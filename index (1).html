@@ -1340,17 +1340,17 @@ html{color-scheme:light!important}
    런타임 어댑터 — 이 블록만 있으면 Claude 밖(일반 웹)에서도 그대로 돌아가요.
    · Claude 아티팩트 안에서는 window.claude 가 이미 있어서 아무것도 안 해요.
    · FIREBASE_CONFIG 가 비어 있으면 "체험 모드": 이 기기 브라우저(IndexedDB)에만 저장.
-   · FIREBASE_CONFIG 를 채우면 "팀 공유 모드": Firestore(데이터) + Storage(악보 이미지).
+   · FIREBASE_CONFIG 를 채우면 "팀 공유 모드": Firestore(데이터 + 악보 이미지, Storage 미사용).
    앱 본문이 쓰는 API: claude.use('db'|'assets'|'downloads'|'user'), BLOB(id)
    ===================================================================== */
 window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
-  apiKey: "AIzaSyA-lb09RLMgiZV8LYfcrvxZB-umwPCR-I",
+  apiKey: "AIzaSyA-lb09RLMgiZV8LBYfcrvxZB-umwPCR-I",
   authDomain: "kkumjari-worship.firebaseapp.com",
   projectId: "kkumjari-worship",
   storageBucket: "kkumjari-worship.firebasestorage.app",
   messagingSenderId: "888617439047",
-  appId: "1:888617439047:web:ab2d984fd4b9f4b3e4662",
-  measurementId: "G-J1YLKL5JH"
+  appId: "1:888617439047:web:ab26d984fd4b9f4b3e4662",
+  measurementId: "G-J1YYLKL5JH"
 };
 /* 예시)
 window.FIREBASE_CONFIG = {
@@ -1375,17 +1375,50 @@ if(window.FIREBASE_CONFIG&&window.firebase){
   const st=firebase.storage(),bucket=FIREBASE_CONFIG.storageBucket;
   const auth=firebase.auth();
   window.KZ_FIREBASE_AUTH=auth;
+  /* 탭마다 로그인 상태를 따로 유지 (다른 탭에서 가입·로그아웃해도 이 탭의 로그인이 풀리지 않게) */
+  try{auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(()=>{})}catch(e){}
   window.KZ_FIREBASE_AUTH_READY=new Promise(resolve=>{
     const off=auth.onAuthStateChanged(u=>{if(u){off();resolve(u)}});
   });
   window.KZ_FIREBASE_APP_READY=new Promise(resolve=>{window.__kzResolveFirebaseAppReady=resolve});
-  window.BLOB=id=>`https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent('blobs/'+id)}?alt=media`;
+  /* ---------- 이미지 저장: Storage 대신 Firestore (Spark 무료 요금제) ----------
+     _assets/{id}        : 파일 정보(크기·형식·조각 수) — 저장 용량 표시에 사용
+     _assets/{id}/c/{n}  : 파일 조각(최대 900KB, 원본 그대로 · 압축 없음)
+     한 번 받은 이미지는 이 기기(IndexedDB)에 보관해 다음부터는 다시 받지 않아요. */
+  const CH=900*1024,URLS=new Map(),RAW=new Map(),PEND=new Map();
+  const SENT='blob:'+location.origin+'/kz-asset-';
+  const cdb=new Promise(r=>{try{const q=indexedDB.open('kkumjari-fbcache',1);q.onupgradeneeded=()=>q.result.createObjectStore('blobs');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null);q.onblocked=()=>r(null)}catch(e){r(null)}});
+  const cReq=async(mode,fn)=>{const d=await cdb;if(!d)return null;return new Promise(r=>{try{const q=fn(d.transaction('blobs',mode).objectStore('blobs'));q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)}catch(e){r(null)}})};
+  const cGet=id=>cReq('readonly',o=>o.get(id)),cPut=(id,v)=>cReq('readwrite',o=>o.put(v,id)),cDel=id=>cReq('readwrite',o=>o.delete(id));
+  const toBl=v=>{try{if(!v)return null;if(v.blob instanceof Blob)return v.blob;if(v.buf)return new Blob([v.buf],{type:v.type||'image/png'})}catch(e){}return null};
+  const keep=(id,b)=>{if(URLS.has(id))return URLS.get(id);RAW.set(id,b);const u=URL.createObjectURL(b);URLS.set(id,u);return u};
+  const drop=id=>{const u=URLS.get(id);if(u)try{URL.revokeObjectURL(u)}catch(e){}URLS.delete(id);RAW.delete(id);cDel(id)};
+  const fetchAsset=id=>{if(!id)return Promise.resolve(null);if(RAW.has(id))return Promise.resolve(RAW.get(id));if(PEND.has(id))return PEND.get(id);
+    const pr=(async()=>{const c=toBl(await cGet(id));if(c){keep(id,c);return c}
+      const q=await fs.collection('_assets/'+id+'/c').get();if(q.empty)return null;
+      let type='';const parts=q.docs.slice().sort((x,y)=>x.id<y.id?-1:x.id>y.id?1:0).map(d=>{const x=d.data();if(x.t)type=x.t;return x.d.toUint8Array()});
+      const bl=new Blob(parts,{type:type||'image/png'});keep(id,bl);
+      try{await cPut(id,{buf:await bl.arrayBuffer(),type:bl.type,sizeBytes:bl.size})}catch(e){}
+      return bl})();
+    PEND.set(id,pr);pr.then(()=>PEND.delete(id),()=>PEND.delete(id));return pr};
+  /* 이 기기에 보관된 이미지를 먼저 메모리에 올려 둠 */
+  const warm=(async()=>{const d=await cdb;if(!d)return;await new Promise(r=>{try{const c=d.transaction('blobs').objectStore('blobs').openCursor();c.onsuccess=()=>{const k=c.result;if(k){const bl=toBl(k.value);if(bl)keep(String(k.key),bl);k.continue()}else r()};c.onerror=()=>r()}catch(e){r()}})})().catch(()=>{});
+  /* 아직 안 받은 이미지는 임시 주소를 돌려주고 뒤에서 받아 옴 → 이미지 안전장치(V68)가 받아 온 이미지로 바꿔 보여줌 */
+  window.BLOB=id=>{const u=URLS.get(id);if(u)return u;fetchAsset(id).catch(()=>{});return SENT+encodeURIComponent(id)};
+  window.BLOBID=u=>{u=String(u||'');if(u.startsWith(SENT))return decodeURIComponent(u.slice(SENT.length));for(const[k,v]of URLS)if(v===u)return k;return ''};
+  window.BLOBDATA=id=>fetchAsset(id).then(bl=>bl?new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r('');f.readAsDataURL(bl)}):'').catch(e=>{console.warn('[꿈자리] 이미지 불러오기 실패',id,e);return ''});
+  window.KZ_RESOLVE=async src=>{const t=String(src||'');if(!t.startsWith(SENT))return src;const id=decodeURIComponent(t.slice(SENT.length));try{await fetchAsset(id)}catch(e){console.warn('[꿈자리] 이미지 불러오기 실패',id,e)}return URLS.get(id)||src};
   db=fs;
   assets={
-    upload:async b=>{const id=rid();await st.ref('blobs/'+id).put(b,{contentType:b.type||'application/octet-stream',cacheControl:'public,max-age=31536000,immutable'});await fs.doc('_assets/'+id).set({sizeBytes:b.size,createdAt:new Date().toISOString()});return{id}},
-    delete:async id=>{try{await st.ref('blobs/'+id).delete()}catch(e){}await fs.doc('_assets/'+id).delete();return{ok:true}},
-    list:async()=>{const q=await fs.collection('_assets').get(),a=q.docs.map(d=>({id:d.id,...d.data()}));return{usage:{files:a.length,bytes:a.reduce((s,x)=>s+(x.sizeBytes||0),0),maxFiles:null,maxBytes:5368709120,quotaLabel:'무료 저장 구간 5GB 기준'},assets:a}}};
-  ready=window.KZ_FIREBASE_APP_READY;
+    upload:async b=>{const id=rid(),u8=new Uint8Array(await b.arrayBuffer()),n=Math.max(1,Math.ceil(u8.length/CH)),type=b.type||'application/octet-stream',done=[];
+      try{for(let i=0;i<n;i++){const ref=fs.doc(`_assets/${id}/c/${String(i).padStart(4,'0')}`),d=firebase.firestore.Blob.fromUint8Array(u8.slice(i*CH,(i+1)*CH));await ref.set(i===0?{d,t:type}:{d});done.push(ref)}
+        await fs.doc('_assets/'+id).set({sizeBytes:b.size,type,chunks:n,createdAt:new Date().toISOString()});
+      }catch(e){for(const r of done)try{await r.delete()}catch(x){}throw e}
+      keep(id,b);try{await cPut(id,{buf:u8.buffer,type,sizeBytes:b.size})}catch(e){}
+      return{id}},
+    delete:async id=>{try{const q=await fs.collection('_assets/'+id+'/c').get();for(const d of q.docs)await d.ref.delete()}catch(e){}await fs.doc('_assets/'+id).delete();drop(id);return{ok:true}},
+    list:async()=>{const q=await fs.collection('_assets').get(),a=q.docs.map(d=>({id:d.id,...d.data()}));return{usage:{files:a.length,bytes:a.reduce((s,x)=>s+(x.sizeBytes||0),0),maxFiles:null,maxBytes:1073741824,quotaLabel:'무료 저장 구간 1GB 기준 (Firestore · 글 데이터 포함)'},assets:a}}};
+  ready=Promise.all([window.KZ_FIREBASE_APP_READY,Promise.race([warm,new Promise(r=>setTimeout(r,2500))])]).then(()=>{});
 }else{
   /* ---------- 체험 모드: 브라우저 IndexedDB ---------- */
   const DOCS=new Map(),BL=new Map(),URLS=new Map(),dSubs=new Map(),cSubs=new Map();
@@ -1758,7 +1791,7 @@ function loadUploaded(){od=false;wm=data.ment;wmDirty=false;loadedDate=date;from
 const clrBanner=()=>data.up&&loadedDate!==date&&role==='leader'?`<div class="clrb"><span>${fmtD(date)}에 이미 올라간 콘티가 있어요 (악보 ${(data.scores||[]).length}장) · 이 시트는 작업용이라 자동으로 불러오지 않아요</span><button class="sm" id="ldup">불러와서 고치기</button></div>`:'';
 function sched(){}
 function saveText(){}
-const loadImg=src=>new Promise((r,j)=>{const i=new Image();if(/^https?:/.test(src))i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=j;i.src=src});
+const loadImg=async src=>{if(window.KZ_RESOLVE)src=await window.KZ_RESOLVE(src);return new Promise((r,j)=>{const i=new Image();if(/^https?:/.test(src))i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=j;i.src=src})};
 
 /* ---------- 송폼 ---------- */
 const SW=['#111111','#ffffff','#ef3038','#f6a313','#26c66d','#3d7df2','#7446d5','#e83e8c'];
@@ -1819,7 +1852,10 @@ function libItems(){const m=new Map();
 library.forEach(x=>{if(x.oaid)m.set(x.oaid,{oaid:x.oaid,name:x.name||'',nw:x.nw,nh:x.nh,at:x.at||0,hidden:!!x.hidden,doc:true,works:[]})});
 archive.filter(a=>a.up).sort((a,b)=>a.id<b.id?1:-1).forEach(a=>(a.scores||[]).forEach(x=>{if(!x.oaid)return;let e=m.get(x.oaid);if(!e){e={oaid:x.oaid,name:'',nw:x.nw,nh:x.nh,at:0,hidden:false,doc:false,works:[]};m.set(x.oaid,e)}
 e.works.push({date:a.id,aid:x.aid,seq:x.seq||[],marks:x.marks||[],lay:x.lay||null,nw:x.nw,nh:x.nh,name:x.name,by:a.by});if(!e.name)e.name=x.name||''}));
-return[...m.values()].filter(e=>!e.hidden).map(e=>({...e,name:e.name||'제목 없음'})).sort((a,b)=>((b.works[0]&&b.works[0].date)||'')<((a.works[0]&&a.works[0].date)||'')?-1:((b.works[0]&&b.works[0].date)||'')>((a.works[0]&&a.works[0].date)||'')?1:(b.at||0)-(a.at||0))}
+/* 같은 제목(띄어쓰기·대소문자 무시)은 하나로 묶음: 모음집에 직접 저장된 것 중 가장 먼저 올린 원본을 대표로 */
+const nkL=t=>String(t||'').replace(/\s+/g,'').toLowerCase(),gm=new Map();
+[...m.values()].filter(e=>!e.hidden).map(e=>({...e,name:e.name||'제목 없음'})).forEach(e=>{const k=e.name==='제목 없음'?'#'+e.oaid:nkL(e.name),r=gm.get(k);if(!r){gm.set(k,{...e,works:[...e.works],dups:[e.oaid]});return}r.dups.push(e.oaid);r.works=r.works.concat(e.works).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);if((e.doc&&!r.doc)||(e.doc===r.doc&&(e.at||0)>0&&(e.at||0)<(r.at||Infinity))){r.oaid=e.oaid;r.name=e.name;r.nw=e.nw;r.nh=e.nh;r.at=e.at;r.doc=e.doc}});
+return[...gm.values()].sort((a,b)=>((b.works[0]&&b.works[0].date)||'')<((a.works[0]&&a.works[0].date)||'')?-1:((b.works[0]&&b.works[0].date)||'')>((a.works[0]&&a.works[0].date)||'')?1:(b.at||0)-(a.at||0))}
 const libMeta=e=>e.works.length?`작업 ${e.works.length}번 · 마지막 ${fmtD(e.works[0].date)}`:'콘티에 아직 안 썼어요';
 function bigView(src,cap){const o=document.createElement('div');o.id='lb';o.innerHTML=`<div class="lb-t"><div class="cap"><span>${esc(cap)}</span></div><span class="sp"></span><button class="lb-b zb2">확대</button><button class="lb-b x" title="닫기 (Esc)">✕</button></div><div class="lbv"><img alt="" src="${src}"></div>`;const kd=e=>{if(e.key==='Escape')close()};function close(){o.remove();document.removeEventListener('keydown',kd)}$('.x',o).onclick=close;$('.zb2',o).onclick=()=>lbZoom(o);$('img',o).ondblclick=()=>lbZoom(o);$('.lbv',o).onclick=e=>{if(e.target===e.currentTarget&&!o.classList.contains('zm'))close()};document.addEventListener('keydown',kd);document.body.append(o)}
 function libraryView(){const q=libQ.trim().toLowerCase(),all=libItems(),l=sortLib(all.filter(e=>!q||e.name.toLowerCase().includes(q)),libSort),E=canEdit;
@@ -1833,10 +1869,10 @@ $$('[data-v]').forEach(b=>b.onclick=()=>{const e=all.find(x=>x.oaid===b.dataset.
 if($('#libadd')){$('#libadd').onclick=()=>$('#libf').click();$('#libf').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)await libAdd(fs)}}
 $$('[data-u]').forEach(b=>b.onclick=()=>{view='edit';LS('view','edit');renderNav();go('edit');setTimeout(()=>openImport(b.dataset.u),60)});
 $$('[data-e]').forEach(b=>b.onclick=()=>{libEdit=b.dataset.e;libraryView();const i=$('.libn');if(i){i.focus();i.select()}});
-$$('.libn').forEach(i=>{const oa=i.dataset.n,done=async()=>{const v=i.value.trim(),e=all.find(x=>x.oaid===oa);libEdit=null;if(v&&e&&v!==e.name){try{await db.doc('library/'+oa).set({name:v,oaid:oa,nw:e.nw||0,nh:e.nh||0,at:e.at||Date.now(),by:ldr||''});toast('이름을 바꿨어요')}catch(x){toast('이름을 바꾸지 못했어요')}}libraryView()};i.onkeydown=e=>{if(e.key==='Enter')i.blur();if(e.key==='Escape'){libEdit=null;libraryView()}};i.onblur=done});
-$$('[data-d]').forEach(b=>b.onclick=()=>arm2(b,async()=>{const oa=b.dataset.d,e=all.find(x=>x.oaid===oa);try{if(e&&!e.works.length){const as=await claude.use('assets');if(as)try{await as.delete(oa)}catch(x){}await db.doc('library/'+oa).delete();toast('원본을 삭제했어요')}else{await db.doc('library/'+oa).set({name:e?e.name:'',oaid:oa,nw:(e&&e.nw)||0,nh:(e&&e.nh)||0,at:(e&&e.at)||Date.now(),hidden:true});toast('모음집에서 뺐어요 (콘티에 쓰인 원본은 파일을 남겨 둬요)')}}catch(x){toast('삭제하지 못했어요')}},''))}
+$$('.libn').forEach(i=>{const oa=i.dataset.n,done=async()=>{const v=i.value.trim(),e=all.find(x=>x.oaid===oa);libEdit=null;if(v&&e&&v!==e.name){try{for(const id of (e.dups||[oa]))await db.doc('library/'+id).set({name:v,oaid:id,nw:e.nw||0,nh:e.nh||0,at:e.at||Date.now(),by:ldr||''});toast('이름을 바꿨어요')}catch(x){toast('이름을 바꾸지 못했어요')}}libraryView()};i.onkeydown=e=>{if(e.key==='Enter')i.blur();if(e.key==='Escape'){libEdit=null;libraryView()}};i.onblur=done});
+$$('[data-d]').forEach(b=>b.onclick=()=>arm2(b,async()=>{const oa=b.dataset.d,e=all.find(x=>x.oaid===oa),ids=(e&&e.dups)||[oa];try{if(e&&!e.works.length){const as=await claude.use('assets');for(const id of ids){if(as)try{await as.delete(id)}catch(x){}await db.doc('library/'+id).delete()}toast('원본을 삭제했어요')}else{for(const id of ids)await db.doc('library/'+id).set({name:e?e.name:'',oaid:id,nw:(e&&e.nw)||0,nh:(e&&e.nh)||0,at:(e&&e.at)||Date.now(),hidden:true});toast('모음집에서 뺐어요 (콘티에 쓰인 원본은 파일을 남겨 둬요)')}}catch(x){toast('삭제하지 못했어요')}},''))}
 async function libAdd(files){libMsg='';let ok=0,bad=[];try{const as=await TO(claude.use('assets'),15000,'이미지 저장소 연결');if(!as){cfBox('원본을 추가하지 못했어요',['이미지 저장은 편집(Editor) 권한이 있는 계정에서만 돼요.'],'확인',false);return}
-let n=0;for(const f of files){n++;libMsg=`올리는 중 ${n}/${files.length}`;if(view==='library'&&$('#libmsg'))$('#libmsg').textContent=libMsg;try{const src=await new Promise((res,rej)=>{const x=new FileReader();x.onload=()=>res(x.result);x.onerror=rej;x.readAsDataURL(f)}),im=await loadImg(src),blob=await shrinkOrig(src),up=await TO(as.upload(blob),90000,'원본 올리는 중');
+let n=0;const nkL=t=>String(t||'').replace(/\s+/g,'').toLowerCase(),libKeys=new Set(libItems().map(e=>nkL(e.name)));for(const f of files){n++;libMsg=`올리는 중 ${n}/${files.length}`;{const nm0=(f.name||'악보').replace(/\.[^.]+$/,''),k0=nkL(nm0);if(k0&&libKeys.has(k0)){bad.push(nm0+': 같은 제목의 악보가 이미 모음집에 있어요');continue}if(k0)libKeys.add(k0)}if(view==='library'&&$('#libmsg'))$('#libmsg').textContent=libMsg;try{const src=await new Promise((res,rej)=>{const x=new FileReader();x.onload=()=>res(x.result);x.onerror=rej;x.readAsDataURL(f)}),im=await loadImg(src),blob=await shrinkOrig(src),up=await TO(as.upload(blob),90000,'원본 올리는 중');
 await db.doc('library/'+up.id).set({name:(f.name||'악보').replace(/\.[^.]+$/,''),oaid:up.id,nw:im.naturalWidth,nh:im.naturalHeight,at:Date.now(),by:ldr||''});ok++}catch(e){console.error(e);bad.push((f.name||'악보')+': '+((e&&e.message)||'오류'))}}}
 catch(e){console.error(e);bad.push((e&&e.message)||'오류')}
 libMsg='';if(view==='library'&&$('#body'))libraryView();if(bad.length)cfBox(ok?`${ok}장은 추가했고 ${bad.length}장은 못 했어요`:'원본을 추가하지 못했어요',bad,'확인',false);else toast(`${ok}장을 모음집에 추가했어요`)}
@@ -1871,7 +1907,7 @@ function editView(){$('#body').innerHTML=`<div class="ed3 leader-sheet ${ldrCls(
 <aside class="fsl" id="fsl"><section class="lp-s pl"><div class="lp-h"><b>악보 <span class="mu" id="pcnt"></span></b></div><div id="plist" class="pgrid"></div><button type="button" class="fsadd" id="add" title="악보 추가">＋ 악보 추가</button><div class="mu pl-hint">끌어서 순서 변경<br>Ctrl+Shift+↑↓</div><input type="file" id="ff" accept="image/*" multiple hidden></section></aside>
 <section class="main2"><div class="tools tb2">
 <div class="tb-r1"><div class="tb-l"><span class="sheet-id"><i></i>${esc(ldr)}</span><label class="tfield"><span>제목</span><input id="tt" placeholder="제목 입력" autocomplete="off"></label></div>
-<div class="tb-rt"><div class="grp"><button class="ibb" id="un" title="되돌리기 (Ctrl+Z)">↶</button><button class="ibb" id="re" title="다시 (Ctrl+Y)">↷</button></div><div class="grp"><button class="ibb" id="zo" title="축소">−</button><span class="mu" id="zl">100%</span><button class="ibb" id="zi" title="확대">＋</button><button class="sm zb" id="zf" title="한 화면에 악보 전체가 보이게 맞춰요">맞춤</button><button class="sm zb" id="zw" title="가로 폭에 맞춰 크게 보여요">폭</button></div><button class="sm" id="lw" title="이전에 올린 악보를 곡 제목으로 찾아 가져와요">가져오기</button><div class="dd" data-k="ex"><button type="button" class="ddb exb" id="exb">내보내기 <span>▾</span></button><div class="ddp menu rt" hidden><button type="button" class="ssi" data-ex="pdf">PDF로 저장 <span class="mu">A4 · 전체 악보</span></button><button type="button" class="ssi" data-ex="pdf1">현재 악보만 PDF <span class="mu">A4</span></button><button type="button" class="ssi" data-ex="copy">이미지 복사 <span class="mu">카톡에 붙여넣기</span></button><button type="button" class="ssi" data-ex="png">현재 악보 PNG 저장</button><button type="button" class="ssi" data-ex="all">전체 악보 PNG 저장</button></div></div></div></div>
+<div class="tb-rt"><div class="grp"><button class="ibb" id="un" title="되돌리기 (Ctrl+Z)">↶</button><button class="ibb" id="re" title="다시 (Ctrl+Y)">↷</button></div><div class="grp"><button class="ibb" id="zo" title="축소">−</button><span class="mu" id="zl">100%</span><button class="ibb" id="zi" title="확대">＋</button><button class="sm zb" id="zf" title="한 화면에 악보 전체가 보이게 맞춰요">맞춤</button><button class="sm zb" id="zw" title="가로 폭에 맞춰 크게 보여요">폭</button></div><button class="sm" id="lw" title="이전에 올린 악보를 곡 제목으로 찾아 가져와요">가져오기</button><button class="sm" data-kz-clear title="이 시트의 송폼과 콘티 작업 내용을 모두 비워요">시트 비우기</button><div class="dd" data-k="ex"><button type="button" class="ddb exb" id="exb">내보내기 <span>▾</span></button><div class="ddp menu rt" hidden><button type="button" class="ssi" data-ex="pdf">PDF로 저장 <span class="mu">A4 · 전체 악보</span></button><button type="button" class="ssi" data-ex="pdf1">현재 악보만 PDF <span class="mu">A4</span></button><button type="button" class="ssi" data-ex="copy">이미지 복사 <span class="mu">카톡에 붙여넣기</span></button><button type="button" class="ssi" data-ex="png">현재 악보 PNG 저장</button><button type="button" class="ssi" data-ex="all">전체 악보 PNG 저장</button></div></div></div></div>
 <div class="optb" id="optb"><div class="og"><button type="button" class="ico" data-im="size" title="이동 · 크기 — 끌어서 옮기고, 모서리는 크기, 변은 늘리기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button><button type="button" class="ico" data-im="crop" title="자르기 — 변이나 모서리를 안쪽으로 끌어요 (악보 더블클릭으로 전환)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 002 2h14M2 6h14a2 2 0 012 2v14"/></svg></button></div><i class="osep"></i><div class="og"><button type="button" class="ico io" id="imfit" title="용지에 맞추기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button type="button" class="ico io" id="imw" title="가로 꽉 채우기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg></button><button type="button" class="ico io" id="imc" title="가운데 정렬"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><rect x="6" y="6" width="12" height="5" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></button><button type="button" class="ico io" id="imr" title="처음 상태로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 108-8M4 4v5h5"/></svg></button><button type="button" class="ico io" id="imdel" title="이 악보 삭제 (Delete 두 번)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button></div><i class="osep"></i><div class="og"><button type="button" class="ico" id="snp" title="스냅 — 마커를 옮길 때 다른 마커·용지 가운데에 자석처럼 붙고 안내선이 나와요 (Alt를 누르면 잠깐 꺼요)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v8a6 6 0 0012 0V3h-4v8a2 2 0 01-4 0V3zM6 7h4M14 7h4"/></svg></button></div><span class="sp"></span><span class="optt mu" id="optt"></span></div>
 </div><div id="stage"></div></section>
 <aside class="rcol"><section class="lp-s"><div class="lp-h"><b>마커</b><span class="sp"></span><button class="sm nm" id="nm">＋ 새 마커</button><button class="sm nm" id="pe" title="마커를 지우는 모드 — 마커 오른쪽 ✕를 눌러요">삭제</button></div><div class="pre" id="pre"></div><div class="mu lp-hint">끌어다 악보 위 또는 맨 위 줄에 놓으세요</div></section><aside class="ins" id="ins"><div class="ins-h"><div><h3 id="ih"></h3><div class="mu" id="ihelp"></div></div><button type="button" class="ibb" id="insx" title="닫기 (Esc)">✕</button></div>
@@ -2112,13 +2148,13 @@ const ment=wm!=null?wm:(data.ment!=null?data.ment:defMent(date));
 const nd={ment,by:ldr,up:Date.now(),scores:ok.map(p=>({name:p.name,aid:p.aid,oaid:p.oaid,seq:p.seq.map(q=>({t:q.t,c:q.c,bc:q.bc||q.c,b:q.b!==false,free:!!q.free})),marks:p.marks.map(m=>({...m})),lay:p.lay?{...p.lay}:null,nw:p.nw||0,nh:p.nh||0}))};
 clearTimeout(saveT);await TO(db.doc('weeks/'+date).set(nd),45000,step);
 data=nd;wm=ment;lastKey=JSON.stringify([nd.scores,nd.ment]);setTimeout(()=>refreshStorage(true),1500);
-try{ok.forEach(p=>{const ex=library.find(l=>l._id===p.oaid);if(!ex||ex.hidden){db.doc('library/'+p.oaid).set({name:(ex&&ex.name)||p.name||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:(ex&&ex.at)||Date.now(),by:ldr||''}).catch(()=>{})}})}catch(e){}
+try{const nkL=t=>String(t||'').replace(/\s+/g,'').toLowerCase(),seen=new Set(libItems().map(e=>nkL(e.name)));ok.forEach(p=>{const ex=library.find(l=>l._id===p.oaid);if(ex&&!ex.hidden)return;const k=nkL((ex&&ex.name)||p.name);if(k&&seen.has(k))return;if(k)seen.add(k);{db.doc('library/'+p.oaid).set({name:(ex&&ex.name)||p.name||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:(ex&&ex.at)||Date.now(),by:ldr||''}).catch(()=>{})}})}catch(e){}
 let verify='';try{const chk=await TO(db.doc('weeks/'+date).get(),5000,'저장 확인');const cd=chk.exists&&chk.data();if(!cd||cd.up!==nd.up||(cd.scores||[]).length!==nd.scores.length||cd.ment!==nd.ment)verify='저장은 했는데 다시 읽어 보니 방금 올린 내용과 달라요'}catch(e){}
 const bad=new Set(fails.map(f=>f.p));pages.forEach(p=>{if(!bad.has(p))p.dirty=false});od=bad.size>0;wmDirty=false;LS('wm:'+ldr,null);
 if(as){const keep=new Set([...ok.flatMap(p=>[p.aid,p.oaid]),...archive.filter(a=>a.id!==date).flatMap(a=>(a.scores||[]).flatMap(x=>[x.aid,x.oaid])),...trash.flatMap(t=>((t.data||{}).scores||[]).flatMap(x=>[x.aid,x.oaid]))].filter(Boolean));
 (async()=>{for(const id of oldIds){if(!keep.has(id)){try{await TO(as.delete(id),10000,'정리')}catch(e){}}}})()}
 if(fails.length||verify){lastFail=true;const rs=[...new Set(fails.map(f=>f.e))];if(verify)rs.push(verify);cfBox(fails.length?'콘티 글은 올렸지만 악보 '+fails.length+'장은 올리지 못했어요':'확인이 필요해요',rs.concat(fails.length?['이미지 저장은 편집(Editor) 권한이 있는 계정에서만 돼요. 권한을 확인하거나 편집자에게 요청해 주세요.']:[]),'확인',false)}
-else{clearWorkspace();if(manual)toast((hadUp?'홈의 콘티를 새 내용으로 교체했어요 ✓':'홈에 업로드했어요 ✓')+' · 작업 시트는 깨끗하게 비웠어요')}}
+else{loadedDate=date;if(manual)toast((hadUp?'홈의 콘티를 새 내용으로 교체했어요 ✓':'홈에 업로드했어요 ✓')+' · 시트 내용은 그대로 남아 있어요')}}
 catch(e){lastFail=true;console.error(e);const c=(e&&e.code)||'',m=String((e&&e.message)||'');
 cfBox('홈에 올리지 못했어요',[c==='timeout'?m:c==='not_granted'||c==='invalid_argument'?'이 계정은 홈에 저장할 권한이 없는 것 같아요. 사이트 공유 설정에서 참여자(Contributor) 이상인지 확인해 주세요.':c==='quota_exceeded'||c==='resource_exhausted'?'저장 공간이 가득 찼어요. 콘티 보관함이나 휴지통을 정리해 주세요.':'원인: ['+step+'] '+(m||c||'알 수 없는 오류'),'다시 눌러서 올려 보세요. 계속 안 되면 이 화면 내용을 알려 주세요.'],'확인',false)}
 finally{saving=false;upMsg='';try{if(view==='edit'){editView()}else if(view==='ment')mentView()}catch(e){console.error(e)}stat();if(dirty()&&!lastFail)sched()}}
@@ -2150,7 +2186,7 @@ $$('[data-sg]').forEach(b=>b.onclick=()=>{const cur=getLine(ta.value,'싱어').s
 ta.addEventListener('input',sync)}
 
 function mentView(){if(wm==null&&canEdit){const dr=LS('wm:'+ldr);if(dr){wm=dr.replace(/::\s*\d{6,8}\s*꿈자리 콘티\s*::/,`:: ${date.replace(/-/g,'').slice(2)} 꿈자리 콘티 ::`);wmDirty=true;toast('작업 중이던 콘티를 복원했어요')}}
-let txt=wm!=null?wm:defMent(date);if(canEdit){const fx=ensureFixed(txt);if(fx!==txt){txt=fx;wm=fx;wmDirty=true;stat()}}$('#body').innerHTML=`<div class="wk mwide leader-ment ${ldrCls(ldr)==='lm'?'lm-sheet':'lf-sheet'}"><div id="clrbox">${clrBanner()}</div><div class="card"><h2>💬 콘티 <span class="mu">${shortD(date)} · 업로드하기 전까지는 콘티 보관함에 저장되지 않아요</span></h2><div class="mg"><textarea id="mt" class="big" ${canEdit?'':'readonly'}>${esc(txt)}</textarea><div class="mside"><label class="afrow"><span class="tgl"><input type="checkbox" id="afs" ${autoFill?'checked':''} ${canEdit?'':'disabled'}><i></i></span><span class="aft"><b>고정 멤버 자동 채우기</b><span class="mu">${autoFill?'켜짐 · 인도자, 세션, 싱어를 일정에 맞춰 채워요 (불참 제외)':'꺼짐 · 모두 직접 선택해요'}</span></span></label>${lineupPanel(txt)}</div></div><div class="g" style="margin-top:12px"><button class="btn" id="cp">복사하기</button><button class="sm" id="fs" ${canEdit?'':'disabled'}>악보 곡명 넣기</button><button class="sm" id="rs" ${canEdit?'':'disabled'}>기본 멘트로 되돌리기</button><span class="mu">악보 이미지는 '송폼'의 PNG로 따로 올려 주세요</span></div></div></div>`;
+let txt=wm!=null?wm:defMent(date);if(canEdit){const fx=ensureFixed(txt);if(fx!==txt){txt=fx;wm=fx;wmDirty=true;stat()}}$('#body').innerHTML=`<div class="wk mwide leader-ment ${ldrCls(ldr)==='lm'?'lm-sheet':'lf-sheet'}"><div id="clrbox">${clrBanner()}</div><div class="card"><h2>💬 콘티 <span class="mu">${shortD(date)} · 업로드하기 전까지는 콘티 보관함에 저장되지 않아요</span></h2><div class="mg"><textarea id="mt" class="big" ${canEdit?'':'readonly'}>${esc(txt)}</textarea><div class="mside"><label class="afrow"><span class="tgl"><input type="checkbox" id="afs" ${autoFill?'checked':''} ${canEdit?'':'disabled'}><i></i></span><span class="aft"><b>고정 멤버 자동 채우기</b><span class="mu">${autoFill?'켜짐 · 인도자, 세션, 싱어를 일정에 맞춰 채워요 (불참 제외)':'꺼짐 · 모두 직접 선택해요'}</span></span></label>${lineupPanel(txt)}</div></div><div class="g" style="margin-top:12px"><button class="btn" id="cp">복사하기</button><button class="sm" data-kz-clear ${canEdit?'':'disabled'} title="이 시트의 송폼과 콘티 작업 내용을 모두 비워요">시트 비우기</button><button class="sm" id="fs" ${canEdit?'':'disabled'}>악보 곡명 넣기</button><button class="sm" id="rs" ${canEdit?'':'disabled'}>기본 멘트로 되돌리기</button><span class="mu">악보 이미지는 '송폼'의 PNG로 따로 올려 주세요</span></div></div></div>`;
 const ta=$('#mt');fitTa(ta);ta.oninput=()=>{setWm(ta.value);fitTa(ta)};bindLineup(ta);if($('#ldup'))$('#ldup').onclick=()=>{loadUploaded();mentView();toast('올라간 콘티를 불러왔어요')};
 $('#cp').onclick=async e=>{try{await navigator.clipboard.writeText(ta.value)}catch(x){ta.select();document.execCommand('copy')}toast('복사했어요. 카톡에 붙여넣으세요')};
 $('#fs').onclick=()=>{const names=pages.map(p=>p.name.trim()).filter(Boolean);if(!names.length)return toast('저장된 악보가 없어요');const L=ta.value.split('\n'),i=L.findIndex(l=>/^인도\s*:/.test(l));
@@ -2526,7 +2562,7 @@ $('#body').innerHTML=`<div class="wk mnw kz-arch"><div class="ro-h kz-page-h"><d
 hydrateSc();$$('[data-am]').forEach(b=>b.onclick=()=>{const m=b.dataset.am,i=months.indexOf(m),cur=abOpen[m]!==undefined?abOpen[m]:i<2;abOpen[m]=!cur;archiveView()});
 $$('[data-cn]').forEach(b=>b.onclick=()=>{const[y,m]=abCal.split('-').map(Number);abCal=ymd(new Date(Date.UTC(y,m-1+(+b.dataset.cn),1))).slice(0,7);archiveView()});
 bindArch();
-$$('[data-o]').forEach(b=>b.onclick=async()=>{const d=b.dataset.o,ld=role==='leader';if(ld&&dirty()&&canEdit&&!await cfBox('저장하지 않은 변경이 있어요',['지금 송폼·콘티에서 작업 중인 내용은 아직 업로드하지 않았어요.','열면 그 내용은 사라지고, 올라간 콘티로 바뀌어요.'],'버리고 열기','돌아가기'))return;view=ld?'edit':'home';LS('view',view);renderNav();if(d!==date)await goDate(d);await subP;if(ld)loadUploaded();go(view)});
+$$('[data-o]').forEach(b=>b.onclick=()=>kzArchView(b.dataset.o));
 $$('[data-c]').forEach(b=>b.onclick=async()=>{const a=archive.find(x=>x.id===b.dataset.c);try{await navigator.clipboard.writeText(normHead(a.ment));toast('복사했어요')}catch(e){toast('복사하지 못했어요')}});
 $$('[data-x]').forEach(b=>b.onclick=()=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='정말 삭제?';b.style.cssText='margin-left:auto;background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent='삭제';b.style.cssText='margin-left:auto'}},3000);return}
 const id=b.dataset.x;toTrash('conti',id,'weeks').then(()=>{toast('휴지통으로 옮겼어요');if(id===date){pages=[];cur=0;data={scores:[],ment:null};wm=null;wmDirty=false;od=false;lastKey=null}}).catch(()=>toast('삭제하지 못했어요'))})}
@@ -2785,7 +2821,7 @@ button:disabled,.btn:disabled{opacity:.58!important}
 </script>
 
 <style id="kz-auth-v92">
-.kz-login-lock{position:fixed;inset:0;z-index:999999;background:rgba(251,248,243,.97);display:grid;place-items:center;padding:20px}.kz-login-card{width:min(460px,100%);background:#fff;border:1px solid #e5d7c5;border-radius:22px;box-shadow:0 24px 70px rgba(55,39,20,.18);overflow:hidden}.kz-login-head{padding:24px 24px 16px;border-bottom:1px solid #eee4d7}.kz-login-head b{font-family:var(--serif);font-size:24px;color:#352b22}.kz-login-head p{margin:6px 0 0;color:#776c61;font-size:13px;line-height:1.55}.kz-login-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:14px 20px 0}.kz-login-tabs button,.kz-auth-secondary{border:1px solid #dfd1c0;background:#fff;color:#66594d;border-radius:11px;padding:10px;font-weight:800}.kz-login-tabs button.on{background:#fff6e7;border-color:#c99955;color:#83581f}.kz-login-body{padding:14px 20px 22px;display:grid;gap:12px}.kz-login-body label{display:grid;gap:6px;font-size:12px;font-weight:800;color:#5e5145}.kz-login-body input,.kz-login-body select,.kz-admin-card select{width:100%;box-sizing:border-box;border:1px solid #ddcfbe;background:#fff;color:#332a22;border-radius:11px;padding:11px 12px;font:inherit}.kz-pin{text-align:center;font-size:19px!important;letter-spacing:.4em}.kz-auth-primary{border:0;background:#9b6a2c;color:#fff;border-radius:11px;padding:12px;font-weight:850}.kz-auth-msg{padding:10px 12px;border:1px solid #ead8bb;background:#fff8ec;color:#71542e;border-radius:10px;font-size:12px;line-height:1.5}.kz-auth-msg.err{border-color:#e7c3bd;background:#fff2f0;color:#93443c}.kz-admin-overlay{position:fixed;inset:0;z-index:999998;background:rgba(42,33,24,.35);display:grid;place-items:center;padding:20px}.kz-admin-card{width:min(560px,100%);max-height:min(760px,90vh);overflow:auto;background:#fff;border-radius:20px;border:1px solid #e5d7c5;box-shadow:0 24px 70px rgba(30,20,10,.2);padding:20px}.kz-admin-top{display:flex;align-items:center;gap:10px;margin-bottom:15px}.kz-admin-top div{display:grid;gap:2px}.kz-admin-top small{color:#81766b}.kz-admin-top .sp{flex:1}.kz-admin-top button{border:1px solid #ddd0c0;background:#fff;border-radius:9px;padding:7px 9px}.kz-request{display:grid;gap:10px;padding:14px 0;border-top:1px solid #eee4d8}.kz-request-head{display:flex;align-items:center;gap:10px}.kz-request-head span{display:grid;gap:2px}.kz-request-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kz-approve-box{display:grid;gap:7px}.kz-approve-box>span{font-size:11px;font-weight:850;color:#77695c}.kz-choice{display:flex;flex-wrap:wrap;gap:6px}.kz-choice button{border:1px solid #ddcfbe;background:#fff;color:#5f5246;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.kz-choice button.on{background:#fff1d9;border-color:#c99955;color:#81551d}.kz-approve-foot{display:flex;justify-content:flex-end;gap:8px}.kz-request small{display:block;color:#887d72}.kz-admin-section{margin-top:16px;padding-top:14px;border-top:1px solid #eee4d8}.kz-admin-actions{display:flex;gap:8px;flex-wrap:wrap}.kz-admin-actions button{padding:9px 11px}.kz-auth-note{font-size:11px;color:#877c71;line-height:1.5}.kz-pending-ok{text-align:center;padding:10px 4px 2px}.kz-pending-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#edf7ef;color:#3f6849;font-size:25px;font-weight:900}.kz-pending-ok b{display:block;font-size:18px;color:#352b22;margin-bottom:7px}.kz-pending-ok p{margin:0 0 15px;color:#776c61;font-size:13px;line-height:1.65}@media(max-width:600px){.kz-request{grid-template-columns:1fr}.kz-login-card{border-radius:17px}}
+.kz-login-lock{position:fixed;inset:0;z-index:999999;background:rgba(251,248,243,.97);display:grid;place-items:center;padding:20px}.kz-login-card{width:min(460px,100%);background:#fff;border:1px solid #e5d7c5;border-radius:22px;box-shadow:0 24px 70px rgba(55,39,20,.18);overflow:hidden}.kz-login-head{padding:24px 24px 16px;border-bottom:1px solid #eee4d7}.kz-login-head b{font-family:var(--serif);font-size:24px;color:#352b22}.kz-login-head p{margin:6px 0 0;color:#776c61;font-size:13px;line-height:1.55}.kz-login-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:14px 20px 0}.kz-login-tabs button,.kz-auth-secondary{border:1px solid #dfd1c0;background:#fff;color:#66594d;border-radius:11px;padding:10px;font-weight:800}.kz-login-tabs button.on{background:#fff6e7;border-color:#c99955;color:#83581f}.kz-login-body{padding:14px 20px 22px;display:grid;gap:12px}.kz-login-body label{display:grid;gap:6px;font-size:12px;font-weight:800;color:#5e5145}.kz-login-body input,.kz-login-body select,.kz-admin-card select{width:100%;box-sizing:border-box;border:1px solid #ddcfbe;background:#fff;color:#332a22;border-radius:11px;padding:11px 12px;font:inherit}.kz-pin{text-align:center;font-size:19px!important;letter-spacing:.4em}.kz-auth-primary{border:0;background:#9b6a2c;color:#fff;border-radius:11px;padding:12px;font-weight:850}.kz-auth-msg{padding:10px 12px;border:1px solid #ead8bb;background:#fff8ec;color:#71542e;border-radius:10px;font-size:12px;line-height:1.5}.kz-auth-msg.err{border-color:#e7c3bd;background:#fff2f0;color:#93443c}.kz-admin-overlay{position:fixed;inset:0;z-index:999998;background:rgba(42,33,24,.35);display:grid;place-items:center;padding:20px}.kz-admin-card{width:min(560px,100%);max-height:min(760px,90vh);overflow:auto;background:#fff;border-radius:20px;border:1px solid #e5d7c5;box-shadow:0 24px 70px rgba(30,20,10,.2);padding:20px}.kz-admin-top{display:flex;align-items:center;gap:10px;margin-bottom:15px}.kz-admin-top div{display:grid;gap:2px}.kz-admin-top small{color:#81766b}.kz-admin-top .sp{flex:1}.kz-admin-top button{border:1px solid #ddd0c0;background:#fff;border-radius:9px;padding:7px 9px}.kz-request{display:grid;gap:10px;padding:14px 0;border-top:1px solid #eee4d8}.kz-request-head{display:flex;align-items:center;gap:10px}.kz-request-head span{display:grid;gap:2px}.kz-request-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kz-approve-box{display:grid;gap:7px}.kz-approve-box[hidden]{display:none!important}.kz-acct{display:grid;gap:10px;padding:14px 0;border-top:1px solid #eee4d8}.kz-acct .kz-request-head button{padding:7px 12px;font-size:12px}.kz-acct small{display:block;color:#887d72}.kz-acct-form{display:grid;gap:10px;padding:12px;border:1px solid #eee4d8;border-radius:14px;background:#fffcf7}.kz-acct-form[hidden]{display:none!important}.kz-approve-box>span{font-size:11px;font-weight:850;color:#77695c}.kz-choice{display:flex;flex-wrap:wrap;gap:6px}.kz-choice button{border:1px solid #ddcfbe;background:#fff;color:#5f5246;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.kz-choice button.on{background:#fff1d9;border-color:#c99955;color:#81551d}.kz-approve-foot{display:flex;justify-content:flex-end;gap:8px}.kz-request small{display:block;color:#887d72}.kz-admin-section{margin-top:16px;padding-top:14px;border-top:1px solid #eee4d8}.kz-admin-actions{display:flex;gap:8px;flex-wrap:wrap}.kz-admin-actions button{padding:9px 11px}.kz-auth-note{font-size:11px;color:#877c71;line-height:1.5}.kz-pending-ok{text-align:center;padding:10px 4px 2px}.kz-pending-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#edf7ef;color:#3f6849;font-size:25px;font-weight:900}.kz-pending-ok b{display:block;font-size:18px;color:#352b22;margin-bottom:7px}.kz-pending-ok p{margin:0 0 15px;color:#776c61;font-size:13px;line-height:1.65}@media(max-width:600px){.kz-request{grid-template-columns:1fr}.kz-login-card{border-radius:17px}}
 </style>
 \n<script id="kz-auth-v92-script">
 (function(){
@@ -2808,19 +2844,34 @@ button:disabled,.btn:disabled{opacity:.58!important}
  const salt=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
  const emailFor=id=>id==='management'?manager.authEmail:`${String(id).replace(/[^a-zA-Z0-9]/g,'').toLowerCase()}@kkumjari-worship.firebaseapp.com`;const accountDocId=a=>a&&a.id==='management'?'management':a.id;
  const authPassword=(id,pin)=>`Kz!${pin}#${String(id).replace(/[^a-zA-Z0-9]/g,'').slice(0,18)}`;
- const fbError=e=>{const c=e&&e.code||'';if(c.includes('wrong-password')||c.includes('invalid-credential'))return 'PIN이 맞지 않아요.';if(c.includes('too-many-requests'))return '로그인 시도가 너무 많아요. 잠시 후 다시 시도해 주세요.';if(c.includes('email-already-in-use'))return '이미 사용 중인 계정이에요. 다시 시도해 주세요.';return 'Firebase 인증에 실패했어요. 잠시 후 다시 시도해 주세요.'};
+ /* 가입 때 비밀번호에 쓴 ID = 로그인 이메일 앞부분 (Firebase uid와 다르므로 이메일 기준으로 맞춤) */
+ const authPwId=a=>{const l=String(a&&a.authEmail||'').split('@')[0];return l||(a&&a.id)};
+ const fbError=e=>{const c=e&&e.code||'';console.error('[꿈자리] Firebase 인증 오류 코드:',c,e&&e.message);if(c.includes('wrong-password')||c.includes('invalid-credential'))return 'PIN이 맞지 않아요.';if(c.includes('too-many-requests'))return '로그인 시도가 너무 많아요. 잠시 후 다시 시도해 주세요.';if(c.includes('email-already-in-use'))return '이미 사용 중인 계정이에요. 다시 시도해 주세요.';return `Firebase 인증에 실패했어요. (${c||'오류 코드 없음'})`};
  function apply(a){if(!a)return;try{me=a.name;LS('me',me);syncPermission()}catch(e){}try{renderApp()}catch(e){console.error(e)}}
  async function syncAccounts(){const fs=FS();if(!fs)return;try{const s=await fs.collection('accounts').get();if(!s.empty){const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote)}}catch(e){console.warn('[꿈자리] 계정 목록 동기화 대기 중',e)}}
- function watchAccounts(){const fs=FS();if(!fs)return;try{fs.collection('accounts').onSnapshot(s=>{const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote);const l=document.getElementById('kzLoginLock');if(l&&l.isConnected){const active=l.querySelector('.kz-login-tabs button.on')?.dataset.tab||'login';login(active)}} ,e=>console.warn('[꿈자리] accounts 구독 실패',e))}catch(e){console.warn(e)}}
+ function watchAccounts(){const fs=FS();if(!fs)return;try{fs.collection('accounts').onSnapshot(s=>{const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote);const l=document.getElementById('kzLoginLock');if(l&&l.isConnected&&!l.querySelector('.kz-pending-ok')){const active=l.querySelector('.kz-login-tabs button.on')?.dataset.tab||'login';login(active)}} ,e=>console.warn('[꿈자리] accounts 구독 실패',e))}catch(e){console.warn(e)}}
  async function ensureManagerAuth(){
    const auth=FB(),fs=FS();if(!auth||!fs)return;
-   try{const doc=await fs.doc('accounts/management').get();if(doc.exists)return;
-     let cred;try{cred=await auth.createUserWithEmailAndPassword(manager.authEmail,authPassword('management','1111'));}catch(e){if((e.code||'').includes('email-already-in-use'))cred=await auth.signInWithEmailAndPassword(manager.authEmail,authPassword('management','1111'));else throw e}
-     const u=cred.user;await u.updateProfile({displayName:'관리계정'}).catch(()=>{});
-     const m={id:'management',name:'관리계정',rank:'관리계정',status:'approved',createdAt:Date.now()};await fs.doc('accounts/management').set(m);try{localStorage.setItem('kzManagerUid',u.uid)}catch(e){};await auth.signOut();
+   /* 이미 관리계정이 만들어졌거나 누군가 로그인 중이면 건너뜀 (로그인 상태를 풀지 않도록) */
+   if(auth.currentUser)return;try{const ms=await fs.doc('accounts/management').get();if(ms.exists)return}catch(e){return}
+   try{
+     let cred;
+     try{
+       cred=await auth.signInWithEmailAndPassword(manager.authEmail,authPassword('management','1111'));
+     }catch(e){
+       if((e.code||'').includes('user-not-found')){
+         cred=await auth.createUserWithEmailAndPassword(manager.authEmail,authPassword('management','1111'));
+       }else{throw e}
+     }
+     const u=cred.user;
+     await u.updateProfile({displayName:'관리계정'}).catch(()=>{});
+     const m={id:'management',name:'관리계정',rank:'관리계정',status:'approved',createdAt:Date.now()};
+     await fs.doc('accounts/management').set(m,{merge:true});
+     try{localStorage.setItem('kzManagerUid',u.uid)}catch(e){}
+     await auth.signOut();
    }catch(e){console.warn('[꿈자리] 관리계정 초기화 대기',e)}
  }
- async function firebaseLogin(a,p){const auth=FB(),fs=FS();if(!auth||!fs)return false;try{await auth.signInWithEmailAndPassword(a.authEmail||emailFor(a.id),authPassword(a.id,p));const u=auth.currentUser;const snap=await fs.doc('accounts/'+accountDocId(a)).get();if(!snap.exists){await auth.signOut();return false}const x={id:a.id,...snap.data()};if(x.status!=='approved'){await auth.signOut();login('login','아직 관리자 승인이 완료되지 않았어요.',true);return false}write(read().filter(v=>v.id!==x.id).concat(x));sessionStorage.setItem(S,x.id);apply(x);document.getElementById('kzLoginLock')?.remove();if(typeof window.__kzResolveFirebaseAppReady==='function'){window.__kzResolveFirebaseAppReady(u);window.__kzResolveFirebaseAppReady=null}try{toast(`${x.name}으로 로그인했어요`)}catch(e){}return true}catch(e){login('login',fbError(e),true);return false}}
+ async function firebaseLogin(a,p){const auth=FB(),fs=FS();if(!auth||!fs)return false;try{const email=a.authEmail||emailFor(a.id),password=authPassword(authPwId(a),p);let cred;try{cred=await auth.signInWithEmailAndPassword(email,password)}catch(e){/* 최초 배포 직후 관리계정이 아직 생성되지 않은 경우 로그인 순간 생성 */if(a.id==='management'&&String(e&&e.code||'').includes('user-not-found')){cred=await auth.createUserWithEmailAndPassword(email,password);await cred.user.updateProfile({displayName:'관리계정'}).catch(()=>{})}else{throw e}}const u=cred.user;let snap=await fs.doc('accounts/'+accountDocId(a)).get();if(!snap.exists&&a.id==='management'){await fs.doc('accounts/management').set({id:'management',name:'관리계정',rank:'관리계정',status:'approved',createdAt:Date.now()},{merge:true});snap=await fs.doc('accounts/management').get()}if(!snap.exists){await auth.signOut();return false}const x={id:a.id,...snap.data()};if(x.status!=='approved'){await auth.signOut();login('login','아직 관리자 승인이 완료되지 않았어요.',true);return false}write(read().filter(v=>v.id!==x.id).concat(x));sessionStorage.setItem(S,x.id);apply(x);document.getElementById('kzLoginLock')?.remove();if(typeof window.__kzResolveFirebaseAppReady==='function'){window.__kzResolveFirebaseAppReady(u);window.__kzResolveFirebaseAppReady=null}try{toast(`${x.name}으로 로그인했어요`)}catch(e){}return true}catch(e){console.error('[꿈자리] Firebase 로그인 오류',e&&e.code,e&&e.message,e);login('login',fbError(e),true);return false}}
  function login(tab='login',message='',err=false){
   document.getElementById('kzLoginLock')?.remove();const root=document.createElement('div');root.id='kzLoginLock';root.className='kz-login-lock';document.body.append(root);const approved=read().filter(x=>x.status==='approved');const isLogin=tab==='login';
   root.innerHTML=`<div class="kz-login-card"><div class="kz-login-head"><b>꿈자리 찬양팀</b><p>본인 계정을 선택하고 설정한 4자리 PIN으로 접속해 주세요.</p></div><div class="kz-login-tabs"><button class="${isLogin?'on':''}" data-tab="login">계정 로그인</button><button class="${!isLogin?'on':''}" data-tab="join">처음 왔어요</button></div><div class="kz-login-body">${message?`<div class="kz-auth-msg ${err?'err':''}">${esc(message)}</div>`:''}${isLogin?`<div class="kz-account-picker"><label>계정 선택 또는 이름 직접 입력<input id="kzNameInput" type="text" autocomplete="off" maxlength="20" placeholder="이름을 검색하거나 직접 입력하세요"></label><div class="kz-account-list" id="kzAccountList">${approved.length?approved.map(a=>`<button type="button" class="kz-account-item" data-account-id="${esc(a.id)}" data-account-name="${esc(a.name)}"><b>${esc(a.name)}</b><small>${esc(a.rank||'팀원')}</small></button>`).join(''):'<div class="kz-account-empty">승인된 계정이 없습니다.</div>'}</div><div class="kz-auth-note">목록을 스크롤해서 선택하거나 위 칸에 등록된 이름을 직접 입력해도 됩니다.</div></div><label>4자리 PIN<input id="kzPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="••••"></label><button class="kz-auth-primary" id="kzGo">로그인</button>`:`<label>본인 이름<input id="kzJoinName" maxlength="20" placeholder="예: 김찬양"></label><label>사용할 4자리 PIN<input id="kzJoinPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="••••"></label><label>PIN 확인<input id="kzJoinPin2" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="••••"></label><button class="kz-auth-primary" id="kzJoin">가입 요청</button><div class="kz-auth-note">가입 후 관리계정이 승인하고 역할을 지정해야 로그인할 수 있어요.</div>`}</div></div>`;
@@ -2828,14 +2879,39 @@ button:disabled,.btn:disabled{opacity:.58!important}
   if(isLogin){let selectedId='';const nameInput=root.querySelector('#kzNameInput'),accountList=root.querySelector('#kzAccountList');const filterAccounts=()=>{const q=normName(nameInput.value||'');selectedId='';accountList.querySelectorAll('.kz-account-item').forEach(btn=>{const hit=!q||normName(btn.dataset.accountName).includes(q);btn.hidden=!hit;btn.classList.remove('on')})};nameInput.addEventListener('input',filterAccounts);accountList.querySelectorAll('.kz-account-item').forEach(btn=>btn.onclick=()=>{selectedId=btn.dataset.accountId;nameInput.value=btn.dataset.accountName;accountList.querySelectorAll('.kz-account-item').forEach(x=>x.classList.toggle('on',x===btn));root.querySelector('#kzPin')?.focus()});root.querySelector('#kzGo').onclick=async()=>{const typed=normName(nameInput.value||''),p=root.querySelector('#kzPin').value,accounts=read().filter(x=>x.status==='approved'),a=selectedId?accounts.find(x=>x.id===selectedId):accounts.find(x=>normName(x.name)===typed);if(!a)return login('login',typed?'등록된 계정을 찾을 수 없어요. 이름을 확인해 주세요.':'계정을 선택하거나 이름을 입력해 주세요.',true);if(!/^\d{4}$/.test(p))return login('login','PIN 숫자 4자리를 입력해 주세요.',true);await firebaseLogin(a,p)}}
   else root.querySelector('#kzJoin').onclick=async()=>{const n=root.querySelector('#kzJoinName').value.trim().replace(/\s+/g,' '),p=root.querySelector('#kzJoinPin').value,p2=root.querySelector('#kzJoinPin2').value;if(!n)return login('join','이름을 입력해 주세요.',true);if(!/^\d{4}$/.test(p))return login('join','PIN은 숫자 4자리로 만들어 주세요.',true);if(p!==p2)return login('join','PIN 확인이 일치하지 않아요.',true);const all=read(),same=all.find(x=>normName(x.name)===normName(n));if(same){if(same.status==='pending'){root.querySelector('.kz-login-body').innerHTML=`<div class="kz-pending-ok"><div class="kz-pending-icon">✓</div><b>이미 승인 대기 중이에요</b><p><strong>${esc(same.name)}</strong>님의 가입 요청이 이미 접수되어 있습니다.<br>추가 요청은 생성하지 않았어요. 관리자 승인 후 로그인할 수 있습니다.</p><button class="kz-auth-secondary" id="kzPendingBack">계정 로그인으로 돌아가기</button></div>`;root.querySelector('#kzPendingBack').onclick=()=>login('login','관리자 승인 후 계정 선택란에 이름이 표시됩니다.');return}return login('join','이미 등록된 계정 이름이에요. 계정 로그인에서 본인 이름을 선택해 주세요.',true)}const auth=FB(),fs=FS();if(!auth||!fs)return login('join','Firebase 연결이 준비되지 않았어요. 잠시 후 다시 시도해 주세요.',true);const id='u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),email=emailFor(id);try{const cred=await auth.createUserWithEmailAndPassword(email,authPassword(id,p));const u=cred.user;await u.updateProfile({displayName:n}).catch(()=>{});const sl=salt(),x={id:u.uid,name:n,rank:'팀원',status:'pending',parts:[],slots:[],authEmail:email,salt:sl,pinHash:pinHash(p,sl),fail:0,lockUntil:0,requestedAt:Date.now()};const publicX={id:u.uid,name:n,rank:'팀원',status:'pending',parts:[],slots:[],authEmail:email,requestedAt:x.requestedAt};await fs.doc('accounts/'+u.uid).set(publicX);write([...read(),x]);await auth.signOut();root.querySelector('.kz-login-body').innerHTML=`<div class="kz-pending-ok"><div class="kz-pending-icon">✓</div><b>승인 대기 중이에요</b><p><strong>${esc(n)}</strong>님의 가입 요청이 정상적으로 접수됐어요.<br>관리계정에서 승인한 뒤 로그인할 수 있습니다.</p><button class="kz-auth-secondary" id="kzPendingBack">계정 로그인으로 돌아가기</button></div>`;root.querySelector('#kzPendingBack').onclick=()=>login('login','관리자 승인 후 계정 목록이 새로고침됩니다.')}catch(e){console.error(e);login('join',fbError(e),true)}};
  }
+ /* ===== 가입 계정 관리 (관리계정 전용): 직책·파트 수정, 계정 삭제 ===== */
+ function acctMgrHTML(){const RK=['팀원','선임싱어','선임세션','인도자','단장'],PT=['싱어','세션','엔지니어'],SL=['건반','드럼','E.G','B.G','A.G'];
+  const list=read().filter(x=>x&&x.id!=='management'&&x.rank!=='관리계정').sort((a,b)=>((a.status==='approved'?0:1)-(b.status==='approved'?0:1))||String(a.name||'').localeCompare(String(b.name||''),'ko'));
+  return `<div class="kz-admin-section"><b>가입 계정 관리</b><div class="kz-auth-note" style="margin-top:7px">직책과 파트를 바꾸거나 계정을 삭제할 수 있어요. PIN을 잊은 회원은 계정을 삭제한 뒤 같은 이름으로 다시 가입하면 돼요.</div>${list.length?list.map(x=>{const pa=x.parts||[],sl=x.slots||[],ok=x.status==='approved',sum=[x.rank||'팀원',pa.join(', '),sl.join(', ')].filter(Boolean).join(' / ');
+   return `<div class="kz-acct" data-acct="${esc(x.id)}"><div class="kz-request-head"><span><b>${esc(x.name)}</b><small>${ok?esc(sum):'승인 대기'}</small></span><span style="flex:1"></span>${ok?'<button type="button" class="kz-auth-secondary" data-acct-edit>수정</button>':''}<button type="button" class="kz-auth-secondary" data-acct-del>삭제</button></div>${ok?`<div class="kz-acct-form" data-acct-form hidden><div class="kz-request-grid"><label class="kz-approve-box"><span>직책</span><select data-rank>${RK.map(r=>`<option ${r===(x.rank||'팀원')?'selected':''}>${r}</option>`).join('')}</select></label><div class="kz-approve-box"><span>파트 · 복수 선택 가능</span><div class="kz-choice">${PT.map(v=>`<button type="button" data-part="${v}">${v}</button>`).join('')}</div></div></div><div class="kz-approve-box" data-slots-wrap hidden><span>세션 악기 · 복수 선택 가능</span><div class="kz-choice">${SL.map(v=>`<button type="button" data-slot="${v}">${v}</button>`).join('')}</div></div><div class="kz-approve-foot"><button type="button" class="kz-auth-secondary" data-acct-cancel>취소</button><button type="button" class="kz-auth-primary" data-acct-save>저장</button></div></div>`:''}</div>`}).join(''):'<div class="kz-auth-note" style="margin-top:8px">가입한 계정이 아직 없어요.</div>'}</div>`}
+ function bindAcctMgr(root){root.querySelectorAll('.kz-acct').forEach(row=>{const id=row.dataset.acct,x=read().find(v=>v.id===id);if(!x)return;
+   const form=row.querySelector('[data-acct-form]'),eb=row.querySelector('[data-acct-edit]');
+   if(form&&eb){const rank=form.querySelector('[data-rank]'),parts=new Set(x.parts||[]),slots=new Set(x.slots||[]),wrap=form.querySelector('[data-slots-wrap]');
+    const sync=()=>{if(rank.value==='선임싱어')parts.add('싱어');if(rank.value==='선임세션')parts.add('세션');form.querySelectorAll('[data-part]').forEach(q=>q.classList.toggle('on',parts.has(q.dataset.part)));wrap.hidden=!parts.has('세션');if(!parts.has('세션'))slots.clear();form.querySelectorAll('[data-slot]').forEach(q=>q.classList.toggle('on',slots.has(q.dataset.slot)))};
+    rank.onchange=sync;
+    form.querySelectorAll('[data-part]').forEach(q=>q.onclick=()=>{const v=q.dataset.part;if((rank.value==='선임싱어'&&v==='싱어')||(rank.value==='선임세션'&&v==='세션'))return toast('선임 직책의 해당 파트는 필수예요');parts.has(v)?parts.delete(v):parts.add(v);sync()});
+    form.querySelectorAll('[data-slot]').forEach(q=>q.onclick=()=>{const v=q.dataset.slot;slots.has(v)?slots.delete(v):slots.add(v);sync()});
+    sync();
+    eb.onclick=()=>{form.hidden=!form.hidden;eb.textContent=form.hidden?'수정':'닫기'};
+    form.querySelector('[data-acct-cancel]').onclick=()=>{form.hidden=true;eb.textContent='수정'};
+    form.querySelector('[data-acct-save]').onclick=async()=>{sync();if(parts.has('세션')&&!slots.size)return toast('세션 파트라면 악기를 하나 이상 선택해 주세요');const upd={rank:rank.value,parts:[...parts],slots:[...slots]};
+     try{await FS().doc('accounts/'+id).set(upd,{merge:true})}catch(e){console.error('[꿈자리] 계정 수정 실패',e);const c=String(e&&e.code||'');return toast(c.includes('permission')?'관리계정 로그인이 풀렸어요. 로그아웃 후 다시 로그인해 주세요':'계정 정보를 저장하지 못했어요')}
+     write(read().map(v=>v.id===id?{...v,...upd}:v));
+     try{const idx=members.findIndex(m=>m.accountId===id||m.name===x.name);if(idx>=0&&typeof saveMembers==='function')saveMembers(members.map((m,i)=>i===idx?{...m,accountId:id,rank:upd.rank,parts:[...upd.parts],slots:[...upd.slots],roles:[...upd.parts]}:m))}catch(e){console.error(e)}
+     root.remove();panel();try{toast(`${x.name}님 정보를 바꿨어요`)}catch(e){}}}
+   row.querySelector('[data-acct-del]').onclick=async()=>{if(!confirm(`${x.name}님 계정을 삭제할까요?\n\n삭제하면 이 계정으로는 로그인할 수 없고, 같은 이름으로 다시 가입할 수 있어요.\n멤버 명단과 지난 일정은 그대로 남아요.`))return;
+    try{await FS().doc('accounts/'+id).delete()}catch(e){console.error('[꿈자리] 계정 삭제 실패',e);const c=String(e&&e.code||'');return toast(c.includes('permission')?'관리계정 로그인이 풀렸어요. 로그아웃 후 다시 로그인해 주세요':'계정을 삭제하지 못했어요')}
+    write(read().filter(v=>v.id!==id));root.remove();panel();try{toast(`${x.name}님 계정을 삭제했어요`)}catch(e){}};
+  })}
  async function panel(){
   const a=session();if(!a)return login();document.getElementById('kzAdminPanel')?.remove();const root=document.createElement('div');root.id='kzAdminPanel';root.className='kz-admin-overlay';const admin=a.rank==='관리계정',pending=read().filter(x=>x.status==='pending').filter((x,i,arr)=>arr.findIndex(y=>normName(y.name)===normName(x.name))===i);
-  root.innerHTML=`<div class="kz-admin-card"><div class="kz-admin-top"><div><b>${esc(a.name)}</b><small>${a.rank==='관리계정'?'최상위 관리 권한 · 로그인됨':esc(a.rank)+' · 로그인됨'}</small></div><span class="sp"></span><button data-close>✕</button></div><div class="kz-auth-msg">모든 팀원은 전체 페이지를 볼 수 있고, 수정 권한만 역할에 따라 달라집니다.</div>${admin?`<div class="kz-admin-section"><b>가입 승인 · 멤버 자동 등록</b><div class="kz-auth-note" style="margin-top:7px">승인하면서 직책과 파트를 정하면 멤버 명단과 싱어·세션 일정에 자동으로 연결돼요.</div>${pending.length?pending.map(x=>`<div class="kz-request" data-id="${esc(x.id)}"><div class="kz-request-head"><span><b>${esc(x.name)}</b><small>승인 대기</small></span></div><div class="kz-request-grid"><label class="kz-approve-box"><span>직책</span><select data-rank><option>팀원</option><option>선임싱어</option><option>선임세션</option><option>인도자</option><option>단장</option></select></label><div class="kz-approve-box"><span>파트 · 복수 선택 가능</span><div class="kz-choice"><button type="button" data-part="싱어">싱어</button><button type="button" data-part="세션">세션</button><button type="button" data-part="엔지니어">엔지니어</button></div></div></div><div class="kz-approve-box" data-slots-wrap hidden><span>세션 악기 · 복수 선택 가능</span><div class="kz-choice"><button type="button" data-slot="건반">건반</button><button type="button" data-slot="드럼">드럼</button><button type="button" data-slot="E.G">E.G</button><button type="button" data-slot="B.G">B.G</button><button type="button" data-slot="A.G">A.G</button></div></div><div class="kz-approve-foot"><button class="kz-auth-secondary" data-reject>요청 삭제</button><button class="kz-auth-primary" data-approve>승인하고 멤버 등록</button></div></div>`).join(''):'<div class="kz-auth-note" style="margin-top:8px">현재 승인 대기 계정이 없어요.</div>'}</div><div class="kz-admin-section"><b>관리계정 PIN 변경</b><div class="kz-auth-note" style="margin:6px 0 10px">테스트가 끝나면 여기서 관리계정 PIN을 변경하세요. 변경 즉시 기존 PIN은 사용할 수 없습니다.</div><div style="display:grid;gap:8px"><input id="kzOldPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="현재 PIN"><input id="kzNewPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="새 PIN"><input id="kzNewPin2" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="새 PIN 확인"><button class="kz-auth-primary" id="kzChangePin">PIN 변경</button></div></div>`:''}<div class="kz-admin-section kz-admin-actions"><button class="kz-auth-secondary" id="kzLogout">로그아웃</button></div></div>`;
+  root.innerHTML=`<div class="kz-admin-card"><div class="kz-admin-top"><div><b>${esc(a.name)}</b><small>${a.rank==='관리계정'?'최상위 관리 권한 · 로그인됨':esc(a.rank)+' · 로그인됨'}</small></div><span class="sp"></span><button data-close>✕</button></div><div class="kz-auth-msg">모든 팀원은 전체 페이지를 볼 수 있고, 수정 권한만 역할에 따라 달라집니다.</div>${admin?`<div class="kz-admin-section"><b>가입 승인 · 멤버 자동 등록</b><div class="kz-auth-note" style="margin-top:7px">승인하면서 직책과 파트를 정하면 멤버 명단과 싱어·세션 일정에 자동으로 연결돼요.</div>${pending.length?pending.map(x=>`<div class="kz-request" data-id="${esc(x.id)}"><div class="kz-request-head"><span><b>${esc(x.name)}</b><small>승인 대기</small></span></div><div class="kz-request-grid"><label class="kz-approve-box"><span>직책</span><select data-rank><option>팀원</option><option>선임싱어</option><option>선임세션</option><option>인도자</option><option>단장</option></select></label><div class="kz-approve-box"><span>파트 · 복수 선택 가능</span><div class="kz-choice"><button type="button" data-part="싱어">싱어</button><button type="button" data-part="세션">세션</button><button type="button" data-part="엔지니어">엔지니어</button></div></div></div><div class="kz-approve-box" data-slots-wrap hidden><span>세션 악기 · 복수 선택 가능</span><div class="kz-choice"><button type="button" data-slot="건반">건반</button><button type="button" data-slot="드럼">드럼</button><button type="button" data-slot="E.G">E.G</button><button type="button" data-slot="B.G">B.G</button><button type="button" data-slot="A.G">A.G</button></div></div><div class="kz-approve-foot"><button class="kz-auth-secondary" data-reject>요청 삭제</button><button class="kz-auth-primary" data-approve>승인하고 멤버 등록</button></div></div>`).join(''):'<div class="kz-auth-note" style="margin-top:8px">현재 승인 대기 계정이 없어요.</div>'}</div>${acctMgrHTML()}<div class="kz-admin-section"><b>관리계정 PIN 변경</b><div class="kz-auth-note" style="margin:6px 0 10px">테스트가 끝나면 여기서 관리계정 PIN을 변경하세요. 변경 즉시 기존 PIN은 사용할 수 없습니다.</div><div style="display:grid;gap:8px"><input id="kzOldPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="현재 PIN"><input id="kzNewPin" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="새 PIN"><input id="kzNewPin2" class="kz-pin" inputmode="numeric" maxlength="4" placeholder="새 PIN 확인"><button class="kz-auth-primary" id="kzChangePin">PIN 변경</button></div></div>`:''}<div class="kz-admin-section kz-admin-actions"><button class="kz-auth-secondary" id="kzLogout">로그아웃</button></div></div>`;
   document.body.append(root);root.onclick=e=>{if(e.target===root)root.remove()};root.querySelector('[data-close]').onclick=()=>root.remove();root.querySelectorAll('.kz-pin').forEach(i=>i.oninput=()=>i.value=i.value.replace(/\D/g,'').slice(0,4));
   root.querySelector('#kzLogout').onclick=async()=>{sessionStorage.removeItem(S);root.remove();try{me='';LS('me','');syncPermission()}catch(e){}try{await FB()?.signOut()}catch(e){}login('login','로그아웃했어요.')};
   if(admin){
-   root.querySelectorAll('.kz-request').forEach(row=>{const rank=row.querySelector('[data-rank]'),parts=new Set(),slots=new Set(),wrap=row.querySelector('[data-slots-wrap]');const sync=()=>{if(rank.value==='선임싱어')parts.add('싱어');if(rank.value==='선임세션')parts.add('세션');row.querySelectorAll('[data-part]').forEach(q=>q.classList.toggle('on',parts.has(q.dataset.part)));wrap.hidden=!parts.has('세션');if(!parts.has('세션')){slots.clear();row.querySelectorAll('[data-slot]').forEach(q=>q.classList.remove('on'))}};rank.onchange=sync;row.querySelectorAll('[data-part]').forEach(q=>q.onclick=()=>{const v=q.dataset.part;if((rank.value==='선임싱어'&&v==='싱어')||(rank.value==='선임세션'&&v==='세션'))return toast('선임 직책의 해당 파트는 필수예요');parts.has(v)?parts.delete(v):parts.add(v);sync()});row.querySelectorAll('[data-slot]').forEach(q=>q.onclick=()=>{const v=q.dataset.slot;slots.has(v)?slots.delete(v):slots.add(v);q.classList.toggle('on',slots.has(v))});sync();const rejectBtn=row.querySelector('[data-reject]');if(rejectBtn)rejectBtn.onclick=async()=>{const fs=FS(),target=read().find(v=>v.id===row.dataset.id);if(!target)return;if(!confirm(`${target.name}님의 가입 요청을 삭제할까요?`))return;try{await fs.doc('accounts/'+target.id).delete()}catch(e){toast('요청을 삭제하지 못했어요');return}write(read().filter(v=>v.id!==target.id));root.remove();panel();try{toast(`${target.name}님의 가입 요청을 삭제했어요`)}catch(e){}};row.querySelector('[data-approve]').onclick=async()=>{const fs=FS(),x=read().find(v=>v.id===row.dataset.id);if(!x)return;sync();if(parts.has('세션')&&!slots.size)return toast('세션 파트라면 악기를 하나 이상 선택해 주세요');x.status='approved';x.rank=rank.value;x.parts=[...parts];x.slots=[...slots];x.approvedAt=Date.now();const publicX={id:x.id,name:x.name,rank:x.rank,status:x.status,parts:[...x.parts],slots:[...x.slots],authEmail:x.authEmail,requestedAt:x.requestedAt||Date.now(),approvedAt:x.approvedAt};try{await fs.doc('accounts/'+x.id).set(publicX)}catch(e){return toast('승인 정보를 저장하지 못했어요')};write(read().map(v=>v.id===x.id?x:v));try{const nm={id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),accountId:x.id,name:x.name,rank:x.rank,parts:[...parts],slots:[...slots],roles:[...(x.parts||[])]};const idx=members.findIndex(m=>m.accountId===x.id||m.name===x.name);const next=idx>=0?members.map((m,i)=>i===idx?{...m,...nm,id:m.id||nm.id}:m):[...members,nm];if(typeof saveMembers==='function')saveMembers(next)}catch(e){console.error(e)}root.remove();panel();try{toast(`${x.name} 승인 완료 · 이제 로그인 계정 목록에 표시됩니다`)}catch(e){}}});
-   root.querySelector('#kzChangePin').onclick=async()=>{const old=root.querySelector('#kzOldPin').value,np=root.querySelector('#kzNewPin').value,np2=root.querySelector('#kzNewPin2').value;if(!/^\d{4}$/.test(old)||!/^\d{4}$/.test(np))return toast('PIN은 숫자 4자리로 입력하세요');if(np!==np2)return toast('새 PIN 확인이 일치하지 않아요');const all=read(),m=all.find(x=>x.id===a.id);if(!m)return toast('관리계정을 찾을 수 없어요');if(pinHash(old,m.salt)!==m.pinHash&&m.pinHash!==pinHash(old,'dream-manager-v92'))return toast('현재 PIN이 맞지 않아요');try{const u=FB().currentUser;if(!u)return toast('Firebase 로그인 상태가 아니에요');await u.updatePassword(authPassword(m.id,np));const sl=salt();m.salt=sl;m.pinHash=pinHash(np,sl);m.fail=0;m.lockUntil=0;await FS().doc('accounts/'+m.id).set({id:m.id,name:m.name,rank:m.rank,status:m.status,approvedAt:m.approvedAt||Date.now()});write(all);root.querySelector('#kzOldPin').value='';root.querySelector('#kzNewPin').value='';root.querySelector('#kzNewPin2').value='';toast('관리계정 PIN을 변경했어요')}catch(e){console.error(e);toast('PIN을 변경하지 못했어요. 다시 로그인한 뒤 시도해 주세요')}};
+   root.querySelectorAll('.kz-request').forEach(row=>{const rank=row.querySelector('[data-rank]'),parts=new Set(),slots=new Set(),wrap=row.querySelector('[data-slots-wrap]');const sync=()=>{if(rank.value==='선임싱어')parts.add('싱어');if(rank.value==='선임세션')parts.add('세션');row.querySelectorAll('[data-part]').forEach(q=>q.classList.toggle('on',parts.has(q.dataset.part)));wrap.hidden=!parts.has('세션');if(!parts.has('세션')){slots.clear();row.querySelectorAll('[data-slot]').forEach(q=>q.classList.remove('on'))}};rank.onchange=sync;row.querySelectorAll('[data-part]').forEach(q=>q.onclick=()=>{const v=q.dataset.part;if((rank.value==='선임싱어'&&v==='싱어')||(rank.value==='선임세션'&&v==='세션'))return toast('선임 직책의 해당 파트는 필수예요');parts.has(v)?parts.delete(v):parts.add(v);sync()});row.querySelectorAll('[data-slot]').forEach(q=>q.onclick=()=>{const v=q.dataset.slot;slots.has(v)?slots.delete(v):slots.add(v);q.classList.toggle('on',slots.has(v))});sync();const rejectBtn=row.querySelector('[data-reject]');if(rejectBtn)rejectBtn.onclick=async()=>{const fs=FS(),target=read().find(v=>v.id===row.dataset.id);if(!target)return;if(!confirm(`${target.name}님의 가입 요청을 삭제할까요?`))return;try{await fs.doc('accounts/'+target.id).delete()}catch(e){toast('요청을 삭제하지 못했어요');return}write(read().filter(v=>v.id!==target.id));root.remove();panel();try{toast(`${target.name}님의 가입 요청을 삭제했어요`)}catch(e){}};row.querySelector('[data-approve]').onclick=async()=>{const fs=FS(),x=read().find(v=>v.id===row.dataset.id);if(!x)return;sync();if(parts.has('세션')&&!slots.size)return toast('세션 파트라면 악기를 하나 이상 선택해 주세요');x.status='approved';x.rank=rank.value;x.parts=[...parts];x.slots=[...slots];x.approvedAt=Date.now();const publicX={id:x.id,name:x.name,rank:x.rank,status:x.status,parts:[...x.parts],slots:[...x.slots],authEmail:x.authEmail,requestedAt:x.requestedAt||Date.now(),approvedAt:x.approvedAt};try{await fs.doc('accounts/'+x.id).set(publicX)}catch(e){console.error('[꿈자리] 승인 저장 실패',e);x.status='pending';const c=String(e&&e.code||'');return toast(c.includes('permission')?'관리계정 로그인이 풀렸어요. 로그아웃 후 다시 로그인해 주세요':'승인 정보를 저장하지 못했어요'+(c?' ('+c+')':''))};write(read().map(v=>v.id===x.id?x:v));try{const nm={id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),accountId:x.id,name:x.name,rank:x.rank,parts:[...parts],slots:[...slots],roles:[...(x.parts||[])]};const idx=members.findIndex(m=>m.accountId===x.id||m.name===x.name);const next=idx>=0?members.map((m,i)=>i===idx?{...m,...nm,id:m.id||nm.id}:m):[...members,nm];if(typeof saveMembers==='function')saveMembers(next)}catch(e){console.error(e)}root.remove();panel();try{toast(`${x.name} 승인 완료 · 이제 로그인 계정 목록에 표시됩니다`)}catch(e){}}});
+   bindAcctMgr(root);
+   root.querySelector('#kzChangePin').onclick=async()=>{const old=root.querySelector('#kzOldPin').value,np=root.querySelector('#kzNewPin').value,np2=root.querySelector('#kzNewPin2').value;if(!/^\d{4}$/.test(old)||!/^\d{4}$/.test(np))return toast('PIN은 숫자 4자리로 입력하세요');if(np!==np2)return toast('새 PIN 확인이 일치하지 않아요');const all=read(),m=all.find(x=>x.id===a.id);if(!m)return toast('관리계정을 찾을 수 없어요');if(pinHash(old,m.salt)!==m.pinHash&&m.pinHash!==pinHash(old,'dream-manager-v92'))return toast('현재 PIN이 맞지 않아요');try{const u=FB().currentUser;if(!u)return toast('Firebase 로그인 상태가 아니에요');await u.updatePassword(authPassword(authPwId(m),np));const sl=salt();m.salt=sl;m.pinHash=pinHash(np,sl);m.fail=0;m.lockUntil=0;await FS().doc('accounts/'+m.id).set({id:m.id,name:m.name,rank:m.rank,status:m.status,approvedAt:m.approvedAt||Date.now()});write(all);root.querySelector('#kzOldPin').value='';root.querySelector('#kzNewPin').value='';root.querySelector('#kzNewPin2').value='';toast('관리계정 PIN을 변경했어요')}catch(e){console.error(e);toast('PIN을 변경하지 못했어요. 다시 로그인한 뒤 시도해 주세요')}};
   }
  }
  window.kzOpenAccountPanel=panel;
@@ -3735,6 +3811,7 @@ select.kz-native{position:absolute!important;width:1px!important;height:1px!impo
 window.kzImgFb=async function(img){try{const ids=(img.dataset.ids||'').split('|').filter(Boolean);let t=+(img.dataset.t||0);while(t<ids.length){const id=ids[t++];img.dataset.t=t;const u=window.BLOBDATA?await window.BLOBDATA(id):'';if(u){img.src=u;return}}}catch(e){}const p=img.parentNode;if(p&&p.classList)p.classList.add('noimg')};
 window.KZ_NOIMG='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect width="300" height="400" fill="#f7f1e7"/><g fill="none" stroke="#c9a46a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".75"><path d="M128 230v-78l52-12v74"/><circle cx="116" cy="232" r="14"/><circle cx="168" cy="216" r="14"/></g><text x="150" y="292" text-anchor="middle" font-family="sans-serif" font-size="17" fill="#9a8c78">이미지를 불러오지 못했어요</text><text x="150" y="318" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#b3a792">원본을 다시 올려 주세요</text></svg>');
 document.addEventListener('error',async function(e){const el=e.target;if(!el||el.tagName!=='IMG'||el.dataset.ids)return;const src=el.getAttribute('src')||'';if(src===window.KZ_NOIMG)return;
+ if(window.KZ_RESOLVE&&src.indexOf('/kz-asset-')>=0){const u=await window.KZ_RESOLVE(src);if(u&&u!==src){el.src=u;return}}
  if(!el.dataset.kzfb&&src.startsWith('blob:')&&window.BLOBID&&window.BLOBDATA){el.dataset.kzfb='1';const id=window.BLOBID(src);if(id){const u=await window.BLOBDATA(id);if(u){el.src=u;return}}}
  if(src.startsWith('blob:')||src.startsWith('data:')||src.indexOf('/_blob/')>=0||src.indexOf('firebasestorage')>=0){el.dataset.kzfb='2';el.classList.add('kz-broken');el.src=window.KZ_NOIMG}},true);
 </script>
@@ -3812,3 +3889,367 @@ button:disabled,.btn:disabled,input:disabled,select:disabled,textarea:disabled{o
 <style id="v87-permissions">
 .kz-account-btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:750;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}.kz-account-btn:hover{border-color:var(--gold);background:#fffaf2}.kz-account-dlg{width:min(560px,calc(100vw - 28px));max-height:min(720px,calc(100vh - 30px));overflow:auto}.kz-account-note{display:grid;gap:5px;margin:0 18px 12px;padding:12px 14px;border-radius:12px;background:#fffaf2;border:1px solid #eadbc6;color:#655b50;font-size:12px}.kz-account-note b{color:#35291d;margin-bottom:2px}.kz-user-list{display:grid;gap:7px;padding:0 18px 18px}.kz-user-row{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:11px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx)}.kz-user-row:hover,.kz-user-row.on{border-color:var(--gold);background:#fffaf2}.kz-user-row span{display:grid;gap:2px;min-width:0}.kz-user-row b{font-size:14px}.kz-user-row small{color:var(--mu)}.kz-user-row em{margin-left:auto;font-style:normal;font-size:11px;font-weight:750;color:#8a622d;background:var(--golds);padding:4px 7px;border-radius:999px}@media(max-width:700px){.kz-account-btn{max-width:115px;padding:7px 9px}.kz-account-note{margin-left:12px;margin-right:12px}.kz-user-list{padding-left:12px;padding-right:12px}}
 </style>
+
+<script id="kz-archive-sheet">
+/* ===== 콘티 보관함 보기: 인도자 시트로 이동하지 않고, 그 주의 콘티와 송폼을 한 창에서 보여줌 =====
+   (홈의 '상세 보기' 창을 그대로 사용 · 보기 전용) */
+function kzArchView(id){
+ const a=(archive||[]).find(x=>x.id===id);if(!a)return toast('콘티를 찾을 수 없어요');
+ const sc=(a.scores||[]).filter(x=>x.aid||x.oaid);
+ if(!(a.ment&&String(a.ment).trim())&&!sc.length)return toast('이 주에는 저장된 콘티와 송폼이 없어요');
+ const sd=data,st=date;
+ try{data={...a,up:a.up||Date.now()};date=id;kzWeekView()}finally{data=sd;date=st}
+ const all=document.querySelectorAll('.kz-modal.kz-wv'),o=all[all.length-1];if(!o)return;
+ o.classList.add('kz-arch-v');
+ const h=o.querySelector('.kz-dlg-h small');if(h)h.textContent=(a.by?a.by+' 작성 · ':'')+'콘티 보관함';
+ const st2=o.querySelector('.kz-wv-s .kz-wv-st');
+ if(st2&&sc.length){const b=document.createElement('button');b.type='button';b.className='sm';b.textContent='PDF로 저장';b.style.marginLeft='8px';b.onclick=()=>kzArchPdf(a,b);st2.appendChild(b)}
+}
+async function kzArchPdf(a,btn){
+ const l=(a.scores||[]).filter(x=>x.aid||x.oaid);if(!l.length)return toast('저장할 송폼이 없어요');
+ const t0=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='만드는 중…'}
+ try{const d=await claude.use('downloads');if(!d)return toast('이 환경에서는 파일 저장을 지원하지 않아요');
+  toast('PDF를 만드는 중…');const cvs=[];
+  for(const x of l){const tmp=URL.createObjectURL(await scoreBlob(x));try{const im=await loadImg(tmp),cv=document.createElement('canvas');cv.width=2480;cv.height=Math.round(2480*PH/PW);const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);const k=Math.min(cv.width/im.naturalWidth,cv.height/im.naturalHeight),w=im.naturalWidth*k,h=im.naturalHeight*k;c.drawImage(im,(cv.width-w)/2,(cv.height-h)/2,w,h);cvs.push(cv)}finally{URL.revokeObjectURL(tmp)}}
+  await d.save({filename:`${shortD(a.id)}_꿈자리_송폼.pdf`,data:await makePdf(cvs)});toast(`PDF로 저장했어요 (${l.length}장)`)}
+ catch(e){console.error(e);toast('PDF를 만들지 못했어요')}
+ finally{if(btn){btn.disabled=false;btn.textContent=t0}}
+}
+/* ===== 인도자 시트 비우기: 업로드해도 시트는 그대로 두고, 필요할 때 직접 비움 ===== */
+document.addEventListener('click',async function(e){
+ const b=e.target.closest&&e.target.closest('[data-kz-clear]');if(!b)return;e.preventDefault();
+ try{
+  if(!canEdit)return toast('시트를 비울 권한이 없어요');
+  const hasMent=wm!=null&&String(wm).trim()&&wm!==defMent(date);
+  if(!pages.length&&!hasMent)return toast('시트가 이미 비어 있어요');
+  const ok=await cfBox('시트를 비울까요?',[dirty()?'아직 홈에 올리지 않은 변경이 있어요. 비우면 그 내용은 사라져요.':'홈에 올린 콘티와 콘티 보관함은 그대로 남아요.','이 시트의 송폼 악보와 콘티 글만 지워져요.'],'비우기','취소');
+  if(!ok)return;
+  clearWorkspace();
+  try{if(view==='edit')editView();else if(view==='ment')mentView()}catch(x){console.error(x)}
+  try{stat()}catch(x){}
+  toast('시트를 비웠어요');
+ }catch(x){console.error(x)}
+});
+</script>
+
+<!-- =====================================================================
+     모바일 전용 화면 (휴대폰 화면 폭 760px 이하에서만 동작)
+     · PC 화면 코드는 그대로 두고, 로그인 후 휴대폰에서만 이 화면을 위에 띄워요.
+     · 데이터는 기존 앱이 받아 온 값(콘티·공지·일정·순서)을 그대로 읽기만 해요. (보기 전용)
+     · "PC 화면으로 보기"를 누르면 기존 화면을 그대로 쓸 수 있어요.
+     ===================================================================== -->
+<style id="kz-mobile-style">
+#kzM{--m-ink:#17202f;--m-mu:#646e84;--m-line:#e3e6ed;--m-bg:#f2f3f7;--m-card:#fff;--m-navy:#1d2b57;--m-navy2:#22336b;--m-gold:#c99a43;--m-goldl:#f1dfb8;
+ position:fixed;inset:0;z-index:80;background:var(--m-bg);color:var(--m-ink);display:flex;flex-direction:column;font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+#kzM[hidden]{display:none}
+html.kz-m-on,html.kz-m-on body{overflow:hidden!important;overscroll-behavior:none}
+html.kz-m-on #toast{z-index:100;bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+#kzM *{box-sizing:border-box}
+#kzM button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+#kzM a{color:inherit;text-decoration:none}
+#kzM svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#kzM .ico{width:22px!important;height:22px!important;flex:0 0 22px!important;margin:0!important;padding:0!important;color:inherit!important;display:grid!important;place-items:center!important;background:none!important}
+#kzM .ico svg,#kzM .ico img{width:20px!important;height:20px!important}
+#kzM .m-all .ico{color:var(--m-gold)!important}
+#kzM :focus-visible{outline:2px solid var(--m-gold);outline-offset:2px;border-radius:8px}
+
+.m-top{flex:none;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 10px;background:var(--m-bg)}
+.m-brand{font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--m-navy)}
+.m-acc{margin-left:auto;display:flex;align-items:center;gap:8px;max-width:58%;padding:6px 12px 6px 6px!important;border-radius:999px;background:var(--m-card)!important;border:1px solid var(--m-line)!important}
+.m-acc i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--m-navy);color:var(--m-goldl);font-style:normal;font-weight:800;font-size:12.5px;flex:none}
+.m-acc span{font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.m-main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.m-h{font-size:21px;font-weight:800;letter-spacing:-.03em;margin:8px 2px 14px}
+.m-sec{margin-top:22px}
+.m-sec>h3{font-size:14px;font-weight:750;color:var(--m-mu);margin:0 4px 10px}
+
+/* 이번 주 콘티 */
+.m-hero{position:relative;overflow:hidden;border-radius:24px;background:var(--m-navy);color:#fff;padding:20px 20px 18px}
+.m-hero::after{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;border:34px solid rgba(201,154,67,.13)}
+.m-hero-k{position:relative;font-size:13px;font-weight:650;color:rgba(255,255,255,.72)}
+.m-hero-d{position:relative;display:flex;align-items:baseline;font-size:66px;font-weight:800;letter-spacing:-.05em;line-height:1;margin:10px 0 6px;color:var(--m-goldl);font-variant-numeric:tabular-nums}
+.m-hero-d i{font-style:normal;color:var(--m-gold);margin:0 2px}
+.m-hero-b{position:relative;display:flex;align-items:flex-end;gap:12px;margin-top:12px}
+.m-hero-w{font-size:14px;color:rgba(255,255,255,.82)}
+.m-hero-l{margin-left:auto;text-align:right}
+.m-hero-l small{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}
+.m-hero-l b{font-size:17px;font-weight:750}
+.m-pill{position:relative;display:inline-block;margin-top:10px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff}
+
+.m-songs{list-style:none;margin:0;padding:6px 0;background:var(--m-card);border-radius:20px;border:1px solid var(--m-line)}
+.m-song{display:flex;gap:14px;align-items:center;padding:12px 14px}
+.m-song+.m-song{border-top:1px solid var(--m-line)}
+.m-th{position:relative;flex:none;width:92px;height:56px;border-radius:12px;overflow:hidden;background:#e9ecf3;display:grid;place-items:center;color:var(--m-mu)}
+.m-th img{width:100%;height:100%;object-fit:cover;display:block}
+.m-th.sc img{object-fit:cover;object-position:top}
+.m-th.noimg img{display:none}
+.m-th .m-no{position:absolute;left:5px;bottom:5px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--m-navy);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.m-th.e .m-no{position:static;width:34px;height:34px;font-size:15px}
+.m-th .m-play{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center}
+#kzM .m-th .m-play svg{width:11px;height:11px;fill:currentColor;stroke:none}
+.m-sb{min-width:0;flex:1}
+.m-sb>b{display:block;font-size:15.5px;font-weight:700;letter-spacing:-.01em;line-height:1.35;word-break:keep-all}
+.m-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.m-btn{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px!important;border-radius:999px;font-size:13px!important;font-weight:700;border:1px solid var(--m-line)!important;background:#fff!important;color:var(--m-ink)!important}
+#kzM .m-btn svg{width:12px;height:12px;fill:currentColor;stroke:none}
+.m-btn.yt{background:var(--m-navy2)!important;border-color:var(--m-navy2)!important;color:#fff!important}
+.m-btn.n{padding:0 10px!important}
+.m-none{font-size:12.5px;color:var(--m-mu)}
+.m-all{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;height:50px;border-radius:16px;background:var(--m-card)!important;border:1px solid var(--m-line)!important;font-weight:750!important;color:var(--m-navy)!important}
+
+.m-ppl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.m-pr{background:var(--m-card);border:1px solid var(--m-line);border-radius:14px;padding:10px 12px;min-width:0}
+.m-pr.w{grid-column:1/-1}
+.m-pr small{display:block;font-size:12px;color:var(--m-mu);font-weight:650}
+.m-pr b{display:block;font-size:14.5px;font-weight:700;word-break:keep-all}
+.m-card{background:var(--m-card);border:1px solid var(--m-line);border-radius:18px;padding:14px 16px}
+.m-memo p{margin:0;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.m-memo p+p{margin-top:6px}
+.m-raw summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--m-navy);list-style:none}
+.m-raw summary::-webkit-details-marker{display:none}
+.m-raw summary::after{content:" 열기";color:var(--m-mu);font-weight:600}
+.m-raw[open] summary::after{content:" 닫기"}
+.m-raw pre{margin:12px 0 0;font:inherit;font-size:14px;white-space:pre-wrap;word-break:break-word}
+#kzM .m-raw a,#kzM .m-nt-b a,#kzM .m-memo a{color:var(--m-navy2);text-decoration:underline;word-break:break-all}
+
+.m-empty{text-align:center;padding:40px 20px;background:var(--m-card);border:1px dashed #cfd4df;border-radius:20px;color:var(--m-mu)}
+.m-empty b{display:block;color:var(--m-ink);font-size:15.5px;margin-bottom:4px}
+.m-empty span{font-size:13.5px}
+
+/* 공지 */
+.m-nt{background:var(--m-card);border:1px solid var(--m-line);border-radius:18px;padding:16px}
+.m-nt+.m-nt{margin-top:10px}
+.m-nt.pin{border-color:rgba(201,154,67,.55);box-shadow:inset 3px 0 0 var(--m-gold)}
+.m-nt-h{display:flex;gap:8px;align-items:flex-start}
+.m-nt-h b{font-size:16px;font-weight:750;line-height:1.4;word-break:keep-all}
+.m-tag{flex:none;margin-top:2px;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(201,154,67,.16);color:#8a622d}
+.m-nt-d{font-size:12.5px;color:var(--m-mu);margin-top:4px}
+.m-nt-b{margin-top:10px;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.m-nt-b.clip{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.m-more{margin-top:8px;font-size:13.5px!important;font-weight:700!important;color:var(--m-navy2)!important}
+
+/* 일정 */
+.m-mon{font-size:14px;font-weight:800;color:var(--m-mu);margin:20px 4px 8px}
+.m-mon:first-of-type{margin-top:6px}
+.m-evs{list-style:none;margin:0;padding:0;background:var(--m-card);border:1px solid var(--m-line);border-radius:18px}
+.m-ev{display:flex;align-items:center;gap:14px;padding:13px 14px}
+.m-ev+.m-ev{border-top:1px solid var(--m-line)}
+.m-ev-d{flex:none;width:46px;text-align:center}
+.m-ev-d b{display:block;font-size:22px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.m-ev-d small{font-size:12px;color:var(--m-mu);font-weight:650}
+.m-ev-d.sun b,.m-ev-d.sun small{color:#c23b34}
+.m-ev-t{flex:1;min-width:0}
+.m-ev-t b{display:block;font-size:15px;font-weight:700;word-break:keep-all}
+.m-ev-t span{display:block;font-size:13px;color:var(--m-mu)}
+.m-dd{flex:none;font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px;background:#eef0f5;color:var(--m-mu);font-variant-numeric:tabular-nums}
+.m-dd.soon{background:var(--m-navy2);color:#fff}
+
+/* 내 순서 */
+.m-me{font-size:14px;color:var(--m-mu);margin:-6px 2px 14px}
+.m-wks{list-style:none;margin:0;padding:0;background:var(--m-card);border:1px solid var(--m-line);border-radius:18px}
+.m-wk{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.m-wk+.m-wk{border-top:1px solid var(--m-line)}
+.m-wk-d{flex:none;width:118px}
+.m-wk-d b{display:block;font-size:15px;font-weight:700}
+.m-wk-d small{font-size:12px;font-weight:750;color:var(--m-gold)}
+.m-wk-r{flex:1;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.m-chip{font-size:13px;font-weight:750;padding:4px 10px;border-radius:999px;background:var(--m-navy2);color:#fff}
+.m-chip.off{background:#f6e3e1;color:#a8322c;text-decoration:line-through}
+.m-rest{font-size:13px;color:#9aa2b3}
+
+.m-pc{display:block;margin:30px auto 0;font-size:13px!important;color:var(--m-mu)!important;text-decoration:underline!important;padding:8px!important}
+
+/* 하단 탭 */
+.m-tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--m-line)}
+.m-tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 5px!important;border-radius:12px;color:#8a92a5!important;font-size:11.5px!important;font-weight:700!important}
+.m-tabs button.on{color:var(--m-navy)!important}
+.m-tabs button.on svg{stroke-width:2.2}
+
+/* 악보 모아 보기 */
+#kzMSc{position:fixed;inset:0;z-index:85;background:#f7f8fb;display:flex;flex-direction:column;color:#17202f}
+#kzMSc .s-top{flex:none;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px 18px;background:#fff;border-bottom:1px solid #e3e6ed}
+#kzMSc .s-top b{font-size:16px;font-weight:800}
+#kzMSc .s-x{margin-left:auto;height:36px;padding:0 14px;border-radius:999px;border:1px solid #e3e6ed;background:#fff;font:inherit;font-size:14px;font-weight:700;color:#17202f;cursor:pointer}
+#kzMSc .s-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px calc(28px + env(safe-area-inset-bottom,0px))}
+#kzMSc figure{margin:0 0 16px}
+#kzMSc figcaption{font-size:14px;font-weight:750;margin:0 4px 8px}
+#kzMSc .s-img{display:block;width:100%;padding:0;border:1px solid #e3e6ed;border-radius:12px;overflow:hidden;background:#fff;cursor:zoom-in}
+#kzMSc .s-img img{display:block;width:100%;height:auto;min-height:120px}
+#kzMSc .s-img.noimg{padding:40px 0;color:#646e84;font-size:13.5px}
+#kzMSc .s-img.noimg img{display:none}
+#kzMSc .s-img.noimg::after{content:"악보를 불러오지 못했어요"}
+#kzMSc .s-tip{font-size:12.5px;color:#646e84;text-align:center;margin:0 0 12px}
+
+#kzMBack{position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;height:40px;padding:0 16px;border-radius:999px;border:0;background:#1d2b57;color:#fff;font:inherit;font-size:13.5px;font-weight:750;box-shadow:0 6px 18px rgba(29,43,87,.3);cursor:pointer}
+#kzMBack[hidden]{display:none}
+@media (prefers-reduced-motion:no-preference){.m-main.fade{animation:kzMIn .18s ease-out}}
+@keyframes kzMIn{from{opacity:.4}to{opacity:1}}
+</style>
+<script id="kz-mobile-script">
+(function(){
+'use strict';
+var MQ=window.matchMedia('(max-width: 760px)');
+var K_PC='kzForcePC',K_TAB='kzMTab',TABS=['conti','notice','event','me'];
+function LSg(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function LSs(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+function G(fn,d){try{var v=fn();return v===undefined?d:v}catch(e){return d}}
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function I(n){return G(function(){return V13I(n)},'')}
+function LK(t){return G(function(){return kzLinkify(t)},E(t))}
+var PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+var tab=TABS.indexOf(LSg(K_TAB))>=0?LSg(K_TAB):'conti';
+var openN={},root=null,back=null,lastSig='',wasOn=false;
+
+function loggedIn(){return !document.getElementById('kzLoginLock')&&!!document.querySelector('#app .shell')}
+function active(){return MQ.matches&&LSg(K_PC)!=='1'&&loggedIn()}
+function p2(v){return String(v).padStart(2,'0')}
+
+/* ---------- 이번 주 콘티 ---------- */
+function contiHTML(){
+ var d=G(function(){return date},'')||G(function(){return nextSun()},'');
+ var dt=new Date(d+'T12:00:00'),dat=G(function(){return data},{})||{};
+ var pub=!!dat.up,ment=pub&&dat.ment&&String(dat.ment).trim()?String(dat.ment):'';
+ var sc=pub?(dat.scores||[]):[];
+ var cs=ment?G(function(){return kzSongs(ment.split(/\r?\n/).map(function(v){return v.trim()}).filter(Boolean))},[]):[];
+ var n=Math.max(cs.length,sc.length),ld=G(function(){return ldrOf(d)},'');
+ var lab=G(function(){return lbl(d)},'');
+ var h='<section class="m-hero"><div class="m-hero-k">'+E(lab?lab+' 주일예배':'주일예배')+'</div>'
+  +'<div class="m-hero-d"><span>'+(dt.getMonth()+1)+'</span><i>.</i><span>'+p2(dt.getDate())+'</span></div>'
+  +'<div class="m-hero-b"><div class="m-hero-w">'+dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일 주일</div>'
+  +(ld?'<div class="m-hero-l"><small>인도</small><b>'+E(ld)+'</b></div>':'')+'</div>'
+  +(!pub?'<span class="m-pill">콘티 준비 중</span>':'')+'</section>';
+ var rows='',hasSc=false;
+ for(var i=0;i<n;i++){
+  var c=cs[i],x=sc[i],nm=(c&&c.t.replace(/^\d+\s*[.)]\s*/,''))||(x&&x.name)||((i+1)+'번 곡'),L=(c&&c.links)||[];
+  var yid='';for(var k=0;k<L.length&&!yid;k++)yid=G(function(){return kzYtId(L[k])},'');
+  var aid=x&&(x.aid||x.oaid);if(aid)hasSc=true;
+  var no='<span class="m-no">'+(i+1)+'</span>',th;
+  if(yid)th='<a class="m-th" href="'+E(L[0])+'" target="_blank" rel="noopener noreferrer" aria-label="'+E(nm)+' 유튜브 열기"><img src="https://i.ytimg.com/vi/'+yid+'/mqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.r){this.dataset.r=1;this.src=\'https://img.youtube.com/vi/'+yid+'/hqdefault.jpg\'}else this.parentNode.classList.add(\'noimg\')"><span class="m-play">'+PLAY+'</span>'+no+'</a>';
+  else if(aid)th='<button type="button" class="m-th sc" data-ms="'+i+'" aria-label="'+E(nm)+' 악보 보기"><img src="'+E(BLOB(aid))+'" alt="" loading="lazy" data-ids="'+E(aid)+'|'+(x.oaid&&x.oaid!==aid?E(x.oaid):'')+'" onerror="kzImgFb(this)">'+no+'</button>';
+  else th='<span class="m-th e">'+no+'</span>';
+  var acts='';
+  if(L.length)acts+='<a class="m-btn yt" href="'+E(L[0])+'" target="_blank" rel="noopener noreferrer">'+PLAY+'듣기</a>';
+  for(var j=1;j<L.length;j++)acts+='<a class="m-btn n" href="'+E(L[j])+'" target="_blank" rel="noopener noreferrer" aria-label="레퍼런스 '+(j+1)+'">'+PLAY+(j+1)+'</a>';
+  if(aid)acts+='<button type="button" class="m-btn" data-ms="'+i+'">악보</button>';
+  if(!acts)acts='<span class="m-none">아직 링크와 악보가 없어요</span>';
+  rows+='<li class="m-song">'+th+'<div class="m-sb"><b>'+E(nm)+'</b><div class="m-acts">'+acts+'</div></div></li>';
+ }
+ h+='<div class="m-sec"><h3>부를 곡</h3>'+(rows?'<ol class="m-songs">'+rows+'</ol>':'<div class="m-empty"><b>아직 곡이 올라오지 않았어요</b><span>인도자가 콘티를 올리면 곡과 악보, 유튜브 링크가 여기에 보여요</span></div>')
+  +(hasSc?'<button type="button" class="m-all" data-ms="0">'+I('music')+'악보 모아 보기</button>':'')+'</div>';
+ var ppl=G(function(){return kzPeople(pub,ment)},[])||[];if(ld)ppl=ppl.filter(function(p){return p[0]!=='인도'});
+ if(ppl.length)h+='<div class="m-sec"><h3>섬기는 사람들</h3><div class="m-ppl">'+ppl.map(function(p){return '<div class="m-pr'+(String(p[1]).length>12?' w':'')+'"><small>'+E(p[0])+'</small><b>'+E(p[1])+'</b></div>'}).join('')+'</div></div>';
+ if(ment){
+  var memo=(G(function(){return parseMent(ment).memo},[])||[]).filter(function(v){return !/https?:\/\/|www\./i.test(v)&&!/^[^:：\d]{1,6}\s*[:：]/.test(v)});
+  if(memo.length)h+='<div class="m-sec"><h3>전달 사항</h3><div class="m-card m-memo">'+memo.map(function(v){return '<p>'+LK(v)+'</p>'}).join('')+'</div></div>';
+  h+='<div class="m-sec"><details class="m-card m-raw"><summary>콘티 원문</summary><pre>'+LK(ment)+'</pre></details></div>';
+ }
+ return h;
+}
+
+/* ---------- 공지 ---------- */
+function noticeHTML(){
+ var ns=G(function(){return ntSort().filter(ntActive)},[])||[];
+ var h='<h2 class="m-h">공지</h2>';
+ if(!ns.length)return h+'<div class="m-empty"><b>올라온 공지가 없어요</b><span>새 공지가 올라오면 여기에 보여요</span></div>';
+ return h+ns.map(function(n){var id=String(n._id||''),body=String(n.body||''),long=body.length>140||body.split('\n').length>5,op=!!openN[id];
+  var dl=G(function(){return fmtTs(n.at)},'');
+  return '<article class="m-nt'+(n.pin?' pin':'')+'"><div class="m-nt-h">'+(n.pin?'<span class="m-tag">고정</span>':'')+'<b>'+E(n.title||'공지')+'</b></div>'
+   +'<div class="m-nt-d">'+E(dl)+(n.until?' 올림, '+E(n.until)+'까지 게시':'')+'</div>'
+   +(body?'<div class="m-nt-b'+(long&&!op?' clip':'')+'">'+LK(body)+'</div>':'')
+   +(long?'<button type="button" class="m-more" data-nt="'+E(id)+'">'+(op?'접기':'더 보기')+'</button>':'')+'</article>'}).join('');
+}
+
+/* ---------- 일정 ---------- */
+function eventHTML(){
+ var td=G(function(){return todayStr()},''),es=(G(function(){return evSort()},[])||[]).filter(function(e){return e&&e.date&&e.date>=td});
+ var h='<h2 class="m-h">일정</h2>';
+ if(!es.length)return h+'<div class="m-empty"><b>다가오는 일정이 없어요</b><span>새 일정이 등록되면 날짜순으로 보여요</span></div>';
+ var mon='',out='';
+ es.forEach(function(e){var x=new Date(e.date+'T12:00:00'),mk=x.getFullYear()+'-'+x.getMonth();
+  if(mk!==mon){if(mon)out+='</ul>';mon=mk;out+='<div class="m-mon">'+(x.getFullYear()!==new Date().getFullYear()?x.getFullYear()+'년 ':'')+(x.getMonth()+1)+'월</div><ul class="m-evs">'}
+  var dd=G(function(){return daysTo(e.date)},99),wk=G(function(){return wd(e.date)},'');
+  out+='<li class="m-ev"><div class="m-ev-d'+(x.getDay()===0?' sun':'')+'"><b>'+x.getDate()+'</b><small>'+E(wk)+'</small></div><div class="m-ev-t"><b>'+E(e.title||'일정')+'</b>'
+   +(e.time?'<span>'+E(e.time)+'</span>':'')+(e.place?'<span>'+E(e.place)+'</span>':'')+'</div><span class="m-dd'+(dd<=7?' soon':'')+'">'+E(G(function(){return dday(e.date)},''))+'</span></li>'});
+ return h+out+'</ul>';
+}
+
+/* ---------- 내 순서 ---------- */
+function meHTML(){
+ var nm=G(function(){return me},'')||'',h='<h2 class="m-h">내 순서</h2>';
+ if(!nm||nm==='관리계정')return h+'<div class="m-empty"><b>'+(nm?'관리계정은 배정된 순서가 없어요':'이름을 찾지 못했어요')+'</b><span>팀원 계정으로 로그인하면 내 인도, 싱어, 세션 순서가 보여요</span></div>';
+ var w=G(function(){return myWeeks(nm)},[])||[];
+ h+='<p class="m-me">'+E(nm)+'님의 앞으로 6주 순서예요</p>';
+ if(!w.length)return h+'<div class="m-empty"><b>배정된 순서가 아직 없어요</b><span>순서가 정해지면 여기에 보여요</span></div>';
+ return h+'<ul class="m-wks">'+w.map(function(x){var lab=G(function(){return lbl(x.d)},'');
+  return '<li class="m-wk"><div class="m-wk-d"><b>'+E(G(function(){return fmtD(x.d)},x.d))+'</b>'+(lab?'<small>'+E(lab)+'</small>':'')+'</div><div class="m-wk-r">'
+   +(x.r&&x.r.length?x.r.map(function(r){return '<span class="m-chip '+(r[1]==='off'?'off':'')+'">'+E(r[0])+'</span>'}).join(''):'<span class="m-rest">쉬는 주</span>')+'</div></li>'}).join('')+'</ul>';
+}
+
+/* ---------- 악보 모아 보기 ---------- */
+function openScores(start){
+ var dat=G(function(){return data},{})||{},sc=(dat.up?(dat.scores||[]):[]).map(function(x,i){return{x:x,i:i}}).filter(function(o){return o.x&&(o.x.aid||o.x.oaid)});
+ if(!sc.length)return;
+ var old=document.getElementById('kzMSc');if(old)old.remove();
+ var o=document.createElement('div');o.id='kzMSc';o.setAttribute('role','dialog');o.setAttribute('aria-label','악보 모아 보기');
+ o.innerHTML='<div class="s-top"><b>악보 '+sc.length+'장</b><button type="button" class="s-x">닫기</button></div><div class="s-list"><p class="s-tip">악보를 누르면 크게 확대해서 볼 수 있어요</p>'
+  +sc.map(function(s,k){var x=s.x,aid=x.aid||x.oaid,nm=x.name||((s.i+1)+'번 곡');
+   return '<figure data-i="'+s.i+'"><figcaption>'+(s.i+1)+'. '+E(nm)+'</figcaption><button type="button" class="s-img" data-k="'+k+'"><img src="'+E(BLOB(aid))+'" alt="'+E(nm)+' 악보" data-ids="'+E(aid)+'|'+(x.oaid&&x.oaid!==aid?E(x.oaid):'')+'" onerror="kzImgFb(this)"></button></figure>'}).join('')+'</div>';
+ document.body.appendChild(o);
+ var close=function(){o.remove();document.removeEventListener('keydown',kd)},kd=function(e){if(e.key==='Escape'&&!document.getElementById('lb'))close()};
+ document.addEventListener('keydown',kd);
+ o.querySelector('.s-x').onclick=close;
+ Array.prototype.forEach.call(o.querySelectorAll('.s-img'),function(b){b.onclick=function(){var im=b.querySelector('img'),s=sc[+b.dataset.k];if(!im||b.classList.contains('noimg'))return;G(function(){bigView(im.currentSrc||im.src,(s.x.name||'악보')+' · 송폼')})}});
+ var t=o.querySelector('figure[data-i="'+start+'"]');if(t&&start>0)setTimeout(function(){t.scrollIntoView({block:'start'})},30);
+}
+
+/* ---------- 화면 그리기 ---------- */
+function sig(){return G(function(){var dt=data||{};return JSON.stringify([tab,date,dt.up,dt.ment,(dt.scores||[]).map(function(x){return[x.aid,x.oaid,x.name]}),
+ (notices||[]).map(function(n){return[n._id,n.at,n.title,n.body,n.pin,n.until]}),(events||[]).map(function(e){return[e._id,e.date,e.title,e.time,e.place]}),
+ me,JSON.stringify(ovr||[]).length,JSON.stringify(sessAbs||[]).length,JSON.stringify(members||[]).length,G(function(){return todayStr()},'')])},String(Date.now()))}
+function build(){
+ if(root)return;
+ root=document.createElement('div');root.id='kzM';root.hidden=true;
+ var tb=[['conti','music','콘티'],['notice','bell','공지'],['event','calendar','일정'],['me','users','내 순서']];
+ root.innerHTML='<header class="m-top"><span class="m-brand">꿈자리 찬양팀</span><button type="button" class="m-acc" aria-label="내 계정"><i></i><span></span></button></header>'
+  +'<main class="m-main" id="kzMMain"></main><nav class="m-tabs" aria-label="모바일 메뉴">'+tb.map(function(t){return '<button type="button" data-mt="'+t[0]+'">'+I(t[1])+'<span>'+t[2]+'</span></button>'}).join('')+'</nav>';
+ document.body.appendChild(root);
+ root.querySelector('.m-acc').onclick=function(){G(function(){window.kzOpenAccountPanel()})};
+ Array.prototype.forEach.call(root.querySelectorAll('[data-mt]'),function(b){b.onclick=function(){if(tab===b.dataset.mt){var m=document.getElementById('kzMMain');if(m)m.scrollTo({top:0,behavior:'smooth'});return}tab=b.dataset.mt;LSs(K_TAB,tab);render(true,true)}});
+ root.querySelector('#kzMMain').addEventListener('click',function(e){
+  var t=e.target.closest('[data-ms]');if(t){e.preventDefault();openScores(+t.dataset.ms);return}
+  var m=e.target.closest('[data-nt]');if(m){var id=m.dataset.nt,b=m.parentNode.querySelector('.m-nt-b');openN[id]=!openN[id];if(b)b.classList.toggle('clip',!openN[id]);m.textContent=openN[id]?'접기':'더 보기';return}
+  if(e.target.closest('[data-pc]')){LSs(K_PC,'1');sync()}
+ });
+}
+function render(force,newTab){
+ if(!root)return;var s=sig();if(!force&&s===lastSig)return;lastSig=s;
+ var nm=G(function(){return me},'')||'내 계정';
+ root.querySelector('.m-acc i').textContent=nm.charAt(0);root.querySelector('.m-acc span').textContent=nm;
+ Array.prototype.forEach.call(root.querySelectorAll('[data-mt]'),function(b){var on=b.dataset.mt===tab;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ var m=root.querySelector('#kzMMain'),y=m.scrollTop,op=Array.prototype.map.call(m.querySelectorAll('details[open]'),function(d){return d.className});
+ var h=tab==='notice'?noticeHTML():tab==='event'?eventHTML():tab==='me'?meHTML():contiHTML();
+ m.innerHTML=h+'<button type="button" class="m-pc" data-pc>PC 화면으로 보기</button>';
+ op.forEach(function(c){var d=m.querySelector('details.'+c.split(' ').join('.'));if(d)d.open=true});
+ if(newTab){m.scrollTop=0;m.classList.remove('fade');void m.offsetWidth;m.classList.add('fade')}else m.scrollTop=y;
+}
+function sync(){
+ var on=active();
+ document.documentElement.classList.toggle('kz-m-on',on);
+ if(on){build();if(!wasOn){wasOn=true;G(function(){var n=nextSun();if(date!==n)goDate(n)})}root.hidden=false;render(true)}
+ else{wasOn=false;if(root)root.hidden=true;var sc=document.getElementById('kzMSc');if(sc)sc.remove()}
+ var showBack=MQ.matches&&LSg(K_PC)==='1'&&loggedIn();
+ if(showBack&&!back){back=document.createElement('button');back.id='kzMBack';back.type='button';back.textContent='모바일 화면으로';back.onclick=function(){LSs(K_PC,null);sync()};document.body.appendChild(back)}
+ if(back)back.hidden=!showBack;
+}
+var st=null;function soon(){clearTimeout(st);st=setTimeout(sync,60)}
+if(MQ.addEventListener)MQ.addEventListener('change',soon);else if(MQ.addListener)MQ.addListener(soon);
+function start(){
+ try{new MutationObserver(soon).observe(document.body,{childList:true})}catch(e){}
+ try{var app=document.getElementById('app');if(app)new MutationObserver(function(){if(active()&&root&&!root.hidden)render(false)}).observe(app,{childList:true,subtree:true})}catch(e){}
+ setInterval(function(){if(active()){if(root&&root.hidden)sync();else render(false)}},1500);
+ sync();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
