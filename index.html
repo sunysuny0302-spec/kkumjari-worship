@@ -1342,7 +1342,15 @@ html{color-scheme:light!important}
    · FIREBASE_CONFIG 를 채우면 "팀 공유 모드": Firestore(데이터) + Storage(악보 이미지).
    앱 본문이 쓰는 API: claude.use('db'|'assets'|'downloads'|'user'), BLOB(id)
    ===================================================================== */
-window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || null;
+window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
+  apiKey: "AIzaSyA-lb09RLMgiZV8LYfcrvxZB-umwPCR-I",
+  authDomain: "kkumjari-worship.firebaseapp.com",
+  projectId: "kkumjari-worship",
+  storageBucket: "kkumjari-worship.firebasestorage.app",
+  messagingSenderId: "888617439047",
+  appId: "1:888617439047:web:ab26d984fd4b9f4b3e4662",
+  measurementId: "G-J1YLKL5JH"
+};
 /* 예시)
 window.FIREBASE_CONFIG = {
   apiKey: "…", authDomain: "…firebaseapp.com", projectId: "…",
