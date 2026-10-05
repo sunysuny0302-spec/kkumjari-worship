@@ -1340,7 +1340,7 @@ html{color-scheme:light!important}
    런타임 어댑터 — 이 블록만 있으면 Claude 밖(일반 웹)에서도 그대로 돌아가요.
    · Claude 아티팩트 안에서는 window.claude 가 이미 있어서 아무것도 안 해요.
    · FIREBASE_CONFIG 가 비어 있으면 "체험 모드": 이 기기 브라우저(IndexedDB)에만 저장.
-   · FIREBASE_CONFIG 를 채우면 "팀 공유 모드": Firestore(데이터) + Storage(악보 이미지).
+   · FIREBASE_CONFIG 를 채우면 "팀 공유 모드": Firestore(데이터 + 악보 이미지, Storage 미사용).
    앱 본문이 쓰는 API: claude.use('db'|'assets'|'downloads'|'user'), BLOB(id)
    ===================================================================== */
 window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
@@ -1379,13 +1379,44 @@ if(window.FIREBASE_CONFIG&&window.firebase){
     const off=auth.onAuthStateChanged(u=>{if(u){off();resolve(u)}});
   });
   window.KZ_FIREBASE_APP_READY=new Promise(resolve=>{window.__kzResolveFirebaseAppReady=resolve});
-  window.BLOB=id=>`https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent('blobs/'+id)}?alt=media`;
+  /* ---------- 이미지 저장: Storage 대신 Firestore (Spark 무료 요금제) ----------
+     _assets/{id}        : 파일 정보(크기·형식·조각 수) — 저장 용량 표시에 사용
+     _assets/{id}/c/{n}  : 파일 조각(최대 900KB, 원본 그대로 · 압축 없음)
+     한 번 받은 이미지는 이 기기(IndexedDB)에 보관해 다음부터는 다시 받지 않아요. */
+  const CH=900*1024,URLS=new Map(),RAW=new Map(),PEND=new Map();
+  const SENT='blob:'+location.origin+'/kz-asset-';
+  const cdb=new Promise(r=>{try{const q=indexedDB.open('kkumjari-fbcache',1);q.onupgradeneeded=()=>q.result.createObjectStore('blobs');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null);q.onblocked=()=>r(null)}catch(e){r(null)}});
+  const cReq=async(mode,fn)=>{const d=await cdb;if(!d)return null;return new Promise(r=>{try{const q=fn(d.transaction('blobs',mode).objectStore('blobs'));q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)}catch(e){r(null)}})};
+  const cGet=id=>cReq('readonly',o=>o.get(id)),cPut=(id,v)=>cReq('readwrite',o=>o.put(v,id)),cDel=id=>cReq('readwrite',o=>o.delete(id));
+  const toBl=v=>{try{if(!v)return null;if(v.blob instanceof Blob)return v.blob;if(v.buf)return new Blob([v.buf],{type:v.type||'image/png'})}catch(e){}return null};
+  const keep=(id,b)=>{if(URLS.has(id))return URLS.get(id);RAW.set(id,b);const u=URL.createObjectURL(b);URLS.set(id,u);return u};
+  const drop=id=>{const u=URLS.get(id);if(u)try{URL.revokeObjectURL(u)}catch(e){}URLS.delete(id);RAW.delete(id);cDel(id)};
+  const fetchAsset=id=>{if(!id)return Promise.resolve(null);if(RAW.has(id))return Promise.resolve(RAW.get(id));if(PEND.has(id))return PEND.get(id);
+    const pr=(async()=>{const c=toBl(await cGet(id));if(c){keep(id,c);return c}
+      const q=await fs.collection('_assets/'+id+'/c').get();if(q.empty)return null;
+      let type='';const parts=q.docs.slice().sort((x,y)=>x.id<y.id?-1:x.id>y.id?1:0).map(d=>{const x=d.data();if(x.t)type=x.t;return x.d.toUint8Array()});
+      const bl=new Blob(parts,{type:type||'image/png'});keep(id,bl);
+      try{await cPut(id,{buf:await bl.arrayBuffer(),type:bl.type,sizeBytes:bl.size})}catch(e){}
+      return bl})();
+    PEND.set(id,pr);pr.then(()=>PEND.delete(id),()=>PEND.delete(id));return pr};
+  /* 이 기기에 보관된 이미지를 먼저 메모리에 올려 둠 */
+  const warm=(async()=>{const d=await cdb;if(!d)return;await new Promise(r=>{try{const c=d.transaction('blobs').objectStore('blobs').openCursor();c.onsuccess=()=>{const k=c.result;if(k){const bl=toBl(k.value);if(bl)keep(String(k.key),bl);k.continue()}else r()};c.onerror=()=>r()}catch(e){r()}})})().catch(()=>{});
+  /* 아직 안 받은 이미지는 임시 주소를 돌려주고 뒤에서 받아 옴 → 이미지 안전장치(V68)가 받아 온 이미지로 바꿔 보여줌 */
+  window.BLOB=id=>{const u=URLS.get(id);if(u)return u;fetchAsset(id).catch(()=>{});return SENT+encodeURIComponent(id)};
+  window.BLOBID=u=>{u=String(u||'');if(u.startsWith(SENT))return decodeURIComponent(u.slice(SENT.length));for(const[k,v]of URLS)if(v===u)return k;return ''};
+  window.BLOBDATA=id=>fetchAsset(id).then(bl=>bl?new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r('');f.readAsDataURL(bl)}):'').catch(e=>{console.warn('[꿈자리] 이미지 불러오기 실패',id,e);return ''});
+  window.KZ_RESOLVE=async src=>{const t=String(src||'');if(!t.startsWith(SENT))return src;const id=decodeURIComponent(t.slice(SENT.length));try{await fetchAsset(id)}catch(e){console.warn('[꿈자리] 이미지 불러오기 실패',id,e)}return URLS.get(id)||src};
   db=fs;
   assets={
-    upload:async b=>{const id=rid();await st.ref('blobs/'+id).put(b,{contentType:b.type||'application/octet-stream',cacheControl:'public,max-age=31536000,immutable'});await fs.doc('_assets/'+id).set({sizeBytes:b.size,createdAt:new Date().toISOString()});return{id}},
-    delete:async id=>{try{await st.ref('blobs/'+id).delete()}catch(e){}await fs.doc('_assets/'+id).delete();return{ok:true}},
-    list:async()=>{const q=await fs.collection('_assets').get(),a=q.docs.map(d=>({id:d.id,...d.data()}));return{usage:{files:a.length,bytes:a.reduce((s,x)=>s+(x.sizeBytes||0),0),maxFiles:null,maxBytes:5368709120,quotaLabel:'무료 저장 구간 5GB 기준'},assets:a}}};
-  ready=window.KZ_FIREBASE_APP_READY;
+    upload:async b=>{const id=rid(),u8=new Uint8Array(await b.arrayBuffer()),n=Math.max(1,Math.ceil(u8.length/CH)),type=b.type||'application/octet-stream',done=[];
+      try{for(let i=0;i<n;i++){const ref=fs.doc(`_assets/${id}/c/${String(i).padStart(4,'0')}`),d=firebase.firestore.Blob.fromUint8Array(u8.slice(i*CH,(i+1)*CH));await ref.set(i===0?{d,t:type}:{d});done.push(ref)}
+        await fs.doc('_assets/'+id).set({sizeBytes:b.size,type,chunks:n,createdAt:new Date().toISOString()});
+      }catch(e){for(const r of done)try{await r.delete()}catch(x){}throw e}
+      keep(id,b);try{await cPut(id,{buf:u8.buffer,type,sizeBytes:b.size})}catch(e){}
+      return{id}},
+    delete:async id=>{try{const q=await fs.collection('_assets/'+id+'/c').get();for(const d of q.docs)await d.ref.delete()}catch(e){}await fs.doc('_assets/'+id).delete();drop(id);return{ok:true}},
+    list:async()=>{const q=await fs.collection('_assets').get(),a=q.docs.map(d=>({id:d.id,...d.data()}));return{usage:{files:a.length,bytes:a.reduce((s,x)=>s+(x.sizeBytes||0),0),maxFiles:null,maxBytes:1073741824,quotaLabel:'무료 저장 구간 1GB 기준 (Firestore · 글 데이터 포함)'},assets:a}}};
+  ready=Promise.all([window.KZ_FIREBASE_APP_READY,Promise.race([warm,new Promise(r=>setTimeout(r,2500))])]).then(()=>{});
 }else{
   /* ---------- 체험 모드: 브라우저 IndexedDB ---------- */
   const DOCS=new Map(),BL=new Map(),URLS=new Map(),dSubs=new Map(),cSubs=new Map();
@@ -1758,7 +1789,7 @@ function loadUploaded(){od=false;wm=data.ment;wmDirty=false;loadedDate=date;from
 const clrBanner=()=>data.up&&loadedDate!==date&&role==='leader'?`<div class="clrb"><span>${fmtD(date)}에 이미 올라간 콘티가 있어요 (악보 ${(data.scores||[]).length}장) · 이 시트는 작업용이라 자동으로 불러오지 않아요</span><button class="sm" id="ldup">불러와서 고치기</button></div>`:'';
 function sched(){}
 function saveText(){}
-const loadImg=src=>new Promise((r,j)=>{const i=new Image();if(/^https?:/.test(src))i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=j;i.src=src});
+const loadImg=async src=>{if(window.KZ_RESOLVE)src=await window.KZ_RESOLVE(src);return new Promise((r,j)=>{const i=new Image();if(/^https?:/.test(src))i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=j;i.src=src})};
 
 /* ---------- 송폼 ---------- */
 const SW=['#111111','#ffffff','#ef3038','#f6a313','#26c66d','#3d7df2','#7446d5','#e83e8c'];
@@ -3746,6 +3777,7 @@ select.kz-native{position:absolute!important;width:1px!important;height:1px!impo
 window.kzImgFb=async function(img){try{const ids=(img.dataset.ids||'').split('|').filter(Boolean);let t=+(img.dataset.t||0);while(t<ids.length){const id=ids[t++];img.dataset.t=t;const u=window.BLOBDATA?await window.BLOBDATA(id):'';if(u){img.src=u;return}}}catch(e){}const p=img.parentNode;if(p&&p.classList)p.classList.add('noimg')};
 window.KZ_NOIMG='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect width="300" height="400" fill="#f7f1e7"/><g fill="none" stroke="#c9a46a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".75"><path d="M128 230v-78l52-12v74"/><circle cx="116" cy="232" r="14"/><circle cx="168" cy="216" r="14"/></g><text x="150" y="292" text-anchor="middle" font-family="sans-serif" font-size="17" fill="#9a8c78">이미지를 불러오지 못했어요</text><text x="150" y="318" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#b3a792">원본을 다시 올려 주세요</text></svg>');
 document.addEventListener('error',async function(e){const el=e.target;if(!el||el.tagName!=='IMG'||el.dataset.ids)return;const src=el.getAttribute('src')||'';if(src===window.KZ_NOIMG)return;
+ if(window.KZ_RESOLVE&&src.indexOf('/kz-asset-')>=0){const u=await window.KZ_RESOLVE(src);if(u&&u!==src){el.src=u;return}}
  if(!el.dataset.kzfb&&src.startsWith('blob:')&&window.BLOBID&&window.BLOBDATA){el.dataset.kzfb='1';const id=window.BLOBID(src);if(id){const u=await window.BLOBDATA(id);if(u){el.src=u;return}}}
  if(src.startsWith('blob:')||src.startsWith('data:')||src.indexOf('/_blob/')>=0||src.indexOf('firebasestorage')>=0){el.dataset.kzfb='2';el.classList.add('kz-broken');el.src=window.KZ_NOIMG}},true);
 </script>
