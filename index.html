@@ -4859,7 +4859,7 @@ function state(){if(!online())return'local';if(!supported())return isIOS()&&!sta
 async function register(types){const u=authUser();if(!u)throw new Error('로그인한 뒤에 켤 수 있어요');
  const perm=await Notification.requestPermission();if(perm!=='granted')throw new Error(perm==='denied'?'알림이 차단되어 있어요. 휴대폰 설정에서 이 사이트(앱)의 알림을 허용해 주세요':'알림 허용을 눌러 주세요');
  const m=await messaging(),token=await m.getToken({vapidKey:VAPID,serviceWorkerRegistration:swReg});if(!token)throw new Error('이 기기의 알림 주소를 받지 못했어요');
- const a=me2()||{},t=types||st().types||{conti:true,notice:true,event:true},old=st().token;
+ const a=me2()||{},t=types||st().types||{conti:true,notice:true,event:true,sched:true},old=st().token;
  if(old&&old!==token)try{await FDB().doc('pushTokens/'+tokenId(old)).delete()}catch(e){}
  await FDB().doc('pushTokens/'+tokenId(token)).set({token,uid:u.uid,name:a.name||me||'',rank:a.rank||'',types:t,ios:isIOS(),ua:navigator.userAgent.slice(0,120),at:Date.now()});
  save({token,types:t,uid:u.uid,at:Date.now()});return token}
@@ -4882,14 +4882,14 @@ const noticePush=n=>notify({type:'notice',title:`📢 ${n.title||'새 공지'}`,
 function eventPush(e){let w='';try{w=wd(e.date)}catch(x){}return notify({type:'event',title:`📅 ${e.title||'새 일정'}`,body:[`${md(e.date)}${w?` (${w})`:''}`,e.time,e.place].filter(Boolean).join(' · ')})}
 
 /* ---------- 계정 창 안 "휴대폰 알림" 칸 ---------- */
-function secHTML(){const s=state(),T=st().types||{conti:true,notice:true,event:true};
+function secHTML(){const s=state(),T=st().types||{conti:true,notice:true,event:true,sched:true};
  const lab={on:['켜짐','on'],off:['꺼짐','off'],denied:['차단됨','off'],'ios-home':['홈 화면 추가 필요',''],unsupported:['이 브라우저는 미지원',''],local:['팀 공유 모드에서만','']}[s]||['',''];
  let body='';
  if(s==='ios-home')body=`<div class="kz-push-ios">아이폰은 <b>홈 화면에 추가한 앱</b>에서만 알림을 받을 수 있어요.<br>① Safari 아래쪽 <b>공유 버튼(□↑)</b> → ② <b>홈 화면에 추가</b> → ③ 홈 화면의 <b>꿈자리</b> 앱을 열고 로그인 → ④ 여기서 <b>알림 켜기</b></div>`;
  else if(s==='denied')body=`<div class="kz-push-note">이 기기에서 알림이 차단되어 있어요. 휴대폰 <b>설정 → 알림</b>(또는 브라우저 사이트 설정)에서 꿈자리 알림을 허용한 뒤 다시 켜 주세요.</div>`;
  else if(s==='unsupported')body=`<div class="kz-push-note">이 브라우저에서는 알림을 받을 수 없어요. 안드로이드는 <b>크롬</b>, 아이폰은 <b>Safari에서 홈 화면에 추가</b>한 뒤 이용해 주세요.</div>`;
- else if(s==='on')body=`<div class="kz-push-types">${[['conti','콘티 업로드'],['notice','새 공지'],['event','새 일정']].map(([k,l])=>`<label><input type="checkbox" data-kzp-t="${k}" ${T[k]!==false?'checked':''}>${l}</label>`).join('')}</div><div class="kz-push-note">이 기기로 알림이 와요. 다른 휴대폰·컴퓨터에서도 받으려면 그 기기에서도 켜 주세요.</div>`;
- else if(s==='off')body=`<div class="kz-push-note">새 콘티·공지·일정이 올라오면 이 기기로 바로 알려 드려요.</div>`;
+ else if(s==='on')body=`<div class="kz-push-types">${[['conti','콘티 업로드'],['notice','새 공지'],['event','새 일정'],['sched','일정 변경']].map(([k,l])=>`<label><input type="checkbox" data-kzp-t="${k}" ${T[k]!==false?'checked':''}>${l}</label>`).join('')}</div><div class="kz-push-note">이 기기로 알림이 와요. 다른 휴대폰·컴퓨터에서도 받으려면 그 기기에서도 켜 주세요.</div>`;
+ else if(s==='off')body=`<div class="kz-push-note">새 콘티·공지·일정, 그리고 내 일정이 바뀌면 이 기기로 바로 알려 드려요.</div>`;
  return `<div class="kz-push-sec" id="kzPushSec"><div class="kz-push-row"><b>📱 휴대폰 알림</b><span class="kz-push-st ${lab[1]}">${lab[0]}</span>${s==='off'||s==='denied'?'<button type="button" class="kz-push-btn" data-kzp="on">알림 켜기</button>':s==='on'?'<button type="button" class="kz-push-btn sec" data-kzp="off">끄기</button>':''}</div>${body}</div>`}
 function bindSec(root){root.querySelectorAll('[data-kzp]').forEach(b=>b.onclick=async()=>{b.disabled=true;const t0=b.textContent;b.textContent='잠시만요…';
   try{if(b.dataset.kzp==='on'){await register();toast('이 기기에서 알림을 켰어요 ✓')}else{await unregister();toast('이 기기 알림을 껐어요')}}catch(e){console.error(e);toast(e.message||'알림을 켜지 못했어요')}
@@ -4910,6 +4910,52 @@ window.kzPush={state,register,unregister,notify,contiPush,noticePush,eventPush};
 new MutationObserver(()=>{const p=document.getElementById('kzAdminPanel');if(p&&!p.querySelector('#kzPushSec'))paint()}).observe(document.body,{childList:true});
 setInterval(paintBar,2000);
 if(window.KZ_FIREBASE_AUTH_READY)window.KZ_FIREBASE_AUTH_READY.then(()=>setTimeout(refresh,3000)).catch(()=>{});
+})();
+</script>
+<script id="kz-sched-push-script">
+/* =====================================================================
+   일정 변경 자동 알림 — 싱어·세션·인도자 일정이 바뀌면 관련된 사람에게 푸시
+   · 일정이 저장되는 바닥(overrides, sessAbs 쓰기)에서 감지 → 어느 화면에서 바꾸든 동작
+   · 여러 주를 한꺼번에 바꾸면 1.5초 동안 모아서 알림 1개로 보냄
+   · 받는 사람: 관리자급 전원(관리계정·단장·인도자·선임싱어·선임세션) + 당사자·대신 서는 사람·그 주 인도자
+   ===================================================================== */
+(function(){
+if(!window.firebase||!firebase.firestore||!firebase.firestore.DocumentReference)return;
+const P=firebase.firestore.DocumentReference.prototype;if(P.__kzSched)return;P.__kzSched=true;
+const oSet=P.set,oDel=P.delete;let Q=[],T=null;
+const G=f=>{try{return f()}catch(e){return null}};
+const kindOf=(col,d)=>col==='sessAbs'?'sessAbs':d&&d.k==='L'?'L':d&&d.k==='session'?'session':'singer';
+function make(op,ref,data){const path=String(ref&&ref.path||''),m=/^(overrides|sessAbs)\/([^/]+)$/.exec(path);if(!m)return null;
+ const col=m[1],id=m[2];let d=data;if(op==='del'){const arr=col==='sessAbs'?G(()=>sessAbs):G(()=>ovr);d=(arr||[]).find(x=>x._id===id);if(!d)return null}
+ if(!d||!d.date)return null;return{op,col,id,kind:kindOf(col,d),date:String(d.date),from:String(d.from||d.name||''),to:String(d.to||''),pair:d.pair||''}}
+function enqueue(item){Q.push(item);clearTimeout(T);T=setTimeout(flush,1500)}
+P.set=function(data){const r=oSet.apply(this,arguments);const it=G(()=>make('set',this,data));if(it)Promise.resolve(r).then(()=>enqueue(it)).catch(()=>{});return r};
+P.delete=function(){const it=G(()=>make('del',this,null));const r=oDel.apply(this,arguments);if(it)Promise.resolve(r).then(()=>enqueue(it)).catch(()=>{});return r};
+
+const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일`};
+const KL={singer:'싱어',session:'세션',sessAbs:'세션',L:'인도자'};
+function describe(list){
+ /* 같은 묶음 안에서 '지우고 새로 저장'(덮어쓰기)은 지운 것을 무시 */
+ const sets=list.filter(x=>x.op==='set');list=list.filter(x=>x.op==='set'||!sets.some(s=>s.kind===x.kind&&s.date===x.date&&s.from===x.from));
+ const lines=[],seenPair=new Set();
+ list.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).forEach(x=>{
+  if(x.pair&&x.op==='set'){if(seenPair.has(x.pair))return;seenPair.add(x.pair);const o=list.find(y=>y.pair===x.pair&&y!==x);
+   lines.push(x.kind==='L'?`${md(x.date)} 인도 ${x.from} ↔ ${o?md(o.date):''} 인도 ${x.to} 서로 교대`:`${md(x.date)} ${x.from} ↔ ${o?md(o.date)+' ':''}${x.to} 서로 교환`);return}
+  if(x.op==='del'){lines.push(`${md(x.date)} ${x.from}${x.kind==='sessAbs'?' 불참':x.to?` → ${x.to}`:' 불참'} 취소`);return}
+  if(x.kind==='sessAbs')lines.push(`${md(x.date)} ${x.from} 세션 불참`);
+  else if(x.kind==='L')lines.push(`${md(x.date)} 인도자 ${x.from} → ${x.to||'미정'}`);
+  else lines.push(x.to?`${md(x.date)} ${x.from} → ${x.to} 대신`:`${md(x.date)} ${x.from} 불참`)});
+ return lines}
+function flush(){const list=Q;Q=[];if(!list.length||!window.kzPush||!kzPush.notify)return;
+ const kinds=[...new Set(list.map(x=>KL[x.kind]))],lines=describe(list);if(!lines.length)return;
+ /* 관리자급(관리계정·단장·인도자·선임싱어·선임세션)은 모든 일정 변경을 받음 + 관련된 사람 */
+ const names=new Set(),ranks=new Set(['관리계정','단장','인도자','선임싱어','선임세션']);
+ list.forEach(x=>{if(x.from)names.add(x.from);if(x.to)names.add(x.to);const ld=G(()=>ldrOf(x.date));if(ld)names.add(ld)});
+ const allCancel=list.every(x=>x.op==='del'),icon=kinds.length>1?'🔁':kinds[0]==='인도자'?'🎤':kinds[0]==='세션'?'🎸':'🎵';
+ const title=`${icon} ${kinds.join('·')} 일정 ${allCancel?'변경 취소':'변경'}`;
+ const body=lines.slice(0,4).join('\n')+(lines.length>4?`\n외 ${lines.length-4}건`:'');
+ kzPush.notify({type:'sched',title,body,to:{names:[...names].filter(Boolean),ranks:[...ranks]}})}
+window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
 })();
 </script>
 <!-- =====================================================================
