@@ -174,6 +174,28 @@ h1,h2,h3{letter-spacing:-.025em}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#fffaf2;color:#35291d;padding:12px 20px;border-radius:14px;font-size:14px;font-weight:700;line-height:1.45;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:120;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(70,50,28,.20);border:1px solid #e2d1ba;border-left:4px solid var(--gold);text-shadow:none}
 #toast[style*="opacity: 1"]{transform:translate(-50%,0)}
 
+
+/* ---------- 사이드바 UX 개선 ---------- */
+:root{--side:264px}
+.side{padding:18px 12px 14px;gap:0}
+.nv-s{margin:0 2px 14px;padding:9px 11px 9px 12px;min-height:40px}
+.nv-l{margin:14px 10px 6px;font-size:10.5px;letter-spacing:.04em;color:var(--mu);font-weight:700}
+.nv-group{display:grid;gap:2px;margin-bottom:4px}
+.nv-group+.nv-l{margin-top:12px}
+.nv-i{min-height:39px;padding:8px 10px 8px 12px;border-radius:10px;font-size:13.5px}
+.nv-i .ic{width:19px;display:inline-flex;justify-content:center;flex:none;margin-right:2px}
+.nv-i.on{background:var(--acs);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 8%,transparent)}
+.nv-i.on::before{left:-12px;top:7px;bottom:7px;width:3px}
+.nv-i[data-go="lyrics"]{margin-top:3px}
+.nv-i[data-go="lyrics"] .ic{color:var(--goldt)}
+.nv-i[data-go="lyrics"] .nv-t{font-weight:650}
+.nv-divider{height:1px;background:var(--bd);margin:8px 10px 2px}
+.nv-section-hint{margin:1px 10px 7px;color:var(--mu);font-size:11px;line-height:1.45}
+.nv-leadroom{min-height:39px}
+.nv-m{display:grid;gap:2px}
+.side-b{padding-top:10px;gap:3px}
+.stm{min-height:38px}
+
 /* ---------- 프레임 ---------- */
 .shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh}
 .side{position:sticky;top:0;height:100vh;height:100dvh;overflow:auto;background:var(--card);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px;z-index:31}
@@ -1621,9 +1643,27 @@ else mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 �
 const p=stg?Math.max(...stgPcts()):null;
 sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="home">${BRAND}<span><b>꿈자리</b><small>꿈꾸는 자들의 소리</small><em class="brand-en"><i></i>WORSHIP TEAM</em></span></button><button type="button" class="ib side-x" id="sdx" title="닫기">✕</button></div>
 <button type="button" class="nv-s" data-qk="1"><span>🔍 검색 · 바로 가기</span><kbd>${isMac?'⌘':'Ctrl'} K</kbd></button>
-<div class="nv-l">팀 공간</div>${[['home','홈','home'],['notice','공지 · 일정','bell'],['archive','콘티 보관함','archive'],['library','악보 모음집','music'],['members','멤버 명단','users'],['minutes','회의록','note'],['attend','출결 관리','list'],['lyrics','가사 PPT 생성','slides']].map(([v,l,ic])=>v==='attend'&&!(typeof kzAttOK==='function'&&kzAttOK())?it(v,l,0,ic).replace(/<\/button>$/,'<span class="nv-c kz-lk" title="권한 필요">'+(window.KZ_LOCK_SVG||'')+'</span></button>'):it(v,l,v==='library'?libItems().length:0,ic)).join('')}
+<div class="nv-l">빠른 이동</div>
+<div class="nv-group">${it('home','홈',0,'home')}${it('notice','공지 · 일정',0,'bell')}</div>
+
+<div class="nv-l">예배 준비</div>
+<div class="nv-group">
+${it('archive','콘티 보관함',0,'archive')}
+${it('library','악보 모음집',libItems().length,'music')}
+${it('lyrics','가사 PPT 생성',0,'slides')}
+</div>
+
+<div class="nv-l">팀 관리</div>
+<div class="nv-group">
+${it('members','멤버 명단',0,'users')}
+${it('attend','출결 관리',0,'list').replace(/<\/button>$/,'<span class="nv-c kz-lk" title="권한 필요">'+(window.KZ_LOCK_SVG||'')+'</span></button>')}
+${it('minutes','회의록',0,'note')}
+</div>
+
 ${leadBlock}
-<div class="nv-l">내 자리</div><div class="rsw rsw2" role="tablist">${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='leader'?'leader':k==='singer'?'mic':'guitar')}<span>${t}</span></button>`).join('')}</div><div class="nv-m">${mine}</div>
+<div class="nv-l">내 자리</div>
+<div class="rsw rsw2" role="tablist">${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='leader'?'leader':k==='singer'?'mic':'guitar')}<span>${t}</span></button>`).join('')}</div>
+<div class="nv-m">${mine}</div>
 <div class="side-b">${p!=null?`<button type="button" class="stm" data-go="storage" title="꿈자리 전체 저장 공간 ${fmtB(stg.bytes)}${stg.maxBytes?' / 무료 '+fmtB(stg.maxBytes):''}"><span>저장 공간</span><b>${stg.maxBytes?fmtB(stg.bytes)+' / '+fmtB(stg.maxBytes):fmtB(stg.bytes)}</b>${stg.maxBytes?`<div class="stg-bar ${stCls(p)}"><i style="width:${Math.min(100,p>0?Math.max(1.2,p):0)}%"></i></div>`:''}</button>`:''}<div class="side-devotion" aria-label="히브리서 10장 24절"><div class="side-devotion-img"></div><p>서로 돌아보아<br>사랑과 선행을 격려하며</p><small>(히브리서 10:24)</small></div>${it('trash','휴지통',trash.length,'trash')}</div>`;
 $$('[data-go]',sd).forEach(b=>b.onclick=()=>go(b.dataset.go));
 $$('[data-r]',sd).forEach(b=>b.onclick=()=>setRole(b.dataset.r));
