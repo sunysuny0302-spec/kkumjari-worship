@@ -910,6 +910,10 @@ kbd{white-space:nowrap}
 
 /* V96 로그인 계정 선택 개선: 검색 + 스크롤 + 직접 입력 */
 .kz-account-picker{display:grid;gap:8px}.kz-account-list{display:grid;gap:4px;max-height:210px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px;border:1px solid #e4d7c7;border-radius:12px;background:#fff}.kz-account-item{width:100%;display:flex;align-items:center;gap:10px;border:0;background:#fff!important;color:#352b22!important;-webkit-text-fill-color:#352b22!important;border-radius:9px;padding:10px 11px;text-align:left;font:inherit}.kz-account-item:hover,.kz-account-item.on{background:#f7efe3!important}.kz-account-item b{font-size:13px;font-weight:800;color:#352b22}.kz-account-item small{margin-left:auto;font-size:11px;color:#817468}.kz-account-item.on{box-shadow:inset 0 0 0 1px #c99955}.kz-account-empty{padding:18px 10px;text-align:center;color:#817468;font-size:12px}.kz-account-picker .kz-auth-note{margin-top:0}.kz-account-list::-webkit-scrollbar{width:8px}.kz-account-list::-webkit-scrollbar-thumb{background:#d4c4b1;border-radius:99px;border:2px solid #fff}@media(max-width:600px){.kz-account-list{max-height:180px}.kz-account-item{min-height:44px}}
+
+/* 채팅방 사진 추가 UI 제거: 채팅에서는 텍스트 메시지만 작성 */
+#kcPanel[data-panel="community"] .kc-chat-plus,
+#kcPanel[data-panel="community"] #kcChatAttach{display:none!important}
 </style>
 <style id="calm-church-v12">
 /* V12 — 잔잔한 예배 공간: warm ivory + muted olive + antique gold */
@@ -3588,6 +3592,45 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
 }
 </style>
 
+
+<style id="kz-mobile-chat-back-button">
+@media (max-width:820px){
+  #kcPanel[data-panel="community"] .kc-chat-modern-head{
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    min-height:62px!important;
+    padding:8px 10px!important;
+    box-sizing:border-box!important;
+  }
+  #kcPanel[data-panel="community"] .kc-chat-mobile-back{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 40px!important;
+    width:40px!important;
+    height:40px!important;
+    padding:0!important;
+    margin:0!important;
+    border:1px solid #ddd2c5!important;
+    border-radius:12px!important;
+    background:#fffdf9!important;
+    color:#6e6257!important;
+    font:inherit!important;
+    font-size:28px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+    -webkit-tap-highlight-color:transparent!important;
+  }
+  #kcPanel[data-panel="community"] .kc-chat-mobile-back:active{
+    background:#f2ebe2!important;
+    transform:scale(.97);
+  }
+}
+@media (min-width:821px){
+  #kcPanel[data-panel="community"] .kc-chat-mobile-back{display:none!important;}
+}
+</style>
 </body></html><style>
 /* ===== v5 일정표 리디자인: 주간 플래너 ===== */
 .sch-v5{max-width:1120px;margin:0 auto;display:grid;gap:18px}
@@ -5799,6 +5842,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
    </div>
    <main class="kc-chat-main">
      <header class="kc-chat-modern-head">
+       <button type="button" class="kc-chat-mobile-back" id="kcChatMobileBack" aria-label="채팅 닫고 이전 화면으로" title="뒤로가기">‹</button>
        <div class="kc-chat-modern-title">
          <span class="kc-chat-modern-avatar">${room==='admin'?'♛':'👥'}</span>
          <span><strong>${room==='admin'?'관리자방':'전체 채팅'}</strong><small>참여자 ${totalMembers||'여러'}명</small></span>
@@ -5814,11 +5858,9 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
      <div class="kc-chat">
        <div id="kcChatLog" class="kc-chat-log" role="log" aria-label="채팅 메시지"></div>
        <button class="kc-btn kc-new" id="kcNew" hidden>새 메시지 ↓</button>
-       <div id="kcChatAttach"></div>
      </div>
      <div class="kc-chat-composer">
        <div class="kc-chat-composer-row">
-         <button type="button" class="kc-chat-plus" id="kcChatPlus" aria-label="사진 추가">＋</button>
          <form class="kc-compose" id="kcCompose"><textarea id="kcChatText" rows="1" maxlength="2000" placeholder="메시지를 입력하세요…" aria-label="메시지"></textarea><button class="kc-btn primary" type="submit">전송</button></form>
          <button type="submit" form="kcCompose" class="kc-chat-send" aria-label="전송"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 3-7.5 18-3.5-7L3 10.5 21 3Z"/><path d="M10 14 21 3"/></svg></button>
        </div>
@@ -5826,14 +5868,15 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
      </div>
    </main>
  </div>`;
+ const mobileBack=$c('#kcChatMobileBack');
+ if(mobileBack) mobileBack.onclick=()=>{ closePanel(); };
  const search=$c('#kcRoomSearch');if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();$c('#kcRoomList')?.querySelectorAll('.kc-room-item').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(q));};
  const switchRoom=x=>{const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();};
  document.querySelectorAll('#kcRoomList [data-room],#kcMobileRooms [data-room]').forEach(x=>x.onclick=()=>switchRoom(x));
  const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();document.addEventListener('click',()=>{if(!pop.hidden){pop.hidden=true;memberBtn.setAttribute('aria-expanded','false');memberBtn.classList.remove('open');}},{once:false});}
- $c('#kcChatPlus').onclick=()=>{const file=$c('#kcChatAttach input[type=file]');if(file)file.click();else $c('#kcChatAttach')?.scrollIntoView({block:'nearest'});};
  $c('#kcNew').onclick=()=>{const l=$c('#kcChatLog');l.scrollTop=l.scrollHeight;$c('#kcNew').hidden=true;};
  $c('#kcCompose').onsubmit=send;
- KZImages.mount($c('#kcChatAttach'),imageDrafts[room],a=>imageDrafts[room]=a);$c('#kcChatText').value=drafts[room];$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
+ $c('#kcChatText').value=drafts[room];$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
  if(loadedRoom!==room){chatItems=[];chatCursor=null;loadedRoom=room;}await loadChat(false,gen);
  }catch(e){if(activeView()==='community'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 연결</button>';$c('#kcRetry').onclick=communityView;error(e);}}
 }
@@ -5847,7 +5890,7 @@ function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near
  if(!force&&!near&&l.scrollHeight>previous)$c('#kcNew').hidden=false;
 }
 async function loadChat(older=false,gen=pageGeneration){const current=room;const result=await api({action:'chat',room:current,...(older&&chatCursor?{cursor:chatCursor}:{})});if(activeView()!=='community'||room!==current||gen!==pageGeneration)return;const initial=!chatItems.length;if(older||initial)chatCursor=result.cursor;const map=new Map(chatItems.map(m=>[m.id,m]));result.items.forEach(m=>map.set(m.id,m));chatItems=[...map.values()].sort((a,b)=>a.createdAt-b.createdAt||a.id.localeCompare(b.id));paintChat(initial);const s=$c('#kcConnection');if(s)s.textContent='연결됨 · 새 메시지는 약 4초마다 갱신돼요.';clearError();}
-async function send(e){e.preventDefault();const form=e.currentTarget,input=$c('#kcChatText'),value=input.value.trim();const images=[...imageDrafts[room]];if(KZImages.busy($c('#kcChatAttach')))return toast('사진을 준비하고 있어요.');if(!value&&!images.length)return;const targetRoom=room,gen=pageGeneration,button=form.querySelector('button');button.disabled=true;input.disabled=true;const attach=$c('#kcChatAttach');attach.inert=true;if(sendText!==targetRoom+'|'+value+'|'+images.join('')){sendId=uuid();sendText=targetRoom+'|'+value+'|'+images.join('');}try{const r=await api({action:'send',room:targetRoom,text:value,images,id:sendId});drafts[targetRoom]='';imageDrafts[targetRoom]=[];sendText='';sendId='';if(gen===pageGeneration&&room===targetRoom&&activeView()==='community'){KZImages.mount($c('#kcChatAttach'),[],a=>imageDrafts[targetRoom]=a);if(images.length)imageCache.set(targetRoom+'|'+r.item.id,images);input.value='';input.style.height='auto';const sentItem={...(r.item||{}),_mine:true,owner:r.item?.owner||uid(),uid:r.item?.uid||uid(),userId:r.item?.userId||uid(),senderId:r.item?.senderId||uid(),name:r.item?.name||actor?.name};if(!chatItems.some(m=>m.id===r.item.id))chatItems.push(sentItem);paintChat(true);clearError();}}catch(e){error(e);}finally{if(attach.isConnected)attach.inert=false;button.disabled=false;input.disabled=false;if(input.isConnected&&matchMedia('(min-width:821px)').matches)input.focus();}}
+async function send(e){e.preventDefault();const form=e.currentTarget,input=$c('#kcChatText'),value=input.value.trim();const images=[];if(!value)return;const targetRoom=room,gen=pageGeneration,button=form.querySelector('button');button.disabled=true;input.disabled=true;if(sendText!==targetRoom+'|'+value){sendId=uuid();sendText=targetRoom+'|'+value;}try{const r=await api({action:'send',room:targetRoom,text:value,images,id:sendId});drafts[targetRoom]='';imageDrafts[targetRoom]=[];sendText='';sendId='';if(gen===pageGeneration&&room===targetRoom&&activeView()==='community'){input.value='';input.style.height='auto';const sentItem={...(r.item||{}),_mine:true,owner:r.item?.owner||uid(),uid:r.item?.uid||uid(),userId:r.item?.userId||uid(),senderId:r.item?.senderId||uid(),name:r.item?.name||actor?.name};if(!chatItems.some(m=>m.id===r.item.id))chatItems.push(sentItem);paintChat(true);clearError();}}catch(e){error(e);}finally{button.disabled=false;input.disabled=false;if(input.isConnected&&matchMedia('(min-width:821px)').matches)input.focus();}}
 async function songsView(){const gen=++pageGeneration;if(!shell('신청곡','함께 부르고 싶은 찬양과 참고 영상을 남겨 주세요.','<button class="kc-btn primary" id="kcAddSong">＋ 신청하기</button>'))return;$c('#kcAddSong').onclick=()=>songForm();$c('#kcContent').innerHTML='<div class="kc-empty">신청곡을 불러오는 중…</div>';try{await status();const r=await api({action:'songs'});if(activeView()!=='song_requests'||gen!==pageGeneration)return;songItems=r.items;songCursor=r.cursor;paintSongs();}catch(e){if(activeView()==='song_requests'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 불러오기</button>';$c('#kcRetry').onclick=songsView;error(e);}}}
 function paintSongs(){const c=$c('#kcContent');if(!c||activeView()!=='song_requests')return;c.innerHTML=(songItems.length?songItems.map(s=>`<article class="kc-card"><h3>${escape(s.title)}</h3><div class="kc-sub">${escape(s.name)} · ${escape(time(s.createdAt))}${s.revision>1?' · 수정됨':''}</div><p><a href="${escape(/^https?:\/\//i.test(s.url)?s.url:'#')}" target="_blank" rel="noopener noreferrer">참고 영상 열기 ↗</a></p><div class="kc-actions">${s.owner===actor?.id?`<button class="kc-btn" data-edit="${escape(s.id)}">수정</button><button class="kc-btn danger" data-delete="${escape(s.id)}">삭제</button>`:''}${['인도자','관리계정'].includes(actor?.rank)?`<button class="kc-btn" data-complete="${escape(s.id)}">콘티 반영 완료</button>`:''}</div></article>`).join(''):'<div class="kc-empty">아직 신청곡이 없어요.<br>함께 부르고 싶은 찬양을 알려 주세요.</div>')+(songCursor?'<button class="kc-btn kc-more" id="kcMoreSongs">이전 신청곡 더 보기</button>':'');
  c.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>songForm(songItems.find(s=>s.id===b.dataset.edit)));
