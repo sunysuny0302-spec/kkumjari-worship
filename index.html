@@ -1920,7 +1920,7 @@ const sc=pub?(data.scores||[]):[],cs=ment?kzSongs(ment.split(/\r?\n/).map(v=>v.t
 let rows='';for(let i=0;i<n;i++){const c=cs[i],x=sc[i],nm=(c&&c.t.replace(/^\d+\s*[.)]\s*/,''))||(x&&x.name)||`예배곡 ${i+1}`,L=(c&&c.links)||[],yid=L.map(kzYtId).find(Boolean)||'',aid=x&&(x.aid||x.oaid);
 const th=yid?`<span class="kz-th kz-yth"><img src="https://i.ytimg.com/vi/${yid}/mqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='https://img.youtube.com/vi/${yid}/hqdefault.jpg'}else this.parentNode.classList.add('noimg')"><span class="kz-ytfb"><i>${kzYtIco}</i><small>YouTube</small></span><i class="kz-play">${kzYtIco}</i></span>`:aid?`<span class="kz-th"><img src="${BLOB(aid)}" alt="" loading="lazy" data-ids="${aid}|${x.oaid&&x.oaid!==aid?x.oaid:''}" onerror="kzImgFb(this)"><span class="song-fb">${V13I('music')}</span></span>`:`<span class="kz-th kz-th-e">${V13I('music')}</span>`;
 const main=L.length?`<a class="kz-row kz-row-a" href="${esc(L[0])}" target="_blank" rel="noopener noreferrer" title="레퍼런스 영상 열기">`:aid?`<button type="button" class="kz-row" data-home-score="${i}" title="송폼 보기">`:`<div class="kz-row">`,end=L.length?'</a>':aid?'</button>':'</div>';
-rows+=`<div class="kz-song-r">${main}${th}<span class="kz-rt"><b>${i+1}. ${esc(nm)}</b><small>${L.length?'유튜브 레퍼런스'+(L.length>1?` · ${L.length}개`:''):'레퍼런스 링크 없음'}</small></span>${L.length?`<span class="kz-go-yt">${kzYtIco}듣기</span>`:''}${end}<span class="kz-ex">${L.slice(1).map((u,k)=>`<a class="kz-yt" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="레퍼런스 ${k+2}">${kzYtIco}${k+2}</a>`).join('')}${aid&&L.length?`<button type="button" class="kz-sheet" data-home-score="${i}" title="송폼 보기">${V13I('music')}</button>`:''}</span></div>`}
+rows+=`<div class="kz-song-r">${main}${th}<span class="kz-rt"><b>${i+1}. ${esc(nm)}</b><small>${L.length?'유튜브 레퍼런스'+(L.length>1?` · ${L.length}개`:''):'레퍼런스 링크 없음'}</small></span>${L.length?`<span class="kz-go-yt">${kzYtIco}듣기</span>`:''}${end}<span class="kz-ex">${L.slice(1).map((u,k)=>`<a class="kz-yt" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="레퍼런스 ${k+2}">${kzYtIco}${k+2}</a>`).join('')}</span></div>`}
 if(!rows)rows='<div class="kz-empty">이번 주 곡이 아직 없어요<br><span>인도자가 콘티에 곡과 유튜브 링크를 적으면 여기서 바로 들을 수 있어요</span></div>';
 return `<div class="kz-h">${V13I('music')}<h2>이번 주 찬양</h2>${cs.some(c=>c.links.length)?'<span class="kz-sub">레퍼런스</span>':''}<span class="sp"></span><button type="button" class="kz-all" data-conti-open="1">콘티 보기 <span aria-hidden="true">→</span></button></div><div class="kz-list">${rows}</div>`}
 function bindKzSide(){const c=document.getElementById('kzSide');if(!c)return;
@@ -3614,11 +3614,10 @@ setTimeout(()=>{if(db)db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exi
 .hm-v13 .kz-song-r{display:flex;align-items:center;gap:6px;min-width:0}
 .hm-v13 .kz-song-r>.kz-row{flex:1;min-width:0;text-decoration:none}
 .hm-v13 .kz-row-a:hover .kz-go-yt{background:#c0503a;color:#fff}
-.hm-v13 .kz-go-yt{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:11.5px;font-weight:700;color:#c0503a;background:#fbeee9;border-radius:999px;padding:5px 10px;transition:background .15s,color .15s}
-.hm-v13 .kz-ex{display:flex;align-items:center;gap:4px;flex:none;width:68px;justify-content:flex-start}
+.hm-v13 .kz-go-yt{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:0 0 68px;min-width:68px;box-sizing:border-box;font-size:11.5px;font-weight:700;color:#c0503a;background:#fbeee9;border-radius:999px;padding:5px 10px;transition:background .15s,color .15s}
+.hm-v13 .kz-ex{display:flex;align-items:center;gap:4px;flex:none;justify-content:flex-start}
+.hm-v13 .kz-ex:empty{display:none}
 #kzSide .kz-th{width:68px;flex-basis:68px;height:48px}
-.hm-v13 .kz-sheet{width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--gold)}
-.hm-v13 .kz-sheet .ico{width:15px;height:15px}
 .hm-v13 .kz-yth{width:68px;flex-basis:68px;height:48px;background:#2b2520}
 .hm-v13 .kz-yth img{object-position:center}
 .hm-v13 .kz-yth .song-fb{color:#fff}
