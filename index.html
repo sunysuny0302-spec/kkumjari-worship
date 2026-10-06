@@ -1551,6 +1551,24 @@ return {mount,gallery,get:el=>[...(states.get(el)?.images||[])],busy:el=>!!state
  #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{min-height:40px!important;border-radius:18px!important;padding:9px 12px!important;}
 }
 </style>
+<style id="kz-chat-resize-final-fix">
+/* PC 채팅창 크기조절 최종 보강: 핸들이 가려져도 우하단 36px 영역에서 조절 가능 */
+@media(min-width:821px){
+  #kcPanel[data-panel="community"].kc-user-layout{
+    overflow:visible!important;
+    box-sizing:border-box!important;
+  }
+  #kcPanel[data-panel="community"].kc-user-layout .kc-popup-resize{
+    display:block!important;
+    pointer-events:auto!important;
+    position:absolute!important;
+    right:1px!important;bottom:1px!important;
+    width:30px!important;height:30px!important;
+    z-index:9999!important;
+    cursor:nwse-resize!important;
+  }
+}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -3407,6 +3425,40 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
     });
   }
 
+  function enableResizeFallback(p){
+    if(!p||window.innerWidth<=820||p.dataset.resizeFallbackBound)return;
+    p.dataset.resizeFallbackBound='1';
+    let start=null;
+    const end=()=>{
+      if(!start)return;
+      start=null;p.classList.remove('kc-resizing');
+      window.removeEventListener('pointermove',move);
+      window.removeEventListener('pointerup',end);
+      window.removeEventListener('pointercancel',end);
+      saveLayout(p);
+    };
+    const move=e=>{
+      if(!start)return;
+      const v=vp(),b=bounds(p);
+      const nw=clamp(start.w+(e.clientX-start.x),b.minW,Math.max(b.minW,v.w-16));
+      const nh=clamp(start.h+(e.clientY-start.y),b.minH,Math.max(b.minH,v.h-16));
+      setSizePosition(p,start.left,start.top,nw,nh);
+    };
+    p.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse'&&e.button!==0)return;
+      if(e.target.closest('button,input,textarea,a,[data-no-drag]') && !e.target.closest('.kc-popup-resize'))return;
+      const r=p.getBoundingClientRect();
+      const grip=36;
+      if(e.clientX<r.right-grip||e.clientY<r.bottom-grip)return;
+      e.preventDefault();e.stopPropagation();
+      start={x:e.clientX,y:e.clientY,w:r.width,h:r.height,left:r.left,top:r.top};
+      p.classList.add('kc-resizing');
+      window.addEventListener('pointermove',move);
+      window.addEventListener('pointerup',end,{once:true});
+      window.addEventListener('pointercancel',end,{once:true});
+    },true);
+  }
+
   function enableDrag(p){
     if(!p||window.innerWidth<=820)return;
     const head=isChat(p)?p.querySelector('.kc-chat-modern-head'):p.querySelector('.kc-panel-head');
@@ -3461,6 +3513,7 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
     ensureHandle(p);
     if(!p.dataset.layoutApplied)restoreLayout(p);
     else clampCurrent(p);
+    enableResizeFallback(p);
     enableDrag(p);
   }
 
