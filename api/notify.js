@@ -6,7 +6,9 @@
    · 로그인한 관리자(관리계정·단장·인도자·선임싱어·선임세션)만 발송 가능
    · 알림을 켠 팀원 기기(Firestore pushTokens)로 발송, 끊긴 기기는 자동 정리
    ===================================================================== */
-const admin = require('firebase-admin');
+const {admin, init} = require('../lib/firebase.cjs');
+const {recipientsFor,stageInbox} = require('../lib/notification-inbox.cjs');
+const {randomUUID} = require('node:crypto');
 
 const MANAGER_EMAIL = 'management@kkumjari-worship.firebaseapp.com';
 const SENDER_RANKS = ['단장', '인도자', '선임싱어', '선임세션'];
@@ -15,14 +17,6 @@ const ADMIN_RANKS = ['관리계정', '단장', '인도자', '선임싱어', '선
 const TYPES = ['conti', 'notice', 'event', 'sched'];
 const SITE = 'https://kkumjari-worship.vercel.app/';
 
-function init() {
-  if (admin.apps.length) return;
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) throw Object.assign(new Error('서버에 FIREBASE_SERVICE_ACCOUNT 환경변수가 없어요'), { status: 500, code: 'no-config' });
-  let sa;
-  try { sa = JSON.parse(raw); } catch (e) { throw Object.assign(new Error('FIREBASE_SERVICE_ACCOUNT 값이 올바른 JSON이 아니에요'), { status: 500, code: 'bad-config' }); }
-  admin.initializeApp({ credential: admin.credential.cert(sa) });
-}
 const clip = (v, n) => String(v == null ? '' : v).replace(/\s+\n/g, '\n').trim().slice(0, n);
 
 module.exports = async function handler(req, res) {
@@ -59,10 +53,19 @@ module.exports = async function handler(req, res) {
 
     /* 같은 내용이 짧은 시간에 반복 발송되지 않게 (30초) */
     const metaRef = db.doc('pushMeta/last');
-    const meta = await metaRef.get();
-    const sig = type + '|' + title + '|' + body;
-    if (meta.exists && meta.data().sig === sig && Date.now() - (meta.data().at || 0) < 30000) return res.status(200).json({ sent: 0, skipped: 'duplicate' });
-    await metaRef.set({ sig, at: Date.now(), by: senderName });
+    const allAccounts=(await db.collection('accounts').get()).docs.map(d=>({...d.data(),id:d.id}));
+    const senderId=user.email===MANAGER_EMAIL?'management':user.uid;
+    const recipients=recipientsFor(allAccounts,{type,toNames,toRanks,senderId,includeSelf:b.includeSelf===true});
+    const sig = type + '|' + title + '|' + body + '|' + [...toNames].sort().join(',') + '|' + [...toRanks].sort().join(',') + '|' + senderId + '|' + (b.includeSelf===true);
+    const createdAt=Date.now(),key=randomUUID();
+    const saved=await db.runTransaction(async tx=>{
+      const meta=await tx.get(metaRef);
+      if(meta.exists&&meta.data().sig===sig&&createdAt-(meta.data().at||0)<30000)return false;
+      tx.set(metaRef,{sig,at:createdAt,by:senderName});
+      stageInbox(tx,db,recipients,{key,type,title,body,createdAt});
+      return true;
+    });
+    if(!saved)return res.status(200).json({sent:0,skipped:'duplicate'});
 
     const snap = await db.collection('pushTokens').get();
     /* 직책·이름은 계정 정보에서 최신으로 확인 (직책이 바뀌어도 바로 반영) */
