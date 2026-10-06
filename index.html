@@ -5156,7 +5156,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  function myPage(){const a=authAccount(),name=a?.name||me||'',weeks=name&&name!=='관리계정'?myWeeks(name):[];
  return `<section class="km-page"><p class="km-kicker">MY SCHEDULE</p><h1>${esc(name||'나')}님의 순서</h1><p class="km-intro">앞으로 6주간의 섬김 일정이에요.<br>날짜를 누르면 그 주의 콘티와 악보를 볼 수 있어요.</p>${weeks.length?`<div class="km-weeks">${weeks.map(w=>{const dt=new Date(w.d+'T12:00:00');return `<button class="km-week" type="button" data-mobile-date="${w.d}"><span class="km-date"><small>${dt.getMonth()+1}월</small><b>${dt.getDate()}</b></span><span class="km-week-body"><strong>${esc(lbl(w.d)||'주일예배')}</strong><span>${w.r.length?w.r.map(([r,c])=>`<i class="km-chip ${c==='off'?'off':''}">${esc(r)}</i>`).join(''):'<span class="km-rest">배정된 순서가 없어요</span>'}</span></span><span class="km-arrow">›</span></button>`}).join('')}</div>`:'<div class="km-empty">'+(name==='관리계정'?'관리계정에는 개인 순서가 없어요. 팀원 계정으로 접속하면 내 순서를 확인할 수 있어요.':'표시할 개인 일정이 없어요.')+'</div>'}<p class="km-section">일정 변경이 필요할 때</p><div class="km-menu">${menuRow('swap','mic','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','guitar','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
  }
- function morePage(){return `<section class="km-page"><p class="km-kicker">KKUMJARI WORSHIP</p><h1>더보기</h1><p class="km-intro">자주 확인하는 자료와 계정 설정을 모았어요.</p><div class="km-menu">${menuRow('account','users','내 계정 · 알림','계정 정보와 푸시 알림 설정')}${menuRow('events','calendar','팀 일정','다가오는 모임과 행사')}${menuRow('library','music','악보 모음집','곡 이름으로 악보 찾아보기')}${menuRow('attend','list','출결','출석 현황 확인')}${menuRow('minutes','archive','회의록','팀에서 나눈 이야기')}</div><details class="km-tools"><summary>작업 · 관리 기능</summary><p class="km-intro">콘티 작성이나 팀 관리가 필요할 때 열어 주세요.</p><div class="km-menu">${menuRow('leader','leader','인도자 작업실','콘티와 송폼 작성')}${menuRow('lyrics','music','가사 · PPT','예배 가사 준비')}${menuRow('members','users','팀원 관리','팀원과 역할 확인')}${menuRow('all','list','전체 메뉴','기존 작업 메뉴 열기')}</div></details></section>`}
+ function morePage(){return `<section class="km-page"><p class="km-kicker">KKUMJARI WORSHIP</p><h1>더보기</h1><p class="km-intro">자주 확인하는 자료와 계정 설정을 모았어요.</p><div class="km-menu">${menuRow('account','users','내 계정 · 알림','계정 정보와 푸시 알림 설정')}${menuRow('events','calendar','팀 일정','다가오는 모임과 행사')}${menuRow('library','music','악보 모음집','곡 이름으로 악보 찾아보기')}${menuRow('attend','list','출결','출석 현황 확인')}${menuRow('minutes','archive','회의록','팀에서 나눈 이야기')}</div></section>`}
  body=function(){if(view!=='mobile_my'&&view!=='mobile_more')return oldBody();const b=document.getElementById('body');if(!b)return;b.innerHTML=view==='mobile_my'?myPage():morePage();const bar=document.getElementById('dbar');if(bar)bar.hidden=true;
  b.querySelectorAll('[data-mobile-date]').forEach(x=>x.onclick=()=>{go('home');goDate(x.dataset.mobileDate);window.scrollTo({top:0,behavior:'instant'})});
  b.querySelectorAll('[data-mobile-action]').forEach(x=>x.onclick=()=>{const a=x.dataset.mobileAction;if(a==='account')return openAccountPicker();if(a==='events'){ntTab='e';return go('notice')}if(a==='swap')return goRole('singer','swap');if(a==='abs')return goRole('session','abs');if(a==='leader')return openLeaderRoom();if(a==='all')return document.getElementById('shell')?.classList.add('open');go(a)});stat();setBH();
@@ -5204,3 +5204,58 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  if(document.getElementById('shell')){renderDbar();setBH()}
 })();
 </script>
+
+<style id="kz-mobile-navigation">
+.kz-mobile-back{display:none}
+@media screen and (max-width:820px){
+ .shell.no-tab #tabbar,#tabbar{display:grid!important}
+ .shell #body,.shell.no-tab #body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+ .kz-mobile-back{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border:1px solid var(--bd);border-radius:11px;background:var(--card);color:var(--tx);font-size:23px;margin-right:7px}
+ #tl{display:flex;align-items:center}#tl .pt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #side [data-go="lyrics"],#side [data-go="edit"],#side [data-go="ment"],#side [data-go="lpick"],#side [data-lead],#side [data-lpick],#side [data-lv2],#side [data-role="leader"],
+ [data-short="edit"],[data-kz-act="lead"],[data-kz-act="ment"],[data-kz-act="edit"],[data-kz-act="reference"]{display:none!important}
+}
+</style>
+<script id="kz-mobile-navigation-script">
+(function(){
+ const mobile=()=>matchMedia('(max-width:820px)').matches;
+ const blocked=new Set(['lpick','edit','ment','lyrics']);
+ const safe=v=>mobile()&&blocked.has(v)?'mobile_more':v;
+ const trail=[];let returning=false;
+ const originalGo=go;go=function(v){const target=safe(v);if(mobile()&&!returning&&view!==target&&!blocked.has(view)){trail.push(view);if(trail.length>40)trail.shift()}return originalGo(target)};
+ const originalApp=renderApp;renderApp=function(){view=safe(view);return originalApp()};
+ const originalBody=body;body=function(){if(mobile()&&blocked.has(view))return go('mobile_more');return originalBody()};
+ const originalTop=renderTop;renderTop=function(){originalTop();if(!mobile()||view==='home')return;const tl=document.getElementById('tl');if(!tl)return;const back=document.createElement('button');back.type='button';back.className='kz-mobile-back';back.setAttribute('aria-label','뒤로가기');back.title='뒤로가기';back.textContent='‹';back.onclick=()=>{let target=trail.pop();while(target&&(blocked.has(target)||target===view))target=trail.pop();returning=true;try{go(target||'home')}finally{returning=false}};tl.prepend(back)};
+ const mq=matchMedia('(max-width:820px)');const sync=()=>{if(!document.getElementById('shell'))return;if(mobile()&&blocked.has(view))go('mobile_more');else renderTop()};
+ if(mq.addEventListener)mq.addEventListener('change',sync);else mq.addListener(sync);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
+})();
+</script>
+<style id="kz-mobile-width-polish">
+@media screen and (max-width:820px){
+ html,body,#app{width:100%;max-width:100%;min-width:0}
+ #app .shell{width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+ #app .col,#app #body{width:100%;min-width:0;max-width:100%}
+ #body>.wk,#body>.km-page{width:100%!important;max-width:620px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;min-width:0!important;padding-left:12px!important;padding-right:12px!important}
+ #body>.wk{grid-template-columns:minmax(0,1fr)!important}
+ #body>.wk>*{min-width:0;max-width:100%;box-sizing:border-box}
+ #body .card,#body .at-card,#body .cv6-box,#body .wiz,#body .wkg{min-width:0;max-width:100%;box-sizing:border-box}
+ #body .hm.hm-v13 .church-hero{display:none!important}
+ #body .hm.hm-v13{padding-top:10px!important}
+ .at-tabs{display:flex!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:3px;padding:3px}
+ .at-tabs::-webkit-scrollbar{display:none}.at-tabs button{flex:0 0 auto;min-height:40px;padding:7px 10px!important;font-size:12px!important}
+ .at-week{width:100%;min-width:0}.at-week b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.at-wb{flex:none}
+ .at-card>.at-ch{min-width:0;gap:5px}.at-ch>.at-state{max-width:100%}
+ .at-rows,.at-r{min-width:0;width:100%}.at-r{grid-template-columns:minmax(0,1fr) minmax(95px,116px) 26px!important;column-gap:6px!important}
+ .at-nm{min-width:0}.at-nm b,.at-nm small{overflow-wrap:anywhere}
+ .at-r .at-mobile-status{min-width:0!important;width:100%!important;max-width:100%;box-sizing:border-box;appearance:none;-webkit-appearance:none;background-color:var(--card);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m2 2 4 4 4-4' fill='none' stroke='%2374695f' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding:7px 24px 7px 9px}
+ .at-card>.at-foot{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;min-width:0;gap:6px!important;margin-top:10px}
+ .at-card>.at-foot>button{width:100%;min-width:0;max-width:100%;white-space:normal;line-height:1.35;font-size:11px!important;padding:8px 5px!important;min-height:42px}
+ .at-card>.at-foot>select{grid-column:1/-1;width:100%!important;min-width:0!important;max-width:100%!important;min-height:42px;appearance:none;-webkit-appearance:none;background:var(--card);padding:8px 10px!important;text-align:left}
+ .at-empty{overflow-wrap:anywhere;padding:12px 4px!important;line-height:1.6}.at-note-fold,.at-note{min-width:0;max-width:100%}
+ .at-filter{min-width:0}.at-filter select{max-width:100%}.at-tw{width:100%;min-width:0;max-width:100%;overflow:auto;overscroll-behavior-x:contain}
+ .at-t{max-width:none}.at-form .two{min-width:0}.at-form .two>*{min-width:0;max-width:100%}
+ .seg{min-width:0}.km-menu,.km-week{min-width:0;max-width:100%}
+ #top{width:100%;max-width:100%;min-width:0}#tl{flex:1 1 0;min-width:0}#tr{flex:0 1 auto;max-width:48%;min-width:0}#tr .kz-account-btn{max-width:100%}#tl .pt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+</style>
