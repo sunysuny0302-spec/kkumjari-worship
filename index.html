@@ -1687,8 +1687,8 @@ function currentRank(){return authAccount()?.rank||currentMember()?.rank||'팀�
 function isManagementAccount(){return currentRank()==='관리계정'}
 function isAdmin(){return ADMIN_RANKS.includes(currentRank())}
 function canLeaderEdit(){return isManagementAccount()||currentRank()==='인도자'}
-function canSingerManage(){return isManagementAccount()||['단장','인도자','선임싱어'].includes(currentRank())}
-function canSessionManage(){return isManagementAccount()||['단장','인도자','선임세션'].includes(currentRank())}
+function canSingerManage(){return isAdmin()} /* 싱어 스케줄 편집: 관리자급 전원 */
+function canSessionManage(){return isAdmin()} /* 세션 스케줄 편집: 관리자급 전원 */
 function isSingerSelf(){const a=authAccount(),m=currentMember();return !!((a&&((a.parts||[]).includes('싱어')||a.rank==='선임싱어'))||(m&&((m.roles||[]).includes('싱어')||(m.parts||[]).includes('싱어')||m.rank==='선임싱어')))}
 function isSessionSelf(){const a=authAccount(),m=currentMember();return !!((a&&((a.parts||[]).includes('세션')||a.rank==='선임세션'))||(m&&((m.roles||[]).includes('세션')||(m.parts||[]).some(x=>['세션','드럼','E.G','B.G','A.G','건반','키보드','일렉','베이스','어쿠스틱'].includes(x))||m.rank==='선임세션')))}
 function canSingerSelfEdit(){return canSingerManage()||isSingerSelf()}
@@ -2925,7 +2925,8 @@ button:disabled,.btn:disabled{opacity:.58!important}
 <style id="kz-auth-v92">
 .kz-login-lock{position:fixed;inset:0;z-index:999999;background:rgba(251,248,243,.97);display:grid;place-items:center;padding:20px}.kz-login-card{width:min(460px,100%);background:#fff;border:1px solid #e5d7c5;border-radius:22px;box-shadow:0 24px 70px rgba(55,39,20,.18);overflow:hidden}.kz-login-head{padding:24px 24px 16px;border-bottom:1px solid #eee4d7}.kz-login-head b{font-family:var(--serif);font-size:24px;color:#352b22}.kz-login-head p{margin:6px 0 0;color:#776c61;font-size:13px;line-height:1.55}.kz-login-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:14px 20px 0}.kz-login-tabs button,.kz-auth-secondary{border:1px solid #dfd1c0;background:#fff;color:#66594d;border-radius:11px;padding:10px;font-weight:800}.kz-login-tabs button.on{background:#fff6e7;border-color:#c99955;color:#83581f}.kz-login-body{padding:14px 20px 22px;display:grid;gap:12px}.kz-login-body label{display:grid;gap:6px;font-size:12px;font-weight:800;color:#5e5145}.kz-login-body input,.kz-login-body select,.kz-admin-card select{width:100%;box-sizing:border-box;border:1px solid #ddcfbe;background:#fff;color:#332a22;border-radius:11px;padding:11px 12px;font:inherit}.kz-pin{text-align:center;font-size:19px!important;letter-spacing:.4em}.kz-auth-primary{border:0;background:#9b6a2c;color:#fff;border-radius:11px;padding:12px;font-weight:850}.kz-auth-msg{padding:10px 12px;border:1px solid #ead8bb;background:#fff8ec;color:#71542e;border-radius:10px;font-size:12px;line-height:1.5}.kz-auth-msg.err{border-color:#e7c3bd;background:#fff2f0;color:#93443c}.kz-admin-overlay{position:fixed;inset:0;z-index:999998;background:rgba(42,33,24,.35);display:grid;place-items:center;padding:20px}.kz-admin-card{width:min(560px,100%);max-height:min(760px,90vh);overflow:auto;background:#fff;border-radius:20px;border:1px solid #e5d7c5;box-shadow:0 24px 70px rgba(30,20,10,.2);padding:20px}.kz-admin-top{display:flex;align-items:center;gap:10px;margin-bottom:15px}.kz-admin-top div{display:grid;gap:2px}.kz-admin-top small{color:#81766b}.kz-admin-top .sp{flex:1}.kz-admin-top button{border:1px solid #ddd0c0;background:#fff;border-radius:9px;padding:7px 9px}.kz-request{display:grid;gap:10px;padding:14px 0;border-top:1px solid #eee4d8}.kz-request-head{display:flex;align-items:center;gap:10px}.kz-request-head span{display:grid;gap:2px}.kz-request-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kz-approve-box{display:grid;gap:7px}.kz-approve-box[hidden]{display:none!important}.kz-acct{display:grid;gap:10px;padding:14px 0;border-top:1px solid #eee4d8}.kz-acct .kz-request-head button{padding:7px 12px;font-size:12px}.kz-acct small{display:block;color:#887d72}.kz-acct-form{display:grid;gap:10px;padding:12px;border:1px solid #eee4d8;border-radius:14px;background:#fffcf7}.kz-acct-form[hidden]{display:none!important}.kz-approve-box>span{font-size:11px;font-weight:850;color:#77695c}.kz-choice{display:flex;flex-wrap:wrap;gap:6px}.kz-choice button{border:1px solid #ddcfbe;background:#fff;color:#5f5246;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}.kz-choice button.on{background:#fff1d9;border-color:#c99955;color:#81551d}.kz-approve-foot{display:flex;justify-content:flex-end;gap:8px}.kz-request small{display:block;color:#887d72}.kz-admin-section{margin-top:16px;padding-top:14px;border-top:1px solid #eee4d8}.kz-admin-actions{display:flex;gap:8px;flex-wrap:wrap}.kz-admin-actions button{padding:9px 11px}.kz-auth-note{font-size:11px;color:#877c71;line-height:1.5}.kz-pending-ok{text-align:center;padding:10px 4px 2px}.kz-pending-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#edf7ef;color:#3f6849;font-size:25px;font-weight:900}.kz-pending-ok b{display:block;font-size:18px;color:#352b22;margin-bottom:7px}.kz-pending-ok p{margin:0 0 15px;color:#776c61;font-size:13px;line-height:1.65}@media(max-width:600px){.kz-request{grid-template-columns:1fr}.kz-login-card{border-radius:17px}}
 </style>
-\n<script id="kz-auth-v92-script">
+
+<script id="kz-auth-v92-script">
 (function(){
  const K='kzAuthAccountsV92', S='kzAuthSessionV92';
  const FB=()=>window.KZ_FIREBASE_AUTH||null;
@@ -3020,7 +3021,7 @@ button:disabled,.btn:disabled{opacity:.58!important}
  function boot(){read();watchAccounts();setTimeout(()=>syncAccounts(),700);setTimeout(()=>ensureManagerAuth(),1200);try{sessionStorage.removeItem(S);localStorage.removeItem('kzTrialModeV92')}catch(e){}login();}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
-</script>\n
+</script>
 <style id="v88-global-contrast-fix">
 /* ===== 전체 컨트롤 가독성 보정: 기존 레이아웃/기능 유지 ===== */
 button{color:var(--tx)}
@@ -3999,7 +4000,8 @@ button:disabled,.btn:disabled,input:disabled,select:disabled,textarea:disabled{o
 
 <style id="kz-brand-cross-v2">
 /* 브랜드 십자가 교체: 두 줄 골드 십자가 (기존 한 줄 십자가 대신) */
-.side-t .brand .brand-cross{width:22px!important;flex:0 0 22px!important;height:auto!important;min-height:0!important;align-self:stretch!important;margin:2px 4px 2px 0!important;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 100'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23d4a660'/><stop offset='1' stop-color='%23a8742f'/></linearGradient></defs><g stroke='url%28%23g%29' stroke-width='3.3' fill='none'><path d='M17.6 0v100M24.4 0v100M0 26h42M0 32.8h42'/></g></svg>") center/contain no-repeat!important}
+/* 비율 보정: 전통 십자가 비율(가로 ≈ 세로의 2/3, 가로대는 위에서 약 1/3) */
+.side-t .brand .brand-cross{width:38px!important;flex:0 0 38px!important;height:60px!important;min-height:0!important;align-self:center!important;margin:0 6px 0 0!important;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 90'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23d4a660'/><stop offset='1' stop-color='%23a8742f'/></linearGradient></defs><g stroke='url%28%23g%29' stroke-width='2.6' fill='none'><path d='M27 0v90M33 0v90M3 25h54M3 31h54'/></g></svg>") center/contain no-repeat!important}
 .side-t .brand .brand-cross:before,.side-t .brand .brand-cross:after{display:none!important;content:none!important}
 /* 검색 버튼 돋보기 이모지를 단색으로 (기기마다 컬러로 보이는 것 방지) */
 .nv-s>span:first-child{filter:grayscale(1)}
@@ -4862,7 +4864,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 <script id="kz-push-script">
 /* =====================================================================
    휴대폰 푸시 알림 (Firebase Cloud Messaging · 무료)
-   · 팀원: "알림 받기"를 켜면 이 기기를 Firestore pushTokens에 등록
+   · 기본으로 켜짐: 로그인 후 첫 터치 때 알림 허용을 물어보고 이 기기를 Firestore pushTokens에 등록
    · 관리자가 콘티 업로드 / 새 공지 / 새 일정을 올리면 /api/notify 로 자동 발송
    · 아이폰은 "홈 화면에 추가"한 앱에서만 알림을 받을 수 있음 (애플 정책)
    ===================================================================== */
@@ -4892,7 +4894,18 @@ async function register(types){const u=authUser();if(!u)throw new Error('로그�
  if(old&&old!==token)try{await FDB().doc('pushTokens/'+tokenId(old)).delete()}catch(e){}
  await FDB().doc('pushTokens/'+tokenId(token)).set({token,uid:u.uid,name:a.name||me||'',rank:a.rank||'',types:t,ios:isIOS(),ua:navigator.userAgent.slice(0,120),at:Date.now()});
  save({token,types:t,uid:u.uid,at:Date.now()});return token}
-async function unregister(){const s=st();try{if(s.token)await FDB().doc('pushTokens/'+tokenId(s.token)).delete()}catch(e){}try{const m=await messaging();await m.deleteToken()}catch(e){}save({types:s.types})}
+/* ---------- 기본으로 켜기 ----------
+   · 이미 허용된 기기: 로그인하면 조용히 자동 등록
+   · 아직 안 물어본 기기: 로그인 후 화면을 처음 누를 때 알림 허용 창을 띄움 (브라우저 규칙상 터치가 필요)
+   · 본인이 직접 '끄기'를 누른 기기는 다시 켜지 않음 */
+let autoBusy=false;
+function autoReady(){const v=st();return !!authUser()&&!document.getElementById('kzLoginLock')&&state()==='off'&&!v.userOff&&!autoBusy}
+async function autoSilent(){if(!autoReady()||Notification.permission!=='granted')return;autoBusy=true;try{await register();paint()}catch(e){console.warn('[꿈자리] 알림 자동 등록 실패',e)}autoBusy=false}
+function autoGesture(){if(!autoReady()||Notification.permission!=='default')return;const v=st();if((v.autoAsk||0)>Date.now())return;
+ v.autoAsk=Date.now()+3*864e5;save(v);autoBusy=true;
+ register().then(()=>{toast('📱 이 기기에서 알림을 켰어요 ✓ (계정 창에서 종류별로 끌 수 있어요)');paint()}).catch(e=>console.warn('[꿈자리] 알림 허용 안 됨',e)).finally(()=>{autoBusy=false;paint()})}
+document.addEventListener('click',autoGesture,true);document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')autoGesture()},true);
+async function unregister(){const s=st();try{if(s.token)await FDB().doc('pushTokens/'+tokenId(s.token)).delete()}catch(e){}try{const m=await messaging();await m.deleteToken()}catch(e){}save({types:s.types,userOff:true})}
 async function setTypes(t){const s=st();s.types=t;save(s);if(s.token&&authUser())try{await FDB().doc('pushTokens/'+tokenId(s.token)).set({types:t,uid:authUser().uid},{merge:true})}catch(e){}}
 /* 로그인한 상태로 다시 들어오면 기기 정보를 조용히 갱신 (주소가 바뀌는 경우 대비) */
 async function refresh(){if(state()!=='on')return;try{const m=await messaging(),token=await m.getToken({vapidKey:VAPID,serviceWorkerRegistration:swReg});const s=st();if(token&&(token!==s.token||Date.now()-(s.at||0)>7*864e5))await register(s.types)}catch(e){console.warn('[꿈자리] 알림 갱신 실패',e)}}
@@ -4929,7 +4942,7 @@ function paint(){const card=document.querySelector('#kzAdminPanel .kz-admin-card
 
 /* ---------- 모바일 화면 아래 "알림 받기" 안내 ---------- */
 function paintBar(){const M=document.getElementById('kzM'),old=document.getElementById('kzPushBar');const s=state(),dismissed=(st().dismiss||0)>Date.now();
- const show=M&&!M.hidden&&authUser()&&(s==='off'||s==='ios-home')&&!dismissed;if(!show){if(old)old.remove();return}if(old)return;
+ const show=M&&!M.hidden&&authUser()&&((s==='off'&&!st().userOff)||s==='ios-home')&&!dismissed;if(!show){if(old)old.remove();return}if(old)return;
  const b=document.createElement('div');b.id='kzPushBar';
  b.innerHTML=s==='ios-home'?`<span><b>📱 새 콘티 알림 받기</b><small>Safari 공유(□↑) → 홈 화면에 추가 → 앱에서 켜기</small></span><button type="button" class="x" aria-label="닫기">✕</button>`:`<span><b>📱 새 콘티·공지 알림 받기</b><small>올라오면 휴대폰으로 바로 알려 드려요</small></span><button type="button" class="go">켜기</button><button type="button" class="x" aria-label="닫기">✕</button>`;
  M.appendChild(b);b.querySelector('.x').onclick=()=>{const v=st();v.dismiss=Date.now()+14*864e5;save(v);b.remove()};
@@ -4937,7 +4950,7 @@ function paintBar(){const M=document.getElementById('kzM'),old=document.getEleme
 
 window.kzPush={state,register,unregister,notify,contiPush,noticePush,eventPush};
 new MutationObserver(()=>{const p=document.getElementById('kzAdminPanel');if(p&&!p.querySelector('#kzPushSec'))paint()}).observe(document.body,{childList:true});
-setInterval(paintBar,2000);
+setInterval(()=>{paintBar();autoSilent()},2000);
 if(window.KZ_FIREBASE_AUTH_READY)window.KZ_FIREBASE_AUTH_READY.then(()=>setTimeout(refresh,3000)).catch(()=>{});
 })();
 </script>
