@@ -4313,7 +4313,7 @@ function atMissing(){const first=ATT.length?ATT.reduce((m,a)=>a.date<m?a.date:m,
  for(let i=0;i<10&&w>=shiftDate(first,-6);i++){const k=w+'_sun',doc=ATT.find(a=>a._id===k),L=doc?(doc.list||[]):atLineup(w).list,done=doc?L.filter(p=>((doc.recs||{})[p.n]||{}).s).length:0;if(L.length&&done<L.length)out.push({w,done,total:L.length});w=shiftDate(w,-7)}return out}
 function atCardHTML(c,mob){const bc=mob?'m-btn':'sm',done=c.list.filter(p=>(c.recs[p.n]||{}).s).length,st=atSaveState[c.key],inList=new Set(c.list.map(p=>p.n)),addable=atNames().filter(n=>!inList.has(n));
  const off=c.type!=='기타'?atOffWarn(atWeek).filter(x=>!c.list.some(p=>p.n===x.n)):[];
- const rows=c.list.length?c.list.map(p=>{const r=c.recs[p.n]||{},sr=atStatusAt(p.n,c.date);return `<div class="at-r" data-at-row="${esc(c.key)}|${esc(p.n)}"><div class="at-nm"><b>${esc(p.n)}</b><small>${esc(p.r||atRoleOf(p.n)||'')}${sr?` · <span style="color:#ad6f17;font-weight:750">${esc(sr.state)} 중</span>`:''}</small></div><div class="at-st">${AT_ST.map(s=>`<button type="button" data-at-s="${esc(c.key)}|${esc(p.n)}" data-s="${s}" class="${r.s===s?'on':''}">${s}</button>`).join('')}</div><input class="at-note" data-at-n="${esc(c.key)}|${esc(p.n)}" value="${esc(r.n||'')}" placeholder="비고"><button type="button" class="at-x" data-at-rm="${esc(c.key)}|${esc(p.n)}" title="명단에서 빼기" aria-label="${esc(p.n)} 명단에서 빼기">✕</button></div>`}).join(''):'<div class="at-empty">명단이 비어 있어요. 아래에서 사람을 추가하거나, 라인업이 정해지면 자동으로 채워져요</div>';
+ const rows=c.list.length?c.list.map(p=>{const r=c.recs[p.n]||{},sr=atStatusAt(p.n,c.date);return `<div class="at-r" data-at-row="${esc(c.key)}|${esc(p.n)}"><div class="at-nm"><b>${esc(p.n)}</b><small>${esc(p.r||atRoleOf(p.n)||'')}${sr?` · <span style="color:#ad6f17;font-weight:750">${esc(sr.state)} 중</span>`:''}</small></div><select class="at-mobile-status" aria-label="${esc(p.n)} 출결 상태"><option value="">미입력</option>${AT_ST.map(s=>`<option value="${s}" ${r.s===s?'selected':''}>${s}</option>`).join('')}</select><div class="at-st">${AT_ST.map(s=>`<button type="button" data-at-s="${esc(c.key)}|${esc(p.n)}" data-s="${s}" class="${r.s===s?'on':''}">${s}</button>`).join('')}</div><details class="at-note-fold" ${r.n||!matchMedia('(max-width:820px)').matches?'open':''}><summary>비고${r.n?' 있음':' 추가'}</summary><input class="at-note" data-at-n="${esc(c.key)}|${esc(p.n)}" value="${esc(r.n||'')}" placeholder="비고"></details><button type="button" class="at-x" data-at-rm="${esc(c.key)}|${esc(p.n)}" title="명단에서 빼기" aria-label="${esc(p.n)} 명단에서 빼기">✕</button></div>`}).join(''):'<div class="at-empty">명단이 비어 있어요. 아래에서 사람을 추가하거나, 라인업이 정해지면 자동으로 채워져요</div>';
  return `<section class="at-card"><div class="at-ch"><b>${esc(c.type==='기타'?(c.label||'기타'):c.type)}</b><span class="mu">${fmtD(c.date)}</span><span class="at-tag">${esc(c.src)}</span><span class="at-tag ${c.doc&&done===c.list.length&&c.list.length?'ok':'warn'}" data-at-cnt="${esc(c.key)}">입력 ${done}/${c.list.length}</span><span class="at-state ${st==='ok'?'ok':st==='err'?'err':''}" data-at-state="${esc(c.key)}">${st==='wait'||st==='saving'?'저장 중…':st==='ok'?'저장됨 ✓':st==='err'?'저장 실패 · 다시 시도':''}</span></div>${off.length?`<div class="at-warn">쉬는 기간이라 명단에서 뺐어요: ${off.map(x=>`<b>${esc(x.n)}</b> (${esc(atStLbl(x.r))})`).join(', ')}. 라인업에 잡혀 있으니 일정표에서 대체 인원을 확인해 주세요.</div>`:''}<div class="at-rows">${rows}</div>
  <div class="at-foot"><button type="button" class="${bc}" data-at-all="${esc(c.key)}">빈칸 모두 출석</button>${c.type!=='기타'?`<button type="button" class="${bc}" data-at-sync="${esc(c.key)}">라인업 다시 불러오기</button>`:''}${addable.length?`<select data-at-addsel="${esc(c.key)}" aria-label="추가할 사람"><option value="">＋ 사람 추가</option>${addable.map(n=>`<option>${esc(n)}</option>`).join('')}</select>`:''}${c.doc&&c.type==='기타'?`<button type="button" class="${bc}" data-at-del="${esc(c.key)}">일정 삭제</button>`:''}</div></section>`}
 function atEtcForm(mob){const bc=mob?'m-btn':'sm',bp=mob?'m-btn yt':'btn';return `<section class="at-card"><div class="at-ch"><b>기타 일정 추가</b><span class="mu">수련회, 특송 연습처럼 주일·토요연습 외의 일정</span></div><div class="at-form"><div class="two"><input type="date" id="atE1" value="${todayStr()}"><input id="atE2" placeholder="일정 이름 (예: 추수감사 특송 연습)"></div><div class="mu" style="font-size:12.5px">참여 팀원</div><div class="at-pick">${atNames().map(n=>`<label><input type="checkbox" data-at-pk value="${esc(n)}">${esc(n)}</label>`).join('')||'<span class="mu">멤버 명단이 비어 있어요</span>'}</div><div class="at-foot"><button type="button" class="${bc}" id="atEc">취소</button><span class="at-sp"></span><button type="button" class="${bp}" id="atEs">일정 만들기</button></div></div></section>`}
@@ -5165,5 +5165,42 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  function sync(){if(!document.getElementById('shell'))return;if(!mq.matches&&(view==='mobile_my'||view==='mobile_more'))return go('home');renderTabbar();renderTop();renderDbar();body()}
  if(mq.addEventListener)mq.addEventListener('change',sync);else mq.addListener(sync);
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
+})();
+</script>
+
+<style id="kz-compact-forms">
+.at-mobile-status{display:none}.at-note-fold{display:contents}.at-note-fold>summary{display:none}.at-note-fold:not([open])>.at-note{display:block}
+@media screen and (max-width:820px){
+ #body>.wk{padding:12px!important;gap:12px!important}#body .sch .wiz{gap:12px}
+ #body .wz,#body .cv6-box{padding:14px!important;border-radius:14px!important}
+ #body .wz{gap:14px!important}.wz-s,.cv6-step{grid-template-columns:20px minmax(0,1fr)!important;gap:8px!important}
+ .wz-n,.cv6-num{width:20px;height:20px;font-size:11px}.wz-b{gap:7px}.wz-b>b,.cv6-body>b{font-size:13px;line-height:20px;margin:0 0 5px}
+ .wz-h{font-size:10px;margin-left:4px}.cv6-step{padding:10px 0}
+ .nchs{gap:5px}.nchs button{min-height:38px;padding:6px 11px;font-size:13px}
+ .wchs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px!important}
+ .wchs .wchip{min-width:0;min-height:42px;padding:5px 2px;justify-content:center;flex-direction:column;gap:2px;border-radius:8px}.wchip b{font-size:12px}.wchip .tg{font-size:9px;line-height:13px;padding:0 4px}
+ .wz-seg{padding:3px;gap:2px;margin:0}.wz-seg button{min-height:42px;padding:5px 2px!important;font-size:11.5px!important;white-space:normal;line-height:1.3}
+ .wz-d{padding:7px 9px;font-size:11.5px;line-height:1.5}.wz-x{padding:8px}
+ .wz-sum,.cv6-summary{padding:9px 10px;margin-top:0;font-size:12px;line-height:1.5}.wz-sum>.mu{font-size:10px}
+ #wzgo{flex:1;min-height:44px}#wzrs{font-size:11px;padding:6px 9px}
+ .sch h1,.cv6-hero h1{font-size:19px!important}.sch .ht2{font-size:19px!important}.cv6-hero{flex-direction:row;align-items:center}.cv6-hero p{font-size:11px}
+ #body .at-card{padding:12px!important;border-radius:14px!important;min-width:0;overflow:hidden}
+ .at-ch{gap:5px;margin-bottom:8px}.at-ch b{font-size:14px}.at-ch .mu{font-size:11px}.at-tag{font-size:10px;padding:2px 6px}.at-state{font-size:11px}
+ .at-r{grid-template-columns:minmax(0,1fr) 122px 28px!important;gap:6px!important;padding:10px 0;align-items:center}
+ .at-r .at-nm{grid-column:1;grid-row:1;min-width:0}.at-nm b{font-size:13px}.at-nm small{font-size:10.5px;line-height:1.4}
+ .at-r .at-st{display:none!important}.at-r .at-mobile-status{display:block;grid-column:2;grid-row:1;width:100%;min-height:44px;padding:7px 6px;font-size:16px!important;border-radius:9px;background:var(--card)}
+ .at-r .at-x{grid-column:3!important;grid-row:1!important;width:28px;height:44px;font-size:14px}
+ .at-r .at-note-fold{display:block;grid-column:1/-1;grid-row:2;font-size:11px;color:var(--mu)}.at-note-fold>summary{display:list-item;cursor:pointer;min-height:30px;padding:6px 0}.at-note-fold:not([open])>.at-note{display:none}.at-note-fold .at-note{display:block;margin-top:4px;min-height:40px}
+ .at-foot{gap:6px;margin-top:8px}.at-foot .sm{font-size:11px;min-height:40px;padding:6px 8px;flex:1}.at-foot select{min-width:0;max-width:100%;flex:1;min-height:40px;font-size:16px!important}
+ .at-week{flex-wrap:nowrap;gap:5px}.at-week b{min-width:0;flex:1;font-size:13px}.at-wb{height:42px;min-width:40px}.at-miss{gap:5px;font-size:11px}.at-miss .mu{font-size:11px}.at-miss button{font-size:11px;min-height:36px;padding:5px 8px}
+ .at-empty{padding:10px 6px;font-size:12px;line-height:1.6}.at-sum{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.at-sum div{padding:8px;border-radius:10px}
+}
+</style>
+<script id="kz-compact-interactions">
+(function(){
+ document.addEventListener('change',e=>{const select=e.target;if(!select.matches('.at-mobile-status'))return;const row=select.closest('.at-r'),buttons=Array.from(row.querySelectorAll('[data-at-s]')),current=buttons.find(b=>b.classList.contains('on'));const next=select.value?buttons.find(b=>b.dataset.s===select.value):current;if(next&&(!select.value||next!==current))next.click();});
+ const previousGo=go;go=function(v){const result=previousGo(v);if(matchMedia('(max-width:820px)').matches){window.scrollTo(0,0);const b=document.getElementById('body');if(b)b.scrollTop=0}return result};
+ const previousDbar=renderDbar;renderDbar=function(){if(matchMedia('(max-width:820px)').matches&&['swap','abs'].includes(view)){const b=document.getElementById('dbar');if(b)b.hidden=true;setBH();return}return previousDbar()};
+ if(document.getElementById('shell')){renderDbar();setBH()}
 })();
 </script>
