@@ -3354,6 +3354,25 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
   window.kcResetPopupLayout=function(){const o=getStore();delete o[panelKey()];saveStore(o);location.reload();};
 })();
 </script>
+
+<style id="kz-room-members-fix">
+#kcPanel[data-panel="community"] .kc-chat-main{position:relative;overflow:visible}
+#kcPanel[data-panel="community"] .kc-room-member-popover{position:absolute;z-index:50;top:62px;right:14px;width:min(290px,calc(100% - 28px));max-height:330px;border:1px solid #ddd4c8;border-radius:15px;background:rgba(255,253,249,.98);box-shadow:0 18px 45px rgba(64,46,29,.18);overflow:auto}
+#kcPanel[data-panel="community"] .kc-room-member-popover[hidden]{display:none!important}
+#kcPanel[data-panel="community"] .kc-room-members-panel-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px 10px;border-bottom:1px solid #eee7de}
+#kcPanel[data-panel="community"] .kc-room-members-panel-head strong{font-size:13px;color:#403a34}
+#kcPanel[data-panel="community"] .kc-room-members-panel-head span{font-size:11px;color:#8a8177}
+#kcPanel[data-panel="community"] .kc-room-member-popover .kc-room-members-list{padding:5px 9px 8px;max-height:260px;overflow:auto}
+#kcPanel[data-panel="community"] .kc-room-member{display:flex;align-items:center;gap:9px;padding:8px 5px;border-radius:9px}
+#kcPanel[data-panel="community"] .kc-room-member:hover{background:#f6f1ea}
+#kcPanel[data-panel="community"] .kc-room-member-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e9dfd3;color:#6f5239;font-size:11px;font-weight:700;flex:none}
+#kcPanel[data-panel="community"] .kc-room-member-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+#kcPanel[data-panel="community"] .kc-room-member-info b{font-size:12.5px;color:#403a34}
+#kcPanel[data-panel="community"] .kc-room-member-info small{font-size:10.5px;color:#8a8177;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#kcPanel[data-panel="community"] .kc-room-members-empty{padding:15px 7px;color:#8a8177;font-size:11px;text-align:center}
+#kcPanel[data-panel="community"] .kc-chat-member-float.open{background:#eaded1;color:#714e32}
+@media(max-width:820px){#kcPanel[data-panel="community"] .kc-room-member-popover{top:58px;right:8px;width:min(280px,calc(100% - 16px));max-height:300px}}
+</style>
 </body></html><style>
 /* ===== v5 일정표 리디자인: 주간 플래너 ===== */
 .sch-v5{max-width:1120px;margin:0 auto;display:grid;gap:18px}
@@ -5516,40 +5535,38 @@ function chrome(){}
 function shell(title,sub,extra=''){const b=$c('#kcPanelBody');if(!b)return false;b.innerHTML=`<section class="kc-page"><div class="kc-head"><h1>${title}</h1>${extra}</div><p class="kc-sub">${sub}</p><div class="kc-error" id="kcError" role="status"></div><div id="kcContent"></div></section>`;chrome();return true;}
 async function status(){const s=await api({action:'status'});actor=s.account;unread=s.unread;statusAt=Date.now();badge();return s;}
 function roomTabs(){const e=$c('#kcRooms');if(e)e.innerHTML=`<button class="${room==='all'?'on':''}" data-room="all">전체방</button>${actor&&['관리계정','단장','인도자','선임싱어','선임세션'].includes(actor.rank)?`<button class="${room==='admin'?'on':''}" data-room="admin">관리자방</button>`:''}`;e?.querySelectorAll('button').forEach(x=>x.onclick=()=>{const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();});}
-function roomMemberList(){
+function roomMemberListData(){
  const adminRanks=['관리계정','단장','인도자','선임싱어','선임세션'];
  let list=(Array.isArray(members)?members:[]).filter(m=>m&&m.name&&(
    room==='all' || adminRanks.includes(m.rank)
  ));
- const actorId=String(actor?.id||actor?.uid||'');
- const actorName=String(actor?.name||'');
- if(actorName && !list.some(m=>String(m.accountId||m.id||'')===actorId && actorId || String(m.name)===actorName)){
-   list.push({name:actorName,rank:actor?.rank||'팀원',parts:actor?.parts||[]});
+ const actorName=String(actor?.name||'').trim();
+ const actorRank=String(actor?.rank||'팀원');
+ if(actorName && !list.some(m=>String(m.name)===actorName)){
+   const actorMember=(Array.isArray(members)?members:[]).find(m=>String(m.name)===actorName);
+   list.push(actorMember||{name:actorName,rank:actorRank,parts:actor?.parts||[]});
  }
- list=list.filter((m,i,a)=>a.findIndex(x=>String(x.name)===String(m.name))===i)
+ return list.filter((m,i,a)=>a.findIndex(x=>String(x.name)===String(m.name))===i)
    .sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
- const title=room==='admin'?'관리자방 참여 멤버':'전체방 참여 멤버';
- return `<div class="kc-room-members">
-   <button type="button" class="kc-room-members-toggle" id="kcRoomMembersToggle" aria-expanded="false">
-     <span><span class="kc-room-members-icon">♧</span><b>${title}</b><small>${list.length}명</small></span>
-     <span class="kc-room-members-chevron">⌄</span>
-   </button>
-   <div class="kc-room-members-list" id="kcRoomMembersList" hidden>
+}
+function roomMemberList(){
+ const list=roomMemberListData();
+ const title=room==='admin'?'관리자방 참여 멤버':'전체 채팅 참여 멤버';
+ return `<div class="kc-room-members-panel">
+   <div class="kc-room-members-panel-head"><strong>${title}</strong><span>${list.length}명</span></div>
+   <div class="kc-room-members-list">
      ${list.length?list.map(m=>`<div class="kc-room-member">
        <span class="kc-room-member-avatar">${escape(String(m.name).slice(0,1))}</span>
        <span class="kc-room-member-info"><b>${escape(m.name)}</b><small>${escape([m.rank,...(m.parts||[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' · '))}</small></span>
-     </div>`).join(''):'<div class="kc-room-members-empty">참여 권한이 있는 멤버가 없어요.</div>'}
+     </div>`).join(''):'<div class="kc-room-members-empty">이 채팅방에 참여할 수 있는 멤버가 없어요.</div>'}
    </div>
  </div>`;
-}
-function bindRoomMembers(){
- const t=$c('#kcRoomMembersToggle'),l=$c('#kcRoomMembersList');if(!t||!l)return;
- t.onclick=()=>{const open=!l.hidden;l.hidden=open;t.setAttribute('aria-expanded',String(!open));t.classList.toggle('open',!open);};
 }
 async function communityView(){document.body.classList.add('kc-chat-active');const gen=++pageGeneration;if(!shell('팀 채팅',''))return;try{await status();if(activeView()!=='community'||gen!==pageGeneration)return;
  if(room==='admin'&&!['관리계정','단장','인도자','선임싱어','선임세션'].includes(actor.rank))room='all';
  const canAdmin=actor&&['관리계정','단장','인도자','선임싱어','선임세션'].includes(actor.rank);
- const totalMembers=Array.isArray(members)?members.filter(m=>m&&m.name).length:0;
+ const roomMembers=roomMemberListData();
+ const totalMembers=roomMembers.length;
  $c('#kcContent').innerHTML=`<div class="kc-chat-app">
    <aside class="kc-chat-sidebar">
      <div class="kc-chat-side-head">
@@ -5578,7 +5595,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
          </button>
        </div>
      </header>
-     <div id="kcRoomMemberPopover" hidden>${roomMemberList()}</div>
+     <div id="kcRoomMemberPopover" class="kc-room-member-popover" hidden>${roomMemberList()}</div>
      <div class="kc-chat">
        <div id="kcChatLog" class="kc-chat-log" role="log" aria-label="채팅 메시지"></div>
        <button class="kc-btn kc-new" id="kcNew" hidden>새 메시지 ↓</button>
@@ -5597,7 +5614,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  const search=$c('#kcRoomSearch');if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();$c('#kcRoomList')?.querySelectorAll('.kc-room-item').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(q));};
  const switchRoom=x=>{const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();};
  document.querySelectorAll('#kcRoomList [data-room],#kcMobileRooms [data-room]').forEach(x=>x.onclick=()=>switchRoom(x));
- const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();}
+ const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();document.addEventListener('click',()=>{if(!pop.hidden){pop.hidden=true;memberBtn.setAttribute('aria-expanded','false');memberBtn.classList.remove('open');}},{once:false});}
  $c('#kcChatPlus').onclick=()=>{const file=$c('#kcChatAttach input[type=file]');if(file)file.click();else $c('#kcChatAttach')?.scrollIntoView({block:'nearest'});};
  $c('#kcNew').onclick=()=>{const l=$c('#kcChatLog');l.scrollTop=l.scrollHeight;$c('#kcNew').hidden=true;};
  $c('#kcCompose').onsubmit=send;
