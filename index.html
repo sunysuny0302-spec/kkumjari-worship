@@ -3,9 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1d2b57">
 <title>꿈자리 찬양팀</title>
-<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=cross-20261007">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=cross-20261007">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=cross-20261007">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=cross-20261007">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=cross-20261007">
+<link rel="manifest" href="manifest.webmanifest?v=cross-20261007">
+
+
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="꿈자리">
@@ -1492,31 +1498,9 @@ return {mount,gallery,get:el=>[...(states.get(el)?.images||[])],busy:el=>!!state
 }
 </style>
 
-<style id="kz-mobile-chat-fix">
-/* 모바일 채팅: 내가 보낸 메시지는 오른쪽, 상대 메시지는 왼쪽으로 명확하게 구분 */
-@media (max-width:820px){
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message{display:block!important;width:fit-content!important;max-width:82%!important;margin-top:8px!important;margin-bottom:8px!important;margin-left:0!important;margin-right:auto!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.mine{margin-left:auto!important;margin-right:0!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.other{margin-left:0!important;margin-right:auto!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message b{margin:0 5px 4px!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.mine b{text-align:right!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message time{text-align:right!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.other time{text-align:left!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.mine .kc-bubble{background:#ead7c0!important;border:1px solid #b98549!important;color:#3b3028!important;border-radius:16px 4px 16px 16px!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.other .kc-bubble{background:#fffdf9!important;border:1px solid #d8d0c6!important;color:#302d28!important;border-radius:4px 16px 16px 16px!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.mine b{color:#8b5d2e!important;}
-  #kcPanel[data-panel="community"] #kcChatLog .kc-message.other b{color:#6e665d!important;}
-}
-</style>
 
-<style id="kc-user-popup-layout-css">
-/* 사용자별 팝업 이동/크기조절 */
-#kcPanel.kc-user-layout{overflow:visible!important}
-#kcPanel.kc-user-layout .kc-popup-resize{position:absolute;right:3px;bottom:3px;width:22px;height:22px;z-index:20;cursor:nwse-resize;border-radius:0 0 18px 0;background:linear-gradient(135deg,transparent 0 46%,#9a7657 47% 52%,transparent 53% 62%,#9a7657 63% 68%,transparent 69%);touch-action:none}
-#kcPanel.kc-user-layout .kc-panel-head{cursor:grab;user-select:none;touch-action:none}
-#kcPanel.kc-user-layout.kc-dragging .kc-panel-head{cursor:grabbing}
-#kcPanel.kc-user-layout .kc-panel-head button{cursor:pointer}
-</style>
+
+
 
 <style id="kz-chat-message-alignment-final">
 #kcPanel[data-panel="community"] #kcChatLog .kc-message{display:flex!important;align-items:flex-end!important;width:fit-content!important;max-width:78%!important;}
@@ -1530,49 +1514,8 @@ return {mount,gallery,get:el=>[...(states.get(el)?.images||[])],busy:el=>!!state
 #kcPanel[data-panel="community"] #kcChatLog .kc-message.mine time{text-align:right!important;}
 @media(max-width:820px){#kcPanel[data-panel="community"] #kcChatLog .kc-message{max-width:88%!important;}}
 </style>
-<style id="kz-chat-stability-final">
-/* 최종 안정화: 채팅 팝업의 이동/크기/입력창을 한 곳에서 관리 */
-#kcPanel[data-panel="community"]{box-sizing:border-box;overflow:visible!important;}
-#kcPanel[data-panel="community"].kc-user-layout{position:fixed!important;}
-#kcPanel[data-panel="community"].kc-user-layout .kc-chat-modern-head{cursor:grab;user-select:none;touch-action:none;}
-#kcPanel[data-panel="community"].kc-user-layout.kc-dragging .kc-chat-modern-head{cursor:grabbing;}
-#kcPanel[data-panel="community"].kc-user-layout .kc-popup-resize{position:absolute!important;right:2px!important;bottom:2px!important;width:26px!important;height:26px!important;z-index:120!important;cursor:nwse-resize!important;touch-action:none!important;border-radius:0 0 22px 0!important;background:linear-gradient(135deg,transparent 0 42%,#a9783d 43% 48%,transparent 49% 59%,#a9783d 60% 65%,transparent 66%)!important;}
-#kcPanel[data-panel="community"] .kc-chat-composer{padding:12px 14px 14px!important;background:#fffdfb!important;border-top:1px solid #e5ddd3!important;}
-#kcPanel[data-panel="community"] .kc-chat-composer-row{display:flex!important;align-items:center!important;gap:9px!important;}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose{min-width:0!important;flex:1 1 auto!important;border:1px solid #ddd2c5!important;border-radius:20px!important;background:#faf8f4!important;padding:0!important;overflow:hidden!important;}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose:focus-within{border-color:#c6a276!important;background:#fff!important;box-shadow:0 0 0 3px rgba(167,123,69,.10)!important;}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{width:100%!important;min-height:44px!important;max-height:120px!important;border:0!important;border-radius:20px!important;background:transparent!important;padding:11px 15px!important;outline:0!important;box-shadow:none!important;font-size:14px!important;resize:none!important;}
-#kcPanel[data-panel="community"] .kc-chat-plus{width:44px!important;height:44px!important;flex:0 0 44px!important;border-radius:50%!important;border:1px solid #ddd2c5!important;background:#fff!important;color:#796957!important;box-shadow:0 2px 7px rgba(70,50,30,.04)!important;}
-#kcPanel[data-panel="community"] .kc-chat-send{width:46px!important;height:44px!important;flex:0 0 46px!important;border-radius:50%!important;background:#a9783d!important;box-shadow:0 6px 14px rgba(145,100,45,.18)!important;}
-#kcPanel[data-panel="community"] .kc-chat-send:hover{background:#94652f!important;transform:translateY(-1px);}
-@media(max-width:820px){
- #kcPanel[data-panel="community"] .kc-popup-resize{display:none!important;}
- #kcPanel[data-panel="community"] .kc-chat-composer{padding:8px 9px 10px!important;}
- #kcPanel[data-panel="community"] .kc-chat-composer-row{gap:6px!important;}
- #kcPanel[data-panel="community"] .kc-chat-plus{width:40px!important;height:40px!important;flex-basis:40px!important;}
- #kcPanel[data-panel="community"] .kc-chat-send{width:42px!important;height:40px!important;flex-basis:42px!important;}
- #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose{border-radius:18px!important;}
- #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{min-height:40px!important;border-radius:18px!important;padding:9px 12px!important;}
-}
-</style>
-<style id="kz-chat-resize-final-fix">
-/* PC 채팅창 크기조절 최종 보강: 핸들이 가려져도 우하단 36px 영역에서 조절 가능 */
-@media(min-width:821px){
-  #kcPanel[data-panel="community"].kc-user-layout{
-    overflow:visible!important;
-    box-sizing:border-box!important;
-  }
-  #kcPanel[data-panel="community"].kc-user-layout .kc-popup-resize{
-    display:block!important;
-    pointer-events:auto!important;
-    position:absolute!important;
-    right:1px!important;bottom:1px!important;
-    width:30px!important;height:30px!important;
-    z-index:9999!important;
-    cursor:nwse-resize!important;
-  }
-}
-</style>
+
+
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -3343,198 +3286,7 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
 })();
 </script>
 
-<script id="kc-user-popup-layout-js">
-(function(){
-  'use strict';
-  const KEY='kc-user-popup-layout-v3',LEGACY_KEY='kc-user-popup-layout-v2';
-  const getStore=()=>{try{const cur=JSON.parse(localStorage.getItem(KEY)||'null');if(cur&&typeof cur==='object')return cur;const old=JSON.parse(localStorage.getItem(LEGACY_KEY)||'{}');if(old&&typeof old==='object'){localStorage.setItem(KEY,JSON.stringify(old));return old;}return {}}catch(e){return {}}};
-  const saveStore=o=>{try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  const vp=()=>({w:window.innerWidth,h:window.innerHeight});
-  const isChat=p=>p?.dataset.panel==='community';
-  const bounds=p=>isChat(p)?{minW:560,minH:520}:{minW:320,minH:240};
-  const panelKey=p=>p?.dataset.panel||'default';
 
-  function saveLayout(p){
-    if(!p||!p.open)return;
-    try{
-      const r=p.getBoundingClientRect(),v=vp(),o=getStore();
-      o[panelKey(p)]={x:r.left/v.w,y:r.top/v.h,w:r.width/v.w,h:r.height/v.h};
-      saveStore(o);
-    }catch(e){}
-  }
-
-  function setSizePosition(p,left,top,width,height){
-    const v=vp(),b=bounds(p);
-    const w=clamp(width,b.minW,Math.max(b.minW,v.w-16));
-    const h=clamp(height,b.minH,Math.max(b.minH,v.h-16));
-    const x=clamp(left,8,Math.max(8,v.w-w-8));
-    const y=clamp(top,8,Math.max(8,v.h-h-8));
-    p.style.left=x+'px'; p.style.top=y+'px';
-    p.style.right='auto'; p.style.bottom='auto'; p.style.transform='none';
-    p.style.width=w+'px'; p.style.height=h+'px';
-    p.style.maxWidth='none'; p.style.maxHeight='none';
-  }
-
-  function restoreLayout(p){
-    const saved=getStore()[panelKey(p)],v=vp();
-    if(saved){
-      setSizePosition(p,saved.x*v.w,saved.y*v.h,saved.w*v.w,saved.h*v.h);
-    }else{
-      const r=p.getBoundingClientRect();
-      setSizePosition(p,(v.w-r.width)/2,(v.h-r.height)/2,r.width,r.height);
-    }
-    p.dataset.layoutApplied='1';
-  }
-
-  function ensureHandle(p){
-    if(!p||window.innerWidth<=820)return;
-    let h=p.querySelector('.kc-popup-resize');
-    if(!h){
-      h=document.createElement('div');
-      h.className='kc-popup-resize';
-      h.title='팝업 크기 조절';
-      h.setAttribute('aria-label','팝업 크기 조절');
-      h.setAttribute('role','separator');
-      p.appendChild(h);
-    }
-    if(h.dataset.bound)return;
-    h.dataset.bound='1';
-    let start=null;
-    const end=()=>{
-      if(!start)return;
-      start=null;p.classList.remove('kc-resizing');
-      window.removeEventListener('pointermove',move);
-      window.removeEventListener('pointerup',end);
-      window.removeEventListener('pointercancel',end);
-      saveLayout(p);
-    };
-    const move=e=>{
-      if(!start)return;
-      const v=vp(),b=bounds(p);
-      const nw=clamp(start.w+(e.clientX-start.x),b.minW,Math.max(b.minW,v.w-16));
-      const nh=clamp(start.h+(e.clientY-start.y),b.minH,Math.max(b.minH,v.h-16));
-      // Keep the top-left fixed while resizing to avoid visual jumps.
-      setSizePosition(p,start.left,start.top,nw,nh);
-    };
-    h.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='mouse'&&e.button!==0)return;
-      e.preventDefault();e.stopPropagation();
-      const r=p.getBoundingClientRect();
-      start={x:e.clientX,y:e.clientY,w:r.width,h:r.height,left:r.left,top:r.top};
-      h.setPointerCapture?.(e.pointerId);p.classList.add('kc-resizing');
-      window.addEventListener('pointermove',move);
-      window.addEventListener('pointerup',end,{once:true});
-      window.addEventListener('pointercancel',end,{once:true});
-    });
-  }
-
-  function enableResizeFallback(p){
-    if(!p||window.innerWidth<=820||p.dataset.resizeFallbackBound)return;
-    p.dataset.resizeFallbackBound='1';
-    let start=null;
-    const end=()=>{
-      if(!start)return;
-      start=null;p.classList.remove('kc-resizing');
-      window.removeEventListener('pointermove',move);
-      window.removeEventListener('pointerup',end);
-      window.removeEventListener('pointercancel',end);
-      saveLayout(p);
-    };
-    const move=e=>{
-      if(!start)return;
-      const v=vp(),b=bounds(p);
-      const nw=clamp(start.w+(e.clientX-start.x),b.minW,Math.max(b.minW,v.w-16));
-      const nh=clamp(start.h+(e.clientY-start.y),b.minH,Math.max(b.minH,v.h-16));
-      setSizePosition(p,start.left,start.top,nw,nh);
-    };
-    p.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='mouse'&&e.button!==0)return;
-      if(e.target.closest('button,input,textarea,a,[data-no-drag]') && !e.target.closest('.kc-popup-resize'))return;
-      const r=p.getBoundingClientRect();
-      const grip=36;
-      if(e.clientX<r.right-grip||e.clientY<r.bottom-grip)return;
-      e.preventDefault();e.stopPropagation();
-      start={x:e.clientX,y:e.clientY,w:r.width,h:r.height,left:r.left,top:r.top};
-      p.classList.add('kc-resizing');
-      window.addEventListener('pointermove',move);
-      window.addEventListener('pointerup',end,{once:true});
-      window.addEventListener('pointercancel',end,{once:true});
-    },true);
-  }
-
-  function enableDrag(p){
-    if(!p||window.innerWidth<=820)return;
-    const head=isChat(p)?p.querySelector('.kc-chat-modern-head'):p.querySelector('.kc-panel-head');
-    if(!head||head.dataset.layoutDragBound)return;
-    head.dataset.layoutDragBound='1';
-    let start=null;
-    const end=()=>{
-      if(!start)return;
-      start=null;p.classList.remove('kc-dragging');
-      window.removeEventListener('pointermove',move);
-      window.removeEventListener('pointerup',end);
-      window.removeEventListener('pointercancel',end);
-      saveLayout(p);
-    };
-    const move=e=>{
-      if(!start)return;
-      const r=p.getBoundingClientRect(),v=vp();
-      const x=clamp(start.left+(e.clientX-start.x),8,Math.max(8,v.w-r.width-8));
-      const y=clamp(start.top+(e.clientY-start.y),8,Math.max(8,v.h-r.height-8));
-      p.style.left=x+'px';p.style.top=y+'px';p.style.right='auto';p.style.bottom='auto';p.style.transform='none';
-    };
-    head.addEventListener('pointerdown',e=>{
-      if(e.target.closest('button,input,textarea,a,.kc-popup-resize,[data-no-drag]'))return;
-      if(e.pointerType==='mouse'&&e.button!==0)return;
-      const r=p.getBoundingClientRect();
-      start={x:e.clientX,y:e.clientY,left:r.left,top:r.top};
-      head.setPointerCapture?.(e.pointerId);p.classList.add('kc-dragging');e.preventDefault();
-      window.addEventListener('pointermove',move);
-      window.addEventListener('pointerup',end,{once:true});
-      window.addEventListener('pointercancel',end,{once:true});
-    });
-  }
-
-  function resetMobile(p){
-    if(!p)return;
-    p.classList.remove('kc-user-layout','kc-dragging','kc-resizing');
-    const h=p.querySelector('.kc-popup-resize');if(h)h.remove();
-    delete p.dataset.layoutApplied;
-    ['left','top','right','bottom','transform','width','height','maxWidth','maxHeight'].forEach(k=>p.style[k]='');
-  }
-
-  function clampCurrent(p){
-    const r=p.getBoundingClientRect(),v=vp();
-    setSizePosition(p,r.left,r.top,r.width,r.height);
-  }
-
-  function setup(){
-    const p=document.getElementById('kcPanel');
-    if(!p)return;
-    if(window.innerWidth<=820){resetMobile(p);return;}
-    p.classList.add('kc-user-layout');
-    ensureHandle(p);
-    if(!p.dataset.layoutApplied)restoreLayout(p);
-    else clampCurrent(p);
-    enableResizeFallback(p);
-    enableDrag(p);
-  }
-
-  // Run after the panel is created, not on every click, so opening menus/rooms
-  // never snaps the user's window back to an old position.
-  const oldOpen=window.openPanel;
-  if(typeof oldOpen==='function'&&!oldOpen.__layoutWrapped){
-    const wrapped=function(){const r=oldOpen.apply(this,arguments);setTimeout(setup,40);return r;};
-    wrapped.__layoutWrapped=true;window.openPanel=wrapped;
-  }
-  const observer=new MutationObserver(()=>{const p=document.getElementById('kcPanel');if(p&&!p.dataset.layoutReady){p.dataset.layoutReady='1';setTimeout(setup,30);}});
-  observer.observe(document.body,{childList:true,subtree:true});
-  window.addEventListener('resize',()=>{const p=document.getElementById('kcPanel');if(!p?.open)return;if(window.innerWidth<=820)resetMobile(p);else setup();},{passive:true});
-  window.kcResetPopupLayout=function(){try{const o=getStore();delete o.community;saveStore(o);}catch(e){}location.reload();};
-  setTimeout(setup,100);
-})();
-</script>
 
 <style id="kz-room-members-fix">
 #kcPanel[data-panel="community"] .kc-chat-main{position:relative;overflow:visible}
@@ -3555,42 +3307,7 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
 @media(max-width:820px){#kcPanel[data-panel="community"] .kc-room-member-popover{top:58px;right:8px;width:min(280px,calc(100% - 16px));max-height:300px}}
 </style>
 
-<style id="kz-chat-single-window-final">
-/* 채팅은 바깥 #kcPanel 하나만 창으로 사용: 내부 이중 카드 제거 */
-#kcPanel[data-panel="community"] .kc-chat-app{
-  width:100%!important; height:100%!important; min-height:0!important;
-  margin:0!important; padding:0!important;
-  border:0!important; border-radius:0!important; box-shadow:none!important;
-  background:transparent!important; overflow:hidden!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-main,
-#kcPanel[data-panel="community"] .kc-chat-sidebar{
-  border-radius:0!important; box-shadow:none!important;
-}
-#kcPanel[data-panel="community"] .kc-chat{
-  border:0!important; border-radius:0!important; box-shadow:none!important;
-  background:transparent!important;
-}
-#kcPanel[data-panel="community"] #kcPanelBody,
-#kcPanel[data-panel="community"] #kcContent,
-#kcPanel[data-panel="community"] .kc-page{
-  margin:0!important; padding:0!important; border:0!important;
-  border-radius:0!important; box-shadow:none!important;
-}
-/* 바깥 창만 테두리/둥근 모서리를 갖도록 고정 */
-#kcPanel[data-panel="community"]{
-  overflow:hidden!important; box-sizing:border-box!important;
-}
-@media(max-width:820px){
-  #kcPanel[data-panel="community"]{
-    border-radius:18px!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-app{
-    border-radius:0!important;
-  }
-}
-</style>
+
 
 
 
@@ -5841,7 +5558,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  </div>`;
  const mobileBack=$c('#kcChatMobileBack');
  if(mobileBack) mobileBack.onclick=()=>{ closePanel(); };
- const search=$c('#kcRoomSearch');if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();$c('#kcRoomList')?.querySelectorAll('.kc-room-item').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(q));};
+ const search=$c('#kcRoomSearch');if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase(),list=$c('#kcRoomList');let count=0;list?.querySelectorAll('.kc-room-item').forEach(b=>{b.hidden=!b.textContent.toLowerCase().includes(q);if(!b.hidden)count++;});let empty=list?.querySelector('.kc-search-empty');if(!empty&&list){empty=document.createElement('p');empty.className='kc-search-empty';empty.textContent='일치하는 채팅방이 없어요.';list.append(empty);}if(empty)empty.hidden=!!count;};
  const switchRoom=x=>{if(room===x.dataset.room)return;const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();};
  document.querySelectorAll('#kcRoomList [data-room],#kcMobileRooms [data-room]').forEach(x=>x.onclick=()=>switchRoom(x));
  const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();memberDismiss=()=>{if(!pop.hidden){pop.hidden=true;memberBtn.setAttribute('aria-expanded','false');memberBtn.classList.remove('open');}};document.addEventListener('click',memberDismiss);}
@@ -5918,8 +5635,29 @@ const oldTop=renderTop;renderTop=function(){oldTop();top();};
 const oldTitle=pageTitle;pageTitle=function(){return view==='mobile_my'?'내 순서':pages[view]?'홈':oldTitle();};
 const oldBody=body;body=function(){if(pages[view]){const target=view;view='home';LS('view','home');const result=oldBody();openPanel(target);return result;}return oldBody();};
 const oldGo=go;go=function(v){if(pages[v])return openPanel(v);closePanel();return oldGo(v);};
-function closePanel(){const input=$c('#kcChatText');if(input)drafts[room]=input.value;if(memberDismiss){document.removeEventListener('click',memberDismiss);memberDismiss=null;}pageGeneration++;document.body.classList.remove('kc-panel-open');panelView=null;const panel=document.getElementById('kcPanel');if(panel){panel.close();panel.remove();}document.body.classList.remove('kc-chat-active','kc-keyboard');imageCache.clear();}
-function openPanel(v){if(!ready())return toast('로그인 후 이용해 주세요.');const key=uid()+'|'+(authAccount()?.id||'');if(key!==session){session=key;reset();}panelView=v;document.body.classList.add('kc-panel-open');let d=$c('#kcPanel');if(!d){d=document.createElement('dialog');d.id='kcPanel';d.setAttribute('aria-label','팀 소통');d.innerHTML='<header class="kc-panel-head"><strong id="kcPanelTitle">팀 채팅</strong><button type="button" id="kcPanelClose" autofocus aria-label="닫기">✕</button></header><nav id="kcPanelTabs" aria-label="소통 메뉴"></nav><div id="kcPanelBody"></div>';document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();closePanel();});d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel();}});$c('#kcPanelClose').onclick=closePanel;d.showModal();}
+function setupPanelLayout(panel){
+ const mq=matchMedia('(max-width:820px)'),key='kz-chat-window-v4';let drag=null;
+ const handle=document.createElement('button');handle.type='button';handle.className='kc-resize-handle';handle.setAttribute('aria-label','창 크기 조절: 방향키로 조절');handle.title='드래그 또는 방향키로 크기 조절';panel.append(handle);
+ const bound=(n,min,max)=>Math.max(min,Math.min(n,max));
+ function place(x,y,w,h){
+  w=bound(w,Math.min(600,innerWidth-24),innerWidth-24);h=bound(h,Math.min(420,innerHeight-24),innerHeight-24);
+  Object.assign(panel.style,{left:bound(x,12,innerWidth-w-12)+'px',top:bound(y,12,innerHeight-h-12)+'px',width:w+'px',height:h+'px',transform:'none',right:'auto',bottom:'auto'});
+ }
+ function save(){if(mq.matches)return;const r=panel.getBoundingClientRect();try{localStorage.setItem(key,JSON.stringify({x:r.x,y:r.y,w:r.width,h:r.height}));}catch{}}
+ function reset(){if(mq.matches)return;const w=Math.min(980,innerWidth-48),h=Math.min(760,innerHeight-48);place((innerWidth-w)/2,(innerHeight-h)/2,w,h);save();}
+ function sync(){drag=null;if(mq.matches){panel.removeAttribute('style');return;}let v;try{v=JSON.parse(localStorage.getItem(key));}catch{}if(v&&[v.x,v.y,v.w,v.h].every(Number.isFinite))place(v.x,v.y,v.w,v.h);else reset();}
+ function down(e){if(mq.matches||e.button!==0)return;const resize=e.target.closest('.kc-resize-handle');if(!resize&&(!e.target.closest('.kc-panel-head')||e.target.closest('button,input,a')))return;const r=panel.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,r,resize:!!resize};panel.setPointerCapture(e.pointerId);panel.classList.add('kc-dragging');e.preventDefault();}
+ function move(e){if(!drag)return;const {r,x,y,resize}=drag,dx=e.clientX-x,dy=e.clientY-y;place(r.x+(resize?0:dx),r.y+(resize?0:dy),r.width+(resize?dx:0),r.height+(resize?dy:0));}
+ function end(){if(!drag)return;drag=null;panel.classList.remove('kc-dragging');save();}
+ panel.addEventListener('pointerdown',down);panel.addEventListener('pointermove',move);panel.addEventListener('pointerup',end);panel.addEventListener('pointercancel',end);
+ handle.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)||mq.matches)return;e.preventDefault();const r=panel.getBoundingClientRect(),step=e.shiftKey?40:10;place(r.x,r.y,r.width+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0),r.height+(e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0));save();};
+ panel.querySelector('#kcPanelReset').onclick=reset;
+ const head=panel.querySelector('.kc-panel-head');head.ondblclick=e=>{if(!e.target.closest('button'))reset();};
+ const escape=e=>{if(e.key==='Escape'&&!document.querySelector('.kc-dialog[open],.kz-image-viewer[open]'))closePanel();};
+ window.addEventListener('resize',sync);document.addEventListener('keydown',escape);panel._layoutCleanup=()=>{window.removeEventListener('resize',sync);document.removeEventListener('keydown',escape);};sync();
+}
+function closePanel(){const input=$c('#kcChatText');if(input)drafts[room]=input.value;if(memberDismiss){document.removeEventListener('click',memberDismiss);memberDismiss=null;}pageGeneration++;document.body.classList.remove('kc-panel-open');panelView=null;const panel=document.getElementById('kcPanel');if(panel){panel._layoutCleanup?.();panel.close();panel.remove();}document.body.classList.remove('kc-chat-active','kc-keyboard');imageCache.clear();}
+function openPanel(v){if(!ready())return toast('로그인 후 이용해 주세요.');const key=uid()+'|'+(authAccount()?.id||'');if(key!==session){session=key;reset();}panelView=v;document.body.classList.add('kc-panel-open');let d=$c('#kcPanel');if(!d){d=document.createElement('dialog');d.id='kcPanel';d.setAttribute('aria-label','팀 소통');d.innerHTML='<header class="kc-panel-head"><button type="button" id="kcPanelBack" aria-label="이전 화면으로">‹</button><strong id="kcPanelTitle">팀 채팅</strong><span class="kc-drag-hint">상단을 끌어 이동</span><button type="button" id="kcPanelReset" aria-label="창 위치와 크기 초기화" title="창 위치·크기 초기화">↗</button><button type="button" id="kcPanelClose" autofocus aria-label="닫기">✕</button></header><nav id="kcPanelTabs" aria-label="소통 메뉴"></nav><div id="kcPanelBody"></div>';document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();closePanel();});d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel();}});$c('#kcPanelClose').onclick=closePanel;$c('#kcPanelBack').onclick=closePanel;d.show();setupPanelLayout(d);}
 $c('#kcPanelTabs').innerHTML='';$c('#kcPanelTitle').textContent=pages[v];d.setAttribute('aria-label',pages[v]);d.dataset.panel=v;document.body.classList.toggle('kc-chat-active',v==='community');closeSide();viewport();if(v==='community')communityView();else if(v==='song_requests')songsView();else inboxView();}
 let pendingOpen=new URLSearchParams(location.search).get('kz_open');
 async function tick(){if(busy||document.hidden)return;const key=ready()?uid()+'|'+(authAccount()?.id||''):'';if(key!==session){session=key;reset();}if(!key)return;busy=true;try{if(Date.now()-statusAt>15000){const before=actor?.rank;await status();if(activeView()==='inbox'&&!readNote&&mailItems.length<=60){const g=pageGeneration;const r=await api({action:'inbox'});if(activeView()==='inbox'&&!readNote&&g===pageGeneration){mailItems=r.items;mailCursor=r.cursor;paintInbox();}}if(activeView()==='community'&&before&&before!==actor.rank){chatItems=[];loadedRoom='';await communityView();}}
@@ -6046,5 +5784,103 @@ body.kc-panel-open{overflow:hidden}
  #kcPanel .kc-dialog{max-height:var(--kc-vh,90dvh)}
 }
 </style>
+
+
+<style id="kz-device-layout-v5">
+/* Desktop tool window and mobile full-screen communication page. */
+#kcPanel{z-index:90;border-radius:20px;box-shadow:0 20px 70px #30261930;overflow:hidden!important;isolation:isolate}
+#kcPanel[open]{display:flex;flex-direction:column}
+#kcPanel .kc-panel-head{gap:10px;cursor:grab;user-select:none;touch-action:none;background:var(--card);padding:6px 14px;flex:none}
+#kcPanel.kc-dragging .kc-panel-head{cursor:grabbing}
+#kcPanelTitle{font-size:14px;white-space:nowrap}.kc-drag-hint{font-size:11px;color:var(--mu);margin-right:auto}#kcPanelBack{display:none}
+#kcPanel .kc-panel-head button{flex:none;cursor:pointer;border:0;background:transparent;color:var(--tx);border-radius:10px}
+#kcPanel .kc-panel-head button:hover{background:var(--bg)}
+#kcPanel .kc-chat-app{grid-template-columns:240px minmax(0,1fr)}
+#kcPanel .kc-chat-sidebar{overflow:hidden;background:var(--card)}
+#kcPanel .kc-chat-side-head{padding:20px 14px 12px;min-width:0}
+#kcPanel .kc-chat-search{display:flex;align-items:center;gap:8px;width:100%;min-width:0;height:44px;padding:0 10px;margin-top:14px;overflow:hidden;box-sizing:border-box;border-radius:12px;background:var(--page)}
+#kcPanel .kc-chat-search svg{flex:0 0 18px;width:18px;height:18px}
+#kcPanel .kc-chat-search input{flex:1 1 0;width:0!important;min-width:0!important;max-width:100%;height:100%;padding:0!important;margin:0;border:0!important;border-radius:0;background:transparent!important;box-shadow:none!important;outline:none;font-size:13px!important;line-height:normal}
+#kcPanel .kc-chat-search:focus-within{border-color:var(--ac);outline:2px solid var(--golds)}
+#kcPanel .kc-room-item[hidden],#kcPanel .kc-search-empty[hidden]{display:none!important}.kc-search-empty{font-size:12px;color:var(--mu);text-align:center;padding:20px 5px}
+#kcPanel .kc-room-list{padding:4px 8px 12px;min-height:0;overflow:auto}
+#kcPanel .kc-room-item{grid-template-columns:40px minmax(0,1fr);padding:12px 9px;gap:9px}.kc-room-meta:empty{display:none}
+#kcPanel .kc-room-avatar{width:40px;height:40px;font-size:17px}
+#kcPanel .kc-room-item.on{background:var(--golds);box-shadow:inset 3px 0 0 var(--goldt)}
+#kcPanel .kc-chat-modern-head{min-height:66px;padding:10px 18px;background:var(--card);gap:8px}
+#kcPanel .kc-chat-modern-title{min-width:0;margin-right:auto}#kcPanel .kc-chat-modern-title strong{font-size:15px}
+#kcPanel .kc-chat-main{overflow:hidden;position:relative}
+#kcPanel .kc-chat-log{padding:18px 20px;background:var(--page);scrollbar-width:thin}
+#kcPanel .kc-message{margin:14px 0}#kcPanel .kc-bubble{font-size:14px;line-height:1.65;padding:10px 13px}
+#kcPanel .kc-message.mine .kc-bubble{background:#eee0ce;border-color:#d9c3a6;color:#382c20}
+#kcPanel .kc-chat-composer{padding:12px 18px 10px;background:var(--card);flex:none}
+#kcPanel .kc-chat-composer-row{display:flex;align-items:flex-end;gap:8px}
+#kcPanel .kc-compose{border:0;min-width:0;flex:1;margin:0!important;align-self:stretch}
+#kcPanel .kc-compose textarea{display:block;margin:0!important;border:1px solid var(--bd);border-radius:16px;font-size:16px!important;line-height:24px;padding:10px 12px;min-height:46px;background:var(--page);color:var(--tx)}
+#kcPanel .kc-chat-send{border-radius:14px;width:46px;height:46px;flex:none;background:var(--ac);box-shadow:none}
+#kcPanel .kc-chat-connection{font-size:10px;margin:0;padding:5px 0 0;color:var(--mu)}
+.kc-resize-handle{position:absolute;bottom:0;right:0;width:20px;height:20px;border:0;border-radius:0 0 16px 0;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 50%,#b2997955 51%);z-index:10}
+.kc-resize-handle:focus-visible{outline:2px solid var(--ac);outline-offset:-3px}
+@media(min-width:821px){body.kc-panel-open{overflow:initial}#kcPanel{min-width:0}#kcPanelClose,#kcPanelReset{width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important}}
+@media(max-width:820px){
+ body.kc-panel-open{overflow:hidden!important}body.kc-panel-open #tabbar{visibility:hidden}
+ #kcPanel,#kcPanel[data-panel="community"],body.kc-keyboard #kcPanel{position:fixed!important;inset:auto!important;left:0!important;top:var(--kc-vtop,0px)!important;width:100%!important;height:var(--kc-vh,100dvh)!important;max-width:none!important;max-height:none!important;margin:0!important;transform:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:env(safe-area-inset-top,0px) 0 0!important;background:var(--card);z-index:100}
+ #kcPanel .kc-panel-head{padding:4px 10px;min-height:52px;cursor:default;touch-action:auto;gap:7px}
+ #kcPanelBack{display:grid!important;place-items:center;width:44px;height:44px;font-size:30px}#kcPanelClose,#kcPanelReset,.kc-drag-hint,.kc-resize-handle{display:none!important}
+ #kcPanelTitle{font-size:17px;font-weight:750;margin-right:auto}
+ #kcPanel .kc-chat-app{display:flex;flex:1;min-height:0;height:100%;border:0;border-radius:0}
+ #kcPanel .kc-chat-mobile-roombar{flex:none;gap:6px;padding:8px 14px;border-bottom:1px solid var(--bd);background:var(--card)}
+ #kcPanel .kc-chat-mobile-roombar button{padding:8px 14px;min-height:38px;border-radius:20px;font-size:13px;flex:none}
+ #kcPanel .kc-chat-mobile-roombar button.on{background:var(--ac);border-color:var(--ac);color:white}
+ #kcPanel .kc-chat-modern-head{min-height:55px;padding:7px 14px}
+ #kcPanel .kc-chat-modern-title strong{font-size:14px}#kcPanel .kc-chat-modern-title small{font-size:11px}
+ #kcPanel .kc-chat-member-float{min-height:38px;font-size:11px;padding:6px 9px;border-radius:20px}
+ #kcPanel .kc-chat-log{padding:12px 14px}
+ #kcPanel[data-panel="community"] #kcChatLog .kc-message{max-width:88%!important}
+ #kcPanel .kc-chat-composer{padding:8px 12px max(10px,env(safe-area-inset-bottom,0px))!important}
+ #kcPanel .kc-chat-connection{font-size:10px;padding-top:4px}
+ #kcPanel .kc-compose textarea{max-height:100px;min-height:44px;line-height:23px;padding:10px 12px}
+ #kcPanel .kc-chat-send{width:44px;height:44px}#kcPanelBody{min-height:0}
+ body.kc-keyboard #kcPanel{padding-top:0!important}body.kc-keyboard #kcPanel .kc-chat-mobile-roombar,body.kc-keyboard #kcPanel .kc-chat-modern-head{display:none!important}
+ body.kc-keyboard #kcPanel .kc-chat-composer{padding-bottom:8px!important}
+ .km-page{padding:20px 14px 28px}.km-menu button{min-height:66px;padding:14px}.km-menu small{line-height:1.5}
+ .km-week{padding:14px;gap:10px}.km-intro{line-height:1.65}
+ #top{padding-top:max(8px,env(safe-area-inset-top,0px))!important}
+ #body .at-tabs{width:100%;max-width:100%;overflow-x:auto}#body .at-tabs button{flex:none}
+ #body .ly-top{flex-wrap:wrap}#body .ly-ws{min-width:0;grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<style id="kz-worship-video-style">
+#body .hm.hm-v13 .home-grid-mid .devotion-card.kz-dev{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;padding:0!important;gap:0!important;align-self:stretch}
+#body .hm.hm-v13 .devotion-card.kz-dev .kz-dev-image{flex:none;display:block!important;width:100%!important;height:auto!important;margin:0!important;border-radius:0!important;object-fit:contain!important}
+.kw-video{padding:16px;display:grid;gap:12px;border-top:1px solid var(--bd);background:var(--card);min-width:0}
+.kw-video-head{display:flex;align-items:center;gap:8px}.kw-video-head strong{font-size:15px;flex:1}.kw-settings{border:0;background:transparent;color:var(--mu);font:inherit;font-size:11px;padding:6px;cursor:pointer}
+.kw-watch{display:grid;grid-template-columns:112px minmax(0,1fr);gap:11px;align-items:center;text-decoration:none;color:var(--tx);border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--page)}
+.kw-thumb{position:relative;aspect-ratio:16/9;background:#ece4d9;display:grid;place-items:center;overflow:hidden}.kw-thumb img{width:100%;height:100%;object-fit:cover}.kw-thumb span{position:absolute;display:grid;place-items:center;background:#21170dc9;color:white;border-radius:50%;height:28px;width:28px;font-size:12px}
+.kw-watch-copy{min-width:0;padding:9px 9px 9px 0}.kw-watch-copy b{display:block;font-size:12px;line-height:1.5;overflow-wrap:anywhere}.kw-watch-copy small{display:block;color:var(--mu);font-size:10px;margin-top:4px}
+.kw-actions{display:flex;gap:7px;flex-wrap:wrap}.kw-actions a{display:flex;justify-content:center;align-items:center;min-height:42px;flex:1;padding:9px 10px;border-radius:10px;border:1px solid var(--bd);color:var(--tx);text-decoration:none;font-size:12px;font-weight:650;white-space:nowrap}.kw-actions a.kw-primary{background:var(--ac);color:white;border-color:var(--ac)}
+.kw-live{color:#b93030;background:#ffeded;font-size:10px;padding:3px 6px;border-radius:5px;font-weight:700}.kw-help{font-size:11px!important;line-height:1.6!important;color:var(--mu)!important;margin:0!important}.kw-warning{font-size:11px;color:var(--bad)}
+.kw-dialog{width:min(500px,calc(100vw - 24px));box-sizing:border-box;padding:22px;max-height:85dvh;overflow:auto;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:18px}.kw-dialog::backdrop{background:#0006}.kw-dialog h2{font-size:19px;margin:0 0 8px}.kw-dialog label{display:block;font-size:12px;margin-top:14px}.kw-dialog input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:9px;background:var(--page);color:var(--tx);font:inherit;font-size:16px;margin-top:5px;box-sizing:border-box}.kw-dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.kw-dialog button{min-height:44px;padding:8px 16px;border:1px solid var(--bd);border-radius:10px;cursor:pointer}.kw-dialog button[type=submit]{background:var(--ac);color:white}
+@media(max-width:820px){#body .hm.hm-v13 .home-grid-mid.kz-mid>.devotion-card.kz-dev{padding:0!important;min-height:0!important}.kw-video{padding:14px}.kw-watch{grid-template-columns:120px minmax(0,1fr)}.kw-actions a{font-size:13px;min-height:44px}}
+</style>
+<script id="kz-worship-video-script">
+(()=>{
+let state=null,busy=false,stamp=0,identity='';const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const current=()=>window.KZ_FIREBASE_AUTH?.currentUser?.uid||'';
+async function api(body){const u=window.KZ_FIREBASE_AUTH?.currentUser;if(!u)throw Error('로그인 후 연결할 수 있어요.');const token=await u.getIdToken(),r=await fetch('/api/worship',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const data=await r.json().catch(()=>({error:'예배 영상 서버를 함께 업로드해 주세요.'}));if(!r.ok)throw Error(data.error||'연결하지 못했어요.');return data;}
+const fallback=(id,cfg)=>id?{id,title:cfg.title||'주일예배',date:cfg.date,thumbnail:'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'}:null;
+function paint(){const box=document.getElementById('kwVideo');if(!box)return;const cfg=state?.config||{},live=state?.auto?.live,replay=state?.auto?.replay||fallback(cfg.replay,cfg),video=live||replay||state?.auto?.upcoming||fallback(cfg.current,cfg);const editable=state?.editable||['관리계정','단장','인도자'].includes(typeof authAccount==='function'?authAccount()?.rank:'');
+const watch=video?'https://www.youtube.com/watch?v='+encodeURIComponent(video.id):'';
+box.innerHTML=`<div class="kw-video-head"><strong>${live?'함께 드리는 예배':'온라인 예배'}</strong>${live?'<span class="kw-live">LIVE</span>':''}${editable?'<button type="button" class="kw-settings" id="kwSettings">연결 설정</button>':''}</div>${video?`<a class="kw-watch" href="${esc(watch)}" target="_blank" rel="noopener noreferrer"><span class="kw-thumb"><img src="${esc(video.thumbnail)}" alt="예배 영상 썸네일" loading="lazy"><span aria-hidden="true">▶</span></span><span class="kw-watch-copy"><b>${esc(video.title)}</b><small>${live?'지금 방송 중':replay?'최근 예배 다시보기':'이번 주 예배'}${video.date?' · '+esc(/^\d{4}-\d{2}-\d{2}$/.test(video.date)?video.date:new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric'}).format(new Date(video.date))):''}</small></span></a>`:''}<div class="kw-actions">${live||cfg.channel?`<a class="kw-primary" href="${esc(live?watch:cfg.channel+'/live')}" target="_blank" rel="noopener noreferrer">${live?'● 실시간 예배 참여':'▶ 실시간 예배 열기'}</a>`:''}${replay?`<a href="https://www.youtube.com/watch?v=${encodeURIComponent(replay.id)}" target="_blank" rel="noopener noreferrer">지난 예배 다시보기</a>`:cfg.channel?`<a href="${esc(cfg.channel+'/streams')}" target="_blank" rel="noopener noreferrer">지난 예배 목록</a>`:''}</div>${!video?`<p class="kw-help">${cfg.channel?'실시간 예배와 지난 예배를 유튜브에서 시청하세요.':'교회 유튜브를 연결하면 예배 썸네일과 시청 버튼이 여기에 표시돼요.'}</p>`:''}${state?.warning?`<p class="kw-warning" role="status">${esc(state.warning)}</p>`:''}`;
+box.querySelector('img')?.addEventListener('error',e=>e.target.hidden=true,{once:true});box.querySelector('#kwSettings')?.addEventListener('click',settings);
+}
+async function load(){const who=current();if(!who||busy)return;if(who!==identity){identity=who;state=null;stamp=0;}if(Date.now()-stamp<120000){paint();return;}busy=true;try{const result=await api({action:'get'});if(who!==current())return;state=result;stamp=Date.now();paint();}catch(e){if(who===current()){stamp=Date.now()-90000;state={...state,warning:e.message};paint();}}finally{busy=false;}}
+function mount(){const card=document.querySelector('.devotion-card.kz-dev');if(!card||card.querySelector('#kwVideo'))return;const el=document.createElement('div');el.id='kwVideo';el.className='kw-video';card.append(el);paint();load();}
+function settings(){const c=state?.config||{},d=document.createElement('dialog');d.className='kw-dialog';d.innerHTML=`<form><h2>예배 영상 연결</h2><p class="kw-help">채널과 자동 연결이 설정되면 한국 시간 주일에 시작한 예배를 찾아요. 개별 영상 주소는 자동 감지가 늦거나 다른 영상을 지정할 때만 입력하세요.</p><label>유튜브 채널 주소<input name="channel" type="url" placeholder="https://www.youtube.com/@교회채널" value="${esc(c.channel)}"></label><label>이번 주 라이브 영상 주소<input name="current" type="url" placeholder="https://www.youtube.com/watch?v=…" value="${c.current?'https://www.youtube.com/watch?v='+esc(c.current):''}"></label><label>지난 예배 영상 주소<input name="replay" type="url" value="${c.replay?'https://www.youtube.com/watch?v='+esc(c.replay):''}"></label><label>영상 제목<input name="title" maxlength="120" value="${esc(c.title||'주일예배')}"></label><label>예배 날짜<input name="date" type="date" value="${esc(c.date)}"></label><label>자동으로 찾을 영상 제목의 단어<input name="keyword" maxlength="40" value="${esc(c.keyword??'주일')}"></label><p class="kw-help">${state?.automatic?'자동 연결 사용 중 · 최근 공개 영상 중 제목이 일치하는 예배를 확인해요.':'현재 링크 등록 방식 · 자동 갱신에는 서버의 YouTube 연결 설정이 필요해요.'}</p><p class="kw-warning" role="status"></p><footer><button type="button" data-cancel>취소</button><button type="submit">저장</button></footer></form>`;document.body.append(d);d.showModal();d.addEventListener('close',()=>d.remove());d.querySelector('[data-cancel]').onclick=()=>d.close();d.querySelector('form').onsubmit=async e=>{e.preventDefault();const button=d.querySelector('[type=submit]');button.disabled=true;try{const who=current(),result=await api({action:'save',...Object.fromEntries(new FormData(e.currentTarget))});if(who!==current())throw Error('계정이 변경됐어요.');state=result;stamp=Date.now();d.close();paint();}catch(err){d.querySelector('.kw-warning').textContent=err.message;button.disabled=false;}};}
+const original=homeView;homeView=function(){const result=original.apply(this,arguments);mount();return result;};
+setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;stamp=0;identity=current();document.querySelectorAll('.kw-dialog').forEach(d=>d.remove());paint();}if(document.getElementById('kwVideo'))load();},15000);mount();
+})();
+</script>
 
 </body></html>
