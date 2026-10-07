@@ -3593,45 +3593,8 @@ button:disabled,.btn:disabled,.sm:disabled,.ib:disabled,.ibb:disabled,.ico:disab
 </style>
 
 
-<style id="kz-mobile-chat-back-button">
-@media (max-width:820px){
-  #kcPanel[data-panel="community"] .kc-chat-modern-head{
-    display:flex!important;
-    align-items:center!important;
-    gap:8px!important;
-    min-height:62px!important;
-    padding:8px 10px!important;
-    box-sizing:border-box!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-mobile-back{
-    display:inline-flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    flex:0 0 40px!important;
-    width:40px!important;
-    height:40px!important;
-    padding:0!important;
-    margin:0!important;
-    border:1px solid #ddd2c5!important;
-    border-radius:12px!important;
-    background:#fffdf9!important;
-    color:#6e6257!important;
-    font:inherit!important;
-    font-size:28px!important;
-    line-height:1!important;
-    cursor:pointer!important;
-    -webkit-tap-highlight-color:transparent!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-mobile-back:active{
-    background:#f2ebe2!important;
-    transform:scale(.97);
-  }
-}
-@media (min-width:821px){
-  #kcPanel[data-panel="community"] .kc-chat-mobile-back{display:none!important;}
-}
-</style>
-</body></html><style>
+
+<style>
 /* ===== v5 일정표 리디자인: 주간 플래너 ===== */
 .sch-v5{max-width:1120px;margin:0 auto;display:grid;gap:18px}
 .sch-v5 .ro-h{margin-bottom:2px}
@@ -5783,9 +5746,17 @@ const uuid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'_'
 const time=n=>new Date(n).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 let actor=null,unread=0,room='all',session='',epoch=0,busy=false,statusAt=0,feedAt=0,chatItems=[],chatCursor=null,songItems=[],songCursor=null,mailItems=[],mailCursor=null,readNote=null,loadedRoom='',sendId='',sendText='',pageGeneration=0;
 const drafts={all:'',admin:''},imageDrafts={all:[],admin:[]},imageCache=new Map();
-function reset(){epoch++;actor=null;unread=0;chatItems=[];songItems=[];mailItems=[];readNote=null;room='all';loadedRoom='';drafts.all='';drafts.admin='';sendId='';sendText='';statusAt=0;feedAt=0;document.querySelectorAll('.kc-dialog,.kz-image-viewer').forEach(x=>x.remove());badge();closePanel();ntImageDraft=null;evImageDraft=null;if(md)md.images=[];imageCache.clear();imageDrafts.all=[];imageDrafts.admin=[];}
-async function api(input){const user=window.KZ_FIREBASE_AUTH?.currentUser;if(!user||!ready())throw new Error('로그인 후 이용해 주세요.');const ticket=epoch,who=user.uid,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const token=await user.getIdToken();const r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(input),cache:'no-store',signal:controller.signal});const data=await r.json().catch(()=>({}));if(ticket!==epoch||who!==uid()||!ready())throw new Error('계정이 변경됐어요. 다시 열어 주세요.');if(!r.ok){const e=new Error(data.error||(r.status===404?'새 기능 API가 아직 설치되지 않았어요.':'연결에 실패했어요.'));e.status=r.status;throw e;}return data;}catch(e){if(e.name==='AbortError')throw new Error('응답이 늦어요. 다시 시도해 주세요.');throw e;}finally{clearTimeout(timer);}}
-function error(e){const el=$c('#kcError');if(el)el.textContent=e.message;else toast(e.message);}
+let sending=false, memberDismiss=null, paintSignature='', loadingOlder=false;
+const attempts=new Map();
+function reset(){
+ closePanel();epoch++;attempts.clear();sending=false;actor=null;unread=0;
+ chatItems=[];songItems=[];mailItems=[];readNote=null;room='all';loadedRoom='';
+ drafts.all='';drafts.admin='';sendId='';sendText='';statusAt=0;feedAt=0;
+ document.querySelectorAll('.kc-dialog,.kz-image-viewer').forEach(x=>x.remove());
+ badge();imageCache.clear();imageDrafts.all=[];imageDrafts.admin=[];
+}
+async function api(input){const user=window.KZ_FIREBASE_AUTH?.currentUser;if(!user||!ready())throw new Error('로그인 후 이용해 주세요.');const ticket=epoch,who=user.uid,controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const token=await user.getIdToken();const r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(input),cache:'no-store',signal:controller.signal});const data=await r.json().catch(()=>{throw new Error('서버 응답을 읽을 수 없어요. 배포된 채팅 API를 확인해 주세요.');});if(ticket!==epoch||who!==uid()||!ready())throw new Error('계정이 변경됐어요. 다시 열어 주세요.');if(!r.ok){const e=new Error(data.error||(r.status===404?'새 기능 API가 아직 설치되지 않았어요.':'연결에 실패했어요.'));e.status=r.status;throw e;}return data;}catch(e){if(e.name==='AbortError')throw new Error('응답이 늦어요. 다시 시도해 주세요.');throw e;}finally{clearTimeout(timer);}}
+function error(e){const state=$c('#kcConnection');if(state)state.textContent=navigator.onLine?'연결 확인 필요 · 아래 오류를 확인해 주세요.':'오프라인 · 연결 후 다시 전송해 주세요.';const el=$c('#kcError');if(el)el.textContent=e.message;else toast(e.message);}
 function clearError(){const e=$c('#kcError');if(e)e.textContent='';}
 function badge(){const b=$c('#kcMailCount');if(b){b.hidden=!unread;b.textContent=unread>=100?'99+':String(unread);}const btn=$c('#kcMail');if(btn)btn.setAttribute('aria-label','내 알림함'+(unread?', 안 읽은 알림 '+unread+'개':''));}
 function top(){const tr=$c('#tr');if(!tr||$c('#kcMail'))return;const b=document.createElement('button');b.type='button';b.id='kcMail';b.className='kc-mail';b.title='내 알림함';b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span id="kcMailCount" class="kc-badge" hidden></span>';b.onclick=()=>go('inbox');tr.prepend(b);const chat=document.createElement('button');chat.type='button';chat.id='kcChatOpen';chat.className='kc-mail';chat.setAttribute('aria-label','팀 채팅');chat.title='팀 채팅';chat.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 10 10 0 0 1-4-.8L3 21l1.8-5.5a9 9 0 1 1 16.2-4Z"/><path d="M8 11h8"/></svg>';chat.onclick=()=>openPanel('community');b.after(chat);badge();}
@@ -5820,7 +5791,7 @@ function roomMemberList(){
    </div>
  </div>`;
 }
-async function communityView(){document.body.classList.add('kc-chat-active');const gen=++pageGeneration;if(!shell('팀 채팅',''))return;try{await status();if(activeView()!=='community'||gen!==pageGeneration)return;
+async function communityView(){document.body.classList.add('kc-chat-active');const gen=++pageGeneration;paintSignature='';if(memberDismiss){document.removeEventListener('click',memberDismiss);memberDismiss=null;}if(!shell('팀 채팅',''))return;$c('#kcContent').innerHTML='<div class="kc-empty" role="status">대화를 불러오는 중…</div>';try{await status();if(activeView()!=='community'||gen!==pageGeneration)return;
  if(room==='admin'&&!['관리계정','단장','인도자','선임싱어','선임세션'].includes(actor.rank))room='all';
  const canAdmin=actor&&['관리계정','단장','인도자','선임싱어','선임세션'].includes(actor.rank);
  const roomMembers=roomMemberListData();
@@ -5871,17 +5842,21 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  const mobileBack=$c('#kcChatMobileBack');
  if(mobileBack) mobileBack.onclick=()=>{ closePanel(); };
  const search=$c('#kcRoomSearch');if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();$c('#kcRoomList')?.querySelectorAll('.kc-room-item').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(q));};
- const switchRoom=x=>{const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();};
+ const switchRoom=x=>{if(room===x.dataset.room)return;const input=$c('#kcChatText');if(input)drafts[room]=input.value;room=x.dataset.room;communityView();};
  document.querySelectorAll('#kcRoomList [data-room],#kcMobileRooms [data-room]').forEach(x=>x.onclick=()=>switchRoom(x));
- const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();document.addEventListener('click',()=>{if(!pop.hidden){pop.hidden=true;memberBtn.setAttribute('aria-expanded','false');memberBtn.classList.remove('open');}},{once:false});}
+ const memberBtn=$c('#kcRoomMembersToggle2'),pop=$c('#kcRoomMemberPopover');if(memberBtn&&pop){memberBtn.onclick=e=>{e.stopPropagation();const open=!pop.hidden;pop.hidden=open;memberBtn.setAttribute('aria-expanded',String(!open));memberBtn.classList.toggle('open',!open);};pop.onclick=e=>e.stopPropagation();memberDismiss=()=>{if(!pop.hidden){pop.hidden=true;memberBtn.setAttribute('aria-expanded','false');memberBtn.classList.remove('open');}};document.addEventListener('click',memberDismiss);}
  $c('#kcNew').onclick=()=>{const l=$c('#kcChatLog');l.scrollTop=l.scrollHeight;$c('#kcNew').hidden=true;};
  $c('#kcCompose').onsubmit=send;
- $c('#kcChatText').value=drafts[room];$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
+ $c('#kcChatText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229&&matchMedia('(min-width:821px)').matches){e.preventDefault();$c('#kcCompose').requestSubmit();}};
+ $c('#kcChatText').value=drafts[room];requestAnimationFrame(()=>{const t=$c('#kcChatText');if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}});$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
  if(loadedRoom!==room){chatItems=[];chatCursor=null;loadedRoom=room;}await loadChat(false,gen);
  }catch(e){if(activeView()==='community'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 연결</button>';$c('#kcRetry').onclick=communityView;error(e);}}
 }
-function isMyChatMessage(m){const me=uid();const mineIds=[m?.owner,m?.uid,m?.userId,m?.senderId,m?.authorId,m?.accountId].filter(Boolean).map(String);if(me&&mineIds.includes(String(me)))return true;const aid=actor?.id;if(aid&&mineIds.includes(String(aid)))return true;if(m?.mine===true||m?.isMine===true||m?._mine===true)return true;const myName=String(actor?.name||'').trim();const senderName=String(m?.name||m?.senderName||m?.authorName||'').trim();if(myName&&senderName&&myName===senderName)return true;return false;}
-function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near=l.scrollHeight-l.scrollTop-l.clientHeight<100,previous=l.scrollHeight,scroll=l.scrollTop;let day='';chatItems=chatItems.filter(m=>m.createdAt>Date.now()-21*86400000);const items=chatItems;const stampGap=5*60*1000;
+function isMyChatMessage(m){
+ const ids=[m?.owner,m?.uid,m?.userId,m?.senderId,m?.authorId,m?.accountId].filter(Boolean).map(String);
+ return m?._mine===true||m?.mine===true||m?.isMine===true||ids.includes(String(uid()))||!!actor?.id&&ids.includes(String(actor.id));
+}
+function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near=l.scrollHeight-l.scrollTop-l.clientHeight<100,previous=l.scrollHeight,scroll=l.scrollTop;let day='';chatItems=chatItems.filter(m=>Number(m.createdAt)>Date.now()-21*86400000);const items=chatItems;const stampGap=5*60*1000;const sig=JSON.stringify([room,chatCursor,items]);if(!force&&sig===paintSignature)return;paintSignature=sig;
  l.innerHTML=(chatCursor?'<button class="kc-btn kc-more" id="kcOlder">이전 대화 보기</button>':'')+(items.length?items.map((m,i)=>{const d=new Date(m.createdAt).toLocaleDateString('ko-KR');const header=d!==day?`<div class="kc-day">${escape(d)}</div>`:'';day=d;const next=items[i+1];const showTime=!next||next.createdAt-m.createdAt>stampGap||new Date(next.createdAt).toLocaleDateString('ko-KR')!==d;const mine=isMyChatMessage(m);const initial=String(m.name||'?').trim().slice(0,1)||'?';return `${header}<div class="kc-message ${mine?'mine':'other'}"><span class="kc-avatar" aria-hidden="true">${escape(initial)}</span><div class="kc-message-wrap"><b>${escape(m.name||'팀원')}</b><div class="kc-bubble">${escape(m.text||'')}${m.imageCount?`<div class="kc-message-images" data-images="${escape(m.id)}"><button type="button" class="kc-btn">사진 ${m.imageCount}장 보기</button></div>`:''}</div>${showTime?`<time>${escape(time(m.createdAt))}</time>`:''}</div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  const preview=items.length?items[items.length-1]:null;const pv=$c(`[data-preview="${room}"]`);if(pv)pv.textContent=preview?(preview.name?preview.name+' · ':'')+(preview.text||'사진을 보냈어요'):(room==='admin'?'관리자 전용 채팅방':'아직 대화가 없어요');
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
@@ -5889,8 +5864,43 @@ function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near
  const older=$c('#kcOlder');if(older)older.onclick=async()=>{older.disabled=true;const h=l.scrollHeight,y=l.scrollTop;try{await loadChat(true,pageGeneration);if(l.isConnected)l.scrollTop=y+(l.scrollHeight-h);}catch(e){error(e);if(older.isConnected)older.disabled=false;}};
  if(!force&&!near&&l.scrollHeight>previous)$c('#kcNew').hidden=false;
 }
-async function loadChat(older=false,gen=pageGeneration){const current=room;const result=await api({action:'chat',room:current,...(older&&chatCursor?{cursor:chatCursor}:{})});if(activeView()!=='community'||room!==current||gen!==pageGeneration)return;const initial=!chatItems.length;if(older||initial)chatCursor=result.cursor;const map=new Map(chatItems.map(m=>[m.id,m]));result.items.forEach(m=>map.set(m.id,m));chatItems=[...map.values()].sort((a,b)=>a.createdAt-b.createdAt||a.id.localeCompare(b.id));paintChat(initial);const s=$c('#kcConnection');if(s)s.textContent='연결됨 · 새 메시지는 약 4초마다 갱신돼요.';clearError();}
-async function send(e){e.preventDefault();const form=e.currentTarget,input=$c('#kcChatText'),value=input.value.trim();const images=[];if(!value)return;const targetRoom=room,gen=pageGeneration,button=form.querySelector('button');button.disabled=true;input.disabled=true;if(sendText!==targetRoom+'|'+value){sendId=uuid();sendText=targetRoom+'|'+value;}try{const r=await api({action:'send',room:targetRoom,text:value,images,id:sendId});drafts[targetRoom]='';imageDrafts[targetRoom]=[];sendText='';sendId='';if(gen===pageGeneration&&room===targetRoom&&activeView()==='community'){input.value='';input.style.height='auto';const sentItem={...(r.item||{}),_mine:true,owner:r.item?.owner||uid(),uid:r.item?.uid||uid(),userId:r.item?.userId||uid(),senderId:r.item?.senderId||uid(),name:r.item?.name||actor?.name};if(!chatItems.some(m=>m.id===r.item.id))chatItems.push(sentItem);paintChat(true);clearError();}}catch(e){error(e);}finally{button.disabled=false;input.disabled=false;if(input.isConnected&&matchMedia('(min-width:821px)').matches)input.focus();}}
+async function loadChat(older=false,gen=pageGeneration){
+ if(!older&&loadingOlder)return;
+ const current=room;
+ if(older)loadingOlder=true;
+ let result;try{result=await api({action:'chat',room:current,...(older&&chatCursor?{cursor:chatCursor}:{})});}finally{if(older)loadingOlder=false;}
+ if(activeView()!=='community'||room!==current||gen!==pageGeneration)return;
+ if(!Array.isArray(result.items))throw new Error('대화 목록의 서버 응답이 올바르지 않아요. 다시 연결해 주세요.');
+ const initial=!chatItems.length;
+ if(older||initial)chatCursor=result.cursor||null;
+ const map=new Map(chatItems.map(m=>[m.id,m]));
+ result.items.filter(m=>m&&m.id).forEach(m=>map.set(m.id,m));
+ chatItems=[...map.values()].sort((a,b)=>a.createdAt-b.createdAt||String(a.id).localeCompare(String(b.id)));
+ paintChat(initial);const el=$c('#kcConnection');if(el)el.textContent='연결됨 · 4초마다 새 대화 확인';
+}
+async function send(e){
+ e.preventDefault();if(sending)return;
+ const input=$c('#kcChatText'),value=input?.value.trim();if(!value)return;
+ const targetRoom=room,gen=pageGeneration,ticket=epoch;
+ const key=targetRoom+'|'+value;
+ const id=attempts.get(key)||uuid();attempts.set(key,id);
+ sending=true;
+ const buttons=[...document.querySelectorAll('#kcCompose button,.kc-chat-send')];
+ buttons.forEach(b=>b.disabled=true);input.readOnly=true;clearError();
+ try{
+  const r=await api({action:'send',room:targetRoom,text:value,images:[],id});
+  if(!r.item?.id)throw new Error('전송 확인을 받지 못했어요. 같은 메시지로 다시 시도해 주세요.');
+  if(ticket!==epoch)return;
+  attempts.delete(key);if(drafts[targetRoom]?.trim()===value)drafts[targetRoom]='';
+  if(room===targetRoom&&activeView()==='community'){
+   const currentInput=$c('#kcChatText');if(currentInput?.value.trim()===value){currentInput.value='';currentInput.style.height='auto';}
+   const item={...r.item,_mine:true};
+   chatItems=[...new Map([...chatItems,item].map(m=>[m.id,m])).values()].sort((a,b)=>a.createdAt-b.createdAt);
+   paintChat(true);clearError();
+  }
+ }catch(err){if(ticket===epoch&&gen===pageGeneration)error(err);}
+ finally{if(ticket===epoch)sending=false;buttons.forEach(b=>b.disabled=false);input.readOnly=false;}
+}
 async function songsView(){const gen=++pageGeneration;if(!shell('신청곡','함께 부르고 싶은 찬양과 참고 영상을 남겨 주세요.','<button class="kc-btn primary" id="kcAddSong">＋ 신청하기</button>'))return;$c('#kcAddSong').onclick=()=>songForm();$c('#kcContent').innerHTML='<div class="kc-empty">신청곡을 불러오는 중…</div>';try{await status();const r=await api({action:'songs'});if(activeView()!=='song_requests'||gen!==pageGeneration)return;songItems=r.items;songCursor=r.cursor;paintSongs();}catch(e){if(activeView()==='song_requests'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 불러오기</button>';$c('#kcRetry').onclick=songsView;error(e);}}}
 function paintSongs(){const c=$c('#kcContent');if(!c||activeView()!=='song_requests')return;c.innerHTML=(songItems.length?songItems.map(s=>`<article class="kc-card"><h3>${escape(s.title)}</h3><div class="kc-sub">${escape(s.name)} · ${escape(time(s.createdAt))}${s.revision>1?' · 수정됨':''}</div><p><a href="${escape(/^https?:\/\//i.test(s.url)?s.url:'#')}" target="_blank" rel="noopener noreferrer">참고 영상 열기 ↗</a></p><div class="kc-actions">${s.owner===actor?.id?`<button class="kc-btn" data-edit="${escape(s.id)}">수정</button><button class="kc-btn danger" data-delete="${escape(s.id)}">삭제</button>`:''}${['인도자','관리계정'].includes(actor?.rank)?`<button class="kc-btn" data-complete="${escape(s.id)}">콘티 반영 완료</button>`:''}</div></article>`).join(''):'<div class="kc-empty">아직 신청곡이 없어요.<br>함께 부르고 싶은 찬양을 알려 주세요.</div>')+(songCursor?'<button class="kc-btn kc-more" id="kcMoreSongs">이전 신청곡 더 보기</button>':'');
  c.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>songForm(songItems.find(s=>s.id===b.dataset.edit)));
@@ -5908,32 +5918,24 @@ const oldTop=renderTop;renderTop=function(){oldTop();top();};
 const oldTitle=pageTitle;pageTitle=function(){return view==='mobile_my'?'내 순서':pages[view]?'홈':oldTitle();};
 const oldBody=body;body=function(){if(pages[view]){const target=view;view='home';LS('view','home');const result=oldBody();openPanel(target);return result;}return oldBody();};
 const oldGo=go;go=function(v){if(pages[v])return openPanel(v);closePanel();return oldGo(v);};
-function closePanel(){pageGeneration++;panelView=null;const panel=document.getElementById('kcPanel');if(panel){panel.close();panel.remove();}document.body.classList.remove('kc-chat-active','kc-keyboard');imageCache.clear();}
-function openPanel(v){if(!ready())return toast('로그인 후 이용해 주세요.');const key=uid()+'|'+(authAccount()?.id||'');if(key!==session){session=key;reset();}panelView=v;let d=$c('#kcPanel');if(!d){d=document.createElement('dialog');d.id='kcPanel';d.setAttribute('aria-label','팀 소통');d.innerHTML='<header class="kc-panel-head"><strong id="kcPanelTitle">팀 채팅</strong><button type="button" id="kcPanelClose" autofocus aria-label="닫기">✕</button></header><nav id="kcPanelTabs" aria-label="소통 메뉴"></nav><div id="kcPanelBody"></div>';document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();closePanel();});d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel();}});$c('#kcPanelClose').onclick=closePanel;d.showModal();}
+function closePanel(){const input=$c('#kcChatText');if(input)drafts[room]=input.value;if(memberDismiss){document.removeEventListener('click',memberDismiss);memberDismiss=null;}pageGeneration++;document.body.classList.remove('kc-panel-open');panelView=null;const panel=document.getElementById('kcPanel');if(panel){panel.close();panel.remove();}document.body.classList.remove('kc-chat-active','kc-keyboard');imageCache.clear();}
+function openPanel(v){if(!ready())return toast('로그인 후 이용해 주세요.');const key=uid()+'|'+(authAccount()?.id||'');if(key!==session){session=key;reset();}panelView=v;document.body.classList.add('kc-panel-open');let d=$c('#kcPanel');if(!d){d=document.createElement('dialog');d.id='kcPanel';d.setAttribute('aria-label','팀 소통');d.innerHTML='<header class="kc-panel-head"><strong id="kcPanelTitle">팀 채팅</strong><button type="button" id="kcPanelClose" autofocus aria-label="닫기">✕</button></header><nav id="kcPanelTabs" aria-label="소통 메뉴"></nav><div id="kcPanelBody"></div>';document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();closePanel();});d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel();}});$c('#kcPanelClose').onclick=closePanel;d.showModal();}
 $c('#kcPanelTabs').innerHTML='';$c('#kcPanelTitle').textContent=pages[v];d.setAttribute('aria-label',pages[v]);d.dataset.panel=v;document.body.classList.toggle('kc-chat-active',v==='community');closeSide();viewport();if(v==='community')communityView();else if(v==='song_requests')songsView();else inboxView();}
 let pendingOpen=new URLSearchParams(location.search).get('kz_open');
 async function tick(){if(busy||document.hidden)return;const key=ready()?uid()+'|'+(authAccount()?.id||''):'';if(key!==session){session=key;reset();}if(!key)return;busy=true;try{if(Date.now()-statusAt>15000){const before=actor?.rank;await status();if(activeView()==='inbox'&&!readNote&&mailItems.length<=60){const g=pageGeneration;const r=await api({action:'inbox'});if(activeView()==='inbox'&&!readNote&&g===pageGeneration){mailItems=r.items;mailCursor=r.cursor;paintInbox();}}if(activeView()==='community'&&before&&before!==actor.rank){chatItems=[];loadedRoom='';await communityView();}}
  if(pendingOpen){const target=pendingOpen;pendingOpen=null;if(['song_requests','inbox','community'].includes(target))go(target);}
- if(activeView()==='community'&&$c('#kcChatLog')&&Date.now()-feedAt>3500){feedAt=Date.now();await loadChat();}
- }catch(e){if(e.status===403||e.status===401){imageCache.clear();document.querySelectorAll('.kz-image-viewer').forEach(d=>d.remove());chatItems=[];loadedRoom='';const l=$c('#kcChatLog');if(l)l.innerHTML='';const f=$c('#kcCompose');if(f)f.hidden=true;}if(pages[activeView()])error(e);}finally{busy=false;}}
+ if(!sending&&activeView()==='community'&&$c('#kcChatLog')&&Date.now()-feedAt>3500){feedAt=Date.now();await loadChat();}
+ }catch(e){if(e.status===403||e.status===401){imageCache.clear();document.querySelectorAll('.kz-image-viewer').forEach(d=>d.remove());chatItems=[];loadedRoom='';const l=$c('#kcChatLog');if(l)l.innerHTML='';const f=$c('#kcCompose');if(f)f.hidden=true;const c=$c('#kcContent');if(c){c.innerHTML='<div class="kc-empty"><p>접속 권한을 다시 확인해 주세요.</p><button class="kc-btn" id="kcReconnect">다시 연결</button></div>';const retry=$c('#kcReconnect');if(retry)retry.onclick=communityView;}}if(pages[activeView()])error(e);}finally{busy=false;}}
+window.addEventListener('online',()=>{statusAt=0;feedAt=0;tick();});
 setInterval(tick,4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){statusAt=0;tick();}});
-function viewport(){const vv=window.visualViewport,height=vv?.height||window.innerHeight,offset=vv?.offsetTop||0;const root=document.documentElement.style;root.setProperty('--kc-vh',height+'px');root.setProperty('--kc-vtop',offset+'px');const typing=activeView()==='community'&&document.activeElement?.id==='kcChatText';document.body.classList.toggle('kc-keyboard',typing);const log=$c('#kcChatLog');if(typing&&log)requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;});}
+function viewport(){const vv=window.visualViewport,height=vv?.height||window.innerHeight,offset=vv?.offsetTop||0;const root=document.documentElement.style;root.setProperty('--kc-vh',height+'px');root.setProperty('--kc-vtop',offset+'px');const typing=activeView()==='community'&&document.activeElement?.id==='kcChatText'&&height<window.innerHeight-100;document.body.classList.toggle('kc-keyboard',typing);}
 window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);window.addEventListener('resize',viewport);document.addEventListener('focusin',viewport);document.addEventListener('focusout',()=>setTimeout(viewport,0));viewport();
 window.kzCommunity={open:v=>go(pages[v]?v:'community')};
 if($c('#shell')){renderTop();renderNav();if(pages[view])body();}tick();
 })();
 </script>
 
-<style id="kz-chat-keyboard-layout">
-@media(max-width:820px){
- body.kc-keyboard .shell #tabbar{display:none!important}
- body.kc-keyboard .shell #body{padding-bottom:env(safe-area-inset-bottom,0px)!important}
- body.kc-keyboard .kc-page{padding-top:8px;padding-bottom:8px}
- body.kc-keyboard .kc-page>.kc-sub,body.kc-keyboard .kc-head,body.kc-keyboard #kcConnection{display:none}
- body.kc-keyboard .kc-tabs{margin:0 0 8px}
- body.kc-keyboard .kc-chat{height:calc(var(--kc-vh) - var(--th,60px) - 80px);min-height:130px}
-}
-</style>
+
 <style id="kz-compact-popups">
 #kcPanel{position:fixed;top:50%;left:calc(var(--side) + (100vw - var(--side))/2);right:auto;transform:translate(-50%,-50%);margin:0;width:min(440px,calc(100vw - var(--side) - 32px));height:min(690px,calc(var(--kc-vh,100dvh) - 40px));max-width:none;max-height:none;border:1px solid var(--bd,#ded9d1);border-radius:22px;padding:0;background:var(--bg,#faf8f4);color:var(--tx,#302d28);box-shadow:0 24px 80px #30261930;overflow:hidden}
 #kcPanel[open]{display:flex;flex-direction:column}#kcPanel::backdrop{background:#211a1426}.kc-panel-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px 10px}.kc-panel-head button{width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}#kcPanelTabs{display:flex;padding:0 16px 10px;gap:6px}#kcPanelTabs:empty{display:none}#kcPanelTabs button{flex:1;min-height:42px;border:0;border-radius:12px;background:transparent;font:inherit;color:inherit;cursor:pointer}#kcPanelTabs .on{background:#eaded1;color:#714e32;font-weight:700}#kcPanelBody{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}#kcPanel .kc-page{max-width:none;margin:0;padding:0 16px 16px;min-height:100%;display:flex;flex-direction:column;box-sizing:border-box}#kcPanel .kc-head{gap:8px;margin:0;display:flex;align-items:center}#kcPanel h1{font-size:19px}#kcPanel .kc-sub{font-size:12px;margin:7px 0;line-height:1.5}#kcPanel .kc-btn{padding:8px 11px;font-size:12px;min-height:36px}#kcPanel .kc-error:empty{display:none}#kcPanel .kc-card{padding:13px;border-radius:14px;margin-bottom:9px}#kcPanel .kc-card h3{font-size:15px;margin:0}#kcPanel .kc-card p{margin:8px 0}#kcPanel .kc-actions{gap:6px}#kcPanel .kc-tabs{margin:4px 0 8px}#kcPanel .kc-tabs button{min-height:38px;font-size:13px}.kc-chat-active #kcPanel .kc-page{height:100%;min-height:0}.kc-chat-active #kcContent{flex:1;min-height:0;display:flex;flex-direction:column}#kcPanel .kc-chat{flex:1;min-height:0;height:auto;display:flex;flex-direction:column;border-radius:16px;overflow:hidden}#kcPanel .kc-chat-log{flex:1;min-height:0;padding:12px;background:#f0ece5;overflow:auto}#kcPanel .kc-message{margin-bottom:13px}#kcPanel .kc-bubble{font-size:14px;line-height:1.5;overflow-wrap:anywhere;max-width:100%}#kcPanel .kc-compose{padding:9px;gap:7px;flex-shrink:0}#kcPanel textarea{font-size:16px}#kcPanel #kcConnection{font-size:10px;margin-bottom:0}#kcChatAttach{padding:6px 10px;background:var(--bg,#fff);flex-shrink:0}.kz-attach-head{display:flex;gap:10px;align-items:center;padding:7px 0}.kz-attach-head small{font-size:11px;color:#80776c}.kz-attach-label{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;background:#eee6dc;border-radius:9px;color:#604932;font-size:13px;cursor:pointer}.kz-attach-previews,.kz-image-gallery{display:flex;gap:7px;flex-wrap:wrap;margin:5px 0}.kz-attach-previews:empty,.kz-attach-error:empty{display:none}.kz-attach-previews>div{position:relative}.kz-attach-previews img{width:66px;height:66px;object-fit:cover;border-radius:9px}.kz-attach-previews button{position:absolute;top:-4px;right:-4px;width:28px;height:28px;border:0;border-radius:50%;background:#423a32;color:white}.kz-image-open{padding:0;border:0;border-radius:10px;background:transparent;overflow:hidden;cursor:zoom-in}.kz-image-open img{display:block;width:110px;height:100px;object-fit:cover}.kz-attach-error{color:#ac3535;font-size:12px;margin:5px 0}.kz-image-viewer{max-width:94vw;max-height:92dvh;padding:12px;border:0;border-radius:16px;background:#222;color:white}.kz-image-viewer::backdrop{background:#000b}.kz-image-viewer>button{display:block;margin:0 0 10px auto;background:transparent;color:white;border:0;padding:10px}.kz-image-viewer>img{display:block;max-width:86vw;max-height:75dvh;object-fit:contain}.kc-dialog{max-width:min(420px,calc(100vw - 32px));box-sizing:border-box}.kc-dialog input{font-size:16px;min-width:0;box-sizing:border-box;width:100%}
@@ -5961,461 +5963,88 @@ if($c('#shell')){renderTop();renderNav();if(pages[view])body();}tick();
  #kcPanel[data-panel="community"] .kc-room-members-list{max-height:180px}
 }
 </style>
-<style id="kz-mobile-chat-repair">
-#kcPanelTabs{display:none!important}
-#kcPanel[data-panel="community"] #kcPanelBody{display:flex;overflow:hidden;min-height:0;flex:1}
-#kcPanel[data-panel="community"] .kc-page{flex:1;width:100%;height:auto!important;min-height:0!important;padding:0 12px 10px;overflow:hidden}
-#kcPanel[data-panel="community"] .kc-head,#kcPanel[data-panel="community"] .kc-page>.kc-sub,#kcPanel[data-panel="community"] #kcConnection{display:none!important}
-#kcPanel[data-panel="community"] #kcContent{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden}
-#kcPanel[data-panel="community"] .kc-chat{display:flex;flex:1;flex-direction:column;height:auto!important;min-height:0!important}
-#kcPanel[data-panel="community"] .kc-chat-log{flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#kcPanel[data-panel="community"] #kcRooms{flex-shrink:0;margin:0 0 8px}
-#kcPanel[data-panel="community"] #kcRooms button{min-height:36px;padding:6px 10px}
-#kcPanel[data-panel="community"] #kcChatAttach{padding:0 9px}
-#kcPanel[data-panel="community"] .kz-attach-head{padding:3px 0}
-#kcPanel[data-panel="community"] .kz-attach-label{min-height:30px;padding:0 9px;font-size:12px}
-#kcPanel[data-panel="community"] .kc-compose{flex-shrink:0;align-items:flex-end;padding:7px;gap:6px}
-#kcPanel[data-panel="community"] .kc-compose textarea{min-height:40px;max-height:80px;padding:8px 10px;line-height:22px}
-#kcPanel[data-panel="community"] .kc-compose button{min-height:40px}
-#kcPanel[data-panel="community"] .kc-error:not(:empty){flex-shrink:0;max-height:50px;overflow:auto;padding:6px 9px;margin-bottom:6px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="kz-responsive-rebuild">
+/* One layout owner for communication panels. */
+body.kc-panel-open{overflow:hidden}
+#kcPanel{left:50%;top:50%;right:auto;bottom:auto;width:min(920px,calc(100vw - 48px));height:min(760px,calc(100dvh - 48px));transform:translate(-50%,-50%);background:var(--card);padding:0}
+#kcPanel:not([open]){display:none}
+#kcPanel .kc-panel-head{flex:0 0 auto;min-height:52px;padding:6px 16px;border-bottom:1px solid var(--bd)}
+#kcPanelClose{min-width:44px;min-height:44px}#kcPanelTabs{display:none}
+#kcPanel[data-panel="community"] #kcPanelBody{display:flex;overflow:hidden}
+#kcPanel[data-panel="community"] .kc-page{height:100%;min-height:0;padding:0;flex:1;overflow:hidden}
+#kcPanel[data-panel="community"] .kc-page>.kc-head,#kcPanel[data-panel="community"] .kc-page>.kc-sub{display:none}
+#kcPanel #kcError:not(:empty){display:block;flex:none;max-height:100px;overflow:auto;margin:8px;padding:10px;white-space:normal}
+#kcContent{min-width:0}
+#kcPanel[data-panel="community"] #kcContent{display:flex;flex:1;min-height:0;overflow:hidden}
+#kcPanel .kc-chat-app{flex:1;height:100%;min-height:0;width:100%;border:0;border-radius:0;box-shadow:none;grid-template-columns:220px minmax(0,1fr);background:var(--card)}
+#kcPanel .kc-chat-main{position:relative;min-height:0;flex:1;background:var(--card)}
+.kc-chat-modern-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;min-height:64px;padding:10px 14px;border-bottom:1px solid var(--bd)}
+.kc-chat-modern-title{display:flex;gap:10px;align-items:center;min-width:0}.kc-chat-modern-title strong{display:block;font-size:15px}.kc-chat-modern-title small{display:block;font-size:11px;color:var(--mu);margin-top:3px}.kc-chat-modern-avatar{font-size:22px}
+.kc-chat-member-float{display:flex;align-items:center;gap:5px;min-height:44px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);padding:8px;font:inherit;font-size:12px}.kc-chat-member-float svg{width:18px;height:18px}.kc-chat-member-float i{font-style:normal}.kc-chat-mobile-back{display:none}
+#kcRoomMemberPopover{position:absolute;right:10px;top:62px;width:min(290px,calc(100% - 20px));z-index:5;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:var(--sh2)}
+#kcPanel .kc-chat{flex:1;min-height:0;height:auto;border:0;border-radius:0}
+#kcPanel .kc-chat-log{flex:1;min-height:0;overflow:auto;padding:14px;background:var(--page);overflow-anchor:none}
+#kcPanel .kc-chat-composer{flex:none;padding:10px;border-top:1px solid var(--bd);background:var(--card)}
+#kcPanel .kc-compose{padding:0;border:0;flex:1;min-width:0}#kcPanel .kc-compose textarea{width:100%;min-height:44px;max-height:120px;line-height:24px;padding:10px 12px;background:var(--bg);color:var(--tx)}
+#kcPanel .kc-chat-send{height:44px;width:44px;background:var(--ac);color:white}#kcPanel button:disabled{opacity:.5;cursor:wait}
+#kcPanel .kc-chat-connection{display:block;font-size:11px;color:var(--mu);padding:6px 2px 0;text-align:left}
+#kcPanel .kc-bubble{background:var(--card);border-color:var(--bd);color:var(--tx)}#kcPanel .mine .kc-bubble{background:var(--golds)}
+#kcPanel .kc-message b,#kcPanel .kc-message time{color:var(--mu)}
+#kcPanel .kc-chat-sidebar,#kcPanel .kc-chat-search,#kcPanel .kc-chat-mobile-roombar{background:var(--card)}
+#kcPanel .kc-room-item{color:var(--tx)}#kcPanel .kc-room-item.on{background:var(--golds)}
+#kcPanel .kc-room-member-info b,#kcPanel .kc-room-member-info small{color:var(--tx)}
 @media(max-width:820px){
-#kcPanel{top:calc(var(--kc-vtop,0px) + 6px)!important;bottom:auto!important;left:6px!important;right:auto!important;width:calc(100vw - 12px)!important;height:calc(var(--kc-vh,100dvh) - 12px)!important;max-height:calc(var(--kc-vh,100dvh) - 12px)!important;padding-bottom:0!important;border-radius:18px}
-#kcPanel .kc-panel-head{flex-shrink:0;min-height:44px;padding:3px 12px;box-sizing:border-box}#kcPanel .kc-panel-head strong{font-size:16px}#kcPanel .kc-panel-head button{width:36px;height:36px}
-#kcPanel[data-panel="community"] .kc-page{padding:0 8px 7px!important}
-#kcPanel[data-panel="community"] .kc-tabs{margin:0 0 6px!important}
-#kcPanel[data-panel="community"] .kc-chat-log{padding:9px}
-#kcPanel[data-panel="community"] .kc-message{margin:8px 0}
-#kcPanel[data-panel="community"] .kc-bubble{padding:8px 11px}
-body.kc-keyboard #kcPanel .kz-attach-head small{display:none}
-body.kc-keyboard #kcPanel .kz-attach-previews img{width:40px;height:40px}
-body.kc-keyboard #kcPanel .kz-attach-previews{margin:2px 0}
-#kcPanel[data-panel="song_requests"] .kc-page>.kc-head h1,#kcPanel[data-panel="inbox"] .kc-page>.kc-head{display:none}
+ html,body{max-width:100%;overflow-x:clip}
+ #app,#shell,.shell>.col,#body,#body>.wk,#body>.hm{min-width:0;max-width:100%;box-sizing:border-box}
+ #top{display:flex!important;flex-wrap:wrap!important;gap:6px!important;padding:8px 12px!important}
+ #tl{flex:1 1 120px!important;min-width:0}#tr{flex:0 1 auto!important;max-width:100%!important;gap:5px!important;flex-wrap:wrap}
+ #tr #kcChatOpen{display:none}#tr .kz-account-btn{max-width:110px!important;min-height:40px}#tr #kcMail{width:40px;height:40px}
+ #dbar{flex:1 0 100%;width:100%;min-width:0}#dbar .dnav,#dbar .dn-c{min-width:0}
+ #tabbar{grid-template-columns:repeat(5,minmax(0,1fr))!important}#tabbar button{min-width:0;min-height:54px}#tabbar svg{width:22px;height:22px}
+ .km-menu button>svg{width:24px;height:24px;flex:0 0 24px}.km-menu button>span{min-width:0}
+ .wk>*,.card,.wz,.wz-b,.cv6-body,.mg>*,.nf,.at-card{min-width:0;box-sizing:border-box}
+ .at-form .two,.nf-o,.sfg,.storage-grid{grid-template-columns:minmax(0,1fr)!important}
+ .ab-guide span{min-width:0;flex-basis:100%}.mm-list{grid-template-columns:minmax(0,1fr)}
+ .at-rec{grid-template-columns:repeat(2,minmax(0,1fr));overflow-wrap:anywhere}
+ .seg{max-width:100%;overflow-x:auto}.seg>button{flex-shrink:0}
+ input,textarea,select{max-width:100%;box-sizing:border-box}
+ .kz-modal,.kz-admin-overlay,.kz-login-lock{box-sizing:border-box;max-width:100vw;overflow:auto}
+ #atModal .am-c{box-sizing:border-box;max-width:100%;max-height:calc(100dvh - 24px)}
+ #kcPanel,body.kc-keyboard #kcPanel{left:0;right:auto;top:var(--kc-vtop,0px);bottom:auto;transform:none;margin:0;width:100%;height:var(--kc-vh,100dvh);max-width:100%;max-height:none;border:0;border-radius:0;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box}
+ #kcPanel .kc-panel-head{min-height:48px;padding:2px 12px}
+ #kcPanel .kc-chat-app{display:flex;flex-direction:column;min-height:0}
+ #kcPanel .kc-chat-sidebar{display:none}#kcPanel .kc-chat-mobile-roombar{display:flex;flex:none;gap:6px;padding:6px 10px;overflow-x:auto}
+ #kcPanel .kc-chat-mobile-roombar button{min-height:40px;background:var(--card);color:var(--tx);border:1px solid var(--bd)}#kcPanel .kc-chat-mobile-roombar button.on{background:var(--golds)}
+ #kcPanel .kc-chat-modern-head{min-height:52px;padding:5px 12px}
+ #kcPanel .kc-chat-modern-avatar{display:none}#kcPanel .kc-chat-member-float{font-size:11px}
+ #kcPanel .kc-chat-log{padding:10px}#kcPanel .kc-message{max-width:92%}
+ #kcPanel .kc-message .kc-avatar{display:none}
+ #kcPanel .kc-chat-composer{padding:8px 10px max(8px,env(safe-area-inset-bottom,0px))}
+ body.kc-keyboard #kcPanel{padding-top:0}body.kc-keyboard #kcPanel .kc-chat-composer{padding-bottom:8px}
+ body.kc-keyboard #kcPanel .kc-chat-mobile-roombar,body.kc-keyboard #kcPanel .kc-chat-modern-head{display:none}
+ #kcPanel .kc-dialog{max-height:var(--kc-vh,90dvh)}
 }
 </style>
 
-<style id="kz-chat-v2-overrides">#kcPanel[data-panel="community"] .kc-page{max-width:none;height:100%;padding:0!important}#kcPanel[data-panel="community"] .kc-page>.kc-head,#kcPanel[data-panel="community"] .kc-page>.kc-sub,#kcPanel[data-panel="community"] #kcError{display:none}#kcPanel[data-panel="community"] #kcContent{height:100%;min-height:0}#kcPanel[data-panel="community"] .kc-room-members{display:none}#kcPanel[data-panel="community"] #kcRoomMemberPopover{position:absolute;z-index:30;right:18px;top:72px;width:min(300px,calc(100% - 36px));background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 12px 30px rgba(60,45,30,.12);padding:10px}#kcPanel[data-panel="community"] #kcRoomMemberPopover[hidden]{display:none!important}</style>
-
-<style id="kz-chat-popup-size-members-v3">
-/* 채팅 팝업: 큰 기본 사이즈 + 채팅 상단 바 제거 + 참여자 메뉴 */
-@media(min-width:821px){
-  #kcPanel[data-panel="community"]{
-    width:min(720px,calc(100vw - var(--side) - 40px)) !important;
-    height:min(760px,calc(100dvh - 80px)) !important;
-  }
-}
-#kcPanel[data-panel="community"] .kc-chat-main{position:relative;}
-#kcPanel[data-panel="community"] .kc-chat-main-head{display:none!important;}
-#kcPanel[data-panel="community"] .kc-chat-main > .kc-chat{padding-top:0;}
-#kcPanel[data-panel="community"] .kc-chat-log{padding-top:58px!important;}
-#kcPanel[data-panel="community"] .kc-chat-member-float{
-  position:absolute;top:9px;right:12px;z-index:20;
-  display:flex;align-items:center;gap:6px;height:38px;
-  border:1px solid #ddd4c8;border-radius:11px;padding:0 10px;
-  background:rgba(255,255,255,.96);color:#554b42;
-  box-shadow:0 4px 14px rgba(60,45,30,.08);
-  font:inherit;font-size:12px;font-weight:700;cursor:pointer;
-  backdrop-filter:blur(5px);
-}
-#kcPanel[data-panel="community"] .kc-chat-member-float svg{width:18px;height:18px;color:#80664d;}
-#kcPanel[data-panel="community"] .kc-chat-member-float i{font-style:normal;font-size:13px;color:#8b8177;transition:transform .15s;}
-#kcPanel[data-panel="community"] .kc-chat-member-float.open i{transform:rotate(180deg);}
-#kcPanel[data-panel="community"] #kcRoomMemberPopover{
-  position:absolute;z-index:50;right:12px;top:54px;width:min(280px,calc(100% - 24px));
-  max-height:min(360px,60%);overflow:auto;box-sizing:border-box;
-  background:#fff;border:1px solid #ddd4c8;border-radius:14px;
-  box-shadow:0 14px 35px rgba(60,45,30,.16);padding:8px;
-}
-#kcPanel[data-panel="community"] #kcRoomMemberPopover[hidden]{display:none!important;}
-@media(max-width:820px){
-  #kcPanel[data-panel="community"] .kc-chat-log{padding-top:54px!important;}
-  #kcPanel[data-panel="community"] .kc-chat-member-float{top:7px;right:9px;height:36px;padding:0 9px;font-size:11px;}
-  #kcPanel[data-panel="community"] #kcRoomMemberPopover{top:50px;right:9px;width:min(270px,calc(100% - 18px));}
-}
-</style>
-
-<style id="kz-chat-modern-final">
-/* 꿈자리 테마 채팅 UI - 따뜻한 미니멀 + 가독성 중심 */
-#kcPanel[data-panel="community"]{
-  width:min(760px,calc(100vw - var(--side) - 34px)) !important;
-  height:min(760px,calc(100dvh - 54px)) !important;
-  border-radius:24px !important;
-  background:#f8f5ef !important;
-  border:1px solid rgba(139,111,82,.20) !important;
-  box-shadow:0 28px 90px rgba(55,40,25,.20) !important;
-}
-#kcPanel[data-panel="community"] .kc-panel-head{display:none!important}
-#kcPanel[data-panel="community"] #kcPanelBody{overflow:hidden}
-#kcPanel[data-panel="community"] .kc-chat-app{
-  height:100%; min-height:0; border:0; border-radius:0; box-shadow:none;
-  grid-template-columns:250px minmax(0,1fr); background:#fbfaf7;
-}
-#kcPanel[data-panel="community"] .kc-chat-sidebar{background:rgba(251,249,245,.96);border-right:1px solid #e5ddd2}
-#kcPanel[data-panel="community"] .kc-chat-side-head{padding:22px 16px 14px}
-#kcPanel[data-panel="community"] .kc-chat-side-title strong{font-size:18px;letter-spacing:-.02em;color:#332e29}
-#kcPanel[data-panel="community"] .kc-chat-side-count{font-size:10px;color:#a08f7d}
-#kcPanel[data-panel="community"] .kc-chat-search{height:42px;margin-top:15px;border:1px solid #e3dbd1;border-radius:13px;background:#fff;box-shadow:0 2px 8px rgba(65,45,25,.035)}
-#kcPanel[data-panel="community"] .kc-chat-search svg{color:#9c8e80}
-#kcPanel[data-panel="community"] .kc-room-list{padding:8px 9px 14px}
-#kcPanel[data-panel="community"] .kc-room-item{grid-template-columns:42px minmax(0,1fr) auto;gap:10px;padding:12px 10px;border-radius:15px;margin-bottom:4px;transition:.16s ease}
-#kcPanel[data-panel="community"] .kc-room-item:hover{background:#f6f0e8}
-#kcPanel[data-panel="community"] .kc-room-item.on{background:#eee6db;box-shadow:inset 3px 0 0 #a77b45}
-#kcPanel[data-panel="community"] .kc-room-avatar{width:42px;height:42px;background:#eee5da;color:#76583e;font-size:17px}
-#kcPanel[data-panel="community"] .kc-room-item:nth-child(2) .kc-room-avatar{background:#f0e9fb;color:#7862ae}
-#kcPanel[data-panel="community"] .kc-room-copy strong{font-size:13.5px;color:#37312c}
-#kcPanel[data-panel="community"] .kc-room-copy span{font-size:10.5px;color:#9b8f83}
-
-#kcPanel[data-panel="community"] .kc-chat-main{background:#fbfaf7;position:relative;min-width:0}
-#kcPanel[data-panel="community"] .kc-chat-modern-head{
-  height:74px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:0 16px;border-bottom:1px solid #e7dfd5;background:rgba(255,253,250,.92);
-}
-#kcPanel[data-panel="community"] .kc-chat-modern-title{display:flex;align-items:center;gap:11px;min-width:0}
-#kcPanel[data-panel="community"] .kc-chat-modern-avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#eee7f8;color:#755ea7;font-size:18px}
-#kcPanel[data-panel="community"] .kc-chat-modern-title strong{display:block;font-size:15px;letter-spacing:-.02em;color:#302b26}
-#kcPanel[data-panel="community"] .kc-chat-modern-title small{display:block;margin-top:3px;font-size:10.5px;color:#a09283}
-#kcPanel[data-panel="community"] .kc-chat-modern-actions{display:flex;align-items:center}
-#kcPanel[data-panel="community"] .kc-chat-member-float{
-  position:static;display:flex;align-items:center;gap:6px;height:38px;padding:0 11px;
-  border:1px solid #e1d7ca;border-radius:12px;background:#fff;color:#66584c;
-  box-shadow:0 2px 8px rgba(65,45,25,.045);font:inherit;font-size:11px;font-weight:700;cursor:pointer;
-}
-#kcPanel[data-panel="community"] .kc-chat-member-float:hover{background:#f8f3ec;border-color:#d6c7b6}
-#kcPanel[data-panel="community"] .kc-chat-member-float svg{width:17px;height:17px;color:#8b6847}
-#kcPanel[data-panel="community"] .kc-chat-member-float i{font-style:normal;font-size:12px;color:#9a8c7f;transition:transform .16s}
-#kcPanel[data-panel="community"] .kc-chat-member-float.open i{transform:rotate(180deg)}
-#kcPanel[data-panel="community"] #kcRoomMemberPopover{
-  position:absolute;z-index:80;right:16px;top:64px;width:min(285px,calc(100% - 32px));max-height:330px;overflow:auto;
-  box-sizing:border-box;background:rgba(255,253,250,.98);border:1px solid #dfd5ca;border-radius:16px;
-  box-shadow:0 18px 45px rgba(55,40,25,.18);padding:9px;backdrop-filter:blur(12px)
-}
-#kcPanel[data-panel="community"] #kcRoomMemberPopover[hidden]{display:none!important}
-#kcPanel[data-panel="community"] .kc-room-member{padding:9px 6px;border-radius:10px}
-#kcPanel[data-panel="community"] .kc-room-member:hover{background:#f7f1e9}
-#kcPanel[data-panel="community"] .kc-room-member-avatar{width:30px;height:30px;background:#eee4d8;color:#72573e}
-#kcPanel[data-panel="community"] .kc-room-member-info b{font-size:12px;color:#40382f}
-#kcPanel[data-panel="community"] .kc-room-member-info small{font-size:10px;color:#9b8d80}
-
-#kcPanel[data-panel="community"] .kc-chat-main .kc-chat{background:#f5f1ea;border-radius:0;min-height:0}
-#kcPanel[data-panel="community"] .kc-chat-log{padding:18px 18px 16px;background:linear-gradient(180deg,#f6f2ec 0%,#f4f0e9 100%)}
-#kcPanel[data-panel="community"] .kc-message{max-width:78%;margin:14px 0;gap:8px}
-#kcPanel[data-panel="community"] .kc-message .kc-avatar{width:32px;height:32px;flex-basis:32px;margin-bottom:21px;background:#e9dfd3;color:#72563c;font-size:12px;box-shadow:0 1px 2px rgba(50,35,20,.04)}
-#kcPanel[data-panel="community"] .kc-message.mine .kc-avatar{background:#e7e8f6;color:#61699a}
-#kcPanel[data-panel="community"] .kc-message b{font-size:10.5px;margin:0 5px 5px;color:#665b50;font-weight:700}
-#kcPanel[data-panel="community"] .kc-bubble{padding:10px 13px;border:1px solid #e5ded6;border-radius:5px 16px 16px 16px;background:#fff;color:#39332e;line-height:1.55;font-size:13.5px;box-shadow:0 2px 7px rgba(60,45,30,.035)}
-#kcPanel[data-panel="community"] .kc-message.mine .kc-bubble{background:#eeeafb;border-color:#ded8f0;border-radius:16px 5px 16px 16px}
-#kcPanel[data-panel="community"] .kc-message time{font-size:9.5px;color:#9d9184;margin:5px 4px 0}
-#kcPanel[data-panel="community"] .kc-day{margin:12px 0 16px;color:#a29486;font-size:9.5px}
-#kcPanel[data-panel="community"] .kc-empty{color:#9d9185;font-size:12px}
-
-#kcPanel[data-panel="community"] .kc-chat-composer{padding:10px 12px;background:#fffdfb;border-top:1px solid #e4dcd2}
-#kcPanel[data-panel="community"] .kc-chat-composer-row{gap:8px}
-#kcPanel[data-panel="community"] .kc-chat-plus{width:42px;height:42px;border-radius:12px;border:1px solid #e1d7cb;background:#fff;color:#75685b}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{min-height:42px;padding:10px 13px;border:1px solid #e1d8cf;border-radius:13px;background:#faf8f4;color:#3a342e;box-shadow:none}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea:focus{outline:2px solid rgba(170,130,82,.18);border-color:#c8a77c;background:#fff}
-#kcPanel[data-panel="community"] .kc-chat-send{width:44px;height:42px;border-radius:12px;background:#a9783d;box-shadow:0 5px 12px rgba(145,100,45,.16)}
-#kcPanel[data-panel="community"] .kc-chat-send:hover{background:#94652f}
-#kcPanel[data-panel="community"] .kc-chat-connection{display:none}
-#kcPanel[data-panel="community"] .kc-chat-attach{background:#fffdfb}
-
-@media(max-width:820px){
-  #kcPanel[data-panel="community"]{width:calc(100vw - 16px)!important;height:calc(var(--kc-vh,100dvh) - 16px)!important;left:8px!important;right:8px!important;top:8px!important;bottom:auto!important;border-radius:22px!important}
-  #kcPanel[data-panel="community"] .kc-chat-app{grid-template-columns:1fr;display:flex}
-  #kcPanel[data-panel="community"] .kc-chat-sidebar{display:none}
-  #kcPanel[data-panel="community"] .kc-chat-mobile-roombar{display:flex;padding:8px;background:#fbfaf7;border-bottom:1px solid #e5ddd2}
-  #kcPanel[data-panel="community"] .kc-chat-mobile-roombar button{border:1px solid #e1d8cf;background:#fff;border-radius:11px;color:#574d44}
-  #kcPanel[data-panel="community"] .kc-chat-mobile-roombar button.on{background:#eee6db;border-color:#d8c7b5;font-weight:700}
-  #kcPanel[data-panel="community"] .kc-chat-modern-head{height:62px;padding:0 12px}
-  #kcPanel[data-panel="community"] .kc-chat-modern-avatar{width:36px;height:36px;font-size:16px}
-  #kcPanel[data-panel="community"] .kc-chat-modern-title strong{font-size:14px}
-  #kcPanel[data-panel="community"] .kc-chat-member-float{height:35px;padding:0 8px;font-size:10px}
-  #kcPanel[data-panel="community"] .kc-chat-log{padding:12px 10px}
-  #kcPanel[data-panel="community"] .kc-message{max-width:88%;margin:11px 0}
-  #kcPanel[data-panel="community"] .kc-bubble{font-size:13.5px}
-}
-</style>
-
-
-<style id="kz-chat-final-polish">
-/* 채팅 최종 UI: 둥근 입력창 + PC 자유 이동/크기조절 */
-@media(min-width:821px){
-  #kcPanel[data-panel="community"].kc-user-layout{min-width:560px;min-height:520px;}
-  #kcPanel[data-panel="community"].kc-user-layout .kc-chat-modern-head{cursor:grab;user-select:none;touch-action:none;}
-  #kcPanel[data-panel="community"].kc-user-layout.kc-dragging .kc-chat-modern-head{cursor:grabbing;}
-  #kcPanel[data-panel="community"].kc-user-layout .kc-chat-modern-head button,
-  #kcPanel[data-panel="community"].kc-user-layout .kc-chat-modern-head a{cursor:pointer;}
-  #kcPanel[data-panel="community"].kc-user-layout .kc-popup-resize{right:2px;bottom:2px;width:26px;height:26px;z-index:120;cursor:nwse-resize;border-radius:0 0 22px 0;background:linear-gradient(135deg,transparent 0 42%,#a9783d 43% 48%,transparent 49% 59%,#a9783d 60% 65%,transparent 66%);}
-}
-#kcPanel[data-panel="community"] .kc-chat-composer{
-  padding:12px 14px 14px!important;
-  background:#fffdfb!important;
-  border-top:1px solid #e5ddd3!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-composer-row{
-  align-items:center!important;
-  gap:9px!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose{
-  min-width:0;
-  flex:1;
-  border:1px solid #ddd2c5!important;
-  border-radius:18px!important;
-  background:#faf8f4!important;
-  padding:0!important;
-  box-shadow:inset 0 1px 2px rgba(70,50,30,.025)!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose:focus-within{
-  border-color:#c6a276!important;
-  background:#fff!important;
-  box-shadow:0 0 0 3px rgba(167,123,69,.10)!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{
-  width:100%!important;
-  min-height:44px!important;
-  max-height:120px!important;
-  border:0!important;
-  border-radius:18px!important;
-  background:transparent!important;
-  padding:11px 15px!important;
-  box-shadow:none!important;
-  outline:0!important;
-  font-size:14px!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-plus{
-  width:44px!important;height:44px!important;flex:0 0 44px!important;
-  border-radius:14px!important;
-  border:1px solid #ddd2c5!important;
-  background:#fff!important;
-  color:#796957!important;
-  box-shadow:0 2px 7px rgba(70,50,30,.04)!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-plus:hover{background:#f8f3ec!important;}
-#kcPanel[data-panel="community"] .kc-chat-send{
-  width:46px!important;height:44px!important;flex:0 0 46px!important;
-  border-radius:14px!important;
-  background:#a9783d!important;
-  box-shadow:0 6px 14px rgba(145,100,45,.18)!important;
-}
-#kcPanel[data-panel="community"] .kc-chat-send:hover{background:#94652f!important;transform:translateY(-1px);}
-#kcPanel[data-panel="community"] .kc-chat-connection{display:none!important}
-@media(max-width:820px){
-  #kcPanel[data-panel="community"] .kc-chat-composer{padding:8px 9px 10px!important}
-  #kcPanel[data-panel="community"] .kc-chat-composer-row{gap:6px!important}
-  #kcPanel[data-panel="community"] .kc-chat-plus{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:13px!important}
-  #kcPanel[data-panel="community"] .kc-chat-send{width:42px!important;height:40px!important;flex-basis:42px!important;border-radius:13px!important}
-  #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose{border-radius:16px!important}
-  #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{min-height:40px!important;border-radius:16px!important;padding:9px 12px!important}
-}
-</style>
-
-
-
-
-
-
-<style id="kz-mobile-final-repair-20261007">
-/* 모바일 전면 레이아웃 안정화: PC 레이아웃/이동·크기조절은 건드리지 않음 */
-@media (max-width:820px){
-  html,body{overflow-x:hidden!important}
-
-  /* 로그인/관리 팝업: 화면보다 커져 빈 공간이 생기지 않도록 콘텐츠 높이 기준 */
-  #kzLoginLock{
-    position:fixed!important;inset:0!important;
-    width:100vw!important;height:100dvh!important;
-    box-sizing:border-box!important;
-    padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))!important;
-    display:flex!important;align-items:center!important;justify-content:center!important;
-    overflow:auto!important;
-  }
-  #kzLoginLock .kz-login-card{
-    width:min(430px,100%)!important;
-    height:auto!important;min-height:0!important;
-    max-height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
-    overflow:auto!important;
-    border-radius:20px!important;
-    box-sizing:border-box!important;
-  }
-  #kzLoginLock .kz-login-head{padding:18px 18px 12px!important}
-  #kzLoginLock .kz-login-head b{font-size:21px!important}
-  #kzLoginLock .kz-login-head p{font-size:12px!important}
-  #kzLoginLock .kz-login-tabs{padding:10px 14px 0!important}
-  #kzLoginLock .kz-login-body{padding:12px 14px 16px!important;gap:10px!important}
-
-  #kzAdminPanel{box-sizing:border-box!important;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))!important;overflow:auto!important}
-  #kzAdminPanel .kz-admin-card{width:100%!important;max-width:560px!important;max-height:calc(100dvh - 24px)!important;box-sizing:border-box!important}
-
-  /* 공통 팝업: 모바일 화면을 넘지 않게 */
-  #kcPanel{
-    position:fixed!important;
-    left:8px!important;right:8px!important;
-    top:max(8px,env(safe-area-inset-top))!important;
-    bottom:max(8px,env(safe-area-inset-bottom))!important;
-    width:auto!important;height:auto!important;
-    max-width:none!important;max-height:none!important;
-    box-sizing:border-box!important;
-    transform:none!important;margin:0!important;
-    overflow:hidden!important;border-radius:20px!important;
-  }
-  #kcPanel .kc-panel-head{flex:0 0 46px!important;box-sizing:border-box!important}
-  #kcPanelBody{min-height:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
-
-  /* 채팅 팝업은 화면 전체 높이를 사용하되 내부 요소가 flex로 정확히 나눠지게 */
-  #kcPanel[data-panel="community"]{
-    top:max(8px,env(safe-area-inset-top))!important;
-    bottom:max(8px,env(safe-area-inset-bottom))!important;
-    height:auto!important;
-    width:auto!important;
-    display:flex!important;
-    flex-direction:column!important;
-  }
-  #kcPanel[data-panel="community"] #kcPanelBody{
-    display:flex!important;
-    flex:1 1 auto!important;
-    min-height:0!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] .kc-page{
-    display:flex!important;
-    flex:1 1 auto!important;
-    width:100%!important;height:100%!important;
-    min-height:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] #kcContent{
-    display:flex!important;flex-direction:column!important;
-    flex:1 1 auto!important;min-height:0!important;height:100%!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-app{
-    display:flex!important;flex-direction:column!important;
-    flex:1 1 auto!important;width:100%!important;height:100%!important;
-    min-height:0!important;border-radius:0!important;box-shadow:none!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-mobile-roombar{
-    flex:0 0 auto!important;
-    padding:8px 10px!important;
-    overflow-x:auto!important;overflow-y:hidden!important;
-    -webkit-overflow-scrolling:touch!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-main{
-    display:flex!important;flex-direction:column!important;
-    flex:1 1 auto!important;min-height:0!important;height:auto!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-modern-head{
-    flex:0 0 60px!important;height:60px!important;
-    min-height:60px!important;box-sizing:border-box!important;
-    padding:0 12px!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-main .kc-chat{
-    display:flex!important;flex-direction:column!important;
-    flex:1 1 auto!important;min-height:0!important;height:auto!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-log{
-    flex:1 1 0!important;min-height:0!important;
-    height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;
-    -webkit-overflow-scrolling:touch!important;
-    padding:14px 10px 12px!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-attach{
-    flex:0 0 auto!important;max-height:110px!important;overflow:auto!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-composer{
-    flex:0 0 auto!important;
-    position:relative!important;
-    margin-top:auto!important;
-    padding:8px 9px max(9px,env(safe-area-inset-bottom))!important;
-    box-sizing:border-box!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-composer-row{width:100%!important;min-width:0!important}
-  #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose{min-width:0!important;max-width:none!important}
-  #kcPanel[data-panel="community"] .kc-chat-composer .kc-compose textarea{
-    font-size:16px!important;line-height:1.35!important;
-    min-height:40px!important;max-height:88px!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-plus{width:40px!important;height:40px!important;flex:0 0 40px!important}
-  #kcPanel[data-panel="community"] .kc-chat-send{width:42px!important;height:40px!important;flex:0 0 42px!important}
-  #kcPanel[data-panel="community"] .kc-chat-member-float{
-    height:36px!important;max-width:145px!important;padding:0 9px!important;
-    white-space:nowrap!important;overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] .kc-chat-member-float span{overflow:hidden;text-overflow:ellipsis}
-  #kcPanel[data-panel="community"] #kcRoomMemberPopover{
-    position:absolute!important;top:55px!important;right:9px!important;
-    width:min(270px,calc(100% - 18px))!important;
-    max-height:min(52dvh,320px)!important;
-    overflow:auto!important;z-index:200!important;
-  }
-  #kcPanel[data-panel="community"] .kc-message{max-width:88%!important}
-
-  /* 알림함/신청곡: 모바일에서는 콘텐츠에 맞는 컴팩트 카드 */
-  #kcPanel[data-panel="inbox"],#kcPanel[data-panel="song_requests"]{
-    top:max(10px,env(safe-area-inset-top))!important;
-    bottom:max(10px,env(safe-area-inset-bottom))!important;
-    height:auto!important;max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
-  }
-  #kcPanel[data-panel="inbox"] #kcPanelBody,#kcPanel[data-panel="song_requests"] #kcPanelBody{overflow:auto!important}
-  #kcPanel[data-panel="inbox"] .kc-page,#kcPanel[data-panel="song_requests"] .kc-page{
-    min-height:0!important;height:auto!important;overflow:visible!important;padding:0 12px 14px!important;
-  }
-  #kcPanel[data-panel="inbox"] .kc-card,#kcPanel[data-panel="song_requests"] .kc-card{margin-bottom:9px!important}
-
-  /* 키보드가 열리면 팝업이 화면 밖으로 밀리지 않게 */
-  body.kc-keyboard #kcPanel[data-panel="community"]{
-    top:max(6px,env(safe-area-inset-top))!important;
-    bottom:6px!important;
-    height:auto!important;
-  }
-}
-</style>
-<style id="kz-chat-single-window-final-end">
-/* FINAL OVERRIDE: 채팅 외곽 창 하나만 시각적 카드로 사용 */
-#kcPanel[data-panel="community"] .kc-chat-app{width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;overflow:hidden!important;}
-#kcPanel[data-panel="community"] .kc-chat{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;}
-#kcPanel[data-panel="community"] .kc-chat-main,#kcPanel[data-panel="community"] .kc-chat-sidebar{border-radius:0!important;box-shadow:none!important;}
-#kcPanel[data-panel="community"] #kcPanelBody,#kcPanel[data-panel="community"] #kcContent,#kcPanel[data-panel="community"] .kc-page{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;}
-#kcPanel[data-panel="community"]{overflow:hidden!important;box-sizing:border-box!important;}
-@media(max-width:820px){#kcPanel[data-panel="community"]{border-radius:18px!important;overflow:hidden!important;}#kcPanel[data-panel="community"] .kc-chat-app{border-radius:0!important;}}
-</style>
-
-<style id="kc-mobile-chat-fullscreen-final">
-/* 모바일 팀채팅: 팝업이 아니라 화면 전체 페이지로 사용 */
-@media (max-width:820px){
-  #kcPanel[data-panel="community"]{
-    position:fixed!important;
-    inset:0!important;
-    width:100vw!important;
-    height:100dvh!important;
-    max-width:none!important;
-    max-height:none!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-    overflow:hidden!important;
-    transform:none!important;
-  }
-  #kcPanel[data-panel="community"] .kc-panel-head{display:none!important;}
-  #kcPanel[data-panel="community"] #kcPanelBody{
-    width:100%!important;
-    height:100dvh!important;
-    max-height:none!important;
-    min-height:0!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-  }
-  #kcPanel[data-panel="community"] #kcContent,
-  #kcPanel[data-panel="community"] .kc-page,
-  #kcPanel[data-panel="community"] .kc-chat-app{
-    width:100%!important;
-    height:100%!important;
-    min-height:0!important;
-    margin:0!important;
-    padding:0!important;
-  }
-  #kcPanel[data-panel="community"] .kc-popup-resize{display:none!important;}
-  #kcPanel[data-panel="community"].kc-user-layout{position:fixed!important;inset:0!important;}
-}
-</style>
+</body></html>
