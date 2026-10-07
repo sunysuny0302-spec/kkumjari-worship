@@ -757,13 +757,13 @@ button.pc2{cursor:pointer}button.pc2:hover{border-color:var(--ac)}
 .qk-f{display:flex;gap:16px;padding:9px 16px;border-top:1px solid var(--bd);font-size:12px;color:var(--mu);background:var(--bg)}
 .qk-f span{display:inline-flex;align-items:center;gap:4px}
 /* 크게 보기 */
-#lb{position:fixed;inset:0;z-index:90;background:rgba(9,12,24,.95);color:#fff}
+#lb{position:fixed;inset:0;z-index:1000100;background:rgba(9,12,24,.95);color:#fff}
 .lb-t{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:8px;padding:0 12px 0 18px;padding-top:env(safe-area-inset-top,0px);z-index:2}
 #lb .cap{display:flex;align-items:baseline;gap:8px;font-size:14px;min-width:0;color:rgba(255,255,255,.7)}
 #lb .cap b{color:var(--gold);font-size:16px}#lb .cap span{color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-b{height:38px;min-width:38px;padding:0 14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:99px;font-size:13.5px;font-weight:600}
 .lb-b:hover{background:rgba(255,255,255,.18)}.lb-b.x{padding:0;width:38px;font-size:16px}
-.lbv{position:absolute;inset:calc(56px + env(safe-area-inset-top,0px)) 0 16px;overflow:auto;display:flex;padding:0 56px}
+.lbv{position:absolute;inset:calc(56px + env(safe-area-inset-top,0px)) 0 calc(16px + env(safe-area-inset-bottom,0px));overflow:auto;display:flex;padding:0 56px}
 .lbv img{margin:auto;max-width:100%;max-height:100%;background:#fff;border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.5);cursor:zoom-in;display:block}
 #lb.zm .lbv{padding:0 8px 8px}
 #lb.zm .lbv img{max-width:none;max-height:none;width:min(1800px,max(200%,900px));cursor:zoom-out}
@@ -801,7 +801,7 @@ button.pc2{cursor:pointer}button.pc2:hover{border-color:var(--ac)}
 .tabbar button.on::before{content:'';position:absolute;top:-4px;left:50%;width:22px;margin-left:-11px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
 .shell.no-tab .tabbar{display:none}
 .shell:not(.no-tab) #body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
-#toast{bottom:calc(82px + env(safe-area-inset-bottom,0px))}
+#toast{top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;height:auto;min-height:0;max-height:30dvh;overflow:hidden;width:max-content;box-sizing:border-box}
 .wk{padding:16px 14px 32px;gap:14px}.hm{padding:14px 12px 32px;gap:14px}
 .ht2{font-size:22px}
 .card{padding:16px}.hm-card{padding:16px}
