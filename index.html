@@ -6830,7 +6830,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  ${(()=>{const def=(()=>{try{const v=localStorage.getItem('kzMoreRoleV1');if(['s','e','l'].includes(v))return v}catch(e){}return k==='sess'?'e':k==='lead'?'l':'s'})();
   const P=(id,items)=>`<div class="km-rp" data-rp="${id}" ${def===id?'':'hidden'}><div class="km-tiles km-t3">${items.join('')}</div></div>`;
   return `<section class="km-tsec"><p>싱어 · 세션 · 인도자</p><div class="km-rseg" role="tablist">${[['s','mic','싱어'],['e','guitar','세션'],['l','leader','인도자']].map(([id,ic,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${V13I(ic)}<span>${t}</span></button>`).join('')}</div>
-  ${P('s',[T('sched_s','calendar','일정표'),T('swap','swap','일정 변경'),T('rule_s','list','배정 규칙')])}${P('e',[T('sched_e','calendar','일정표'),T('abs','calendar','불참 알리기'),T('rule_e','list','배정 규칙')])}${P('l',[T('lsw','calendar','인도자 일정'),T('leader','leader','작업실')])}</section>`})()}
+  ${P('s',[T('sched_s','calendar','싱어'),T('swap','swap','싱어 일정변경'),T('rule_s','list','싱어 배정규칙')])}${P('e',[T('sched_e','calendar','세션'),T('abs','swap','세션 일정변경'),T('rule_e','list','세션 배정규칙')])}${P('l',[T('lsw','calendar','인도자 일정'),T('leader','leader','작업실')])}</section>`})()}
  ${sec('관리',[k==='adm'?T('kzhub','shield','계정 관리'):'',T('storage','cloud','저장 공간'),T('trash','trash','휴지통'),T('all','list','전체 메뉴')])}</section>`}
  /* 더보기: 큰 줄 목록 대신 작은 아이콘 타일 */
  (function(){if(document.getElementById('kz-more2'))return;const st=document.createElement('style');st.id='kz-more2';st.textContent=`.km-more2 h1{margin:4px 0 14px}.km-tsec{margin:0 0 14px}.km-tsec>p{margin:0 0 7px 4px;font-size:12.5px;font-weight:700;color:var(--mu)}
