@@ -4207,6 +4207,10 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .lx-switch2{justify-self:start;margin:12px 0 0;padding:4px 0;border:0;background:none;color:#5c5047;font:inherit;font-size:14.5px;cursor:pointer}.lx-switch2::after{content:' ›';font-size:17px}
 .lx-art{position:relative;overflow:hidden;background:#f3e7d6 url(assets/login-bg-m.webp) 74% 40%/cover no-repeat}
 .lx-arch,.lx-beam,.lx-leaf{display:none!important}
+/* 폰: 사진 윗부분을 상태 표시줄 색으로 흐리게 이어서 잘린 느낌 없애기 */
+.lx-art::before{content:'';position:absolute;left:0;right:0;top:0;height:64px;z-index:0;background:linear-gradient(180deg,#fbfaf7 0%,rgba(251,250,247,.85) 22%,rgba(251,250,247,.4) 55%,rgba(251,250,247,0) 100%);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);pointer-events:none}
+.lx-brand{z-index:1}
+@media (min-width:860px){.lx-art::before{display:none}}
 .lx-arch{position:absolute;right:9%;top:6%;width:30%;max-width:190px;height:72%;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#fff 0%,#fbf3e4 100%);box-shadow:inset 0 0 0 10px #f3e6d2,0 0 60px rgba(255,240,210,.9);display:block}
 .lx-arch>i{position:absolute;inset:10px;border-radius:999px 999px 0 0;background:linear-gradient(170deg,#fffef8 0%,#fff3d6 55%,#f2dfb8 100%);display:block;overflow:hidden}
 .lx-arch>i::after{content:'';position:absolute;right:-10%;bottom:0;width:80%;height:55%;background:radial-gradient(60% 60% at 60% 60%,rgba(176,170,110,.45),transparent 70%);filter:blur(6px)}
@@ -4299,7 +4303,7 @@ window.kzLoginSkin=function(root,isLogin){if(!root||root.dataset.lx)return;root.
  kzLoginBar(true);
 };
 /* 폰 위쪽 상태 표시줄(시계 줄) 색을 사진 윗부분 색과 맞춰서 그림이 끝까지 이어져 보이게 */
-window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const C=matchMedia('(min-width:860px)').matches?'#f6efe6':'#c0a889';
+window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const C='#fbfaf7';
  if(on){if(window.__lxObs)return;const keep=()=>{if(!document.getElementById('kzLoginLock')){window.__lxObs.disconnect();window.__lxObs2.disconnect();window.__lxObs=null;m.content='#fbfaf7';return}if(m.content!==C)m.content=C};window.__lxObs=new MutationObserver(keep);window.__lxObs.observe(m,{attributes:true});window.__lxObs2=new MutationObserver(keep);window.__lxObs2.observe(document.body,{childList:true});keep()}};
 </script>
 </head><body>
