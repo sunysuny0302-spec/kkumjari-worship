@@ -4198,6 +4198,105 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .ls-r.danger i{background:rgba(200,70,60,.1);color:#b23a2f}.ls-r.danger b{color:#b23a2f}
 @media (max-width:760px){.libg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.libh{display:none!important}}
 </style>
+<style id="kz-login-skin-css">
+/* ===== 로그인 화면 새 디자인 ===== */
+:root .kz-login-lock.lx{--lxg:#24402f;--lxg2:#1c3426;padding:0!important;display:grid!important;grid-template-columns:1fr;grid-template-rows:minmax(300px,46dvh) auto;place-items:stretch!important;background:#faf6f0!important;overflow:auto;color:#2b2118}
+.lx .m{display:inline}.lx .d{display:none}
+.lx [hidden]{display:none!important}
+:root .lx .lx-switch{display:none}
+.lx-switch2{justify-self:start;margin:12px 0 0;padding:4px 0;border:0;background:none;color:#5c5047;font:inherit;font-size:14.5px;cursor:pointer}.lx-switch2::after{content:' ›';font-size:17px}
+.lx-art{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 85% 15%,#fffaf0 0%,#f6ead8 45%,#ecdcc4 100%)}
+.lx-arch{position:absolute;right:9%;top:6%;width:30%;max-width:190px;height:72%;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#fff 0%,#fbf3e4 100%);box-shadow:inset 0 0 0 10px #f3e6d2,0 0 60px rgba(255,240,210,.9);display:block}
+.lx-arch>i{position:absolute;inset:10px;border-radius:999px 999px 0 0;background:linear-gradient(170deg,#fffef8 0%,#fff3d6 55%,#f2dfb8 100%);display:block;overflow:hidden}
+.lx-arch>i::after{content:'';position:absolute;right:-10%;bottom:0;width:80%;height:55%;background:radial-gradient(60% 60% at 60% 60%,rgba(176,170,110,.45),transparent 70%);filter:blur(6px)}
+.lx-beam{position:absolute;inset:-20% -10% 0 -10%;background:repeating-linear-gradient(115deg,rgba(255,255,255,0) 0 60px,rgba(255,250,235,.55) 60px 120px,rgba(255,255,255,0) 120px 200px);filter:blur(14px);opacity:.8;display:block}
+.lx-leaf{position:absolute;left:-6%;top:22%;width:62%;max-width:420px;opacity:.16;filter:blur(5px);transform:rotate(-8deg)}
+.lx-floor{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,rgba(255,255,255,0),#faf6f0 92%);display:block}
+.lx-brand{position:absolute;left:28px;top:max(28px,calc(env(safe-area-inset-top) + 16px));display:grid;gap:6px}
+.lx-cross{position:relative;width:22px;height:30px;display:block}.lx-cross::before,.lx-cross::after{content:'';position:absolute;background:#a8722f;border-radius:2px}.lx-cross::before{left:10px;top:0;width:2.5px;height:30px}.lx-cross::after{left:2px;top:8px;width:18px;height:2.5px}
+.lx-brand b{font-family:var(--serif,serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.lx-tag{display:none}
+.lx-main{display:grid;align-content:start;justify-items:center;padding:0 22px max(22px,env(safe-area-inset-bottom))}
+:root .lx .kz-login-card{width:min(460px,100%)!important;max-height:none!important;overflow:visible!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important}
+.lx .kz-login-body{padding:0!important;display:grid;gap:10px}
+.lx-hi{display:grid;gap:4px;margin:4px 0 14px}
+.lx-eyebrow{display:none;font-size:12px;letter-spacing:.28em;color:#a8722f;font-weight:600}
+.lx-hello{margin:0;font-size:20px;color:#3a3128}.lx-hello.big{font-size:28px;font-weight:800;color:var(--lxg)}
+.lx-who{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.lx-who b{font-size:32px;font-weight:800;color:var(--lxg);letter-spacing:-.02em;order:1}
+.lx-av{order:2;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#efe2cf;color:#9a6a2a;font-size:20px;font-weight:600}
+.lx-sub{margin:4px 0 0;font-size:15px;color:#8a7d70}
+:root .lx .lx-switch{order:3;flex-basis:100%;justify-self:start;margin:10px 0 0;padding:4px 0;border:0;background:none;color:#5c5047;font:inherit;font-size:14.5px;cursor:pointer;text-align:left;box-shadow:none;min-height:0}
+.lx-switch .m::after{content:' ›';font-size:17px}
+:root .lx .kz-passkey-btn{min-height:58px;margin:4px 0 0;border:0!important;border-radius:16px;background:var(--lxg)!important;color:#fff!important;-webkit-text-fill-color:#fff;font-size:16.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(20,40,28,.7)}
+:root .lx .kz-passkey-btn svg{color:#fff;width:26px;height:26px}
+.lx .kz-passkey-btn.busy{opacity:.8}
+.lx-pinbtn{min-height:54px;border:1.5px solid rgba(60,50,40,.18);border-radius:16px;background:rgba(255,255,255,.7);color:#2b3a30;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.lx-pinbox{display:grid;gap:10px}.lx-pinbox[hidden],.lx-pinbtn[hidden]{display:none!important}
+:root .lx #kzJoin,:root .lx #kzGo{min-height:54px;border-radius:16px;background:var(--lxg)!important;border-color:var(--lxg)!important;color:#fff!important;font-size:16px}
+:root .lx .kz-pin{border-radius:14px!important;min-height:52px;font-size:20px!important;letter-spacing:.3em;text-align:center;background:#fff!important}
+.lx-note{margin:6px 0 0;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#8a7d70;text-align:center}
+.lx-note svg{color:#9a8e80;flex:none}
+.lx-foot{margin-top:26px;text-align:center;font-size:14px;color:#8a7d70}
+.lx-foot button{border:0;background:none;padding:2px 0;margin-left:6px;font:inherit;font-weight:800;color:var(--lxg);border-bottom:1.5px solid var(--lxg);cursor:pointer}
+.lx-sign{display:none}
+.lx .kz-account-list{max-height:34dvh}
+.lx .kz-auth-msg{border-radius:12px}
+/* PC: 왼쪽 그림 · 오른쪽 로그인 */
+@media (min-width:860px){
+ :root .kz-login-lock.lx{grid-template-columns:58fr 42fr;grid-template-rows:100dvh}
+ .lx .m{display:none}.lx .d{display:inline}
+ .lx-arch{right:16%;top:3%;height:70%;width:26%;max-width:none}
+ .lx-leaf{left:-4%;top:18%;width:58%;max-width:none}
+ .lx-floor{height:28%;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(250,240,225,.95))}
+ .lx-brand{left:9%;top:7%}.lx-brand b{font-size:26px}.lx-cross{width:26px;height:36px}.lx-cross::before{left:12px;height:36px}.lx-cross::after{left:2px;top:9px;width:22px}
+ .lx-tag{display:grid;gap:12px;position:absolute;left:9%;bottom:9%;z-index:1}.lx-tag b{font-family:var(--serif,serif);font-size:40px;line-height:1.3;font-weight:700;color:#2f2822}.lx-tag span{font-size:16px;color:#7a6d60}
+ .lx-main{align-content:center;padding:40px 8%;position:relative;background:#fbf8f3}
+ :root .lx .kz-login-card{width:min(420px,100%)!important}
+ .lx-eyebrow{display:block}
+ .lx-hello{font-size:34px;font-weight:600;color:var(--lxg)}.lx-hello span{display:none}
+ .lx-who{margin-top:18px;gap:14px}.lx-who b{order:2;font-size:26px}.lx-av{order:1;width:56px;height:56px;font-size:22px}
+ .lx-sub{display:none}
+ .lx-switch2{display:none}
+ :root .lx .lx-switch{display:inline-block;order:3;flex-basis:auto;margin:0 0 0 auto;font-size:13.5px;color:#6b5f55;text-decoration:underline;text-underline-offset:4px}
+ .lx-switch .m::after{content:none}
+ .lx .lx-hi{margin-bottom:18px}
+ :root .lx .kz-passkey-btn,.lx-pinbtn{min-height:56px}
+ .lx-foot{margin-top:56px}
+ .lx-sign{display:block;position:absolute;right:6%;bottom:4%;font-size:13px;color:#a09486}
+}
+@media (prefers-reduced-transparency:reduce){.lx-beam{display:none}}
+</style>
+<script id="kz-login-skin">
+/* ===== 로그인 화면 새 디자인: 폰은 위쪽 빛 그림 + 아래 인사/버튼, PC는 왼쪽 그림 · 오른쪽 로그인 ===== */
+window.kzLoginSkin=function(root,isLogin){if(!root||root.dataset.lx)return;root.dataset.lx='1';root.classList.add('lx');
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const card=root.querySelector('.kz-login-card');if(!card)return;
+ const art=document.createElement('aside');art.className='lx-art';art.setAttribute('aria-hidden','true');
+ art.innerHTML='<i class="lx-arch"><i></i></i><i class="lx-beam"></i><svg class="lx-leaf" viewBox="0 0 300 300"><g fill="#7a6a4f">'+Array.from({length:14},(_,i)=>`<ellipse cx="${60+i*14}" cy="${120+Math.sin(i)*40}" rx="22" ry="8" transform="rotate(${-40+i*9} ${60+i*14} ${120+Math.sin(i)*40})"/>`).join('')+'<path d="M20 260 C 90 190, 170 140, 280 70" stroke="#7a6a4f" stroke-width="3" fill="none"/></g></svg><i class="lx-floor"></i>'
+  +'<div class="lx-brand"><span class="lx-cross"></span><b>꿈자리 찬양팀</b></div><div class="lx-tag"><b>함께 준비하는<br>예배의 시작</b><span>마음을 모아, 찬양으로 하나 되는 우리.</span></div>';
+ const main=document.createElement('main');main.className='lx-main';root.prepend(art);root.append(main);main.append(card);
+ const foot=document.createElement('div');foot.className='lx-foot';foot.innerHTML=isLogin?'처음 오셨나요? <button type="button" data-lx="join">가입하기</button>':'이미 계정이 있나요? <button type="button" data-lx="login">로그인</button>';card.append(foot);
+ foot.querySelector('button').onclick=()=>root.querySelector(`.kz-login-tabs [data-tab="${foot.querySelector('button').dataset.lx}"]`)?.click();
+ const sign=document.createElement('p');sign.className='lx-sign';sign.textContent='꿈자리 찬양팀';main.append(sign);
+ const head=card.querySelector('.kz-login-head');
+ const rc=card.querySelector('.kz-remembered-card');
+ if(isLogin&&rc){root.classList.add('lx-saved');const name=rc.querySelector('.kz-remembered-name b')?.textContent||'',av=rc.querySelector('.kz-user-avatar');
+  const g=document.createElement('div');g.className='lx-hi';g.innerHTML=`<small class="lx-eyebrow">WELCOME BACK</small><p class="lx-hello">다시 만나 반가워요<span>,</span></p><div class="lx-who"><span class="lx-av">${esc(av?av.textContent:name.slice(0,1))}</span><b>${esc(name)} 님</b></div><p class="lx-sub">오늘도 함께 예배를 준비해요.</p>`;
+  const sw=rc.querySelector('.kz-switch-account');sw.classList.add('lx-switch');sw.innerHTML='<span class="m">다른 계정으로 로그인</span><span class="d">계정 변경</span>';
+  g.querySelector('.lx-who').append(sw);const sw2=document.createElement('button');sw2.type='button';sw2.className='lx-switch2';sw2.innerHTML='다른 계정으로 로그인';sw2.onclick=()=>sw.click();g.append(sw2);rc.before(g);rc.hidden=true;
+  const pk=card.querySelector('.kz-passkey-btn'),or=card.querySelector('.kz-passkey-or');if(or)or.hidden=true;
+  const pinL=card.querySelector('#kzPin')?.closest('label'),rem=card.querySelector('.kz-remember-choice'),go=card.querySelector('#kzGo');
+  if(pk){const lab=pk.querySelector('span');const L=window.KZPasskey?KZPasskey.labelRo():'Face ID로';if(lab)lab.innerHTML=`<span class="m">${esc(L)} 시작하기</span><span class="d">생체 인증으로 로그인</span>`;
+   const pinBtn=document.createElement('button');pinBtn.type='button';pinBtn.className='lx-pinbtn';pinBtn.textContent='PIN으로 로그인';pk.after(pinBtn);
+   const box=document.createElement('div');box.className='lx-pinbox';box.hidden=true;pinBtn.after(box);[pinL,rem,go].forEach(x=>x&&box.append(x));
+   pinBtn.onclick=()=>{box.hidden=false;pinBtn.hidden=true;setTimeout(()=>card.querySelector('#kzPin')?.focus(),30)};
+   const note=document.createElement('p');note.className='lx-note';note.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h.5A1.5 1.5 0 0 1 19 11.5v8A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-8A1.5 1.5 0 0 1 6.5 10Zm2 0h6V8a3 3 0 0 0-6 0Z"/></svg><span class="m">이 기기에 저장된 계정으로 안전하게 접속해요</span><span class="d">기기에 등록된 생체 인증으로 접속할 수 있어요.</span>';box.after(note);
+   if(card.querySelector('.kz-auth-msg.err')&&/PIN/.test(card.querySelector('.kz-auth-msg').textContent))pinBtn.click()}
+  else{const note=document.createElement('p');note.className='lx-note';note.textContent='PIN 4자리를 입력하면 바로 시작해요.';go&&go.after(note)}
+ }else{const h=document.createElement('div');h.className='lx-hi';h.innerHTML=isLogin?'<small class="lx-eyebrow">SIGN IN</small><p class="lx-hello big">로그인</p><p class="lx-sub">내 이름을 고르고 PIN을 입력해 주세요.</p>':'<small class="lx-eyebrow">JOIN</small><p class="lx-hello big">처음 오셨나요?</p><p class="lx-sub">가입 요청을 보내면 관리계정이 승인해 줘요.</p>';(card.querySelector('.kz-login-body')||card).before(h)}
+ if(head)head.hidden=true;const tabs=card.querySelector('.kz-login-tabs');if(tabs)tabs.hidden=true;
+};
+</script>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -5776,6 +5875,7 @@ sub();stat()}catch(e){console.error(e)}})();
   root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>login(b.dataset.tab));root.querySelectorAll('.kz-pin').forEach(i=>i.oninput=()=>i.value=i.value.replace(/\D/g,'').slice(0,4));
   if(isLogin){const saved=remembered();let selectedId=draftAccountId||(!choosingAccount&&saved?saved.id:'');const nameInput=root.querySelector('#kzNameInput'),accountList=root.querySelector('#kzAccountList');const filterAccounts=()=>{const q=normName(nameInput.value||'');selectedId='';draftAccountId='';draftAccountName=nameInput.value;accountList.querySelectorAll('.kz-account-item').forEach(btn=>{const hit=!q||normName(btn.dataset.accountName).includes(q);btn.hidden=!hit;btn.classList.remove('on')})};nameInput.addEventListener('input',filterAccounts);accountList.querySelectorAll('.kz-account-item').forEach(btn=>btn.onclick=()=>{selectedId=btn.dataset.accountId;nameInput.value=btn.dataset.accountName;draftAccountId=selectedId;draftAccountName=nameInput.value;accountList.querySelectorAll('.kz-account-item').forEach(x=>x.classList.toggle('on',x===btn));root.querySelector('#kzPin')?.focus()});const restored=approved.find(a=>a.id===selectedId);nameInput.value=restored?restored.name:(draftAccountName||(!choosingAccount&&saved?saved.name:''));accountList.querySelectorAll('.kz-account-item').forEach(b=>b.classList.toggle('on',b.dataset.accountId===selectedId));root.querySelector('#kzPin').value='';if(selectedId)root.querySelector('#kzPin').focus();root.querySelector('#kzGo').onclick=async()=>{const typed=normName(nameInput.value||''),p=root.querySelector('#kzPin').value,accounts=read().filter(x=>x.status==='approved'),a=selectedId?accounts.find(x=>x.id===selectedId):accounts.find(x=>normName(x.name)===typed);if(!a)return login('login',typed?'등록된 계정을 찾을 수 없어요. 이름을 확인해 주세요.':'계정을 선택하거나 이름을 입력해 주세요.',true);if(!/^\d{4}$/.test(p))return login('login','PIN 숫자 4자리를 입력해 주세요.',true);draftAccountId=a.id;draftAccountName=a.name;root.querySelector('#kzPin').value='';await firebaseLogin(a,p)}}
   else (joinPrep(root),root.querySelector('#kzJoin')).onclick=async()=>{if(!await joinGate(root))return;const n=root.querySelector('#kzJoinName').value.trim().replace(/\s+/g,' '),p=root.querySelector('#kzJoinPin').value,p2=root.querySelector('#kzJoinPin2').value;if(!n)return login('join','이름을 입력해 주세요.',true);if(!/^\d{4}$/.test(p))return login('join','PIN은 숫자 4자리로 만들어 주세요.',true);if(p!==p2)return login('join','PIN 확인이 일치하지 않아요.',true);const all=read(),same=all.find(x=>normName(x.name)===normName(n));if(same){if(same.status==='pending'){root.querySelector('.kz-login-body').innerHTML=`<div class="kz-pending-ok"><div class="kz-pending-icon">✓</div><b>이미 승인 대기 중이에요</b><p><strong>${esc(same.name)}</strong>님의 가입 요청이 이미 접수되어 있습니다.<br>추가 요청은 생성하지 않았어요. 관리자 승인 후 로그인할 수 있습니다.</p><button class="kz-auth-secondary" id="kzPendingBack">계정 로그인으로 돌아가기</button></div>`;root.querySelector('#kzPendingBack').onclick=()=>login('login','관리자 승인 후 계정 선택란에 이름이 표시됩니다.');return}return login('join','이미 등록된 계정 이름이에요. 계정 로그인에서 본인 이름을 선택해 주세요.',true)}const auth=FB(),fs=FS();if(!auth||!fs)return login('join','Firebase 연결이 준비되지 않았어요. 잠시 후 다시 시도해 주세요.',true);const id='u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),email=emailFor(id);try{const cred=await auth.createUserWithEmailAndPassword(email,authPassword(id,p));const u=cred.user;await u.updateProfile({displayName:n}).catch(()=>{});const sl=salt(),x={id:u.uid,name:n,rank:'팀원',status:'pending',parts:[],slots:[],authEmail:email,salt:sl,pinHash:pinHash(p,sl),fail:0,lockUntil:0,requestedAt:Date.now()};const publicX={id:u.uid,name:n,rank:'팀원',status:'pending',parts:[],slots:[],authEmail:email,requestedAt:x.requestedAt};await fs.doc('accounts/'+u.uid).set(publicX);write([...read(),x]);await auth.signOut();root.querySelector('.kz-login-body').innerHTML=`<div class="kz-pending-ok"><div class="kz-pending-icon">✓</div><b>승인 대기 중이에요</b><p><strong>${esc(n)}</strong>님의 가입 요청이 정상적으로 접수됐어요.<br>관리계정에서 승인한 뒤 로그인할 수 있습니다.</p><button class="kz-auth-secondary" id="kzPendingBack">계정 로그인으로 돌아가기</button></div>`;root.querySelector('#kzPendingBack').onclick=()=>login('login','관리자 승인 후 계정 목록이 새로고침됩니다.')}catch(e){console.error(e);login('join',fbError(e),true)}};
+  try{window.kzLoginSkin&&kzLoginSkin(root,isLogin)}catch(e){console.error(e)}
  }
  /* ===== 가입 계정 관리 (관리계정 전용): 직책·파트 수정, 계정 삭제 ===== */
  function acctMgrHTML(){const RK=['팀원','선임싱어','선임세션','인도자','단장'],PT=['싱어','세션','엔지니어'],SL=['건반','드럼','E.G','B.G','A.G'];
