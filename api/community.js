@@ -1,6 +1,6 @@
 'use strict';
 const {getRuntime,respondError}=require('../lib/community-runtime.cjs');
-const ACTIONS=new Set(['presence','members','readAll','profileGet','profileSave','profiles','chatPreference','chatImages','status','inbox','read','chat','send','songs','songCreate','songUpdate','songDelete','songComplete']);
+const ACTIONS=new Set(['rsvpGet','rsvpSet','myAttendance','presence','members','readAll','profileGet','profileSave','profiles','chatPreference','chatImages','status','inbox','read','chat','send','songs','songCreate','songUpdate','songDelete','songComplete']);
 module.exports=async function handler(req,res){
  res.setHeader('Cache-Control','private, no-store, max-age=0');res.setHeader('Vary','Authorization');
  if(req.method!=='POST'){res.setHeader('Allow','POST');return res.status(405).json({error:'POST 요청만 가능해요.'});}
