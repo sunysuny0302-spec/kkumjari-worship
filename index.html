@@ -4200,7 +4200,7 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 </style>
 <style id="kz-login-skin-css">
 /* ===== 로그인 화면 새 디자인 ===== */
-:root .kz-login-lock.lx{--lxg:#24402f;--lxg2:#1c3426;padding:0!important;display:grid!important;grid-template-columns:1fr;grid-template-rows:minmax(320px,50dvh) auto;place-items:stretch!important;background:#faf6f0!important;overflow:auto;color:#2b2118}
+:root .kz-login-lock.lx{--lxg:#24402f;--lxg2:#1c3426;padding:0!important;display:grid!important;grid-template-columns:1fr;grid-template-rows:minmax(150px,1fr) auto;height:100dvh;place-items:stretch!important;background:#faf6f0!important;overflow:auto;color:#2b2118}
 .lx .m{display:inline}.lx .d{display:none}
 .lx [hidden]{display:none!important}
 :root .lx .lx-switch{display:none}
@@ -4245,7 +4245,13 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .lx-foot button{border:0;background:none;padding:2px 0;margin-left:6px;font:inherit;font-weight:800;color:var(--lxg);border-bottom:1.5px solid var(--lxg);cursor:pointer}
 .lx-sign{display:none}
 .lx .kz-account-list{max-height:34dvh}
-.lx .kz-auth-msg{border-radius:12px}
+.lx .kz-auth-msg{border-radius:12px;font-size:13px!important;padding:9px 12px!important;margin:0 0 4px!important;line-height:1.45}
+/* 폰: 한 화면 안에 — PIN 입력을 펼치면 그림이 줄고 문구를 줄임 */
+@media (max-width:859px){.lx-main{padding-bottom:max(14px,env(safe-area-inset-bottom))}.lx-foot{margin-top:14px}.lx .lx-hi{margin-bottom:8px}
+ .lx.lx-pin .lx-sub,.lx.lx-pin .lx-switch2,.lx.lx-pin .lx-note{display:none!important}.lx.lx-pin .lx-who b{font-size:26px}.lx.lx-pin .lx-av{width:38px;height:38px;font-size:16px}.lx.lx-pin .lx-hello{font-size:16px}
+ .lx .lx-pinbox label{font-size:0}.lx .lx-pinbox .kz-pin{min-height:48px}.lx .kz-remember-choice{padding:4px 2px!important;font-size:13px}.lx .kz-remember-choice small{display:none}
+ :root .lx .kz-passkey-btn{min-height:52px}.lx-pinbtn,:root .lx #kzGo{min-height:50px}}
+@media (max-width:859px) and (max-height:700px){.lx-brand{top:max(28px,calc(env(safe-area-inset-top) + 16px))}}
 /* PC: 왼쪽 그림 · 오른쪽 로그인 */
 @media (min-width:860px){
  :root .kz-login-lock.lx{grid-template-columns:58fr 42fr;grid-template-rows:100dvh}
@@ -4296,7 +4302,7 @@ window.kzLoginSkin=function(root,isLogin){if(!root||root.dataset.lx)return;root.
    const box=document.createElement('div');box.className='lx-pinbox';box.hidden=true;pinBtn.after(box);[pinL,rem,go].forEach(x=>x&&box.append(x));
    pinBtn.onclick=()=>{box.hidden=false;pinBtn.hidden=true;setTimeout(()=>card.querySelector('#kzPin')?.focus(),30)};
    const note=document.createElement('p');note.className='lx-note';note.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h.5A1.5 1.5 0 0 1 19 11.5v8A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-8A1.5 1.5 0 0 1 6.5 10Zm2 0h6V8a3 3 0 0 0-6 0Z"/></svg><span class="m">이 기기에 저장된 계정으로 안전하게 접속해요</span><span class="d">기기에 등록된 생체 인증으로 접속할 수 있어요.</span>';box.after(note);
-   if(card.querySelector('.kz-auth-msg.err')&&/PIN/.test(card.querySelector('.kz-auth-msg').textContent))pinBtn.click()}
+   const em=card.querySelector('.kz-auth-msg');if(em&&/Face ID|지문|생체|패스키|취소/.test(em.textContent))em.textContent='Face ID를 취소했어요. 다시 누르거나 PIN으로 로그인해 주세요.';if(em&&/PIN이 맞지|PIN 숫자|잠시 잠겼/.test(em.textContent))pinBtn.click();pinBtn.addEventListener('click',()=>root.classList.add('lx-pin'))}
   else{const note=document.createElement('p');note.className='lx-note';note.textContent='PIN 4자리를 입력하면 바로 시작해요.';go&&go.after(note)}
  }else{const h=document.createElement('div');h.className='lx-hi';h.innerHTML=isLogin?'<small class="lx-eyebrow">SIGN IN</small><p class="lx-hello big">로그인</p><p class="lx-sub">내 이름을 고르고 PIN을 입력해 주세요.</p>':'<small class="lx-eyebrow">JOIN</small><p class="lx-hello big">처음 오셨나요?</p><p class="lx-sub">가입 요청을 보내면 관리계정이 승인해 줘요.</p>';(card.querySelector('.kz-login-body')||card).before(h)}
  if(head)head.hidden=true;const tabs=card.querySelector('.kz-login-tabs');if(tabs)tabs.hidden=true;
