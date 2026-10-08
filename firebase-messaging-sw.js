@@ -26,7 +26,9 @@ self.addEventListener('push',event=>{
  const entries=[...(old.entries||[]),entry].slice(-3),count=(old.count||0)+1;
  const displayTitle=chat?entry.sender+(key==='chat-admin'?' · 관리자방':''):entry.sender;
  // Keep the latest message first; older messages remain compact within the same room.
- const displayBody=chat?[...entries].reverse().map(x=>(x.sender===entry.sender?'':x.sender+': ')+x.body).join('\n'):body;
+ // 알림은 짧게: 공지·일정·콘티 등은 제목만, 채팅은 최신 한 줄만 (여러 개면 개수 표시)
+ const one=t=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>60?t.slice(0,58)+'…':t};
+ const displayBody=chat?(count>1?'('+count+'개) ':'')+one(message):'';
  let link=d.link||p.fcmOptions?.link||n.click_action||'/?kz_open=inbox';
  try{const u=new URL(link,self.location.origin);link=u.origin===self.location.origin?u.href:self.location.origin+'/?kz_open=inbox';}catch{link='/?kz_open=inbox';}
  for(const notification of existing)notification.close();
