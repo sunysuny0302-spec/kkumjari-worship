@@ -4114,6 +4114,47 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 #kzLoginLock label[hidden],.kz-join-closed[hidden],#kzJoinCodeL[hidden]{display:none!important}
 #kzOpenHub,#kzMyPin{width:100%}
 </style>
+<style id="kz-rules2">
+.r2{display:grid;gap:14px;padding:20px 28px 90px;max-width:1180px}
+.r2-hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}.r2-hero>div{flex:1 1 320px}.r2-hero p{margin:4px 0 0;color:var(--mu);font-size:13.5px;line-height:1.5}
+.r2-quick{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.r2-quick span{font-size:12px;color:var(--mu);font-weight:700;margin-right:2px}
+.r2-quick button{border:1px solid rgba(120,88,56,.16);background:rgba(255,255,255,.7);border-radius:99px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;color:#5c4a3a;cursor:pointer}
+.r2-quick button:hover{background:#fff;border-color:rgba(120,88,56,.3)}
+.r2-list{display:grid;gap:6px}
+.r2-head{display:grid;grid-template-columns:minmax(120px,1.1fr) 280px minmax(150px,.9fr);gap:12px;align-items:end;padding:0 14px;font-size:11.5px;color:var(--mu);font-weight:700}
+.r2-dates{display:grid;grid-template-columns:repeat(6,1fr);text-align:center}.r2-dates em{font-style:normal;display:grid;gap:1px;font-size:11px}.r2-dates em b{font-size:10.5px;color:#a07a55;font-weight:700}
+.r2-row{display:grid;grid-template-columns:minmax(120px,1.1fr) 280px minmax(150px,.9fr);gap:8px 12px;align-items:center;padding:10px 14px;border-radius:16px;background:var(--glass,rgba(255,255,255,.7));border:1px solid var(--glass-line,rgba(120,88,56,.1));box-shadow:var(--glass-sh,none)}
+.r2-who{display:flex;align-items:center;gap:10px;min-width:0}.r2-who i{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;background:#efe4d6;color:#7a5531}
+.r2-who span{display:grid;min-width:0}.r2-who b{font-size:15px}.r2-who small{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r2-row.m-off .r2-who i{background:#eee;color:#aaa}.r2-row.m-off .r2-who b{color:var(--mu)}
+.r2-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:rgba(120,88,56,.08)}
+:root .r2-seg button{border:0;background:none;border-radius:9px;padding:7px 11px;font:inherit;font-size:12.5px;font-weight:600;color:#6b5442!important;cursor:pointer;white-space:nowrap;box-shadow:none}
+:root .r2-seg button:hover{background:rgba(255,255,255,.7)}
+:root .r2-seg button.on{background:#3a2c20!important;color:#fff!important;box-shadow:0 1px 3px rgba(40,25,10,.25)}
+.r2-dots{display:grid;grid-template-columns:repeat(6,1fr);justify-items:center}.r2-dots i{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(120,88,56,.25);background:transparent}
+.r2-dots i.on{background:#ca7e23;border-color:#ca7e23}
+.r2-det{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 10px;margin-left:44px;border-radius:12px;background:rgba(120,88,56,.05)}
+.r2-det label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);font-weight:600}
+.r2-det input,.r2-det select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid rgba(120,88,56,.18);background:#fff;color:var(--tx,#2b2118)}
+.r2-det input[type=number]{width:56px}.r2-det input[list]{width:120px}
+.r2-wk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mu);font-weight:600}
+:root .r2-wk button{border:1px solid rgba(120,88,56,.18);background:#fff;border-radius:8px;padding:5px 9px;font:inherit;font-size:12.5px;font-weight:600;color:#6b5442!important;cursor:pointer}
+:root .r2-wk button.on{background:#3a2c20!important;border-color:#3a2c20!important;color:#fff!important}
+.r2-empty{padding:24px;text-align:center;color:var(--mu)}
+.r2-bar{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;gap:8px;padding:10px 12px 10px 16px;border-radius:16px;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(120,88,56,.12);box-shadow:0 8px 24px -12px rgba(60,40,20,.3);font-size:13.5px;color:var(--mu)}
+.r2-bar span{flex:1}.r2-bar.show{background:#3a2c20;color:#fff;border-color:#3a2c20}
+.r2-undo{border:0;background:none;color:inherit;font:inherit;font-weight:600;padding:8px 10px;border-radius:10px;cursor:pointer;opacity:.85}.r2-undo:disabled{opacity:.35;cursor:default}
+.r2-bar .r2-save:disabled{opacity:.45}
+@media (max-width:820px){
+ .r2{padding:14px 14px 90px}
+ .r2-head{display:none}
+ .r2-row{grid-template-columns:1fr auto;padding:12px}
+ .r2-seg{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr)}:root .r2-seg button{padding:8px 2px;font-size:12px}
+ .r2-dots{gap:4px;grid-template-columns:repeat(6,12px);grid-row:1;grid-column:2}
+ .r2-det{margin-left:0}
+ .r2-bar{bottom:calc(76px + env(safe-area-inset-bottom))}
+}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -4303,7 +4344,7 @@ const openL=view==='lpick'?lrPick:(view==='edit'||view==='ment')?ldr:null;
 const leadSub=inLead?`<div class="nv-lead">${LEADERS.map(L=>{const op=openL===L;return `<button type="button" class="nv-i nv-ldr ${op?'open':''}" data-lpick="${esc(L)}" aria-expanded="${op}"><i class="ldot ${ldrCls(L)}"></i><span class="nv-t">${esc(L)}</span>${ldDirty(L)?'<u class="nv-dirty" title="업로드 안 한 작업이 있어요"></u>':''}<span class="nv-car">${op?'▾':'▸'}</span></button>${op?`<div class="nv-lsub">${[['edit','송폼 · 악보 관리','music'],['ment','주간 콘티 작성','archive']].map(([v,l,ic])=>`<button type="button" class="nv-i ${view===v&&ldr===L?'on':''}" data-lv2="${esc(L)}|${v}">${V13I(ic)}<span class="nv-t">${l}</span></button>`).join('')}</div>`:''}`}).join('')}${it('lsw','인도자 일정',0,'calendar')}</div>`:'';
 const leadBlock=`<div class="nv-l">인도자</div><button type="button" class="nv-i nv-leadroom ${view==='lpick'&&role==='leader'&&!lrPick?'on':''} ${inLead&&(view!=='lpick'||lrPick)?'open':''}" data-lead="1">${V13I('leader')}<span class="nv-t">인도자 작업실</span></button>${leadSub}`;
 if(role==='leader')mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
-else if(role&&TABS[role].includes(view)){const roleNavIcon=v=>(v==='sched_s'||v==='sched_e')?'calendar':(v==='abs'||v==='swap')?'list':(v==='rule_s'||v==='rule_e')?'users':null;mine=TABS[role].map(v=>it(v,TAB[v][1],0,roleNavIcon(v))).join('');}
+else if(role&&TABS[role].includes(view)){const roleNavIcon=v=>(v==='sched_s'||v==='sched_e')?'calendar':(v==='abs'||v==='swap')?'swap':(v==='rule_s'||v==='rule_e')?'users':null;mine=TABS[role].map(v=>it(v,TAB[v][1],0,roleNavIcon(v))).join('');}
 else mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
 const p=stg?Math.max(...stgPcts()):null;
 sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="home">${BRAND}<span><b>꿈자리</b><small>꿈꾸는 자들의 소리</small><em class="brand-en"><i></i>WORSHIP TEAM</em></span></button><button type="button" class="ib side-x" id="sdx" title="닫기">✕</button></div>
@@ -6036,6 +6077,50 @@ function rerender(){arPage(kind)}
 $$('[data-ar-mode]').forEach(b=>b.onclick=()=>{const n=b.dataset.arMode, tag=roster.find(x=>x.n===n)?.tag||'',r=arGet(kind,n,tag);assignCfg[kind][n]={...r,mode:b.dataset.v};rerender()});$$('[data-ar-mw]').forEach(b=>b.onclick=()=>{const n=b.dataset.arMw,r=arGet(kind,n);let a=[...(r.monthWeeks||[])],w=+b.dataset.w;a=a.includes(w)?a.filter(x=>x!==w):[...a,w].sort();assignCfg[kind][n]={...r,monthWeeks:a};rerender()});$$('[data-preset]').forEach(b=>b.onclick=()=>{roster.forEach((m,i)=>assignCfg[kind][m.n]={...arGet(kind,m.n,m.tag),mode:b.dataset.preset,group:isS?'싱어 로테이션':(m.tag||'세션 로테이션'),order:i,every:1,anchor:nextSun()});rerender()});
 const collect=()=>{roster.forEach(m=>{const n=m.n,r={...arGet(kind,n,m.tag)};const q=s=>document.querySelector(`[${s}="${CSS.escape(n)}"]`);if(q('data-ar-group'))r.group=q('data-ar-group').value.trim()||'기본 로테이션';if(q('data-ar-every'))r.every=Math.max(1,+q('data-ar-every').value||1);if(q('data-ar-order'))r.order=Math.max(0,+q('data-ar-order').value||0);if(q('data-ar-offset'))r.offset=Math.max(0,+q('data-ar-offset').value||0);if(q('data-ar-anchor'))r.anchor=q('data-ar-anchor').value||nextSun();if(q('data-ar-start'))r.start=q('data-ar-start').value;if(q('data-ar-end'))r.end=q('data-ar-end').value;if(q('data-ar-skip'))r.skip=q('data-ar-skip').value;assignCfg[kind][n]=r})};const save=async()=>{collect();try{await db.doc('settings/assignmentRules').set(assignCfg);toast('배정 규칙을 저장했어요 ✓');arPage(kind)}catch(e){toast('저장하지 못했어요')}};$('#arSave').onclick=save;$('#arSave2').onclick=save}
 singerRuleView=function(){arPage('singer')};sessionRuleView=function(){arPage('session')};
+/* ===== 배정 규칙 v2: 한 줄에 한 사람 + 6주 미리보기 ===== */
+(function(){
+ const MODES=[['fixed','매주'],['rotation','로테이션'],['interval','격주·N주'],['monthly','월별'],['off','쉼']];
+ const norm=m=>m==='odd'?'interval':m==='manual'?'off':m;
+ let saved='',kindNow='';
+ const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}/${x.getDate()}`};
+ function desc(r){const m=norm(r.mode);if(m==='fixed')return '매주 서요';if(m==='rotation')return `${r.group||'기본 로테이션'} 안에서 돌아가며${(+r.every||1)>1?` · ${r.every}주씩`:''}`;if(m==='interval'){const e=r.mode==='odd'?2:Math.max(2,+r.every||2);return e===2?'2주에 한 번':`${e}주에 한 번`}if(m==='monthly')return `매월 ${(r.monthWeeks||[]).length?(r.monthWeeks||[]).join('·')+'째 주':'(주차를 골라 주세요)'}`;return '자동 배정 안 해요'}
+ function page(kind){kindNow=kind;const isS=kind==='singer',roster=isS?singRoster():sessRoster(),W=sundays().slice(0,6);
+  if(!assignCfg[kind])assignCfg[kind]={};
+  if(!saved||saved.split('|')[0]!==kind)saved=kind+'|'+JSON.stringify(assignCfg[kind]);
+  const dirty=saved!==kind+'|'+JSON.stringify(assignCfg[kind]);
+  const full={};roster.forEach(m=>full[m.n]=arGet(kind,m.n,m.tag));const keep=assignCfg[kind];assignCfg[kind]=full;let maps;try{maps=W.map(d=>arActiveMap(kind,d,roster.map(x=>x.n)))}finally{assignCfg[kind]=keep}
+  const groups=[...new Set(roster.map(m=>arGet(kind,m.n,m.tag)).filter(r=>norm(r.mode)==='rotation').map(r=>r.group||'기본 로테이션'))];
+  const counts=W.map((d,i)=>roster.filter(m=>maps[i][m.n]).length);
+  const row=m=>{const n=m.n,r=arGet(kind,n,m.tag),mode=norm(r.mode),e=esc(n);let det='';
+   if(mode==='rotation')det=`<label>그룹<input data-r2-group="${e}" list="r2Groups" value="${esc(r.group||'기본 로테이션')}" placeholder="예: A조"></label><label>순서<input data-r2-order="${e}" type="number" min="0" max="99" value="${+r.order||0}"></label><label>몇 주씩<input data-r2-every="${e}" type="number" min="1" max="12" value="${+r.every||1}"></label>`;
+   else if(mode==='interval'){const ev=r.mode==='odd'?2:Math.max(2,+r.every||2),off=((+r.offset||0)%ev+ev)%ev;det=`<label>몇 주에 한 번<input data-r2-every="${e}" type="number" min="2" max="12" value="${ev}"></label><label>첫 순서<select data-r2-offset="${e}">${Array.from({length:ev},(_,k)=>{const d=W.find(dd=>(((arWeek(dd,r.anchor||nextSun())-k)%ev)+ev)%ev===0)||'';return `<option value="${k}" ${k===off?'selected':''}>${d?md(d)+' 부터':(k+1)+'번째 주'}</option>`}).join('')}</select></label>`}
+   else if(mode==='monthly')det=`<div class="r2-wk"><span>매월</span>${[1,2,3,4,5].map(w=>`<button type="button" data-r2-mw="${e}" data-w="${w}" class="${(r.monthWeeks||[]).includes(w)?'on':''}" aria-pressed="${(r.monthWeeks||[]).includes(w)}">${w}째</button>`).join('')}<span>주</span></div>`;
+   return `<div class="r2-row m-${mode}" data-r2-row="${e}"><div class="r2-who"><i>${e.slice(0,1)}</i><span><b>${e}</b><small>${isS?'':esc(m.tag||'세션')+' · '}${esc(desc(r))}</small></span></div>
+    <div class="r2-seg" role="radiogroup" aria-label="${e} 배정 방식">${MODES.map(([v,l])=>`<button type="button" role="radio" aria-checked="${mode===v}" data-r2-mode="${e}" data-v="${v}" class="${mode===v?'on':''}">${l}</button>`).join('')}</div>
+    <div class="r2-dots" aria-label="앞으로 6주">${W.map((d,i)=>`<i class="${maps[i][n]?'on':''}" title="${md(d)} ${maps[i][n]?'배정':'쉼'}"></i>`).join('')}</div>
+    ${det?`<div class="r2-det">${det}</div>`:''}</div>`};
+  $('#body').innerHTML=`<div class="r2"><div class="r2-hero"><div><h1 class="ht2">${isS?'싱어':'세션'} 배정 규칙</h1><p>사람마다 방식을 고르면 오른쪽 점(앞으로 6주)에 바로 보여요. 특정 날짜만 바꿀 땐 <b>일정 변경</b>을 써요.</p></div>
+   <div class="r2-quick"><span>한 번에</span><button type="button" data-r2-all="fixed">모두 매주</button><button type="button" data-r2-all="rotation">모두 로테이션</button><button type="button" data-r2-all="off">모두 쉼</button></div></div>
+   <div class="r2-list"><div class="r2-head"><span>이름</span><span>방식</span><span class="r2-dates">${W.map((d,i)=>`<em>${md(d)}<b>${counts[i]}명</b></em>`).join('')}</span></div>
+   ${roster.length?roster.map(row).join(''):`<div class="r2-empty">${isS?'싱어':'세션'} 멤버가 아직 없어요. 멤버 명단에서 파트를 정해 주세요.</div>`}</div>
+   <datalist id="r2Groups">${groups.map(g=>`<option value="${esc(g)}">`).join('')}</datalist>
+   <div class="r2-bar ${dirty?'show':''}" role="status"><span>${dirty?'저장하지 않은 변경이 있어요':'모두 저장됐어요'}</span><button type="button" class="r2-undo" ${dirty?'':'disabled'}>되돌리기</button><button type="button" class="btn r2-save" ${dirty?'':'disabled'}>저장</button></div></div>`;
+  const set=(n,patch)=>{const m=roster.find(x=>x.n===n);assignCfg[kind][n]={...arGet(kind,n,m&&m.tag),...patch};page(kind)};
+  $$('[data-r2-mode]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mode,v=b.dataset.v,r=arGet(kind,n);const p={mode:v};if(v==='interval')p.every=Math.max(2,r.mode==='odd'?2:+r.every||2);if(v==='rotation'){p.group=r.group&&r.group!=='기본'?r.group:(groups[0]||(isS?'싱어 로테이션':'세션 로테이션'));p.every=Math.max(1,+r.every||1);p.anchor=r.anchor||nextSun()}if(v==='monthly'&&!(r.monthWeeks||[]).length)p.monthWeeks=[1,3];set(n,p)});
+  $$('[data-r2-mw]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mw,r=arGet(kind,n),w=+b.dataset.w;let a=[...(r.monthWeeks||[])];a=a.includes(w)?a.filter(x=>x!==w):[...a,w].sort((x,y)=>x-y);set(n,{monthWeeks:a})});
+  const num=(sel,key,min)=>$$(`[${sel}]`).forEach(i=>i.onchange=()=>set(i.getAttribute(sel),{[key]:Math.max(min,Math.round(+i.value||min))}));
+  num('data-r2-order','order',0);num('data-r2-every','every',1);
+  $$('[data-r2-offset]').forEach(s=>s.onchange=()=>set(s.dataset.r2Offset,{offset:+s.value||0}));
+  $$('[data-r2-group]').forEach(i=>i.onchange=()=>set(i.dataset.r2Group,{group:i.value.trim()||'기본 로테이션'}));
+  $$('[data-r2-all]').forEach(b=>b.onclick=()=>{const v=b.dataset.r2All;roster.forEach((m,i)=>assignCfg[kind][m.n]={...arGet(kind,m.n,m.tag),mode:v,...(v==='rotation'?{group:isS?'싱어 로테이션':(m.tag||'세션 로테이션'),order:i,every:1,anchor:nextSun()}:{})});page(kind)});
+  $('.r2-undo').onclick=()=>{assignCfg[kind]=JSON.parse(saved.slice(kind.length+1));page(kind)};
+  $('.r2-save').onclick=async()=>{const b=$('.r2-save');b.disabled=true;b.textContent='저장 중…';try{if(!db)throw 0;await db.doc('settings/assignmentRules').set(assignCfg);saved=kind+'|'+JSON.stringify(assignCfg[kind]);toast('배정 규칙을 저장했어요 ✓');page(kind)}catch(e){b.disabled=false;b.textContent='저장';toast('저장하지 못했어요')}};
+ }
+ window.kzRulePage=page;
+ singerRuleView=function(){if(kindNow!=='singer')saved='';page('singer')};
+ sessionRuleView=function(){if(kindNow!=='session')saved='';page('session')};
+})();
+
 /* Load the advanced rules. Empty document keeps the old rules fully compatible. */
 setTimeout(()=>{if(db)db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){const d=x.data();assignCfg={singer:d.singer||{},session:d.session||{}};if(view==='rule_s')singerRuleView();if(view==='rule_e')sessionRuleView();if(view==='sched_s')schedSView();if(view==='sched_e')schedEView();}},()=>{})},1400);
 </script>
@@ -6803,7 +6888,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  window.kzRoleTab=function(){let a=null,m=null;try{a=authAccount()}catch(e){}try{m=currentMember()}catch(e){}const rank=(a&&a.rank)||(m&&m.rank)||'',parts=[...((a&&a.parts)||[]),...((m&&m.parts)||[])];
   if(rank==='관리계정')return ['adm','shield','관리',[],()=>window.kzAdminHub&&kzAdminHub()];
   if(rank==='단장')return ['att','list','출결 관리',['attend'],()=>go('attend')];
-  if(rank==='인도자')return ['lead','leader','작업실',['lpick','edit','ment','lsw'],()=>openLeaderRoom()];
+  if(rank==='인도자')return ['lead','leader','인도자',['lpick','edit','ment','lsw'],()=>openLeaderRoom()];
   if(rank==='선임싱어'||parts.includes('싱어'))return ['sing','mic','싱어',['sched_s','swap','rule_s'],()=>goRole('singer','sched_s')];
   if(rank==='선임세션'||parts.includes('세션'))return ['sess','guitar','세션',['sched_e','abs','rule_e'],()=>goRole('session','sched_e')];
   return null};
@@ -6818,7 +6903,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  const shortDate=d=>{const dt=new Date(d+'T12:00:00');return `${dt.getMonth()+1}.${String(dt.getDate()).padStart(2,'0')}`;};
  return `<section class="km-page km-my-compact"><div class="km-my-heading"><h1>${esc(name||'나')}님의 순서</h1><span>앞으로 6주</span></div>${next?`<button type="button" class="km-next-duty" data-mobile-date="${next.d}"><span class="km-next-label">가장 가까운 순서 <b>${daysTo(next.d)===0?'오늘':'D-'+daysTo(next.d)}</b></span><span class="km-next-line"><strong>${shortDate(next.d)} <small>일요일</small></strong><span>${chips(next)}</span><i aria-hidden="true">›</i></span></button>`:''}
  ${weeks.length?`<div class="km-list-heading"><b>주별 일정</b><span>배정 ${assigned.length}주</span></div><div class="km-duty-list">${weeks.map(w=>`<button type="button" class="km-duty-row ${w.r.some(r=>r[1]==='on')?'has-duty':''}" data-mobile-date="${w.d}"><span class="km-duty-date"><b>${shortDate(w.d)}</b><small>${esc(lbl(w.d)||'일요일')}</small></span><span class="km-duty-roles">${chips(w)}</span><span class="km-duty-arrow" aria-hidden="true">›</span></button>`).join('')}</div><p class="km-my-hint">날짜를 누르면 해당 주의 예배 정보를 볼 수 있어요.</p>`:'<div class="km-empty">'+(name==='관리계정'?'팀원 계정으로 접속하면 내 순서를 볼 수 있어요.':'표시할 개인 일정이 없어요.')+'</div>'}
- <p class="km-section">일정 변경</p><div class="km-menu">${menuRow('swap','mic','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','guitar','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
+ <p class="km-section">일정 변경</p><div class="km-menu">${menuRow('swap','swap','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','swap','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
  }
 
  function morePage(){const rt=kzRoleTab(),k=rt?rt[0]:'',T=(id,ic,t)=>`<button type="button" class="km-tile" data-mobile-action="${id}"><i>${V13I(ic)}</i><span>${t}</span></button>`;
@@ -6830,7 +6915,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  ${(()=>{const def=(()=>{try{const v=localStorage.getItem('kzMoreRoleV1');if(['s','e','l'].includes(v))return v}catch(e){}return k==='sess'?'e':k==='lead'?'l':'s'})();
   const P=(id,items)=>`<div class="km-rp" data-rp="${id}" ${def===id?'':'hidden'}><div class="km-tiles km-t3">${items.join('')}</div></div>`;
   return `<section class="km-tsec"><p>인도자 · 싱어 · 세션</p><div class="km-rseg" role="tablist">${[['l','leader','인도자'],['s','mic','싱어'],['e','guitar','세션']].map(([id,ic,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${V13I(ic)}<span>${t}</span></button>`).join('')}</div>
-  ${P('s',[T('sched_s','calendar','싱어'),T('swap','swap','싱어 일정변경'),T('rule_s','list','싱어 배정규칙')])}${P('e',[T('sched_e','calendar','세션'),T('abs','swap','세션 일정변경'),T('rule_e','list','세션 배정규칙')])}${P('l',[T('lsw','calendar','인도자 일정'),T('leader','leader','작업실')])}</section>`})()}
+  ${P('s',[T('sched_s','calendar','싱어'),T('swap','swap','싱어 일정변경'),T('rule_s','list','싱어 배정규칙')])}${P('e',[T('sched_e','calendar','세션'),T('abs','swap','세션 일정변경'),T('rule_e','list','세션 배정규칙')])}${P('l',[T('lsw','calendar','인도자 일정'),T('leader','leader','인도자 목록')])}</section>`})()}
  ${sec('관리',[k==='adm'?T('kzhub','shield','계정 관리'):'',T('storage','cloud','저장 공간'),T('trash','trash','휴지통'),T('all','list','전체 메뉴')])}</section>`}
  /* 더보기: 큰 줄 목록 대신 작은 아이콘 타일 */
  (function(){if(document.getElementById('kz-more2'))return;const st=document.createElement('style');st.id='kz-more2';st.textContent=`.km-more2 h1{margin:4px 0 14px}.km-tsec{margin:0 0 14px}.km-tsec>p{margin:0 0 7px 4px;font-size:12.5px;font-weight:700;color:var(--mu)}
