@@ -4296,7 +4296,11 @@ window.kzLoginSkin=function(root,isLogin){if(!root||root.dataset.lx)return;root.
   else{const note=document.createElement('p');note.className='lx-note';note.textContent='PIN 4자리를 입력하면 바로 시작해요.';go&&go.after(note)}
  }else{const h=document.createElement('div');h.className='lx-hi';h.innerHTML=isLogin?'<small class="lx-eyebrow">SIGN IN</small><p class="lx-hello big">로그인</p><p class="lx-sub">내 이름을 고르고 PIN을 입력해 주세요.</p>':'<small class="lx-eyebrow">JOIN</small><p class="lx-hello big">처음 오셨나요?</p><p class="lx-sub">가입 요청을 보내면 관리계정이 승인해 줘요.</p>';(card.querySelector('.kz-login-body')||card).before(h)}
  if(head)head.hidden=true;const tabs=card.querySelector('.kz-login-tabs');if(tabs)tabs.hidden=true;
+ kzLoginBar(true);
 };
+/* 폰 위쪽 상태 표시줄(시계 줄) 색을 사진 윗부분 색과 맞춰서 그림이 끝까지 이어져 보이게 */
+window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const C=matchMedia('(min-width:860px)').matches?'#f6efe6':'#c0a889';
+ if(on){if(window.__lxObs)return;const keep=()=>{if(!document.getElementById('kzLoginLock')){window.__lxObs.disconnect();window.__lxObs2.disconnect();window.__lxObs=null;m.content='#fbfaf7';return}if(m.content!==C)m.content=C};window.__lxObs=new MutationObserver(keep);window.__lxObs.observe(m,{attributes:true});window.__lxObs2=new MutationObserver(keep);window.__lxObs2.observe(document.body,{childList:true});keep()}};
 </script>
 </head><body>
 <div id="app"></div><div id="toast"></div>
