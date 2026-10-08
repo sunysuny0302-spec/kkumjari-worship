@@ -6954,7 +6954,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  return `<section class="km-page km-more2"><h1>더보기</h1>
  ${sec('나',[rt?T('mobile_my','users','내 순서'):'',T('account','users','내 계정'),T('tour','note','사용법')])}
  ${sec('예배 준비',[T('archive','archive','콘티 보관함'),T('library','music','악보'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')])}
- ${sec('팀',[T('events','calendar','팀 일정'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','list','출결'):''])}
+ ${sec('팀',[(()=>{try{return ['관리계정','단장','인도자'].includes((authAccount()||{}).rank)}catch(e){return false}})()?T('prac','list','토요 연습'):'',T('events','calendar','팀 일정'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','list','출결'):''])}
  ${(()=>{const def=(()=>{try{const v=localStorage.getItem('kzMoreRoleV1');if(['s','e','l'].includes(v))return v}catch(e){}return k==='sess'?'e':k==='lead'?'l':'s'})();
   const P=(id,items)=>`<div class="km-rp" data-rp="${id}" ${def===id?'':'hidden'}><div class="km-tiles km-t3">${items.join('')}</div></div>`;
   return `<section class="km-tsec"><p>인도자 · 싱어 · 세션</p><div class="km-rseg" role="tablist">${[['l','leader','인도자'],['s','mic','싱어'],['e','guitar','세션']].map(([id,ic,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${V13I(ic)}<span>${t}</span></button>`).join('')}</div>
@@ -6977,7 +6977,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  window.kzMoreRole=id=>{try{localStorage.setItem('kzMoreRoleV1',id)}catch(e){}document.querySelectorAll('.km-rseg [data-rs]').forEach(b=>{const on=b.dataset.rs===id;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.km-rp').forEach(x=>x.hidden=x.dataset.rp!==id)};
  body=function(){if(view!=='mobile_my'&&view!=='mobile_more')return oldBody();const b=document.getElementById('body');if(!b)return;b.innerHTML=view==='mobile_my'?myPage():morePage();const bar=document.getElementById('dbar');if(bar)bar.hidden=true;
  b.querySelectorAll('[data-mobile-date]').forEach(x=>x.onclick=()=>{go('home');goDate(x.dataset.mobileDate);window.scrollTo({top:0,behavior:'instant'})});
- b.querySelectorAll('[data-mobile-action]').forEach(x=>x.onclick=()=>{const a=x.dataset.mobileAction;if(a==='account')return openAccountPicker();if(a==='tour')return window.kzTour&&kzTour(true);if(a==='events'){ntTab='e';return go('notice')}if(a==='swap')return goRole('singer','swap');if(a==='rule_s')return goRole('singer','rule_s');if(a==='rule_e')return goRole('session','rule_e');if(a==='kzhub')return window.kzAdminHub&&kzAdminHub();if(a==='sched_s')return goRole('singer','sched_s');if(a==='sched_e')return goRole('session','sched_e');if(a==='abs')return goRole('session','abs');if(a==='leader')return openLeaderRoom();if(a==='all')return document.getElementById('shell')?.classList.add('open');go(a)});stat();setBH();
+ b.querySelectorAll('[data-mobile-action]').forEach(x=>x.onclick=()=>{const a=x.dataset.mobileAction;if(a==='account')return openAccountPicker();if(a==='tour')return window.kzTour&&kzTour(true);if(a==='events'){ntTab='e';return go('notice')}if(a==='swap')return goRole('singer','swap');if(a==='rule_s')return goRole('singer','rule_s');if(a==='rule_e')return goRole('session','rule_e');if(a==='kzhub')return window.kzAdminHub&&kzAdminHub();if(a==='prac')return window.kzPrac&&kzPrac.openList(date);if(a==='sched_s')return goRole('singer','sched_s');if(a==='sched_e')return goRole('session','sched_e');if(a==='abs')return goRole('session','abs');if(a==='leader')return openLeaderRoom();if(a==='all')return document.getElementById('shell')?.classList.add('open');go(a)});stat();setBH();
  };
  const oldDbar=renderDbar;renderDbar=function(){if(view==='mobile_my'||view==='mobile_more'){const b=document.getElementById('dbar');if(b)b.hidden=true;setBH();return}return oldDbar()};
  function sync(){if(!document.getElementById('shell'))return;if(!mq.matches&&(view==='mobile_my'||view==='mobile_more'))return go('home');renderTabbar();renderTop();renderDbar();body()}
@@ -7737,9 +7737,9 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   document.querySelectorAll('#kzMe [data-rgo]').forEach(b=>b.onclick=()=>{const v=b.dataset.rgo;if(v==='lsw')return go('lsw');if(v==='swap')return goRole('singer','swap');goRole('session','abs')})}
  function mount(){if(typeof view==='undefined'||view!=='home')return;const top=document.querySelector('#body .hm .home-grid-top');if(!top)return;document.getElementById('kzMe')?.remove();const d=date;top.insertAdjacentHTML('beforebegin',cardHTML(d));
   const c=document.querySelector('#kzMe [data-kmc]');if(c)c.onclick=()=>{try{kzWeekView()}catch(e){}};bindRsvp();try{if(typeof paintProfiles==='function')paintProfiles()}catch(e){}load(d)}
- const prev=homeView;homeView=function(){const out=prev.apply(this,arguments);try{mount()}catch(e){console.error('[꿈자리] 이번 주 카드',e)}return out};
+ const prev=homeView;homeView=function(){const out=prev.apply(this,arguments);try{window.kzPrac&&kzPrac.home()}catch(e){console.error('[꿈자리] 연습 확인',e)}return out};
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&view==='home'){const c=document.getElementById('kzMe');if(c)load(c.dataset.d,true)}});
- window.kzRsvp={load,assigned};
+ window.kzRsvp={load,assigned,api,RS,songsOf};
 })();
 </script>
 <script id="kz-tour-script">
@@ -7766,7 +7766,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   let sx=0;o.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});o.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&i<st.length-1){i++;draw()}else if(dx>0&&i>0){i--;draw()}}},{passive:true})}
  window.kzTour=show;
  /* 로그인 후 홈이 보이면 한 번 */
- let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{if(typeof view!=='undefined'&&view==='home'&&document.getElementById('kzMe'))show(false)},900)}).observe(document.body,{childList:true});
+ let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>{if(typeof view!=='undefined'&&view==='home'&&document.querySelector('#body .hm'))show(false)},900)}).observe(document.body,{childList:true});
 })();
 </script>
 <script id="kz-attend-v2-script">
@@ -7841,6 +7841,84 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  const _lv=libraryView;libraryView=function(){const r=_lv.apply(this,arguments);try{kzLibKeys();kzLibMenus()}catch(e){console.error(e)}return r};
 })();
 </script>
+<script id="kz-prac-script">
+/* ===== 새 콘티 → 토요 연습 참석 확인 팝업 =====
+   콘티가 올라온 주에, 그 주에 서는 사람이 앱을 열면 한 번 뜸. 참석 / 어려워요(사유 필수).
+   응답은 서버 rsvp(이번 주 참석 확인)를 그대로 사용. 인도자·단장·관리계정은 '이번 주 준비'의 [토요 연습]에서 확인. */
+window.kzPrac=(function(){
+ const R=()=>window.kzRsvp||{};
+ const myName=()=>{try{const a=authAccount();return (a&&a.name)||''}catch(e){return ''}};
+ const rank=()=>{try{return (authAccount()||{}).rank||''}catch(e){return ''}};
+ const canSee=()=>['관리계정','단장','인도자'].includes(rank());
+ const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일`};
+ const sat=d=>shiftDate(d,-1);
+ const dis=d=>{try{return sessionStorage.getItem('kzPracLater:'+d)==='1'}catch(e){return false}};
+ const later=d=>{try{sessionStorage.setItem('kzPracLater:'+d,'1')}catch(e){}};
+ let checking=false;
+ async function answers(d,force){const r=R();if(!r.api)return {};if(!force&&r.RS&&r.RS[d])return r.RS[d];try{const j=await r.api({action:'rsvpGet',date:d});if(r.RS)r.RS[d]=j.answers||{};return j.answers||{}}catch(e){return null}}
+ async function check(){if(checking||document.getElementById('kzPrac')||document.getElementById('kzLoginLock')||document.getElementById('kzTour')||document.getElementById('kzLiveWelcome'))return;
+  let d;try{d=date;if(d!==nextSun()||!data||!data.up)return}catch(e){return}
+  const n=myName();if(!n||rank()==='관리계정'||dis(d))return;const me=(R().assigned?R().assigned(d):[]).find(o=>o.n===n);if(!me)return;
+  checking=true;try{const a=await answers(d,true);if(a===null||a[n])return;show(d,me)}finally{checking=false}}
+ function show(d,me){const songs=(R().songsOf?R().songsOf(d):[])||[];const w=document.createElement('div');w.id='kzPrac';w.className='pr-ov';
+  w.innerHTML=`<div class="pr-sh" role="dialog" aria-modal="true" aria-labelledby="prT"><div class="pr-top"><span class="pr-ic">🎵</span><div><small>${md(d)} 주일 · ${esc(me.r.join(' · '))}</small><b id="prT">새 콘티가 올라왔어요</b></div></div>
+   ${songs.length?`<ol class="pr-songs">${songs.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:''}<button type="button" class="pr-conti">콘티 자세히 보기 ›</button>
+   <div class="pr-q"><b>${md(sat(d))}(토) 연습에 올 수 있나요?</b><div class="pr-bs"><button type="button" class="pr-b yes" data-pr="yes">참석할게요</button><button type="button" class="pr-b no" data-pr="no">어려워요</button></div>
+   <div class="pr-why" hidden><label for="prNote">어려운 이유를 적어 주세요</label><textarea id="prNote" maxlength="200" rows="3" placeholder="예: 학교 시험이 있어요 / 오후에 늦게 도착해요"></textarea><p class="pr-err" role="alert"></p><button type="button" class="pr-send">보내기</button></div></div>
+   <button type="button" class="pr-later">나중에 할게요</button></div>`;
+  document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));
+  const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),200)};
+  w.querySelector('.pr-later').onclick=()=>{later(d);close()};
+  w.querySelector('.pr-conti').onclick=()=>{later(d);close();try{kzWeekView()}catch(e){try{go('archive')}catch(_){}}};
+  const send=async(s,note)=>{const r=R();const bs=w.querySelectorAll('button');bs.forEach(b=>b.disabled=true);try{const j=await r.api({action:'rsvpSet',date:d,s,note});if(r.RS)r.RS[d]=j.answers||r.RS[d];close();toast(s==='yes'?'토요 연습 참석으로 알렸어요 ✓':'불참 사유를 전했어요');paintTile()}catch(e){bs.forEach(b=>b.disabled=false);toast(e.message||'보내지 못했어요')}};
+  w.querySelector('[data-pr=yes]').onclick=()=>send('yes','');
+  w.querySelector('[data-pr=no]').onclick=()=>{w.querySelector('[data-pr=no]').classList.add('on');w.querySelector('[data-pr=yes]').classList.remove('on');const y=w.querySelector('.pr-why');y.hidden=false;setTimeout(()=>w.querySelector('#prNote').focus(),50)};
+  w.querySelector('.pr-send').onclick=()=>{const t=w.querySelector('#prNote').value.trim();if(t.length<2){w.querySelector('.pr-err').textContent='이유를 짧게라도 적어 주세요.';return}send('no',t)};}
+ /* 인도자·단장·관리계정: '이번 주 준비'에 토요 연습 칸 */
+ async function paintTile(){const g=document.querySelector('#body .kz-rd .kz-rd-g');if(!g||!canSee())return;let d;try{d=date}catch(e){return}
+  const list=R().assigned?R().assigned(d):[];let t=g.querySelector('[data-kz-act=prac]');if(!t){g.insertAdjacentHTML('beforeend','<button type="button" class="kz-ck na" data-kz-act="prac"><i>…</i><span><b>토요 연습</b><small>불러오는 중</small></span></button>');t=g.querySelector('[data-kz-act=prac]');t.onclick=e=>{e.stopPropagation();e.preventDefault();openList(d)}}
+  const a=await answers(d,false)||{};const y=list.filter(o=>a[o.n]&&a[o.n].s==='yes').length,no=list.filter(o=>a[o.n]&&a[o.n].s==='no').length,w=list.length-y-no;
+  t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전'}
+ async function openList(d){const list=R().assigned?R().assigned(d):[];const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
+  const grp=s=>list.filter(o=>s==='wait'?!a[o.n]:a[o.n]&&a[o.n].s===s);
+  const row=o=>`<li><b>${esc(o.n)}</b><small>${esc(o.r.join(' · '))}</small>${a[o.n]&&a[o.n].note?`<p>${esc(a[o.n].note)}</p>`:''}</li>`;
+  const sec=(t,s,c)=>{const l=grp(s);return `<section class="pl-s ${c}"><h4>${t} <em>${l.length}</em></h4>${l.length?`<ul>${l.map(row).join('')}</ul>`:'<p class="pl-n">없어요</p>'}</section>`};
+  const w=document.createElement('div');w.id='kzPracList';w.className='pr-ov';w.innerHTML=`<div class="pr-sh pl" role="dialog" aria-modal="true" aria-label="토요 연습 참석"><div class="pl-h"><div><small>${md(d)} 주일</small><b>${md(sat(d))}(토) 연습 참석</b></div><button type="button" class="pl-x" aria-label="닫기">✕</button></div>${sec('어려워요','no','no')}${sec('참석','yes','yes')}${sec('아직 응답 안 함','wait','wait')}</div>`;
+  document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),200)};w.onclick=e=>{if(e.target===w)close()};w.querySelector('.pl-x').onclick=close}
+ function home(){setTimeout(()=>{paintTile();check()},700)}
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,800)});
+ return{home,check,openList};
+})();
+</script>
+<style id="kz-prac-css">
+.pr-ov{position:fixed;inset:0;z-index:2147482400;display:grid;place-items:end center;background:rgba(30,20,12,.32);opacity:0;transition:opacity .2s}
+.pr-ov.in{opacity:1}
+@media (min-width:700px){.pr-ov{place-items:center}}
+.pr-sh{width:min(440px,100%);box-sizing:border-box;max-height:88dvh;overflow:auto;background:#faf7f2;border-radius:24px 24px 0 0;padding:20px 18px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px -12px rgba(60,40,20,.4);transform:translateY(18px);transition:transform .22s;color:var(--tx,#2b2118)}
+.pr-ov.in .pr-sh{transform:none}
+@media (min-width:700px){.pr-sh{border-radius:24px}}
+.pr-top{display:flex;align-items:center;gap:12px}.pr-ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,#f3e2c9,#e9cfa9)}
+.pr-top small{font-size:12px;color:var(--mu)}.pr-top b{display:block;font-size:19px;margin-top:2px}
+.pr-songs{margin:14px 0 0;padding:10px 14px 10px 32px;border-radius:14px;background:rgba(120,88,56,.06);display:grid;gap:4px;font-size:14px;font-weight:600}
+.pr-conti{margin-top:8px;border:0;background:none;color:#8a5a2b;font:inherit;font-size:13px;font-weight:700;padding:4px 2px;cursor:pointer}
+.pr-q{margin-top:14px;padding-top:14px;border-top:1px solid rgba(120,88,56,.12)}.pr-q>b{font-size:15.5px}
+.pr-bs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pr-b{border:1.5px solid rgba(120,88,56,.18);background:#fff;border-radius:14px;padding:14px 8px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:var(--tx,#2b2118)}
+.pr-b.yes{background:#2f6b4a;border-color:#2f6b4a;color:#fff}.pr-b.no.on{background:#fbecea;border-color:#c4573f;color:#a3392a}
+.pr-why[hidden]{display:none!important}
+.pr-why{margin-top:12px;display:grid;gap:6px}.pr-why label{font-size:13px;font-weight:700;color:#6b5442}
+.pr-why textarea{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(120,88,56,.2);background:#fff;resize:vertical}
+.pr-err{margin:0;min-height:1em;color:#b23a2f;font-size:12.5px}
+.pr-send{border:0;border-radius:12px;padding:12px;background:#3a2c20;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.pr-later{display:block;margin:12px auto 0;border:0;background:none;color:var(--mu);font:inherit;font-size:13px;padding:8px;cursor:pointer}
+.pr-sh button:disabled{opacity:.55}
+.pl-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}.pl-h div{flex:1}.pl-h small{font-size:12px;color:var(--mu)}.pl-h b{display:block;font-size:18px}
+.pl-x{width:34px;height:34px;border-radius:50%;border:0;background:rgba(120,88,56,.08);cursor:pointer}
+.pl-s{margin-top:12px}.pl-s h4{margin:0 0 6px;font-size:13px;color:#6b5442}.pl-s h4 em{font-style:normal;color:#a07a55}
+.pl-s ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pl-s li{background:#fff;border:1px solid rgba(120,88,56,.1);border-radius:12px;padding:9px 12px}
+.pl-s li b{font-size:14px}.pl-s li small{margin-left:6px;font-size:12px;color:var(--mu)}.pl-s li p{margin:5px 0 0;font-size:13px;color:#a3392a;line-height:1.45}
+.pl-s.yes li{border-color:rgba(47,107,74,.2)}.pl-n{margin:0;font-size:12.5px;color:var(--mu)}
+</style>
 </body></html>
 
 <script id="kz-score-pages-script">
