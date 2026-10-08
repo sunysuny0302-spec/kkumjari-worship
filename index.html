@@ -4889,9 +4889,9 @@ stgMsg('');await refreshStorage(true);toast(fail?`${done}주를 정리했고 ${f
 let library=[],libQ='',libEdit=null,libMsg=''
 ,libSort=['recent','old','ko','en','used'].includes(LS('lsort'))?LS('lsort'):'recent';
 const LSORTS=[['recent','최신순'],['old','오래된순'],['ko','가나다순'],['en','ABC순'],['used','많이 쓴 순']];
-const nameCls=n=>{const c=String(n||'').trim().charAt(0);return /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(c)?'h':/[A-Za-z]/.test(c)?'l':/[0-9]/.test(c)?'d':'o'};
+const nameCls=n=>{const c=String(n||'').normalize('NFC').trim().charAt(0);return /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(c)?'h':/[A-Za-z]/.test(c)?'l':/[0-9]/.test(c)?'d':'o'};
 const CHO=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-const initOf=n=>{const c=String(n||'').trim().charAt(0),k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3)return CHO[Math.floor((k-0xAC00)/588)];if(/[ㄱ-ㅎ]/.test(c)){const i=CHO.indexOf(c);return i>=0?c:c}if(/[A-Za-z]/.test(c))return c.toUpperCase();if(/[0-9]/.test(c))return '0-9';return '#'};
+const initOf=n=>{const c=String(n||'').normalize('NFC').trim().charAt(0),k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3)return CHO[Math.floor((k-0xAC00)/588)];if(/[ㄱ-ㅎ]/.test(c)){const i=CHO.indexOf(c);return i>=0?c:c}if(/[A-Za-z]/.test(c))return c.toUpperCase();if(/[0-9]/.test(c))return '0-9';return '#'};
 const lastTs=e=>Math.max(e.works[0]?Date.parse(e.works[0].date+'T12:00:00')||0:0,e.at||0);
 function sortLib(list,mode){const a=[...list],nk=v=>String(v||'').normalize('NFC').trim(),nc=(x,y)=>nk(x.name).localeCompare(nk(y.name),'ko',{numeric:true,sensitivity:'base'});
 if(mode==='old')a.sort((x,y)=>lastTs(x)-lastTs(y)||nc(x,y));
@@ -7977,7 +7977,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
 (function(){
  const SEMI={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
  const semi=k=>{k=kzKey(k);if(!k)return -1;const r=k.replace(/m$/,'');return SEMI[r]??-1};
- const base=n=>String(kzStripKey(n||'')).replace(/\s+/g,'').toLowerCase();
+ const base=n=>String(kzStripKey(String(n||'').normalize('NFC'))).replace(/\s+/g,'').toLowerCase();
  const pick=new Map();
  function nav(card,group,cur){const i=group.indexOf(cur),lo=i>0?group[i-1]:null,hi=i<group.length-1?group[i+1]:null,k=kzKey(cur.key);
   let n=card.querySelector('.kv');if(!n){n=document.createElement('div');n.className='kv';const li=card.querySelector('.libi');if(li)li.before(n);else card.append(n)}
@@ -8283,7 +8283,7 @@ function foldContiSongs(root,scores){const groups=new Map(),songNo=scoreSongNumb
    여러 장을 고르면 [한 곡의 여러 장] / [장마다 다른 곡] 중 선택. */
 function scoreAddDialog(where,files){
  if(!canEdit)return;
- const base=f=>String(f&&f.name||'악보').replace(/\.[^.]+$/,'').trim()||'악보';
+ const base=f=>String(f&&f.name||'악보').normalize('NFC').replace(/\.[^.]+$/,'').trim()||'악보';
  const byName=(a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true});
  let list=[...files].filter(f=>/^image\//.test(f.type||'image/')).sort(byName).map(f=>({f,name:base(f),url:URL.createObjectURL(f)}));
  if(!list.length)return toast('이미지 파일을 골라 주세요');
