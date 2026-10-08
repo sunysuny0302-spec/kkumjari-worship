@@ -6829,7 +6829,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  ${sec('팀',[T('events','calendar','팀 일정'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','list','출결'):''])}
  ${(()=>{const def=(()=>{try{const v=localStorage.getItem('kzMoreRoleV1');if(['s','e','l'].includes(v))return v}catch(e){}return k==='sess'?'e':k==='lead'?'l':'s'})();
   const P=(id,items)=>`<div class="km-rp" data-rp="${id}" ${def===id?'':'hidden'}><div class="km-tiles km-t3">${items.join('')}</div></div>`;
-  return `<section class="km-tsec"><p>싱어 · 세션 · 인도자</p><div class="km-rseg" role="tablist">${[['s','mic','싱어'],['e','guitar','세션'],['l','leader','인도자']].map(([id,ic,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${V13I(ic)}<span>${t}</span></button>`).join('')}</div>
+  return `<section class="km-tsec"><p>인도자 · 싱어 · 세션</p><div class="km-rseg" role="tablist">${[['l','leader','인도자'],['s','mic','싱어'],['e','guitar','세션']].map(([id,ic,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${V13I(ic)}<span>${t}</span></button>`).join('')}</div>
   ${P('s',[T('sched_s','calendar','싱어'),T('swap','swap','싱어 일정변경'),T('rule_s','list','싱어 배정규칙')])}${P('e',[T('sched_e','calendar','세션'),T('abs','swap','세션 일정변경'),T('rule_e','list','세션 배정규칙')])}${P('l',[T('lsw','calendar','인도자 일정'),T('leader','leader','작업실')])}</section>`})()}
  ${sec('관리',[k==='adm'?T('kzhub','shield','계정 관리'):'',T('storage','cloud','저장 공간'),T('trash','trash','휴지통'),T('all','list','전체 메뉴')])}</section>`}
  /* 더보기: 큰 줄 목록 대신 작은 아이콘 타일 */
@@ -6838,10 +6838,12 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  .km-tile{display:grid;justify-items:center;gap:6px;padding:10px 2px 8px;border:0;background:none;border-radius:12px;color:var(--ink,#2b2118);cursor:pointer;min-width:0}
  .km-tile:active{background:rgba(120,88,56,.08)}.km-tile i{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(150,110,70,.10);color:#7a5531}
  .km-tile i svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
- .km-rseg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin-bottom:8px;border-radius:18px;background:rgba(120,88,56,.07);border:1px solid rgba(120,88,56,.1)}
+ .km-rseg{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;margin-bottom:8px;border-radius:18px;background:rgba(120,88,56,.07);border:1px solid rgba(120,88,56,.1)}
  .km-rseg button{display:grid;justify-items:center;gap:3px;padding:9px 4px 8px;border:0;border-radius:14px;background:none;color:var(--mu,#7a6654);font-size:13px;font-weight:600;cursor:pointer}
  .km-rseg button .ico{display:grid;place-items:center;width:24px;height:24px}.km-rseg button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
  .km-rseg button.on{background:#fff;color:var(--ink,#2b2118);font-weight:700;box-shadow:0 1px 3px rgba(60,40,20,.12)}
+ .km-rseg button[data-rs=l]{grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:8px;padding:11px}
+ .km-rseg .ico,.km-rseg .ico img{background:none!important;box-shadow:none!important;border:0!important}
  .km-rp[hidden]{display:none!important}.km-t3{grid-template-columns:repeat(3,minmax(0,1fr))}
  .km-tile span{font-size:12px;font-weight:600;line-height:1.25;text-align:center;word-break:keep-all;max-width:100%}`;document.head.append(st)})();
  window.kzMoreRole=id=>{try{localStorage.setItem('kzMoreRoleV1',id)}catch(e){}document.querySelectorAll('.km-rseg [data-rs]').forEach(b=>{const on=b.dataset.rs===id;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.km-rp').forEach(x=>x.hidden=x.dataset.rp!==id)};
