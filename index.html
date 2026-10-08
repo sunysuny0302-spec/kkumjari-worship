@@ -4208,7 +4208,7 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .lx-art{position:relative;overflow:hidden;background:#f3e7d6 url(assets/login-bg-m.webp) 74% 40%/cover no-repeat}
 .lx-arch,.lx-beam,.lx-leaf{display:none!important}
 /* 폰: 사진 윗부분을 상태 표시줄 색으로 흐리게 이어서 잘린 느낌 없애기 */
-.lx-art::before{content:'';position:absolute;left:0;right:0;top:0;height:64px;z-index:0;background:linear-gradient(180deg,#fbfaf7 0%,rgba(251,250,247,.85) 22%,rgba(251,250,247,.4) 55%,rgba(251,250,247,0) 100%);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);pointer-events:none}
+.lx-art::before{content:'';position:absolute;left:0;right:0;top:0;height:150px;z-index:0;background:linear-gradient(180deg,rgba(251,250,247,.95) 0%,rgba(251,250,247,.7) 18%,rgba(251,250,247,.42) 40%,rgba(251,250,247,.18) 65%,rgba(251,250,247,0) 100%);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 45%,transparent 100%);pointer-events:none}
 .lx-brand{z-index:1}
 @media (min-width:860px){.lx-art::before{display:none}}
 .lx-arch{position:absolute;right:9%;top:6%;width:30%;max-width:190px;height:72%;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#fff 0%,#fbf3e4 100%);box-shadow:inset 0 0 0 10px #f3e6d2,0 0 60px rgba(255,240,210,.9);display:block}
@@ -4217,7 +4217,7 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .lx-beam{position:absolute;inset:-20% -10% 0 -10%;background:repeating-linear-gradient(115deg,rgba(255,255,255,0) 0 60px,rgba(255,250,235,.55) 60px 120px,rgba(255,255,255,0) 120px 200px);filter:blur(14px);opacity:.8;display:block}
 .lx-leaf{position:absolute;left:-6%;top:22%;width:62%;max-width:420px;opacity:.16;filter:blur(5px);transform:rotate(-8deg)}
 .lx-floor{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(180deg,rgba(255,255,255,0),#faf6f0 92%);display:block}
-.lx-brand{position:absolute;left:28px;top:max(28px,calc(env(safe-area-inset-top) + 16px));display:grid;gap:6px}
+.lx-brand{position:absolute;left:28px;top:max(84px,calc(env(safe-area-inset-top) + 72px));display:grid;gap:6px}
 .lx-cross{position:relative;width:26px;height:39px;display:block;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 90'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23d4a660'/><stop offset='1' stop-color='%23a8742f'/></linearGradient></defs><g stroke='url%28%23g%29' stroke-width='2.6' fill='none'><path d='M27 0v90M33 0v90M3 25h54M3 31h54'/></g></svg>") center/contain no-repeat}
 .lx-brand b{font-family:var(--serif,serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
 .lx-tag{display:none}
