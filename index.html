@@ -4323,7 +4323,7 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root .hm.hm-v13 .devotion-card.kz-dev{display:flex!important;flex-direction:column!important;overflow:hidden}
  :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{border-bottom:1px solid rgba(120,88,56,.10)}
  :root .hm.hm-v13 .devotion-card.kz-dev{background:#fcf8f1!important}
- :root .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:220px!important;height:0!important;width:100%!important;object-position:center center!important;background:#fcf8f1}
+
  /* 공지가 없을 때: 가운데 정렬 */
  :root .hm.hm-v13 #khInfo{display:flex!important;flex-direction:column!important}
  :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 auto;display:flex;flex-direction:column}
@@ -4331,13 +4331,15 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
 }
 @media (min-width:1100px){
  /* 가운데 줄은 높이를 고정: 공지·신청곡·팀 알림이 늘어나도 페이지가 밀리지 않고 칸 안에서 스크롤 */
- :root .hm.hm-v13 .home-grid-mid{height:640px;align-items:stretch!important}
- :root .hm.hm-v13 .home-grid-mid>*{min-height:0!important;height:100%!important;max-height:100%}
+ /* 줄 높이는 오른쪽 영상 카드(영상+그림 원래 크기)가 정하고, 왼쪽·가운데는 그 높이에 맞춰 안에서 스크롤 */
+ :root .hm.hm-v13 .home-grid-mid{align-items:stretch!important;grid-template-rows:minmax(620px,auto)!important}
+ :root .hm.hm-v13 .devotion-card.kz-dev{background:#fcf8f1!important}
+ :root .hm.hm-v13 .home-grid-mid>.kh-left-stack,:root .hm.hm-v13 .home-grid-mid>.kz-info-stack{height:0!important;min-height:100%!important}
  :root .hm.hm-v13 .kh-left-stack,:root .hm.hm-v13 .kz-info-stack{display:flex!important;flex-direction:column!important;gap:14px!important;min-height:0}
  :root .hm.hm-v13 .kh-left-stack>.kz-nx{flex:0 0 auto!important}
  :root .hm.hm-v13 .kh-left-stack>.kz-fd{flex:1 1 0!important;min-height:0!important}
  :root .hm.hm-v13 .kz-fd>.kz-fd-l,:root .hm.hm-v13 .kz-fd>.kz-empty{flex:1 1 0;min-height:0;overflow:auto}
- :root .hm.hm-v13 .kz-info-stack>#khInfo{flex:.9 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+ :root #body .hm.hm-v13 .kz-info-stack>#khInfo{flex:.9 1 0!important;min-height:0!important;height:auto!important;display:flex!important;flex-direction:column!important}
  :root .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:1.1 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
  :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 0!important;min-height:0!important;overflow:auto!important}
  :root .hm.hm-v13 .kh-song-card #khSongList{flex:1 1 0;min-height:0;overflow:auto;margin-bottom:10px}
@@ -4347,7 +4349,7 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root .hm.hm-v13 :is(.kz-fd-l,.kh-info-content,#khSongList){scrollbar-width:thin;scrollbar-color:rgba(120,88,56,.25) transparent;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);padding-bottom:12px}
  /* 오른쪽: 영상 아래 그림이 카드 바닥까지 꽉 */
  :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{flex:0 0 auto}
- :root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:0!important;height:0!important;object-fit:contain!important;object-position:center bottom!important;background:#fcf8f1!important}
+ :root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:0 0 auto!important;min-height:0!important;height:auto!important;width:100%!important;object-fit:contain!important;margin-top:auto!important}
 }
 /* 신청곡 개수 */
 .kh-cnt{font-style:normal;margin-left:6px;font-size:12px;font-weight:700;color:#8a5a2b;background:rgba(150,110,70,.12);padding:1px 8px;border-radius:99px;vertical-align:2px}
@@ -4358,6 +4360,14 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root dialog[open],:root .kz-admin-card,:root #kzMembersDialog,:root .kad-sheet,:root .ls-sh,:root .pr-sh,:root [role=dialog]:not(dialog){border:1px solid rgba(110,80,50,.20)!important;box-shadow:0 2px 6px rgba(40,25,10,.08),0 24px 60px -18px rgba(40,25,10,.38)!important}
  :root #kcPanel,:root #kcPanel[open]{border:1px solid rgba(110,80,50,.20)!important;box-shadow:0 2px 6px rgba(40,25,10,.08),0 24px 60px -18px rgba(40,25,10,.38)!important}
  :root #top{box-shadow:0 1px 0 rgba(110,80,50,.12),0 6px 16px -12px rgba(50,32,15,.18)}
+}
+/* PC 홈: 글라스 카드 — 배경에 따뜻한 빛을 깔고, 카드는 반투명 유리 + 흰 윗선 + 또렷한 바깥선 + 그림자 */
+@media (min-width:821px){
+ :root body{background:#efe6d9 radial-gradient(1200px 700px at 85% -10%,rgba(255,236,206,.9),transparent 60%) fixed,radial-gradient(900px 600px at 0% 40%,rgba(236,214,186,.75),transparent 60%) fixed,linear-gradient(180deg,#f3ebdf,#ece2d4) fixed!important}
+ :root .hm.hm-v13 :is(.kz-top>section,.kh-left-stack>section,.kz-stack>section,.devotion-card,.shortcut-card,.kz-ck){background:rgba(255,255,255,.58)!important;-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);border:1px solid rgba(255,255,255,.75)!important;box-shadow:0 0 0 1px rgba(110,80,50,.16),inset 0 1px 0 rgba(255,255,255,.95),0 2px 4px rgba(50,32,15,.05),0 16px 34px -18px rgba(50,32,15,.38)!important}
+ :root .hm.hm-v13 .devotion-card.kz-dev{background:rgba(252,248,241,.7)!important}
+ :root .hm.hm-v13 :is(.kz-wk-in,.kz-ck,.kz-nx-ld,.kz-ib){background:rgba(255,255,255,.55)!important}
+ :root .hm.hm-v13 .kz-ck{box-shadow:0 0 0 1px rgba(110,80,50,.12),inset 0 1px 0 #fff,0 6px 14px -10px rgba(50,32,15,.3)!important}
 }
 </style>
 <style id="kz-attpick">
@@ -4372,6 +4382,53 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
 :root .ka-t .ka-av{display:none!important}
 :root .ka-t .ka-ck{margin:0!important;width:12px!important;height:12px!important}
 :root .ka-t:not(.on){background:#fff!important}
+</style>
+<style id="kz-songs">
+.sq-n{margin:0 0 8px;font-size:13px;color:var(--mu)}.sq-n b{color:var(--tx)}
+.sq-list{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:900px){.sq-list{grid-template-columns:1fr 1fr;gap:10px}}
+.sq{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border-radius:16px;background:var(--glass,rgba(255,255,255,.8));border:1px solid var(--glass-line,rgba(120,88,56,.15));box-shadow:var(--glass-sh,none);min-width:0}
+.sq-th{position:relative;flex:none;width:96px;height:54px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#3a2c20,#6b4f38);display:block}
+.sq-th img{width:100%;height:100%;object-fit:cover;display:block}
+.sq-play{position:absolute;inset:0;margin:auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.92);color:#c0392b;font-size:11px;padding-left:2px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.sq-tx{flex:1;min-width:0;display:grid;gap:3px}.sq-tx h3{margin:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sq-tx small{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq-acts{flex:none;display:flex;align-items:center;gap:4px}
+.sq-ib{width:32px;height:32px;border-radius:9px;border:0;background:rgba(120,88,56,.08);color:#5c4a3a;display:grid;place-items:center;cursor:pointer}
+.sq-ib:hover{background:rgba(120,88,56,.16)}.sq-ib.del{color:#b23a2f}
+.sq-ok{height:32px;border-radius:9px;border:0;padding:0 10px;background:#eaf3ec;color:#24543a;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sq-ok:hover{background:#d8eadc}
+</style>
+<style id="kz-rest">
+.rs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.rs{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:#fff;border:1px solid rgba(110,80,50,.16);min-width:0}
+.rs.rest{background:#fdf6ea;border-color:rgba(214,150,60,.35)}.rs.off{background:#f4f2ef;opacity:.85}
+.rs-who{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.rs-who i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:13px;background:#efe4d6;color:#7a5531}
+.rs-who span{display:grid;min-width:0}.rs-who b{font-size:14px}.rs-who small{font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs-who:hover b{text-decoration:underline}
+.rs-st{flex:none;display:grid;justify-items:end;gap:2px}.rs-st small{font-size:10.5px;color:var(--mu)}
+.rs-b{flex:none;border:1px solid rgba(110,80,50,.2);background:#fff;border-radius:9px;padding:6px 9px;font:inherit;font-size:12px;font-weight:700;color:#5c4a3a;cursor:pointer;white-space:nowrap}
+.rs-b:hover{background:#3a2c20;color:#fff;border-color:#3a2c20}
+</style>
+<style id="kz-editor-fix">
+:root .tools.tb2{grid-template-columns:minmax(0,1fr)!important;min-width:0}
+:root .tools.tb2 :is(.tb-r1,.tb-l,.tb-rt){flex-wrap:wrap!important;min-width:0!important;row-gap:6px}
+:root .tools.tb2 :is(.tb-l,.tb-rt)>*{flex:none}
+:root .tools.tb2 .grp{flex:none!important;position:static!important}
+:root .kfield .ss{flex:1;min-width:58px;border:0!important;background:none!important;box-shadow:none!important;outline:0!important}
+:root .kfield .ss *{border-left:0!important;border-right:0!important}
+:root .kfield .ssb{border:0!important;background:none!important;box-shadow:none!important;padding:0 4px!important;min-height:0!important;height:30px}
+@media (max-width:1360px){
+ :root .ed3.leader-sheet{grid-template-columns:150px minmax(0,1fr)!important}
+ :root .ed3.leader-sheet>.fsl{grid-column:1;grid-row:1}
+ :root .ed3.leader-sheet>.rcol{grid-column:1;grid-row:2;position:static!important;align-self:start}
+ :root .ed3.leader-sheet>.main2{grid-column:2;grid-row:1/span 2;min-width:0}
+}
+#kzMkSz{position:fixed;z-index:60;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:12px;background:rgba(36,26,18,.92);color:#fff;box-shadow:0 8px 20px -8px rgba(0,0,0,.45);font-size:12px}
+#kzMkSz button{width:26px;height:26px;border-radius:8px;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:15px;font-weight:700;cursor:pointer;line-height:1}
+#kzMkSz button:hover{background:rgba(255,255,255,.26)}
+#kzMkSz input{width:96px;accent-color:#e3b06a}
+#kzMkSz b{min-width:22px;text-align:center;font-weight:700}
 </style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
@@ -4516,7 +4573,7 @@ const shiftDate=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n)
 const wd=s=>new Date(s+'T12:00:00').toLocaleDateString('ko-KR',{weekday:'short'});
 const shortD=d=>String(d).slice(2).replace(/-/g,'');
 const normHead=t=>typeof t==='string'?t.replace(/^(\s*::\s*)20(\d{6})(?=\s)/,'$1$2'):t;
-const defMent=d=>{const f=autoFill?sessFill(d):{},g=k=>f[k]||'';return `:: ${shortD(d)} 꿈자리 콘티 ::\n\n1. \n\n2. \n\n3. \n\n인도 : ${autoFill?ldr:''}\n메인 : ${g('메인')}\n세컨 : ${g('세컨')}\n드럼 : ${g('드럼')}\nE.G : ${g('E.G')}\nB.G : ${g('B.G')}\nA.G : ${g('A.G')}\n\n싱어: ${autoFill?singersFor(d):''}`};
+const defMent=d=>{const f=autoFill?sessFill(d):{},g=k=>f[k]||'';return `:: ${shortD(d)} 꿈자리 콘티 ::\n\n1. \n\n2. \n\n3. \n\n인도 : ${autoFill?ldr:''}\n메인 : \n세컨 : \n드럼 : ${g('드럼')}\nE.G : ${g('E.G')}\nB.G : ${g('B.G')}\nA.G : ${g('A.G')}\n\n싱어: ${autoFill?singersFor(d):''}`};
 let sing={fixed:[],rot:[],every:2,anchor:nextSun()};
 function singEff(d,o){const use=!o,[f,p]=singParts(d,o),ch=use?ovr.filter(x=>x.date===d&&!x.k):[];return[...f,...(p?[p]:[])].map(n=>{const c=ch.find(x=>x.from===n);return c?{n:c.to||n,from:n,abs:!c.to,rp:!!c.to}:{n,from:n,rot:n===p}})}
 function singersFor(d,o){return singEff(d,o).filter(x=>!x.abs).map(x=>x.n).sort((a,b)=>String(a).localeCompare(String(b),'ko')).join(', ')}
@@ -6619,7 +6676,7 @@ function atStatusHTML(){const t=todayStr(),names=atAllNames(),cur=STATUS.filter(
  ${back.length?`<div class="at-card"><div class="at-ch"><b>복귀 예정</b><span class="mu">2주 안에 돌아와요. 일정표 배정을 미리 확인해 주세요</span></div><div class="at-lst">${back.map(r=>row(r,'cur')).join('')}</div></div>`:''}
  <div class="at-card"><div class="at-ch"><b>지금 쉬는 중 · 비활동</b><span class="mu">${cur.length}명</span></div>${cur.length?`<div class="at-lst">${cur.map(r=>row(r,'cur')).join('')}</div>`:'<div class="at-empty">지금 쉬는 사람이 없어요</div>'}</div>
  ${soon.length?`<div class="at-card"><div class="at-ch"><b>예정된 휴식</b></div><div class="at-lst">${soon.map(r=>row(r,'soon')).join('')}</div></div>`:''}
- <div class="at-card"><div class="at-ch"><b>팀원 전체</b><span class="mu">이름을 누르면 출결 상세를 볼 수 있어요</span></div><div class="at-tw"><table class="at-t" style="min-width:520px"><thead><tr><th>이름</th><th>역할</th><th>지금 상태</th><th>기록</th><th></th></tr></thead><tbody>${names.map(n=>{const r=atStatusNow(n),h=STATUS.filter(x=>x.name===n).length;return `<tr><td data-at-m="${esc(n)}" style="cursor:pointer"><b>${esc(n)}</b></td><td>${esc(atRoleOf(n)||'')}</td><td>${r?`<span class="at-tag ${r.state==='비활동'?'':'warn'}">${esc(atStLbl(r))}</span>`:'<span class="at-tag ok">활동</span>'}</td><td>${h?h+'건':'-'}</td><td>${r?'':`<button type="button" class="sm" data-st-pre="${esc(n)}">휴식 등록</button>`}</td></tr>`}).join('')}</tbody></table></div></div>
+ <div class="at-card"><div class="at-ch"><b>팀원 전체</b><span class="mu">이름을 누르면 출결 상세를 볼 수 있어요</span></div><div class="rs-grid">${names.map(n=>{const r=atStatusNow(n),h=STATUS.filter(x=>x.name===n).length;return `<div class="rs ${r?(r.state==='비활동'?'off':'rest'):''}"><button type="button" class="rs-who" data-at-m="${esc(n)}" title="출결 상세"><i>${esc(String(n).slice(0,1))}</i><span><b>${esc(n)}</b><small>${esc(atRoleOf(n)||'')}</small></span></button><div class="rs-st">${r?`<span class="at-tag ${r.state==='비활동'?'':'warn'}">${esc(atStLbl(r))}</span>`:'<span class="at-tag ok">활동</span>'}${h?`<small>기록 ${h}</small>`:''}</div>${r?'':`<button type="button" class="rs-b" data-st-pre="${esc(n)}">＋ 휴식</button>`}</div>`}).join('')}</div></div>
  ${past.length?`<details class="at-card"><summary style="cursor:pointer;font-weight:750">지난 휴식 기록 ${past.length}건</summary><div class="at-lst" style="margin-top:10px">${past.map(r=>row(r,'past')).join('')}</div></details>`:''}`}
 function atStatusBind(B,re){const q=s=>B.querySelector(s);
  B.querySelectorAll('[data-st-new]').forEach(b=>b.onclick=()=>{atStEdit='new';atStPre='';re()});
@@ -6740,7 +6797,7 @@ document.addEventListener('keydown',function(e){
    · 같은 구간은 한 번만 입력, 빈 줄로 슬라이드 나누기, 붙여넣기 자동 분배, 실시간 미리보기
    · 가사는 곡 제목 기준 Firestore lyrics/{곡}에 저장 → 같은 곡이면 자동으로 채워짐
    ===================================================================== */
-let LYR={},LYD={},lySubOn=false,lyUnsub=null,lyUid=null,lyWeek=null,lyLocalOnly=false,lySize=LS('lySize')||'l',lyBlank=LS('lyBlank')!=='0',lySaveT={},lyState={},lySel=0,lyFocus=null,lyOpenInst={},lyMax=Math.min(4,Math.max(2,+(LS('lyMax')||2))),lyAlign=LS('lyAlign')||'center';
+let LYR={},LYD={},lySubOn=false,lyUnsub=null,lyUid=null,lyWeek=null,lyLocalOnly=false,lySize=LS('lySize')||'l',lyBlank=LS('lyBlank')==='1',lySaveT={},lyState={},lySel=0,lyFocus=null,lyOpenInst={},lyMax=Math.min(4,Math.max(2,+(LS('lyMax')||2))),lyAlign=LS('lyAlign')||'center';
 const LY_INST=/^(intro|inter|interlude|outro|ending|간주|전주|후주|반주)/i;
 const lyNorm=t=>String(t||'').replace(/\s*[\(\[]\s*[A-Ga-g][#b♭♯]?m?(\s*[-→>~/,]\s*[A-Ga-g][#b♭♯]?m?)*\s*[\)\]]\s*$/,'').trim();
 const lyKey=t=>'s_'+(lyNorm(t).toLowerCase().replace(/[\s\/\\.#$\[\]'"`~!?,·\-_()]+/g,'')||'untitled').slice(0,120);
@@ -7446,7 +7503,8 @@ async function send(e){
  finally{if(ticket===epoch)sending=false;buttons.forEach(b=>b.disabled=false);input.readOnly=false;}
 }
 async function songsView(){const gen=++pageGeneration;if(!shell('신청곡','함께 부르고 싶은 찬양과 참고 영상을 남겨 주세요.','<button class="kc-btn primary" id="kcAddSong">＋ 신청하기</button>'))return;$c('#kcAddSong').onclick=()=>songForm();$c('#kcContent').innerHTML='<div class="kc-empty">신청곡을 불러오는 중…</div>';try{await status();const r=await api({action:'songs'});if(activeView()!=='song_requests'||gen!==pageGeneration)return;songItems=r.items;songCursor=r.cursor;paintSongs();}catch(e){if(activeView()==='song_requests'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 불러오기</button>';$c('#kcRetry').onclick=songsView;error(e);}}}
-function paintSongs(){const c=$c('#kcContent');if(!c||activeView()!=='song_requests')return;c.innerHTML=(songItems.length?songItems.map(s=>`<article class="kc-card"><h3>${escape(s.title)}</h3><div class="kc-sub">${escape(s.name)} · ${escape(time(s.createdAt))}${s.revision>1?' · 수정됨':''}</div><p><a href="${escape(/^https?:\/\//i.test(s.url)?s.url:'#')}" target="_blank" rel="noopener noreferrer">참고 영상 열기 ↗</a></p><div class="kc-actions">${s.owner===actor?.id?`<button class="kc-btn" data-edit="${escape(s.id)}">수정</button><button class="kc-btn danger" data-delete="${escape(s.id)}">삭제</button>`:''}${['인도자','관리계정'].includes(actor?.rank)?`<button class="kc-btn" data-complete="${escape(s.id)}">콘티 반영 완료</button>`:''}</div></article>`).join(''):'<div class="kc-empty">아직 신청곡이 없어요.<br>함께 부르고 싶은 찬양을 알려 주세요.</div>')+(songCursor?'<button class="kc-btn kc-more" id="kcMoreSongs">이전 신청곡 더 보기</button>':'');
+function paintSongs(){const c=$c('#kcContent');if(!c||activeView()!=='song_requests')return;c.innerHTML=(songItems.length?`<p class="sq-n">신청곡 <b>${songItems.length}${songCursor?'+':''}</b>곡</p><div class="sq-list">`+songItems.map(s=>{const u=/^https?:\/\//i.test(s.url)?s.url:'',yt=(u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)||[])[1],mine=s.owner===actor?.id,lead=['인도자','관리계정'].includes(actor?.rank);
+  return `<article class="sq"><a class="sq-th" ${u?`href="${escape(u)}" target="_blank" rel="noopener noreferrer"`:''} aria-label="참고 영상 열기">${yt?`<img src="https://i.ytimg.com/vi/${yt}/mqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">`:''}<span class="sq-play">▶</span></a><div class="sq-tx"><h3>${escape(s.title)}</h3><small>${escape(s.name)} · ${escape(time(s.createdAt))}${s.revision>1?' · 수정됨':''}</small></div><div class="sq-acts">${lead?`<button class="sq-ok" data-complete="${escape(s.id)}" title="콘티에 반영했어요 (목록에서 내려가요)">✓ 반영</button>`:''}${mine?`<button class="sq-ib" data-edit="${escape(s.id)}" title="수정" aria-label="수정"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg></button><button class="sq-ib del" data-delete="${escape(s.id)}" title="삭제" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</div></article>`}).join('')+'</div>':'<div class="kc-empty">아직 신청곡이 없어요.<br>함께 부르고 싶은 찬양을 알려 주세요.</div>')+(songCursor?'<button class="kc-btn kc-more" id="kcMoreSongs">이전 신청곡 더 보기</button>':'');
  c.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>songForm(songItems.find(s=>s.id===b.dataset.edit)));
  for(const op of ['delete','complete'])c.querySelectorAll('[data-'+op+']').forEach(b=>b.onclick=()=>songRemove(songItems.find(s=>s.id===b.dataset[op]),op));
  const more=$c('#kcMoreSongs');if(more)more.onclick=async()=>{more.disabled=true;const gen=pageGeneration;try{const r=await api({action:'songs',cursor:songCursor});if(activeView()!=='song_requests'||gen!==pageGeneration)return;songItems=[...new Map([...songItems,...r.items].map(s=>[s.id,s])).values()];songCursor=r.cursor;paintSongs();}catch(e){error(e);more.disabled=false;}};
@@ -8182,6 +8240,24 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 #kzBackHint{position:fixed;left:0;top:0;z-index:2147483600;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.92);color:#5c4a3a;box-shadow:0 4px 16px rgba(60,40,20,.25);opacity:0;pointer-events:none;transition:background .15s,color .15s}
 #kzBackHint.go{background:#3a2c20;color:#fff}
 </style>
+<script id="kz-mksz">
+/* 마커를 고르면 마커 위에 작은 크기 조절 막대 */
+(function(){let bar=null,raf=0;
+ function sz(){return document.getElementById('sz')}
+ function hide(){if(bar)bar.hidden=true}
+ function place(){raf=0;const m=document.querySelector('#stage .mk.sel'),s=sz();if(!m||!s||(typeof view!=='undefined'&&view!=='edit')){hide();return}
+  if(!bar){bar=document.createElement('div');bar.id='kzMkSz';bar.innerHTML='<span>크기</span><button type="button" data-d="-2" aria-label="작게">−</button><input type="range" aria-label="마커 크기"><button type="button" data-d="2" aria-label="크게">+</button><b></b>';document.body.append(bar);
+   const r=bar.querySelector('input'),set=(v,commit)=>{const t=sz();if(!t)return;v=Math.max(+t.min||12,Math.min(+t.max||70,v));t.value=v;t.dispatchEvent(new Event('input',{bubbles:true}));if(commit)t.dispatchEvent(new Event('change',{bubbles:true}));r.value=v;bar.querySelector('b').textContent=v};
+   r.oninput=()=>set(+r.value,false);r.onchange=()=>set(+r.value,true);
+   bar.querySelectorAll('[data-d]').forEach(b=>b.onclick=e=>{e.stopPropagation();set(+sz().value+ +b.dataset.d,true)});
+   ['pointerdown','mousedown','click'].forEach(ev=>bar.addEventListener(ev,e=>e.stopPropagation()))}
+  const r=bar.querySelector('input');r.min=s.min;r.max=s.max;if(document.activeElement!==r)r.value=s.value;bar.querySelector('b').textContent=s.value;
+  bar.hidden=false;const k=m.getBoundingClientRect(),w=bar.offsetWidth||220;let x=k.left+k.width/2-w/2,y=k.top-44;if(y<70)y=k.bottom+10;x=Math.max(8,Math.min(innerWidth-w-8,x));bar.style.left=x+'px';bar.style.top=y+'px'}
+ const q=()=>{if(!raf)raf=requestAnimationFrame(place)};
+ new MutationObserver(q).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+ addEventListener('scroll',q,true);addEventListener('resize',q);
+})();
+</script>
 </body></html>
 
 <script id="kz-score-pages-script">
