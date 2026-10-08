@@ -4337,16 +4337,20 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root .hm.hm-v13 .kh-left-stack>.kz-nx{flex:0 0 auto!important}
  :root .hm.hm-v13 .kh-left-stack>.kz-fd{flex:1 1 0!important;min-height:0!important}
  :root .hm.hm-v13 .kz-fd>.kz-fd-l,:root .hm.hm-v13 .kz-fd>.kz-empty{flex:1 1 0;min-height:0;overflow:auto}
- :root .hm.hm-v13 .kz-info-stack>#khInfo{flex:1.15 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
- :root .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:1 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+ :root .hm.hm-v13 .kz-info-stack>#khInfo{flex:.9 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+ :root .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:1.1 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
  :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 0!important;min-height:0!important;overflow:auto!important}
  :root .hm.hm-v13 .kh-song-card #khSongList{flex:1 1 0;min-height:0;overflow:auto;margin-bottom:10px}
  :root .hm.hm-v13 .kh-song-card .kh-song-add{flex:0 0 auto}
+ :root .hm.hm-v13 .kh-song-card>p.mu{display:none}
+ :root .hm.hm-v13 .kh-song-row{padding:7px 2px!important}
  :root .hm.hm-v13 :is(.kz-fd-l,.kh-info-content,#khSongList){scrollbar-width:thin;scrollbar-color:rgba(120,88,56,.25) transparent;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);padding-bottom:12px}
  /* 오른쪽: 영상 아래 그림이 카드 바닥까지 꽉 */
  :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{flex:0 0 auto}
  :root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:0!important;height:0!important;object-fit:contain!important;object-position:center bottom!important;background:#fcf8f1!important}
 }
+/* 신청곡 개수 */
+.kh-cnt{font-style:normal;margin-left:6px;font-size:12px;font-weight:700;color:#8a5a2b;background:rgba(150,110,70,.12);padding:1px 8px;border-radius:99px;vertical-align:2px}
 /* PC 전체: 뿌옇지 않게 — 카드·창 윤곽을 조금 더 진하게, 아주 옅은 그림자 */
 @media (min-width:821px){
  :root{--glass-line:rgba(105,75,45,.22)!important;--glass-sh:inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(50,32,15,.08),0 10px 26px -14px rgba(50,32,15,.30)!important;--bd:#dccdb8!important;--bd2:#cdbba3!important}
@@ -4355,6 +4359,19 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root #kcPanel,:root #kcPanel[open]{border:1px solid rgba(110,80,50,.20)!important;box-shadow:0 2px 6px rgba(40,25,10,.08),0 24px 60px -18px rgba(40,25,10,.38)!important}
  :root #top{box-shadow:0 1px 0 rgba(110,80,50,.12),0 6px 16px -12px rgba(50,32,15,.18)}
 }
+</style>
+<style id="kz-attpick">
+:root .ka{gap:10px!important}
+:root .ka-g{display:block!important;padding:8px 0 10px;border-top:1px solid rgba(120,88,56,.10)}
+:root .ka-g.hide{display:none!important}
+:root .ka-gl{display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;min-height:0!important;width:100%;padding:0 0 7px!important;font-size:12.5px!important;color:#6b5442!important}
+:root .ka-gl small{order:2;background:rgba(120,88,56,.08)!important}
+:root button.ka-gl::after{content:'전체';order:3;margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ac);padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--ac) 10%,transparent)}
+:root .ka-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:5px!important}
+:root .ka-t{justify-content:center;min-height:34px!important;padding:4px 6px!important;border-radius:10px!important;font-size:13px!important;gap:4px!important}
+:root .ka-t .ka-av{display:none!important}
+:root .ka-t .ka-ck{margin:0!important;width:12px!important;height:12px!important}
+:root .ka-t:not(.on){background:#fff!important}
 </style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
@@ -7601,7 +7618,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
 (()=>{
  let songCache=null,songAt=0,songUid='',pending=null;
  async function songs(){const box=document.getElementById('khSongList'),u=window.KZ_FIREBASE_AUTH?.currentUser;if(!box)return;if(!u){box.textContent='로그인 후 신청곡을 확인할 수 있어요.';return;}if(songUid!==u.uid){songUid=u.uid;songCache=null;songAt=0;pending=null;}
- const paint=items=>{if(!box.isConnected)return;box.innerHTML=items.length?items.slice(0,3).map(x=>`<button type="button" class="kh-song-row"><b>${esc(x.title)}</b><small>${esc(x.name||'팀원')} 신청</small></button>`).join(''):'<p class="mu">첫 신청곡을 남겨 주세요.</p>';box.querySelectorAll('button').forEach(b=>b.onclick=()=>go('song_requests'));};
+ const paint=items=>{if(!box.isConnected)return;box.innerHTML=items.length?items.slice(0,12).map(x=>`<button type="button" class="kh-song-row"><b>${esc(x.title)}</b><small>${esc(x.name||'팀원')} 신청</small></button>`).join(''):'<p class="mu">첫 신청곡을 남겨 주세요.</p>';box.querySelectorAll('button').forEach(b=>b.onclick=()=>go('song_requests'));const h=box.closest('.kh-song-card')?.querySelector('.kz-h h2');if(h){let c=h.querySelector('.kh-cnt');if(!c){c=document.createElement('em');c.className='kh-cnt';h.append(c)}c.textContent=items.length;c.hidden=!items.length}};
  if(songCache)paint(songCache);if(Date.now()-songAt<30000)return;
  try{if(!pending){const who=u.uid;pending=(async()=>{const token=await u.getIdToken(),r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({action:'songs'}),signal:AbortSignal.timeout(15000)});const data=await r.json();if(!r.ok)throw Error(data.error||'신청곡을 불러오지 못했어요.');return{who,items:data.items||[]};})();}const request=pending,result=await request;if(window.KZ_FIREBASE_AUTH?.currentUser?.uid!==result.who)return;songCache=result.items;songAt=Date.now();paint(songCache);if(pending===request)pending=null;}catch{pending=null;if(box.isConnected&&!songCache)box.innerHTML='<button type="button" class="kz-mini">신청곡 다시 불러오기</button>';box.querySelector('button')?.addEventListener('click',songs);}
  }
