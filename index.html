@@ -4347,6 +4347,14 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{flex:0 0 auto}
  :root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:0!important;height:0!important;object-fit:contain!important;object-position:center bottom!important;background:#fcf8f1!important}
 }
+/* PC 전체: 뿌옇지 않게 — 카드·창 윤곽을 조금 더 진하게, 아주 옅은 그림자 */
+@media (min-width:821px){
+ :root{--glass-line:rgba(105,75,45,.22)!important;--glass-sh:inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(50,32,15,.08),0 10px 26px -14px rgba(50,32,15,.30)!important;--bd:#dccdb8!important;--bd2:#cdbba3!important}
+ :root body{background-color:#f6f1e9!important}
+ :root dialog[open],:root .kz-admin-card,:root #kzMembersDialog,:root .kad-sheet,:root .ls-sh,:root .pr-sh,:root [role=dialog]:not(dialog){border:1px solid rgba(110,80,50,.20)!important;box-shadow:0 2px 6px rgba(40,25,10,.08),0 24px 60px -18px rgba(40,25,10,.38)!important}
+ :root #kcPanel,:root #kcPanel[open]{border:1px solid rgba(110,80,50,.20)!important;box-shadow:0 2px 6px rgba(40,25,10,.08),0 24px 60px -18px rgba(40,25,10,.38)!important}
+ :root #top{box-shadow:0 1px 0 rgba(110,80,50,.12),0 6px 16px -12px rgba(50,32,15,.18)}
+}
 </style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
