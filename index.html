@@ -4166,6 +4166,23 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
  :root .sx-card-h{padding:10px 12px;gap:8px}:root .sx-card-h .sx-lg{gap:6px;font-size:11px;flex-wrap:wrap}
 }
 </style>
+<style id="kz-libcard">
+.libg{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:12px!important}
+.libc{padding:8px!important;gap:6px!important}
+.libc .libt{aspect-ratio:4/3!important}.libc .libt img{object-fit:cover!important;object-position:top center}
+.libc .kz-car-page{aspect-ratio:4/3!important}.libc .kz-car-page img{object-fit:cover!important;object-position:top center}
+.libc .libi b{font-size:13.5px}.libc .libi .mu{font-size:11.5px}
+.libh{grid-column:1/-1}
+.liba{gap:5px!important;align-items:flex-start}
+.libm{position:relative}
+.libm>summary{list-style:none;display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 10px;border-radius:9px;background:rgba(120,88,56,.09);color:#5c4a3a;font-size:12px;font-weight:600;cursor:pointer;user-select:none}
+.libm>summary::-webkit-details-marker{display:none}.libm>summary::after{content:'▾';font-size:10px;opacity:.7}
+.libm[open]>summary{background:#3a2c20;color:#fff}
+.libm-p{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.libm-p .sm{min-height:28px;padding:0 9px;font-size:12px}
+.libm-p .libm-del{color:#b23a2f!important}
+@media (max-width:760px){.libg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.libh{display:none!important}}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -4723,7 +4740,7 @@ function bigView(src,cap){const o=document.createElement('div');o.id='lb';o.inne
 function libraryView(){const q=libQ.trim().toLowerCase(),all=libItems(),l=sortLib(all.filter(e=>!q||e.name.toLowerCase().includes(q)),libSort),E=canEdit;
 $('#body').innerHTML=`<div class="wk mnw lib"><div class="ro-h"><div><h1 class="ht2">악보 모음집</h1><div class="mu">올린 악보의 <b>원본</b>이 모여 있어요. 송폼의 <b>이전 악보 가져오기</b>에서 골라 쓸 수 있어요 · 총 ${all.length}장</div></div><span class="sp"></span>${E?'<button class="btn" id="libadd">＋ 악보 추가</button><input type="file" id="libf" accept="image/*" multiple hidden>':''}</div>
 <div class="ar-top"><input id="libq" placeholder="악보 제목으로 검색" autocomplete="off" value="${esc(libQ)}">${libSortSel('libs')}<span class="mu" id="libmsg">${esc(libMsg)}</span></div>
-${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}${kzKeyBadge(e.key)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<button class="sm" data-append-page="${e.oaid}">＋ 뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm" data-e="${e.oaid}">이름</button><button class="sm" data-kk="${e.oaid}">${kzKey(e.key)?kzKey(e.key)+'키':'키'}</button><button class="sm" data-d="${e.oaid}">삭제</button>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 악보 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
+${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}${kzKeyBadge(e.key)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<details class="libm"${libEdit===e.oaid?' open':''}><summary>수정</summary><div class="libm-p"><button class="sm" data-e="${e.oaid}">이름 바꾸기</button><button class="sm" data-kk="${e.oaid}">${kzKey(e.key)?'키 · '+kzKey(e.key):'키 설정'}</button><button class="sm" data-append-page="${e.oaid}">＋ 뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm libm-del" data-d="${e.oaid}">삭제</button></div></details>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 악보 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
 bindScoreLibrary();refreshStorage();
 if($('#libs'))$('#libs').onchange=e=>{libSort=e.target.value;LS('lsort',libSort);libraryView()};
 const qi=$('#libq');qi.oninput=e=>{libQ=e.target.value;const p=e.target.selectionStart;libraryView();const j=$('#libq');j.focus();j.setSelectionRange(p,p)};
