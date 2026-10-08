@@ -4174,13 +4174,28 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .libc .libi b{font-size:13.5px}.libc .libi .mu{font-size:11.5px}
 .libh{grid-column:1/-1}
 .liba{gap:5px!important;align-items:flex-start}
-.libm{position:relative}
-.libm>summary{list-style:none;display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 10px;border-radius:9px;background:rgba(120,88,56,.09);color:#5c4a3a;font-size:12px;font-weight:600;cursor:pointer;user-select:none}
-.libm>summary::-webkit-details-marker{display:none}.libm>summary::after{content:'▾';font-size:10px;opacity:.7}
-.libm[open]>summary{background:#3a2c20;color:#fff}
-.libm-p{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.libm-p .sm{min-height:28px;padding:0 9px;font-size:12px}
-.libm-p .libm-del{color:#b23a2f!important}
+.libm-b{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 11px;border:0;border-radius:10px;background:rgba(120,88,56,.09);color:#5c4a3a;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.libm-b:hover{background:rgba(120,88,56,.16)}
+.libc[hidden]{display:none!important}
+.kv{display:flex;align-items:center;gap:4px;padding:3px;border-radius:12px;background:rgba(120,88,56,.07)}
+.kv-b{flex:none;width:36px;height:30px;border:0;border-radius:9px;background:#fff;color:#3a2c20;font-size:17px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(60,40,20,.12)}
+.kv-b:disabled{background:transparent;color:rgba(120,88,56,.28);box-shadow:none;cursor:default}
+.kv-k{flex:1;display:grid;justify-items:center;line-height:1.15}.kv-k b{font-size:15px;color:#8a5a2b}.kv-k small{font-size:10px;color:var(--mu)}
+.ls-ov{position:fixed;inset:0;z-index:2147482500;display:grid;place-items:end center;background:rgba(30,20,12,.28);opacity:0;transition:opacity .2s}
+.ls-ov.in{opacity:1}
+.ls-sh{width:min(460px,100%);box-sizing:border-box;background:rgba(250,247,242,.97);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-radius:22px 22px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px -12px rgba(60,40,20,.35);transform:translateY(16px);transition:transform .2s}
+.ls-ov.in .ls-sh{transform:none}
+@media (min-width:700px){.ls-ov{place-items:center}.ls-sh{border-radius:22px}}
+.ls-hd{display:flex;align-items:center;gap:12px;padding:2px 2px 12px;border-bottom:1px solid rgba(120,88,56,.1);margin-bottom:6px}
+.ls-hd img{width:44px;height:58px;object-fit:cover;object-position:top;border-radius:8px;border:1px solid rgba(120,88,56,.15);background:#fff}
+.ls-hd span{flex:1;display:grid;gap:2px;min-width:0}.ls-hd b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ls-hd small{font-size:12px;color:var(--mu)}
+.ls-x{width:34px;height:34px;border-radius:50%;border:0;background:rgba(120,88,56,.08);color:#5c4a3a;font-size:15px;cursor:pointer}
+.ls-list{display:grid}
+.ls-r{display:flex;align-items:center;gap:12px;padding:10px 6px;border:0;background:none;text-align:left;border-radius:12px;cursor:pointer;color:var(--tx,#2b2118);font:inherit}
+.ls-r:hover,.ls-r:active{background:rgba(120,88,56,.07)}
+.ls-r i{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(150,110,70,.1);color:#7a5531}
+.ls-r span{display:grid;gap:1px}.ls-r b{font-size:14.5px}.ls-r small{font-size:12px;color:var(--mu)}
+.ls-r.danger i{background:rgba(200,70,60,.1);color:#b23a2f}.ls-r.danger b{color:#b23a2f}
 @media (max-width:760px){.libg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.libh{display:none!important}}
 </style>
 </head><body>
@@ -4740,7 +4755,7 @@ function bigView(src,cap){const o=document.createElement('div');o.id='lb';o.inne
 function libraryView(){const q=libQ.trim().toLowerCase(),all=libItems(),l=sortLib(all.filter(e=>!q||e.name.toLowerCase().includes(q)),libSort),E=canEdit;
 $('#body').innerHTML=`<div class="wk mnw lib"><div class="ro-h"><div><h1 class="ht2">악보 모음집</h1><div class="mu">올린 악보의 <b>원본</b>이 모여 있어요. 송폼의 <b>이전 악보 가져오기</b>에서 골라 쓸 수 있어요 · 총 ${all.length}장</div></div><span class="sp"></span>${E?'<button class="btn" id="libadd">＋ 악보 추가</button><input type="file" id="libf" accept="image/*" multiple hidden>':''}</div>
 <div class="ar-top"><input id="libq" placeholder="악보 제목으로 검색" autocomplete="off" value="${esc(libQ)}">${libSortSel('libs')}<span class="mu" id="libmsg">${esc(libMsg)}</span></div>
-${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}${kzKeyBadge(e.key)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<details class="libm"${libEdit===e.oaid?' open':''}><summary>수정</summary><div class="libm-p"><button class="sm" data-e="${e.oaid}">이름 바꾸기</button><button class="sm" data-kk="${e.oaid}">${kzKey(e.key)?'키 · '+kzKey(e.key):'키 설정'}</button><button class="sm" data-append-page="${e.oaid}">＋ 뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm libm-del" data-d="${e.oaid}">삭제</button></div></details>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 악보 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
+${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}${kzKeyBadge(e.key)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<button type="button" class="libm-b" data-libm="${e.oaid}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>수정</button><div class="libm-h" hidden><button class="sm" data-e="${e.oaid}">이름 바꾸기</button><button class="sm" data-kk="${e.oaid}">키 바꾸기</button><button class="sm" data-append-page="${e.oaid}">뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm" data-d="${e.oaid}">삭제</button></div>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 악보 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
 bindScoreLibrary();refreshStorage();
 if($('#libs'))$('#libs').onchange=e=>{libSort=e.target.value;LS('lsort',libSort);libraryView()};
 const qi=$('#libq');qi.oninput=e=>{libQ=e.target.value;const p=e.target.selectionStart;libraryView();const j=$('#libq');j.focus();j.setSelectionRange(p,p)};
@@ -5738,7 +5753,7 @@ sub();stat()}catch(e){console.error(e)}})();
  }
  async function firebaseLogin(a,p){const auth=FB(),fs=FS();if(!auth||!fs)return false;try{const email=a.authEmail||emailFor(a.id),password=authPassword(authPwId(a),p);let cred;try{cred=await auth.signInWithEmailAndPassword(email,password)}catch(e){/* 최초 배포 직후 관리계정이 아직 생성되지 않은 경우 로그인 순간 생성 */if(a.id==='management'&&String(e&&e.code||'').includes('user-not-found')){cred=await auth.createUserWithEmailAndPassword(email,password);await cred.user.updateProfile({displayName:'관리계정'}).catch(()=>{})}else{throw e}}const u=cred.user;lastPin=p;return await finishLogin(a,u,'pin')}catch(e){console.error('[꿈자리] Firebase 로그인 오류',e&&e.code,e&&e.message,e);try{const c=String(e&&e.code||'');if(a.id!=='management'&&(c.includes('wrong-password')||c.includes('invalid-credential')||c.includes('too-many-requests')))ADM({action:'loginFail',id:a.id,locked:c.includes('too-many-requests')},false).catch(()=>{})}catch(_){}login('login',fbError(e),true);return false}}
  /* PIN·Face ID 공통: Firebase 로그인 뒤 계정 확인과 화면 열기 */
- async function finishLogin(a,u,how){const auth=FB(),fs=FS();let snap=await fs.doc('accounts/'+accountDocId(a)).get();if(!snap.exists&&a.id==='management'){await fs.doc('accounts/management').set({id:'management',name:'관리계정',rank:'관리계정',status:'approved',createdAt:Date.now()},{merge:true});snap=await fs.doc('accounts/management').get()}if(!snap.exists){await auth.signOut();return false}const x={id:a.id,...snap.data()};if(x.status!=='approved'){await auth.signOut();login('login','아직 관리자 승인이 완료되지 않았어요.',true);return false}if(x.id!=='management'&&how==='keep'&&x.revokedAt&&x.revokedAt>loginAt(x.id)){try{kzKeep.clear()}catch(e){}await auth.signOut();return false}if(how!=='keep')try{localStorage.setItem('kzLoginAtV1:'+x.id,String(Date.now()))}catch(e){}write(read().filter(v=>v.id!==x.id).concat(x));sessionStorage.setItem(S,x.id);if(x.mustChangePin&&x.id!=='management')setTimeout(()=>forcePin(x,false),500);remember(x);try{window.kzKeep&&kzKeep.onLogin(x,how)}catch(e){}choosingAccount=false;draftAccountId=x.id;draftAccountName=x.name;apply(x);document.getElementById('kzLoginLock')?.remove();if(typeof window.__kzResolveFirebaseAppReady==='function'){window.__kzResolveFirebaseAppReady(u);window.__kzResolveFirebaseAppReady=null}try{toast(`${x.name}으로 로그인했어요`)}catch(e){}if(window.KZPasskey){KZPasskey.setCurrent(x);if(how==='pin')setTimeout(()=>KZPasskey.offer(x),700)}return true}
+ async function finishLogin(a,u,how){const auth=FB(),fs=FS();const cached=how==='passkey'&&a.id!=='management'?read().find(v=>v.id===a.id&&v.status==='approved'):null;let snap=cached?{exists:true,data:()=>{const {id,...r}=cached;return r}}:await fs.doc('accounts/'+accountDocId(a)).get();if(cached)fs.doc('accounts/'+a.id).get().then(s=>{if(!s.exists||s.data().status!=='approved'){try{sessionStorage.removeItem(S)}catch(e){}try{auth.signOut()}catch(e){}login('login','계정 상태를 확인해 주세요. 관리계정에 문의해 주세요.',true)}else write(read().map(v=>v.id===a.id?{...v,...s.data(),id:a.id}:v))}).catch(()=>{});if(!snap.exists&&a.id==='management'){await fs.doc('accounts/management').set({id:'management',name:'관리계정',rank:'관리계정',status:'approved',createdAt:Date.now()},{merge:true});snap=await fs.doc('accounts/management').get()}if(!snap.exists){await auth.signOut();return false}const x={id:a.id,...snap.data()};if(x.status!=='approved'){await auth.signOut();login('login','아직 관리자 승인이 완료되지 않았어요.',true);return false}if(x.id!=='management'&&how==='keep'&&x.revokedAt&&x.revokedAt>loginAt(x.id)){try{kzKeep.clear()}catch(e){}await auth.signOut();return false}if(how!=='keep')try{localStorage.setItem('kzLoginAtV1:'+x.id,String(Date.now()))}catch(e){}write(read().filter(v=>v.id!==x.id).concat(x));sessionStorage.setItem(S,x.id);if(x.mustChangePin&&x.id!=='management')setTimeout(()=>forcePin(x,false),500);remember(x);try{window.kzKeep&&kzKeep.onLogin(x,how)}catch(e){}choosingAccount=false;draftAccountId=x.id;draftAccountName=x.name;apply(x);document.getElementById('kzLoginLock')?.remove();if(typeof window.__kzResolveFirebaseAppReady==='function'){window.__kzResolveFirebaseAppReady(u);window.__kzResolveFirebaseAppReady=null}try{toast(`${x.name}으로 로그인했어요`)}catch(e){}if(window.KZPasskey){KZPasskey.setCurrent(x);if(how==='pin')setTimeout(()=>KZPasskey.offer(x),700)}return true}
  /* Face ID·지문: 서버가 확인한 뒤 발급한 토큰으로 Firebase 로그인 */
  async function passkeyLogin(a){const auth=FB(),fs=FS();if(!auth||!fs||!window.KZPasskey)return false;try{const t=await KZPasskey.signIn(a.id);const cred=await auth.signInWithCustomToken(t);return await finishLogin(a,cred.user,'passkey')}catch(e){console.warn('[꿈자리] Face ID 로그인',e);if(e&&(e.code==='none'||e.code==='unknown'))KZPasskey.forget(a.id);draftAccountId=a.id;draftAccountName=a.name;login('login',KZPasskey.message(e),true);return false}}
  function login(tab='login',message='',err=false){
@@ -7789,6 +7804,41 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  document.addEventListener('click',e=>{const s=e.target.closest('.ax [data-at-s]');if(s){setTimeout(()=>upd(s.closest('.ax-card')),0);return}
   const ev=e.target.closest('[data-ax-ev]');if(ev){window.__axEv=ev.dataset.axEv;document.querySelectorAll('[data-ax-ev]').forEach(b=>{const on=b===ev;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('[data-ax-pane]').forEach(p=>p.classList.toggle('on',p.dataset.axPane===ev.dataset.axEv));return}
   const nb=e.target.closest('[data-ax-note]');if(nb){const i=nb.closest('.ax-r').querySelector('.ax-note');i.hidden=!i.hidden||!!i.value&&false;if(!i.hidden)i.focus();return}});
+})();
+</script>
+<script id="kz-lib-keys">
+/* 악보 모음집: 같은 곡의 다른 키는 카드 하나로 · ♭/♯ 로 넘겨 보기 · 처음엔 가장 먼저 올린 악보 */
+(function(){
+ const SEMI={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
+ const semi=k=>{k=kzKey(k);if(!k)return -1;const r=k.replace(/m$/,'');return SEMI[r]??-1};
+ const base=n=>String(kzStripKey(n||'')).replace(/\s+/g,'').toLowerCase();
+ const pick=new Map();
+ function nav(card,group,cur){const i=group.indexOf(cur),lo=i>0?group[i-1]:null,hi=i<group.length-1?group[i+1]:null,k=kzKey(cur.key);
+  let n=card.querySelector('.kv');if(!n){n=document.createElement('div');n.className='kv';const li=card.querySelector('.libi');if(li)li.before(n);else card.append(n)}
+  n.innerHTML=`<button type="button" class="kv-b" data-kv="-1" ${lo?'':'disabled'} aria-label="${lo?(kzKey(lo.key)||'다른')+'키 악보 보기':'더 낮은 키 없음'}">♭</button><span class="kv-k"><b>${k||'키 –'}</b>${group.length>1?`<small>${group.length}개 키</small>`:''}</span><button type="button" class="kv-b" data-kv="1" ${hi?'':'disabled'} aria-label="${hi?(kzKey(hi.key)||'다른')+'키 악보 보기':'더 높은 키 없음'}">♯</button>`;
+  n.querySelectorAll('[data-kv]').forEach(b=>b.onclick=e=>{e.stopPropagation();const to=b.dataset.kv==='1'?hi:lo;if(!to)return;const tc=to.card;card.before(tc);tc.hidden=false;card.hidden=true;pick.set(to.g,to.oaid);nav(tc,group,to);const nb=tc.querySelector(`.kv-b[data-kv="${b.dataset.kv}"]:not(:disabled)`)||tc.querySelector('.kv-b:not(:disabled)');nb&&nb.focus({preventScroll:true})});
+  card.querySelectorAll('.libnm .kz-key').forEach(x=>x.remove())}
+ window.kzLibKeys=function(){const grid=document.querySelector('.libg');if(!grid)return;let items=[];try{items=libItems()}catch(e){return}
+  const groups=new Map();[...grid.querySelectorAll('.libc')].forEach(card=>{const e=items.find(x=>x.oaid===card.dataset.o);if(!e)return;const g=base(e.name)||('#'+e.oaid);if(!groups.has(g))groups.set(g,[]);groups.get(g).push({card,g,oaid:e.oaid,key:e.key,at:e.at||Infinity,name:e.name})});
+  groups.forEach((list,g)=>{const byPitch=[...list].sort((a,b)=>semi(a.key)-semi(b.key)||a.at-b.at);const first=[...list].sort((a,b)=>a.at-b.at)[0];const cur=list.find(x=>x.oaid===pick.get(g))||first;
+   const anchor=list[0].card;if(cur.card!==anchor)anchor.before(cur.card);list.forEach(x=>{x.card.hidden=x!==cur});if(list.length>1||kzKey(cur.key))nav(cur.card,byPitch,cur)})};
+ /* 수정 메뉴: 아래에서 올라오는 시트 */
+ const ICON={e:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',kk:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',nk:'<path d="M12 5v14M5 12h14"/>',ap:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',mp:'<rect x="4" y="4" width="7" height="9" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/>',d:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>'};
+ const ico=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+ function sheet(card){let e={};try{e=libItems().find(x=>x.oaid===card.dataset.o)||{}}catch(_){}const h=card.querySelector('.libm-h');if(!h)return;document.getElementById('libSheet')?.remove();
+  const k=kzKey(e.key),bs=[...h.querySelectorAll('button')];
+  const rows=[['e',0,'이름 바꾸기',esc(e.name||'')],['kk',1,'키 바꾸기',k?'지금 '+k+'키':'아직 키가 없어요'],['nk',-1,'다른 키 악보 추가','같은 곡을 다른 키로 올려요'],['ap',2,'뒷장 추가','다음 장 악보를 붙여요'],['mp',3,bs[3]&&bs[3].textContent.trim()||'페이지 설정','장 순서 · 나누기'],['d',4,'삭제','휴지통에 30일 보관돼요']];
+  const w=document.createElement('div');w.id='libSheet';w.className='ls-ov';w.innerHTML=`<div class="ls-sh" role="dialog" aria-modal="true" aria-label="악보 수정"><div class="ls-hd"><img src="${BLOB(e.oaid||card.dataset.o)}" alt=""><span><b>${esc(e.name||'악보')}</b><small>${k?k+'키 · ':''}${e.works?esc(libMeta(e)):''}</small></span><button type="button" class="ls-x" aria-label="닫기">✕</button></div><div class="ls-list">${rows.map(([ic,ix,t,sub])=>`<button type="button" class="ls-r ${ic==='d'?'danger':''}" data-ls="${ic}" data-ix="${ix}"><i>${ico(ic)}</i><span><b>${t}</b><small>${sub}</small></span></button>`).join('')}</div></div>`;
+  document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));
+  const kd=ev=>{if(ev.key==='Escape')close()};const close=()=>{document.removeEventListener('keydown',kd);w.classList.remove('in');setTimeout(()=>w.remove(),200)};document.addEventListener('keydown',kd);
+  w.onclick=ev=>{if(ev.target===w)close()};w.querySelector('.ls-x').onclick=close;
+  w.querySelectorAll('[data-ls]').forEach(r=>r.onclick=()=>{const t=r.dataset.ls;close();
+   if(t==='nk'){const f=document.createElement('input');f.type='file';f.accept='image/*';f.multiple=true;f.onchange=()=>{const fs=[...f.files];if(!fs.length)return;scoreAddDialog('library',fs);setTimeout(()=>{const i=document.querySelector('.kz-add-dialog input[name=title]');if(i){i.value=kzStripKey(e.name||'');i.dispatchEvent(new Event('input',{bubbles:true}))}},80)};f.click();return}
+   const b=bs[+r.dataset.ix];if(!b)return;
+   if(t==='d'){if(!confirm(`"${e.name||'악보'}"${k?' '+k+'키':''} 악보를 휴지통으로 옮길까요?`))return;b.click();setTimeout(()=>b.click(),40);return}
+   b.click();if(t==='e')setTimeout(()=>{const i=document.querySelector('.libn');if(i){i.focus();i.select()}},60)})}
+ window.kzLibMenus=function(){document.querySelectorAll('[data-libm]').forEach(b=>b.onclick=()=>sheet(b.closest('.libc')))};
+ const _lv=libraryView;libraryView=function(){const r=_lv.apply(this,arguments);try{kzLibKeys();kzLibMenus()}catch(e){console.error(e)}return r};
 })();
 </script>
 </body></html>
