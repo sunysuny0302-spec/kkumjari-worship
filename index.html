@@ -4200,18 +4200,19 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 </style>
 <style id="kz-login-skin-css">
 /* ===== 로그인 화면 새 디자인 ===== */
-:root .kz-login-lock.lx{--lxg:#24402f;--lxg2:#1c3426;padding:0!important;display:grid!important;grid-template-columns:1fr;grid-template-rows:minmax(300px,46dvh) auto;place-items:stretch!important;background:#faf6f0!important;overflow:auto;color:#2b2118}
+:root .kz-login-lock.lx{--lxg:#24402f;--lxg2:#1c3426;padding:0!important;display:grid!important;grid-template-columns:1fr;grid-template-rows:minmax(320px,50dvh) auto;place-items:stretch!important;background:#faf6f0!important;overflow:auto;color:#2b2118}
 .lx .m{display:inline}.lx .d{display:none}
 .lx [hidden]{display:none!important}
 :root .lx .lx-switch{display:none}
 .lx-switch2{justify-self:start;margin:12px 0 0;padding:4px 0;border:0;background:none;color:#5c5047;font:inherit;font-size:14.5px;cursor:pointer}.lx-switch2::after{content:' ›';font-size:17px}
-.lx-art{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 85% 15%,#fffaf0 0%,#f6ead8 45%,#ecdcc4 100%)}
+.lx-art{position:relative;overflow:hidden;background:#f3e7d6 url(assets/login-bg-m.webp) 74% 40%/cover no-repeat}
+.lx-arch,.lx-beam,.lx-leaf{display:none!important}
 .lx-arch{position:absolute;right:9%;top:6%;width:30%;max-width:190px;height:72%;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#fff 0%,#fbf3e4 100%);box-shadow:inset 0 0 0 10px #f3e6d2,0 0 60px rgba(255,240,210,.9);display:block}
 .lx-arch>i{position:absolute;inset:10px;border-radius:999px 999px 0 0;background:linear-gradient(170deg,#fffef8 0%,#fff3d6 55%,#f2dfb8 100%);display:block;overflow:hidden}
 .lx-arch>i::after{content:'';position:absolute;right:-10%;bottom:0;width:80%;height:55%;background:radial-gradient(60% 60% at 60% 60%,rgba(176,170,110,.45),transparent 70%);filter:blur(6px)}
 .lx-beam{position:absolute;inset:-20% -10% 0 -10%;background:repeating-linear-gradient(115deg,rgba(255,255,255,0) 0 60px,rgba(255,250,235,.55) 60px 120px,rgba(255,255,255,0) 120px 200px);filter:blur(14px);opacity:.8;display:block}
 .lx-leaf{position:absolute;left:-6%;top:22%;width:62%;max-width:420px;opacity:.16;filter:blur(5px);transform:rotate(-8deg)}
-.lx-floor{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,rgba(255,255,255,0),#faf6f0 92%);display:block}
+.lx-floor{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(180deg,rgba(255,255,255,0),#faf6f0 92%);display:block}
 .lx-brand{position:absolute;left:28px;top:max(28px,calc(env(safe-area-inset-top) + 16px));display:grid;gap:6px}
 .lx-cross{position:relative;width:22px;height:30px;display:block}.lx-cross::before,.lx-cross::after{content:'';position:absolute;background:#a8722f;border-radius:2px}.lx-cross::before{left:10px;top:0;width:2.5px;height:30px}.lx-cross::after{left:2px;top:8px;width:18px;height:2.5px}
 .lx-brand b{font-family:var(--serif,serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
@@ -4245,9 +4246,9 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 @media (min-width:860px){
  :root .kz-login-lock.lx{grid-template-columns:58fr 42fr;grid-template-rows:100dvh}
  .lx .m{display:none}.lx .d{display:inline}
- .lx-arch{right:16%;top:3%;height:70%;width:26%;max-width:none}
+ .lx-art{background-image:url(assets/login-bg.webp);background-position:88% center}
  .lx-leaf{left:-4%;top:18%;width:58%;max-width:none}
- .lx-floor{height:28%;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(250,240,225,.95))}
+ .lx-floor{height:34%;background:linear-gradient(180deg,rgba(255,250,242,0),rgba(250,243,232,.72))}
  .lx-brand{left:9%;top:7%}.lx-brand b{font-size:26px}.lx-cross{width:26px;height:36px}.lx-cross::before{left:12px;height:36px}.lx-cross::after{left:2px;top:9px;width:22px}
  .lx-tag{display:grid;gap:12px;position:absolute;left:9%;bottom:9%;z-index:1}.lx-tag b{font-family:var(--serif,serif);font-size:40px;line-height:1.3;font-weight:700;color:#2f2822}.lx-tag span{font-size:16px;color:#7a6d60}
  .lx-main{align-content:center;padding:40px 8%;position:relative;background:#fbf8f3}
@@ -6370,7 +6371,7 @@ function kzLockHTML(what,who,mob,small){const nm=['김○○','이○○','박�
   +`<div class="kz-lk-box" role="note"><span class="kz-lk-ic">${window.KZ_LOCK_SVG||''}</span><b>${esc(what)} 권한이 필요해요</b><p>${esc(who)}만 볼 수 있어요.<br>필요하면 단장이나 관리계정에 권한을 요청해 주세요.</p></div></div>`}
 const atMe=()=>{try{const a=authAccount();return (a&&a.name)||me||''}catch(e){return ''}};
 const atId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const atTypeLbl=a=>a.type==='기타'?(a.label||'기타'):a.type;
+const atTypeLbl=a=>a.type==='기타'?(a.label||'기타'):a.type==='주일예배'?'주일연습':a.type;
 const atAuthUid=()=>{try{const u=window.KZ_FIREBASE_AUTH&&window.KZ_FIREBASE_AUTH.currentUser;return u?u.uid:null}catch(e){return null}};
 function atDefWeek(){const t=todayStr(),d=new Date(t+'T12:00:00').getDay();return d===0?t:d===6?shiftDate(t,1):shiftDate(t,-d)}
 let atWeek=atDefWeek();
@@ -6403,7 +6404,7 @@ const atStatusNow=n=>atStatusAt(n,todayStr());
 const atDays=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
 const atMD=d=>d?`${+d.slice(5,7)}/${+d.slice(8)}`:'';
 const atStLbl=r=>r?`${r.state} ${atMD(r.from)}~${r.to?atMD(r.to):'미정'}`:'';
-function atFresh(sun,sat){const L=atLineup(sun),list=L.list.filter(p=>!atStatusAt(p.n,sun)),recs={};if(!sat)atAbsent(sun).forEach((r,n)=>{if(atStatusAt(n,sun))return;if(!list.some(p=>p.n===n))list.push({n,r});recs[n]={s:'인정 결석',n:'사전 불참 신청'}});list.sort((a,b)=>a.n.localeCompare(b.n,'ko'));return{list,recs,src:L.src}}
+function atFresh(sun,sat){const L=atLineup(sun),list=L.list.filter(p=>!atStatusAt(p.n,sun)),recs={};if(false)atAbsent(sun).forEach((r,n)=>{if(atStatusAt(n,sun))return;if(!list.some(p=>p.n===n))list.push({n,r});recs[n]={s:'인정 결석',n:'사전 불참 신청'}});list.sort((a,b)=>a.n.localeCompare(b.n,'ko'));return{list,recs,src:L.src}}
 function atOffWarn(sun){return atLineup(sun).list.map(p=>({n:p.n,r:atStatusAt(p.n,sun)})).filter(x=>x.r)}
 const atRoleOf=n=>{const m=(members||[]).find(x=>x.name===n);return m?[m.rank&&m.rank!=='팀원'?m.rank:'',...(m.roles||m.parts||[]),...(m.slots||[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', '):''};
 const atAllNames=()=>[...new Set((members||[]).map(m=>m.name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
@@ -6411,11 +6412,12 @@ const atNames=()=>atAllNames().filter(n=>{const r=atStatusNow(n);return !(r&&r.s
 
 /* ---------- 카드 · 자동 저장 ---------- */
 function atCards(){const sun=atWeek,sat=shiftDate(sun,-1),from=shiftDate(sun,-6);
- const cs=[{key:sun+'_sun',date:sun,type:'주일예배'},{key:sat+'_sat',date:sat,type:'토요연습'}];
+ const cs=[{key:sat+'_sat',date:sat,type:'토요연습'},{key:sun+'_sun',date:sun,type:'주일예배'}];
  ATT.filter(a=>a.type==='기타'&&a.date>=from&&a.date<=sun).sort((a,b)=>a.date<b.date?-1:1).forEach(a=>cs.push({key:a._id,date:a.date,type:'기타',label:a.label}));
  return cs.map(c=>{const doc=ATT.find(a=>a._id===c.key);let dr=atDraft[c.key];
   if(dr&&!dr.dirty&&doc&&(doc.at||0)>(dr.savedAt||0)){delete atDraft[c.key];dr=null}
   let list,recs,src;if(dr){list=dr.list;recs=dr.recs;src=dr.src}else if(doc){list=doc.list||[];recs=doc.recs||{};src='저장된 명단'}else{const f=atFresh(sun,c.type==='토요연습');list=f.list;recs=f.recs;src=f.src}
+  if(!dr&&c.type!=='기타')recs=atDefaults(c.type,sun,list,recs);
   return{...c,doc,list,recs,src}})}
 function atDr(c){if(!atDraft[c.key])atDraft[c.key]={date:c.date,type:c.type,label:c.label||'',list:JSON.parse(JSON.stringify(c.list)),recs:JSON.parse(JSON.stringify(c.recs||{})),src:c.src,dirty:false,rev:0,savedAt:0};return atDraft[c.key]}
 function atTouch(key){const d=atDraft[key];if(!d)return;d.dirty=true;d.rev++;clearTimeout(atSaveT[key]);atSaveState[key]='wait';atPaint(key);atSaveT[key]=setTimeout(()=>atSave(key),650)}
@@ -7875,13 +7877,13 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  const SH={'출석':'출석','일반 지각':'지각','인정 지각':'인정 지각','무단 결석':'결석','인정 결석':'인정 결석'};
  const CL={'출석':'x-ok','일반 지각':'x-late','인정 지각':'x-elate','무단 결석':'x-abs','인정 결석':'x-eabs'};
  const NOTE='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19h4L19.5 8.5a2.1 2.1 0 0 0-3-3L6 16v3Z"/><path d="m14.5 7.5 3 3"/></svg>';
- const title=c=>c.type==='기타'?(c.label||'기타'):c.type;
+ const title=c=>c.type==='기타'?(c.label||'기타'):c.type==='주일예배'?'주일연습':c.type;
  function counts(c){const o={done:0,ok:0,late:0,abs:0};c.list.forEach(p=>{const s=(c.recs[p.n]||{}).s;if(!s)return;o.done++;if(s==='출석')o.ok++;else if(/지각/.test(s))o.late++;else o.abs++});return o}
  function bar(o,t){const seg=(k,v)=>v?`<i class="${k}" style="flex:${v}"></i>`:'';return `<div class="ax-bar">${seg('ok',o.ok)}${seg('late',o.late)}${seg('abs',o.abs)}${seg('none',t-o.done)}</div>`}
  window.atCardHTML=function(c,mob){const st=atSaveState[c.key],inList=new Set(c.list.map(p=>p.n)),addable=atNames().filter(n=>!inList.has(n)),o=counts(c),t=c.list.length;
   const off=c.type!=='기타'?atOffWarn(atWeek).filter(x=>!c.list.some(p=>p.n===x.n)):[];
   const rows=t?c.list.map(p=>{const r=c.recs[p.n]||{},sr=atStatusAt(p.n,c.date),id=esc(c.key)+'|'+esc(p.n);
-   return `<div class="ax-r" data-ax-s="${CL[r.s]||''}"><div class="ax-who"><span class="ax-av">${esc(String(p.n).slice(0,1))}</span><div class="ax-nm"><b>${esc(p.n)}</b><small>${esc(p.r||atRoleOf(p.n)||'')}${sr?` · <em>${esc(sr.state)} 중</em>`:''}</small></div><button type="button" class="ax-nb ${r.n?'has':''}" data-ax-note title="비고" aria-label="${esc(p.n)} 비고">${NOTE}</button><button type="button" class="ax-x" data-at-rm="${id}" title="명단에서 빼기" aria-label="${esc(p.n)} 명단에서 빼기">✕</button></div>
+   return `<div class="ax-r" data-ax-s="${CL[r.s]||''}"><div class="ax-who"><span class="ax-av">${esc(String(p.n).slice(0,1))}</span><div class="ax-nm"><b>${esc(p.n)}</b><small>${esc(p.r||atRoleOf(p.n)||'')}${sr?` · <em>${esc(sr.state)} 중</em>`:''}</small></div>${/^불참 사유/.test(r.n||'')&&r.s!=='인정 결석'?`<button type="button" class="ax-ok-ex" data-at-s="${id}" data-s="인정 결석" title="사유를 확인하고 인정 결석으로 바꿔요">인정 결석</button>`:''}<button type="button" class="ax-nb ${r.n?'has':''}" data-ax-note title="비고" aria-label="${esc(p.n)} 비고">${NOTE}</button><button type="button" class="ax-x" data-at-rm="${id}" title="명단에서 빼기" aria-label="${esc(p.n)} 명단에서 빼기">✕</button></div>
     <div class="ax-seg" role="group" aria-label="${esc(p.n)} 출결">${AT_ST.map(s=>`<button type="button" data-at-s="${id}" data-s="${s}" class="${CL[s]} ${r.s===s?'on':''}" aria-pressed="${r.s===s}">${SH[s]}</button>`).join('')}</div>
     <input class="ax-note" data-at-n="${id}" value="${esc(r.n||'')}" placeholder="비고 (예: 출장, 병원, 늦게 옴)" ${r.n?'':'hidden'}></div>`}).join(''):'<div class="ax-empty">명단이 비어 있어요. 아래에서 사람을 추가하거나, 라인업이 정해지면 자동으로 채워져요</div>';
   return `<section class="ax-card" data-ax-card="${esc(c.key)}"><div class="ax-ch"><div><b>${esc(title(c))}</b><small>${fmtD(c.date)} · ${esc(c.src)}</small></div><span class="at-state ${st==='ok'?'ok':st==='err'?'err':''}" data-at-state="${esc(c.key)}">${st==='wait'||st==='saving'?'저장 중…':st==='ok'?'저장됨 ✓':st==='err'?'저장 실패 · 다시 시도':''}</span></div>
@@ -7895,7 +7897,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   return `<div class="ax">${atWeekNav()}${ms.length?`<details class="ax-miss"><summary>출결을 덜 넣은 주 <b>${ms.length}</b>개 <span>눌러서 보기</span></summary><div>${ms.map(x=>`<button type="button" data-at-go="${x.w}">${+x.w.slice(5,7)}/${+x.w.slice(8)} <small>${x.done}/${x.total}</small></button>`).join('')}</div></details>`:''}
    <div class="ax-evs" role="tablist" aria-label="일정">${cards.map(tab).join('')}<button type="button" class="ax-ev-add" id="atEo">＋ 기타 일정</button></div>${atEtcOpen?atEtcForm(mob):''}
    ${cards.map(c=>`<div class="ax-pane ${c.key===sel?'on':''}" data-ax-pane="${esc(c.key)}">${atCardHTML(c,mob)}</div>`).join('')}
-   <p class="ax-tip">누르는 즉시 저장돼요 · 일정 변경에서 미리 불참 신청한 사람은 '인정 결석'으로 채워져 있어요 · 이름 옆 연필로 비고를 남겨요</p></div>`};
+   <p class="ax-tip">콘티에 이름이 있는 사람만 나와요 · 토요연습은 콘티 알림에서 답한 대로(참석→출석, 불참→결석+사유) 채워지고, 사유를 보고 [인정 결석]을 눌러 주세요 · 주일연습은 기본 출석이에요 · 주일이 지나면 그때 상태로 저장되고, 나중에도 고칠 수 있어요</p></div>`};
  function upd(card){if(!card)return;const rows=[...card.querySelectorAll('.ax-r')],o={done:0,ok:0,late:0,abs:0};
   rows.forEach(r=>{const b=r.querySelector('.ax-seg .on'),s=b?b.dataset.s:'';r.dataset.axS=CL[s]||'';if(!s)return;o.done++;if(s==='출석')o.ok++;else if(/지각/.test(s))o.late++;else o.abs++});
   const t=rows.length,pg=card.querySelector('.ax-prog');if(pg){pg.querySelector('.ax-bar').outerHTML=bar(o,t);const c=pg.querySelector('.ax-cnt');c.querySelector('.ok').textContent='출석 '+o.ok;c.querySelector('.late').textContent='지각 '+o.late;c.querySelector('.abs').textContent='결석 '+o.abs}
@@ -8018,6 +8020,28 @@ window.kzPrac=(function(){
 .pl-s ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pl-s li{background:#fff;border:1px solid rgba(120,88,56,.1);border-radius:12px;padding:9px 12px}
 .pl-s li b{font-size:14px}.pl-s li small{margin-left:6px;font-size:12px;color:var(--mu)}.pl-s li p{margin:5px 0 0;font-size:13px;color:#a3392a;line-height:1.45}
 .pl-s.yes li{border-color:rgba(47,107,74,.2)}.pl-n{margin:0;font-size:12.5px;color:var(--mu)}
+</style>
+<script id="kz-att2">
+/* 토요연습 응답(서버 rsvp) 불러오기 · 기본값 · 주일 지나면 자동 저장 */
+const AT_RS={},AT_RSP={};
+function atRsvpLoad(sun){if(AT_RS[sun]||AT_RSP[sun])return AT_RSP[sun]||Promise.resolve(AT_RS[sun]);const r=window.kzRsvp;if(!r||!r.api)return Promise.resolve({});
+ AT_RSP[sun]=r.api({action:'rsvpGet',date:sun}).then(j=>{AT_RS[sun]=j.answers||{};return AT_RS[sun]}).catch(()=>{AT_RS[sun]={};return {}}).finally(()=>{delete AT_RSP[sun];try{atRefresh()}catch(e){}});return AT_RSP[sun]}
+function atDefaults(type,sun,list,recs){const out={...recs};
+ if(type==='토요연습'){const a=AT_RS[sun];if(!a){atRsvpLoad(sun);return out}list.forEach(p=>{const cur=out[p.n]||{};if(cur.s)return;const x=a[p.n];if(!x)return;out[p.n]=x.s==='yes'?{s:'출석',n:cur.n||''}:x.s==='no'?{s:'무단 결석',n:'불참 사유: '+(x.note||'(사유 없음)')}:cur})}
+ else list.forEach(p=>{const cur=out[p.n]||{};if(!cur.s)out[p.n]={s:'출석',n:cur.n||''}});
+ return out}
+let atFinDone=false;
+async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}catch(e){return}atFinDone=true;const today=todayStr(),keep=atWeek;let w=atDefWeek();if(w>=today)w=shiftDate(w,-7);
+ for(let i=0;i<6;i++,w=shiftDate(w,-7)){if(w>=today)continue;await atRsvpLoad(w);atWeek=w;let cards=[];try{cards=atCards()}catch(e){}atWeek=keep;
+  for(const c of cards){if(c.type==='기타'||!c.list.length)continue;const done=c.doc&&c.list.every(p=>((c.doc.recs||{})[p.n]||{}).s);if(done)continue;
+   const need=c.list.some(p=>(c.recs[p.n]||{}).s&&!((c.doc&&(c.doc.recs||{})[p.n])||{}).s);if(c.doc&&!need)continue;
+   const d=atDr(c);d.recs=JSON.parse(JSON.stringify(c.recs));try{await atSave(c.key)}catch(e){}}}
+ atWeek=keep;try{atRefresh()}catch(e){}}
+(function(){const prev=atRefresh;atRefresh=function(){const r=prev.apply(this,arguments);if(!atFinDone&&ATT.length)setTimeout(atFinalize,1200);return r}})();
+</script>
+<style id="kz-att2-css">
+.ax-ok-ex{flex:none;border:0;border-radius:99px;padding:5px 10px;background:#fbecea;color:#a3392a;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ax-ok-ex:hover{background:#f6d9d4}
 </style>
 </body></html>
 
