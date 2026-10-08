@@ -4543,7 +4543,7 @@ sub();stat()}catch(e){console.error(e)}})();
    root.querySelector('#kzGo').textContent='접속하기';
    if(saved&&!choosingAccount&&(!draftAccountName||draftAccountId===saved.id)){
     const card=document.createElement('div');card.className='kz-remembered-card';card.innerHTML='<div class="kz-user-avatar">'+esc(saved.name.charAt(0))+'</div><div class="kz-remembered-name"><small>다시 만나 반가워요</small><b>'+esc(saved.name)+'</b></div><button type="button" class="kz-switch-account">계정 변경</button>';
-    picker.before(card);picker.hidden=true;root.querySelector('.kz-login-head p').textContent='PIN을 입력하면 바로 시작할 수 있어요.';if(window.KZPasskey&&KZPasskey.hasFor(saved.id)){const pk=document.createElement('button');pk.type='button';pk.className='kz-passkey-btn';pk.innerHTML=KZPasskey.icon()+'<span>'+esc(KZPasskey.labelRo())+' 접속</span>';card.after(pk);const or=document.createElement('div');or.className='kz-passkey-or';or.innerHTML='<span>또는 PIN 입력</span>';pk.after(or);KZPasskey.prepare(saved.id);root.querySelector('.kz-login-head p').textContent=KZPasskey.label()+' 또는 PIN으로 바로 시작할 수 있어요.';pk.onclick=async()=>{pk.disabled=true;pk.classList.add('busy');const ok=await passkeyLogin(saved);if(!ok&&pk.isConnected){pk.disabled=false;pk.classList.remove('busy')}}}
+    picker.before(card);picker.hidden=true;root.querySelector('.kz-login-head p').textContent='PIN을 입력하면 바로 시작할 수 있어요.';if(window.KZPasskey&&KZPasskey.hasFor(saved.id)){const pk=document.createElement('button');pk.type='button';pk.className='kz-passkey-btn';pk.innerHTML=KZPasskey.icon()+'<span>'+esc(KZPasskey.labelRo())+' 접속</span>';card.after(pk);const or=document.createElement('div');or.className='kz-passkey-or';or.innerHTML='<span>또는 PIN 입력</span>';pk.after(or);KZPasskey.prepare(saved.id);root.querySelector('.kz-login-head p').textContent=KZPasskey.label()+' 또는 PIN으로 바로 시작할 수 있어요.';const run=async()=>{if(pk.disabled)return;pk.disabled=true;pk.classList.add('busy');const ok=await passkeyLogin(saved);if(!ok&&pk.isConnected){pk.disabled=false;pk.classList.remove('busy')}};pk.onclick=run;/* 앱을 열면 버튼을 누르지 않아도 바로 Face ID 요청 (iOS 16+ · 안드로이드). 취소하면 버튼이나 PIN으로 */if(KZPasskey.autoOnce())setTimeout(()=>{if(pk.isConnected&&document.visibilityState==='visible')run()},300)}
     card.querySelector('button').onclick=()=>{choosingAccount=true;picker.hidden=false;card.remove();pin.value='';const ni=root.querySelector('#kzNameInput');ni.value='';ni.dispatchEvent(new Event('input',{bubbles:true}));ni.focus()};
    }else{root.querySelector('.kz-login-head p').textContent='계정을 선택하고 PIN을 입력해 주세요.'}
   }
@@ -4617,7 +4617,11 @@ window.KZPasskey=(()=>{
  const pre={};
  function prepare(kind,accountId){const k=kind+':'+(accountId||'');const p=(kind==='login'?api('loginOptions',{accountId}):api('registerOptions',{},true)).then(o=>({o,at:Date.now()}));pre[k]=p;p.catch(()=>{if(pre[k]===p)delete pre[k]});return p}
  async function options(kind,accountId){const k=kind+':'+(accountId||''),p=pre[k];delete pre[k];if(p){try{const v=await p;if(Date.now()-v.at<FRESH)return v.o}catch(e){if(e.code==='none'||e.code==='login')throw e}}const v=await prepare(kind,accountId);delete pre[k];return v.o}
- function hasFor(id){return !!(id&&read()[id])}
+ const PIN_ONLY=new Set(['management']);/* 관리계정은 PIN으로만 로그인 */
+ function allowed(id){return !!id&&!PIN_ONLY.has(id)}
+ function hasFor(id){return allowed(id)&&!!read()[id]}
+ let autoLeft=true;/* 앱을 열 때 한 번만 자동으로 Face ID 요청(취소하면 다시 띄우지 않음) */
+ function autoOnce(){const a=autoLeft;autoLeft=false;return a}
  function remember(id,credId){const v=read();v[id]={credId:credId||'',at:Date.now()};write(v)}
  function forget(id){const v=read();delete v[id];write(v)}
  async function signIn(accountId){const o=await options('login',accountId);const mine=(read()[accountId]||{}).credId;const allow=(mine&&o.allow.includes(mine)?[mine]:o.allow).map(id=>({type:'public-key',id:dec(id)}));
@@ -4632,20 +4636,20 @@ window.KZPasskey=(()=>{
  let current=null;
  function setCurrent(x){current=x?{id:x.id,name:x.name}:null;mountPanel()}
  /* 로그인 직후 한 번 안내: 다음부터 Face ID로 접속할까요? */
- async function offer(account){if(!account||hasFor(account.id)||!(await supported()))return;let until=0;try{until=+localStorage.getItem(DISMISS+':'+account.id)||0}catch(e){}if(until>Date.now())return;
+ async function offer(account){if(!account||!allowed(account.id)||hasFor(account.id)||!(await supported()))return;let until=0;try{until=+localStorage.getItem(DISMISS+':'+account.id)||0}catch(e){}if(until>Date.now())return;
   document.getElementById('kzPasskeyOffer')?.remove();prepare('register');const s=document.createElement('div');s.id='kzPasskeyOffer';s.className='kz-passkey-sheet';s.setAttribute('role','dialog');s.setAttribute('aria-label',label()+' 로그인 켜기');
   s.innerHTML=`<div class="kz-passkey-ic">${icon()}</div><div class="kz-passkey-tx"><b>다음부터 ${escH(labelRo())} 접속할까요?</b><small>PIN 대신 이 기기의 ${escH(labelRo())} 바로 들어와요. PIN은 그대로 쓸 수 있어요.</small></div><div class="kz-passkey-act"><button type="button" class="kz-auth-secondary" data-later>나중에</button><button type="button" class="kz-auth-primary" data-on>켜기</button></div>`;
   document.body.append(s);const close=()=>s.remove();
   s.querySelector('[data-later]').onclick=()=>{try{localStorage.setItem(DISMISS+':'+account.id,String(Date.now()+30*864e5))}catch(e){}close()};
   s.querySelector('[data-on]').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='확인 중…';try{await enable(account);close();toast(label()+' 로그인을 켰어요. 다음 접속부터 사용할 수 있어요')}catch(err){console.warn('[꿈자리] 패스키 등록',err);b.disabled=false;b.textContent='켜기';toast(message(err))}}}
  /* 계정 창: 이 기기 Face ID 로그인 켜기/끄기 */
- function mountPanel(){const card=document.querySelector('#kzAdminPanel .kz-admin-card');if(!card||!current)return;let sec=card.querySelector('#kzPasskeySec');
+ function mountPanel(){const card=document.querySelector('#kzAdminPanel .kz-admin-card');if(!card||!current)return;let sec=card.querySelector('#kzPasskeySec');if(!allowed(current.id)){sec?.remove();return}
   supported().then(ok=>{if(!ok||!card.isConnected||!current)return;if(!sec){sec=document.createElement('section');sec.id='kzPasskeySec';sec.className='kz-admin-section';const actions=card.querySelector('.kz-admin-actions');if(actions)actions.before(sec);else card.append(sec)}const on=hasFor(current.id),acc=current;
    sec.innerHTML=`<b>${escH(label())} 로그인</b><p class="kz-auth-note">${on?'이 기기에서 PIN 대신 '+escH(labelRo())+' 접속하고 있어요.':'이 기기에서 PIN 대신 '+escH(labelRo())+' 접속할 수 있어요.'}</p><button type="button" class="${on?'kz-auth-secondary':'kz-auth-primary'}" data-pk>${on?'이 기기에서 끄기':'이 기기에서 켜기'}</button>`;
    if(!on)prepare('register');
    sec.querySelector('[data-pk]').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{if(on){await disable(acc);toast(label()+' 로그인을 껐어요')}else{await enable(acc);toast(label()+' 로그인을 켰어요')}}catch(err){console.warn('[꿈자리] 패스키',err);toast(message(err))}b.disabled=false;mountPanel()}})}
  new MutationObserver(()=>{const p=document.getElementById('kzAdminPanel');if(p&&!p.querySelector('#kzPasskeySec'))mountPanel()}).observe(document.body,{childList:true});
- return {supported,hasFor,forget,prepare:id=>{prepare('login',id)},signIn,enable,disable,offer,message,label,labelRo,icon,setCurrent};
+ return {supported,allowed,autoOnce,hasFor,forget,prepare:id=>{prepare('login',id)},signIn,enable,disable,offer,message,label,labelRo,icon,setCurrent};
 })();
 </script>
 
