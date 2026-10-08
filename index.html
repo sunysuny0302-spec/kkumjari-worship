@@ -8063,9 +8063,12 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 (function(){
  if(typeof go!=='function')return;
  let popping=false;const base=go;
- const st=()=>({kz:1,v:typeof view!=='undefined'?view:'home',r:typeof role!=='undefined'?role:null});
+ const cur=()=>({v:typeof view!=='undefined'?view:'home',r:typeof role!=='undefined'?role:null});
+ const idx=()=>{try{return (history.state&&history.state.kz&&history.state.i)||0}catch(e){return 0}};
+ const st=()=>({kz:1,...cur(),i:idx()+1});
  go=function(v){const prev=typeof view!=='undefined'?view:null;const out=base.apply(this,arguments);try{if(!popping&&typeof view!=='undefined'&&view!==prev&&!document.getElementById('kzLoginLock'))history.pushState(st(),'')}catch(e){}return out};
- try{history.replaceState(st(),'')}catch(e){}
+ /* 맨 처음 기록은 '홈'으로 깔아 둠 → 뒤로 가도 앱 밖(새로고침·로그인 화면)으로 나가지 않게 */
+ try{history.replaceState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:0},'');if(typeof view!=='undefined'&&view!=='home')history.pushState({kz:1,...cur(),i:1},'')}catch(e){}
  /* 열려 있는 창 하나 닫기 → 닫았으면 true */
  function closeTop(){
   const dlg=[...document.querySelectorAll('dialog[open]')].pop();if(dlg){try{dlg.close()}catch(e){dlg.remove()}return true}
@@ -8074,7 +8077,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   const side=document.getElementById('shell');if(side&&side.classList.contains('open')){try{closeSide()}catch(e){}return true}
   return false}
  addEventListener('popstate',e=>{if(document.getElementById('kzLoginLock'))return;
-  if(closeTop()){try{history.pushState(st(),'')}catch(_){}return}
+  if(closeTop()){try{history.pushState({kz:1,...cur(),i:((e.state&&e.state.i)||0)+1},'')}catch(_){}return}
   const s=e.state;popping=true;try{if(s&&s.kz){if(s.r!==undefined&&typeof role!=='undefined'&&s.r!==role){try{role=s.r;LS('role',role)}catch(_){}}go(s.v)}else go('home');window.scrollTo({top:0,behavior:'instant'})}catch(err){console.error(err)}finally{popping=false}});
  /* 아이폰 홈 화면 앱: 화면 왼쪽 끝에서 오른쪽으로 쓸면 뒤로 */
  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
@@ -8082,7 +8085,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  if(!(ios&&standalone))return;
  /* 쓸기: 열린 창 닫기 → 화면 안 뒤로 버튼 → 기록 뒤로 → 홈 */
  function swipeBack(){if(closeTop())return;const bs=[...document.querySelectorAll('.kz-mobile-back,[aria-label="뒤로"],[aria-label="뒤로가기"],.kz-back,.nt-back,[aria-label="목록으로"]')].filter(b=>{const r=b.getBoundingClientRect();return r.width&&r.height&&r.top<window.innerHeight*.35&&getComputedStyle(b).visibility!=='hidden'}).sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top);
-  if(bs[0]){bs[0].click();return}const before=location.href+'|'+(typeof view!=='undefined'?view:'');history.back();setTimeout(()=>{if(before===location.href+'|'+(typeof view!=='undefined'?view:'')&&typeof view!=='undefined'&&view!=='home'){try{go('home')}catch(e){}}},350)}
+  if(bs[0]){bs[0].click();return}if(idx()>0){history.back();return}if(typeof view!=='undefined'&&view!=='home'){try{go('home')}catch(e){}}}
  let sx=0,sy=0,on=false,ind=null;
  const hint=()=>{if(ind)return ind;ind=document.createElement('div');ind.id='kzBackHint';ind.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';document.body.append(ind);return ind};
  addEventListener('touchstart',e=>{const t=e.touches[0];if(e.touches.length!==1||t.clientX>22||document.getElementById('kzLoginLock'))return;sx=t.clientX;sy=t.clientY;on=true},{passive:true});
