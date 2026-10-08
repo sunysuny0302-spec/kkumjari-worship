@@ -7346,6 +7346,33 @@ window.kzLive=(()=>{let cur=null;const esc=s=>String(s??'').replace(/[&<>"']/g,c
 .lw-x{border:0;background:none;color:#fff;opacity:.65;font:inherit;font-size:14px;padding:12px;cursor:pointer}
 /* 모바일: 공지·회의록 본문 글자를 조금 작게, 줄 간격도 촘촘하게 */
 @media (max-width:760px){:root .nt-d-body,:root .km-body{font-size:14px!important;line-height:1.6!important}:root .nt-d-meta{font-size:12px}:root .nt-detail h1,:root .nt-detail h2,:root .km-detail h1,:root .km-detail h2{font-size:20px!important;line-height:1.35}}
+/* 모바일: 홈 카드·채팅 글자도 한 단계 작게 (입력칸은 iOS 확대 방지로 16px 유지) */
+@media (max-width:760px){
+ :root .hm .kz-h h2,:root .hm .kz-h b{font-size:16px!important}
+ :root .kz-ppl-h b{font-size:14.5px!important}:root .kz-pr span{font-size:13px!important}:root .kz-pr b{font-size:13.5px!important}:root .kz-pr{padding-top:4px!important;padding-bottom:4px!important}
+ :root .kz-rt b{font-size:14px!important}:root .kz-rt small{font-size:11.5px!important}
+ :root .hm .kz-th,:root .hm .kz-yth{width:60px!important;flex-basis:60px!important;height:42px!important}
+ :root .hm .kz-go-yt{font-size:12px!important;flex:0 0 58px!important;min-width:58px!important;min-height:30px!important;padding:5px 8px!important}
+ :root .kz-song-r{padding-top:2px!important;padding-bottom:2px!important}
+ :root .kc-bubble{font-size:14px!important;line-height:1.45!important;padding:7px 11px!important}
+}
+/* 모바일 글자 크기 통일 (공지 화면 기준: 제목 20 · 소제목 15~16 · 본문 14 · 보조 12) */
+@media (max-width:760px){
+ :root #body h1.ht2,:root .km-page>h1,:root .km-my-heading h1,:root #body .kz-page-h h1{font-size:20px!important;line-height:1.3!important}
+ :root .kz-hero-tx h3{font-size:19px!important}:root .kz-hero-date{font-size:13px!important}
+ :root .kz-nx-d b{font-size:16px!important}:root .hm .kz-h h2{font-size:15.5px!important}
+ :root .ab-hl h2{font-size:18px!important}:root .ab-date b{font-size:17px!important}:root .ab-hs li,:root .ab-mo h3{font-size:14px!important}
+ :root .sv-big,:root .sv-hm b{font-size:22px!important}:root #body .card>h3{font-size:15px!important}
+ :root .rp2-r .rn{font-size:14px!important}:root .rp2-h b{font-size:14px!important}
+ :root .kw-video-head strong,:root .kr-h b{font-size:14.5px!important}
+ :root .ka-ht b{font-size:14px!important}
+ :root #body p,:root #body li{line-height:1.55}
+}
+/* 팀원 접속 상태 창: 폰에서 화면 폭 꽉 + 목록이 접히지 않게(iOS) */
+@media (max-width:760px){:root #kzMembersDialog{inset:auto 0 0 0!important;width:100vw!important;max-width:none!important;max-height:82dvh!important;height:auto;border-radius:22px 22px 0 0!important;border-left:0!important;border-right:0!important;border-bottom:0!important}}
+:root #kzMembersDialog .kp-list{flex:1 1 auto!important;min-height:120px}
+:root #kzMembersDialog header button:focus:not(:focus-visible){outline:none;box-shadow:none}
+:root #kzMembersDialog .kp-note{padding:10px 18px calc(12px + env(safe-area-inset-bottom))!important;border-top:1px solid var(--bd)}
 </style>
 <script id="kz-worship-video-script">
 (()=>{
