@@ -3087,6 +3087,60 @@ body.kc-panel-open{overflow:hidden}
 }
 @media (prefers-reduced-motion:reduce){#kcPanel #kcChatAttach svg{transition:none}}
 </style>
+<style id="kz-score-add-style">
+.kz-add-dialog{width:min(520px,calc(100% - 24px))}
+.kz-add-dialog input[type=file]{display:none!important}
+.kz-add-mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:4px 0 6px;border-radius:12px;background:var(--bg)}
+.kz-add-mode[hidden]{display:none}
+.kz-add-mode button{min-height:40px;border:0;border-radius:9px;background:none;color:var(--mu);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.kz-add-mode button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(40,30,20,.14)}
+.kz-add-title[hidden]{display:none!important}
+.kz-add-pages{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:46dvh;overflow:auto}
+.kz-add-pages li{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--bd);border-radius:12px;background:var(--card)}
+.kz-add-pages img{width:48px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);flex:none;background:#fff}
+.kz-add-cap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.kz-add-cap b{font-size:15px}.kz-add-cap small{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kz-add-dialog .kz-add-cap input{margin:0;min-height:40px}
+.kz-add-act{display:flex;gap:4px;flex:none}.kz-add-act .sm{min-width:36px;min-height:36px;padding:0}
+.kz-add-more{width:100%;min-height:44px;border:1px dashed var(--bd);border-radius:12px;background:none;color:var(--tx);font:inherit;font-weight:700;cursor:pointer}
+.kz-add-more:hover{background:var(--bg)}
+.kz-car{position:relative;min-width:0}
+.kz-car-track{display:flex;gap:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:8px}
+.kz-car-track::-webkit-scrollbar{display:none}
+.kz-car-track:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.kz-car-track>*{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+.kz-car-page{display:block;padding:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:#fff;aspect-ratio:210/297;cursor:zoom-in}
+.kz-car-page img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.kz-car-count{position:absolute;right:8px;bottom:8px;padding:3px 9px;border-radius:999px;background:rgba(32,24,16,.72);color:#fff;font-size:12px;font-weight:700;pointer-events:none}
+.kz-car-count b{font-weight:800}
+.kz-car-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.94);color:var(--tx);box-shadow:0 2px 8px rgba(40,30,20,.22);font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+.kz-car-nav.prev{left:6px}.kz-car-nav.next{right:6px}
+.kz-car:hover .kz-car-nav:not(:disabled),.kz-car:focus-within .kz-car-nav:not(:disabled){opacity:1}
+.kz-car-nav:disabled{opacity:0!important;pointer-events:none}
+@media (hover:none){.kz-car-nav{display:none}}
+.kz-song-card{position:relative}
+.kz-add-thumb{padding:0;border:0;background:none;cursor:zoom-in;flex:none}
+/* 콘티 창: 곡 단위 줄 */
+.kz-conti-song{width:min(760px,100%);display:grid;gap:8px}
+.kz-conti-song-h{display:flex;align-items:baseline;gap:8px;padding:0 2px}
+.kz-conti-song-h b{font-size:15px}.kz-conti-song-h small{font-size:12px;color:var(--mu)}
+.kz-conti-song .kz-car-track{gap:12px;border-radius:0}
+.kz-conti-song .kz-wv-p{width:auto}
+.kz-conti-song .kz-wv-p figcaption b{font-size:13px}
+@media (min-width:1100px){.kz-conti-song{width:100%}.kz-conti-song .kz-car-track>*{flex-basis:calc(50% - 6px)}}
+@media (prefers-reduced-motion:reduce){.kz-car-nav{transition:none}}
+</style>
+<style id="kz-nav-icons">
+/* 사이드바 아이콘: 모두 같은 크기·선 굵기·색(글자색을 따라감). 선택된 메뉴만 강조색 */
+#side .nv-i>.ico,#side .rsw button>.ico{display:inline-grid!important;place-items:center;width:20px!important;height:20px!important;flex:none;color:inherit!important;background:none}
+#side .nv-i>.ico svg,#side .rsw button>.ico svg{width:19px!important;height:19px!important;fill:none;stroke:currentColor;stroke-width:1.8!important;stroke-linecap:round;stroke-linejoin:round;color:inherit}
+#side .nv-i>.ico svg *,#side .rsw button>.ico svg *{stroke:currentColor;stroke-width:1.8}
+#side .rsw button.on>.ico{color:var(--ac)!important}
+.kc-pageview .kc-card h3{margin:0 0 4px;font-size:16px}
+.kc-pageview #kcContent{display:grid;gap:10px}
+.kc-pageview .kc-card{margin:0}
+.kc-pageview .kc-error:empty{display:none}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -3257,9 +3311,9 @@ function setRole(k){if(role===k&&TABS[k].includes(view)){closeSide();return}role
 function pickLeader(L){if(role!=='leader'){role='leader';LS('role',role)}switchLeader(L);go(['edit','ment'].includes(view)?view:'edit')}
 function go(v){view=v;LS('view',v);syncPermission();closeSide();renderNav();renderTop();renderDbar();body()}
 const applyTheme=()=>{document.documentElement.setAttribute('data-theme','light');const m=document.querySelector('meta[name=theme-color]');if(m)m.content='#fbfaf7'};
-const V13ICONS={search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>',home:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>',leader:'<svg class="crown-img-icon" viewBox="0 0 24 24"><image href="assets/crown.39fee076.png" x="1" y="3.35" width="22" height="17.3" preserveAspectRatio="xMidYMid meet"/></svg>',archive:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5"/><path d="M9 12h6M9 16h6"/></svg>',music:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',mic:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',guitar:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 5.1 18.8.8l1.5 1.5-1.2 1.2 1.4 1.4-1.7 1.7-1.4-1.4-1.1 1.1-4.5 4.6"/><path d="M13.3 8.8c-1.5-1.4-3.8-1.4-5.2.1-.9.9-1.2 2.2-.9 3.3.2.7 0 1.4-.5 1.9l-1.5 1.5c-1.6 1.6-1.6 4.1 0 5.7 1.6 1.6 4.1 1.6 5.7 0l1.5-1.5c.5-.5 1.2-.7 1.9-.5 1.1.3 2.4 0 3.3-.9 1.5-1.5 1.5-3.8.1-5.2l-4.4-4.4Z"/><circle cx="10.8" cy="15.1" r="1.7"/><path d="m12 13.9 5.9-5.9"/></svg>',calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',list:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>',swap:'<svg viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>',users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2-7 6-7s6 3 6 7"/><circle cx="17" cy="9" r="2"/><path d="M16 14c3 0 5 2 5 5"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',cloud:'<svg viewBox="0 0 24 24"><path d="M7 19h11a4 4 0 0 0 .5-8A7 7 0 0 0 5 9a5 5 0 0 0 2 10z"/></svg>',note:'<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg>',slides:'<svg viewBox="0 0 24 24"><path d="M3 4.5h18v12H3z"/><path d="M12 16.5V20M8 20h8M7 8.5h10M8.5 12h7"/></svg>'};
+const V13ICONS={request:'<svg viewBox="0 0 24 24"><path d="M5 4h14a1 1 0 0 1 1 1v4a3 3 0 0 0 0 6v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a3 3 0 0 0 0-6V5a1 1 0 0 1 1-1Z"/><path d="M12 15.5 8.8 12.3a2 2 0 0 1 2.8-2.8l.4.4.4-.4a2 2 0 0 1 2.8 2.8Z"/></svg>',crownline:'<svg viewBox="0 0 24 24"><path d="M4 17.5 3 8l5 4 4-6 4 6 5-4-1 9.5Z"/><path d="M4.5 20.5h15"/></svg>',guitarline:'<svg viewBox="0 0 24 24"><path d="m14.5 9.5 5-5M17.5 3l3.5 3.5"/><path d="M11.6 9.9a4 4 0 0 0-5.5.4c-.9 1-1 2.2-1.9 3-1.2 1-3.2.9-3.2 3 0 2.9 4.7 7.2 7.6 4.9 1.5-1.2 1.2-3 2.5-4 .8-.6 2.1-.7 3-1.6a4 4 0 0 0 .4-5.6Z"/><circle cx="9.5" cy="14.5" r="1.6"/></svg>',search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>',home:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>',leader:'<svg class="crown-img-icon" viewBox="0 0 24 24"><image href="assets/crown.39fee076.png" x="1" y="3.35" width="22" height="17.3" preserveAspectRatio="xMidYMid meet"/></svg>',archive:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5"/><path d="M9 12h6M9 16h6"/></svg>',music:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',mic:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',guitar:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 5.1 18.8.8l1.5 1.5-1.2 1.2 1.4 1.4-1.7 1.7-1.4-1.4-1.1 1.1-4.5 4.6"/><path d="M13.3 8.8c-1.5-1.4-3.8-1.4-5.2.1-.9.9-1.2 2.2-.9 3.3.2.7 0 1.4-.5 1.9l-1.5 1.5c-1.6 1.6-1.6 4.1 0 5.7 1.6 1.6 4.1 1.6 5.7 0l1.5-1.5c.5-.5 1.2-.7 1.9-.5 1.1.3 2.4 0 3.3-.9 1.5-1.5 1.5-3.8.1-5.2l-4.4-4.4Z"/><circle cx="10.8" cy="15.1" r="1.7"/><path d="m12 13.9 5.9-5.9"/></svg>',calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',list:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>',swap:'<svg viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>',users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2-7 6-7s6 3 6 7"/><circle cx="17" cy="9" r="2"/><path d="M16 14c3 0 5 2 5 5"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',cloud:'<svg viewBox="0 0 24 24"><path d="M7 19h11a4 4 0 0 0 .5-8A7 7 0 0 0 5 9a5 5 0 0 0 2 10z"/></svg>',note:'<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg>',slides:'<svg viewBox="0 0 24 24"><path d="M3 4.5h18v12H3z"/><path d="M12 16.5V20M8 20h8M7 8.5h10M8.5 12h7"/></svg>'};
 const V13I=k=>`<span class="ico">${k==='guitar'?'<img class="session-guitar-icon" src="assets/guitar.6f4b3ee7.png" alt="" />':(V13ICONS[k]||V13ICONS.note)}</span>`;
-const PAGES={home:['home','홈'],notice:['bell','공지 · 일정'],archive:['archive','콘티 보관함'],library:['music','악보 모음집'],members:['users','멤버 명단'],minutes:['note','회의록'],storage:['cloud','저장 공간'],trash:['trash','휴지통'],attend:['list','출결 관리'],lyrics:['slides','가사 PPT 생성']};
+const PAGES={home:['home','홈'],song_requests:['request','신청곡'],notice:['bell','공지 · 일정'],archive:['archive','콘티 보관함'],library:['music','악보 모음집'],members:['users','멤버 명단'],minutes:['note','회의록'],storage:['cloud','저장 공간'],trash:['trash','휴지통'],attend:['list','출결 관리'],lyrics:['slides','가사 PPT 생성']};
 const ROLE_HOME={leader:'lpick',singer:'sched_s',session:'sched_e'};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent||'');
 const ldDirty=L=>L===ldr?dirty():!!(ws[L]&&(ws[L].od||ws[L].wmDirty||ws[L].pages.some(p=>p.dirty)));
@@ -3270,7 +3324,7 @@ let mine='';
 const LV=['lpick','edit','ment','lsw'],inLead=role==='leader'&&LV.includes(view);
 const openL=view==='lpick'?lrPick:(view==='edit'||view==='ment')?ldr:null;
 const leadSub=inLead?`<div class="nv-lead">${LEADERS.map(L=>{const op=openL===L;return `<button type="button" class="nv-i nv-ldr ${op?'open':''}" data-lpick="${esc(L)}" aria-expanded="${op}"><i class="ldot ${ldrCls(L)}"></i><span class="nv-t">${esc(L)}</span>${ldDirty(L)?'<u class="nv-dirty" title="업로드 안 한 작업이 있어요"></u>':''}<span class="nv-car">${op?'▾':'▸'}</span></button>${op?`<div class="nv-lsub">${[['edit','송폼 · 악보 관리','music'],['ment','주간 콘티 작성','archive']].map(([v,l,ic])=>`<button type="button" class="nv-i ${view===v&&ldr===L?'on':''}" data-lv2="${esc(L)}|${v}">${V13I(ic)}<span class="nv-t">${l}</span></button>`).join('')}</div>`:''}`}).join('')}${it('lsw','인도자 일정',0,'calendar')}</div>`:'';
-const leadBlock=`<div class="nv-l">인도자</div><button type="button" class="nv-i nv-leadroom ${view==='lpick'&&role==='leader'&&!lrPick?'on':''} ${inLead&&(view!=='lpick'||lrPick)?'open':''}" data-lead="1">${V13I('leader')}<span class="nv-t">인도자 작업실</span></button>${leadSub}`;
+const leadBlock=`<div class="nv-l">인도자</div><button type="button" class="nv-i nv-leadroom ${view==='lpick'&&role==='leader'&&!lrPick?'on':''} ${inLead&&(view!=='lpick'||lrPick)?'open':''}" data-lead="1">${V13I('crownline')}<span class="nv-t">인도자 작업실</span></button>${leadSub}`;
 if(role==='leader')mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
 else if(role&&TABS[role].includes(view)){const roleNavIcon=v=>(v==='sched_s'||v==='sched_e')?'calendar':(v==='abs'||v==='swap')?'list':(v==='rule_s'||v==='rule_e')?'users':null;mine=TABS[role].map(v=>it(v,TAB[v][1],0,roleNavIcon(v))).join('');}
 else mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
@@ -3284,7 +3338,7 @@ sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="h
 <div class="nv-group">
 ${it('archive','콘티 보관함',0,'archive')}
 ${it('library','악보 모음집',0,'music')}
-<button type="button" class="nv-i ${view==='song_requests'?'on':''}" data-go="song_requests"><span class="ic song-request-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14a1 1 0 0 1 1 1v4a3 3 0 0 0 0 6v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a3 3 0 0 0 0-6V5a1 1 0 0 1 1-1Z"/><path d="M12 15.5 8.8 12.3a2 2 0 0 1 2.8-2.8l.4.4.4-.4a2 2 0 0 1 2.8 2.8Z"/></svg></span><span class="nv-t">신청곡</span></button>
+${it('song_requests','신청곡',0,'request')}
 ${it('lyrics','가사 PPT 생성',0,'slides')}
 </div>
 
@@ -3297,7 +3351,7 @@ ${it('minutes','회의록',0,'note')}
 
 ${leadBlock}
 <div class="nv-l">내 자리</div>
-<div class="rsw rsw2" role="tablist">${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='leader'?'leader':k==='singer'?'mic':'guitar')}<span>${t}</span></button>`).join('')}</div>
+<div class="rsw rsw2" role="tablist">${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='singer'?'mic':'guitarline')}<span>${t}</span></button>`).join('')}</div>
 <div class="nv-m">${mine}</div>
 <div class="side-b">${p!=null?`<button type="button" class="stm" data-go="storage" title="꿈자리 전체 저장 공간 ${fmtB(stg.bytes)}${stg.maxBytes?' / 무료 '+fmtB(stg.maxBytes):''}"><span>저장 공간</span><b>${stg.maxBytes?fmtB(stg.bytes)+' / '+fmtB(stg.maxBytes):fmtB(stg.bytes)}</b>${stg.maxBytes?`<div class="stg-bar ${stCls(p)}"><i style="width:${Math.min(100,p>0?Math.max(1.2,p):0)}%"></i></div>`:''}</button>`:''}<div class="side-devotion" aria-label="히브리서 10장 24절"><div class="side-devotion-img"></div><p>서로 돌아보아<br>사랑과 선행을 격려하며</p><small>(히브리서 10:24)</small></div>${it('trash','휴지통',trash.length,'trash')}</div>`;
 $$('[data-go]',sd).forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -3620,7 +3674,7 @@ const nameCls=n=>{const c=String(n||'').trim().charAt(0);return /[가-힣ㄱ-ㅎ
 const CHO=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const initOf=n=>{const c=String(n||'').trim().charAt(0),k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3)return CHO[Math.floor((k-0xAC00)/588)];if(/[ㄱ-ㅎ]/.test(c)){const i=CHO.indexOf(c);return i>=0?c:c}if(/[A-Za-z]/.test(c))return c.toUpperCase();if(/[0-9]/.test(c))return '0-9';return '#'};
 const lastTs=e=>Math.max(e.works[0]?Date.parse(e.works[0].date+'T12:00:00')||0:0,e.at||0);
-function sortLib(list,mode){const a=[...list],nc=(x,y)=>String(x.name).localeCompare(String(y.name),'ko',{numeric:true,sensitivity:'base'});
+function sortLib(list,mode){const a=[...list],nk=v=>String(v||'').normalize('NFC').trim(),nc=(x,y)=>nk(x.name).localeCompare(nk(y.name),'ko',{numeric:true,sensitivity:'base'});
 if(mode==='old')a.sort((x,y)=>lastTs(x)-lastTs(y)||nc(x,y));
 else if(mode==='ko'||mode==='en'){const ord=mode==='ko'?['h','l','d','o']:['l','h','d','o'];a.sort((x,y)=>ord.indexOf(nameCls(x.name))-ord.indexOf(nameCls(y.name))||nc(x,y))}
 else if(mode==='used')a.sort((x,y)=>y.works.length-x.works.length||lastTs(y)-lastTs(x)||nc(x,y));
@@ -3638,14 +3692,14 @@ return[...gm.values()].sort((a,b)=>((b.works[0]&&b.works[0].date)||'')<((a.works
 const libMeta=e=>(e.songId?scoreMeta(e).pageNo+'장 · ':'')+(e.works.length?`작업 ${e.works.length}번 · 마지막 ${fmtD(e.works[0].date)}`:'콘티에 아직 안 썼어요');
 function bigView(src,cap){const o=document.createElement('div');o.id='lb';o.innerHTML=`<div class="lb-t"><div class="cap"><span>${esc(cap)}</span></div><span class="sp"></span><button class="lb-b zb2">확대</button><button class="lb-b x" title="닫기 (Esc)">✕</button></div><div class="lbv"><img alt="" src="${src}"></div>`;const kd=e=>{if(e.key==='Escape')close()};function close(){o.remove();document.removeEventListener('keydown',kd)}$('.x',o).onclick=close;$('.zb2',o).onclick=()=>lbZoom(o);$('img',o).ondblclick=()=>lbZoom(o);$('.lbv',o).onclick=e=>{if(e.target===e.currentTarget&&!o.classList.contains('zm'))close()};document.addEventListener('keydown',kd);document.body.append(o)}
 function libraryView(){const q=libQ.trim().toLowerCase(),all=libItems(),l=sortLib(all.filter(e=>!q||e.name.toLowerCase().includes(q)),libSort),E=canEdit;
-$('#body').innerHTML=`<div class="wk mnw lib"><div class="ro-h"><div><h1 class="ht2">악보 모음집</h1><div class="mu">올린 악보의 <b>원본</b>이 모여 있어요. 송폼의 <b>이전 악보 가져오기</b>에서 골라 쓸 수 있어요 · 총 ${all.length}장</div></div><span class="sp"></span>${E?'<button class="btn" id="libadd">＋ 원본 추가</button><input type="file" id="libf" accept="image/*" multiple hidden>':''}</div>
+$('#body').innerHTML=`<div class="wk mnw lib"><div class="ro-h"><div><h1 class="ht2">악보 모음집</h1><div class="mu">올린 악보의 <b>원본</b>이 모여 있어요. 송폼의 <b>이전 악보 가져오기</b>에서 골라 쓸 수 있어요 · 총 ${all.length}장</div></div><span class="sp"></span>${E?'<button class="btn" id="libadd">＋ 악보 추가</button><input type="file" id="libf" accept="image/*" multiple hidden>':''}</div>
 <div class="ar-top"><input id="libq" placeholder="악보 제목으로 검색" autocomplete="off" value="${esc(libQ)}">${libSortSel('libs')}<span class="mu" id="libmsg">${esc(libMsg)}</span></div>
-${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<button class="sm" data-append-page="${e.oaid}">＋ 뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm" data-e="${e.oaid}">이름</button><button class="sm" data-d="${e.oaid}">삭제</button>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 원본 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
+${l.length?`<div class="libg">${l.map((e,ix)=>`${(libSort==='ko'||libSort==='en')&&(ix===0||initOf(l[ix-1].name)!==initOf(e.name))?`<div class="libh">${initOf(e.name)}</div>`:''}<article class="libc" data-o="${e.oaid}"><button type="button" class="libt" data-v="${e.oaid}" title="크게 보기"><img src="${BLOB(e.oaid)}" alt="" loading="lazy"></button><div class="libi">${libEdit===e.oaid?`<input class="libn" data-n="${e.oaid}" value="${esc(e.name)}">`:`<b class="libnm" title="${esc(e.name)}">${esc(e.name)}</b>`}<span class="mu">${libMeta(e)}</span></div><div class="liba">${role==='leader'&&E?`<button class="sm" data-u="${e.oaid}">송폼에 가져오기</button>`:''}${E?`<button class="sm" data-append-page="${e.oaid}">＋ 뒷장 추가</button><button class="sm" data-multipage="${e.oaid}">페이지 설정</button><button class="sm" data-e="${e.oaid}">이름</button><button class="sm" data-d="${e.oaid}">삭제</button>`:''}</div></article>`).join('')}</div>`:`<div class="card mu">${all.length?'검색 결과가 없어요':'아직 모인 원본이 없어요. 송폼에서 악보를 올리면 자동으로 여기에 모여요. 위의 ＋ 악보 추가로 직접 넣을 수도 있어요.'}</div>`}</div>`;
 bindScoreLibrary();refreshStorage();
 if($('#libs'))$('#libs').onchange=e=>{libSort=e.target.value;LS('lsort',libSort);libraryView()};
 const qi=$('#libq');qi.oninput=e=>{libQ=e.target.value;const p=e.target.selectionStart;libraryView();const j=$('#libq');j.focus();j.setSelectionRange(p,p)};
 $$('[data-v]').forEach(b=>b.onclick=()=>{const e=all.find(x=>x.oaid===b.dataset.v);bigView(BLOB(b.dataset.v),(e?e.name:'')+' · 원본')});
-if($('#libadd')){$('#libadd').onclick=()=>$('#libf').click();$('#libf').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)await libAdd(fs)}}
+if($('#libadd')){$('#libadd').onclick=()=>$('#libf').click();$('#libf').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)scoreAddDialog('library',fs)}}
 $$('[data-u]').forEach(b=>b.onclick=()=>{view='edit';LS('view','edit');renderNav();go('edit');setTimeout(()=>openImport(b.dataset.u),60)});
 $$('[data-e]').forEach(b=>b.onclick=()=>{libEdit=b.dataset.e;libraryView();const i=$('.libn');if(i){i.focus();i.select()}});
 $$('.libn').forEach(i=>{const oa=i.dataset.n,done=async()=>{const v=i.value.trim(),e=all.find(x=>x.oaid===oa);libEdit=null;if(v&&e&&v!==e.name){try{for(const id of (e.songId?all.filter(x=>x.songId===e.songId).flatMap(x=>x.dups||[x.oaid]):e.dups||[oa])){const original=all.find(x=>x.oaid===id)||e;const patch={name:v,oaid:id,nw:original.nw||0,nh:original.nh||0,at:original.at||Date.now(),by:ldr||''};await db.doc('library/'+id).set(patch,{merge:true});const local=library.find(x=>x.oaid===id||x._id===id);if(local)Object.assign(local,patch);else library.push({...patch,_id:id})}toast('이름을 바꿨어요')}catch(x){toast('이름을 바꾸지 못했어요')}}libraryView()};i.onkeydown=e=>{if(e.key==='Enter')i.blur();if(e.key==='Escape'){libEdit=null;libraryView()}};i.onblur=done});
@@ -3693,7 +3747,7 @@ function editView(){$('#body').innerHTML=`<div class="ed3 leader-sheet ${ldrCls(
 <div class="ins-a" id="cb"><button class="btn wide" id="cs">＋ 마커 줄에 추가</button></div>
 <div class="ins-a" id="sb"><button class="sm" id="sl">◀ 앞으로</button><button class="sm" id="sr">뒤로 ▶</button><button class="sm danger" id="dl">삭제</button></div></div></aside></aside></div>`;
 const bd=(id,f)=>{$('#'+id).onclick=f};
-bd('add',()=>$('#ff').click());$('#ff').onchange=async e=>{for(const f of e.target.files)await addFile(f);e.target.value=''};
+bd('add',()=>$('#ff').click());$('#ff').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)scoreAddDialog('editor',fs)};
 
 bd('un',()=>hist(-1));bd('re',()=>hist(1));bd('zo',()=>setZoom(zoom-.15));bd('zi',()=>setZoom(zoom+.15));bd('zf',()=>{fitMode='h';LS('fitm','h');setZoom(1)});bd('zw',()=>{fitMode='w';LS('fitm','w');setZoom(1)});bd('lw',openImport);bindExport();$$('[data-im]').forEach(b=>b.onclick=()=>{imgMode=b.dataset.im;syncInsp();drawStage()});bd('imfit',()=>layOp('fit'));bd('imw',()=>layOp('w'));bd('imc',()=>layOp('c'));bd('imr',()=>layOp('r'));bd('imdel',()=>rmPageKey());bd('snp',()=>{snapOn=!snapOn;LS('snap',snapOn?'1':'0');syncInsp();toast(snapOn?'스냅 켜짐 — 마커가 정렬선에 붙어요':'스냅 꺼짐')});bd('nm',openNm);bd('insx',()=>{insNew=false;sel=null;drawStage()});
 $('#tt').oninput=e=>{const p=P();if(!p||!canEdit)return;p.name=e.target.value;p.titleRenamed=true;p.dirty=true;if(p.songId)pages.filter(x=>x.songId===p.songId).forEach(x=>{x.name=p.name;x.titleRenamed=true;x.dirty=true});drawList();stat();sched()};
@@ -3944,9 +3998,9 @@ const nd={ment,by:ldr,up:Date.now(),scores:orderedScores(ok).map(p=>({...scoreMe
 step='악보 원본 보관';await retainScoreOriginals([...(data.scores||[]),...ok]);
 clearTimeout(saveT);await TO(db.doc('weeks/'+date).set(nd),45000,step);
 data=nd;wm=ment;lastKey=JSON.stringify([nd.scores,nd.ment]);setTimeout(()=>refreshStorage(true),1500);
-try{for(const p of ok){const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty)continue;
+try{const groupDups=new Map();for(const e of libItems())for(const id of e.dups||[e.oaid])groupDups.set(id,e.dups||[e.oaid]);for(const p of ok){const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty)continue;
 const patch={...scoreMeta(p),name:(p.titleRenamed?p.name:ex?.name||p.name)||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:ex?.at||Date.now(),by:ldr||''};
-await db.doc('library/'+p.oaid).set(patch,{merge:true});if(ex)Object.assign(ex,patch);else library.push({...patch,_id:p.oaid});p.titleRenamed=false;p.pageMetaDirty=false;
+await db.doc('library/'+p.oaid).set(patch,{merge:true});if(ex)Object.assign(ex,patch);else library.push({...patch,_id:p.oaid});if(p.titleRenamed&&groupDups){for(const id of groupDups.get(p.oaid)||[]){if(id===p.oaid)continue;await db.doc('library/'+id).set({name:patch.name},{merge:true});const l2=library.find(l=>l._id===id||l.oaid===id);if(l2)l2.name=patch.name}}p.titleRenamed=false;p.pageMetaDirty=false;
 }}catch(e){console.error(e);toast('콘티는 저장했지만 모음집 제목 반영에 실패했어요. 모음집에서 이름을 다시 저장해 주세요.')}
 
 let verify='';try{const chk=await TO(db.doc('weeks/'+date).get(),5000,'저장 확인');const cd=chk.exists&&chk.data();if(!cd||cd.up!==nd.up||(cd.scores||[]).length!==nd.scores.length||cd.ment!==nd.ment)verify='저장은 했는데 다시 읽어 보니 방금 올린 내용과 달라요'}catch(e){}
@@ -4620,8 +4674,11 @@ window.KZPasskey=(()=>{
  const PIN_ONLY=new Set(['management']);/* 관리계정은 PIN으로만 로그인 */
  function allowed(id){return !!id&&!PIN_ONLY.has(id)}
  function hasFor(id){return allowed(id)&&!!read()[id]}
- let autoLeft=true;/* 앱을 열 때 한 번만 자동으로 Face ID 요청(취소하면 다시 띄우지 않음) */
+ /* 앱을 열거나 백그라운드에서 돌아올 때마다 자동으로 Face ID 요청. 같은 화면에서 취소하면 다시 띄우지 않음 */
+ let autoLeft=true;
  function autoOnce(){const a=autoLeft;autoLeft=false;return a}
+ window.addEventListener('pagehide',()=>{autoLeft=true});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){autoLeft=true;return}const b=document.querySelector('#kzLoginLock .kz-passkey-btn');if(b&&!b.disabled&&autoOnce())setTimeout(()=>{if(b.isConnected&&!b.disabled)b.click()},250)});
  function remember(id,credId){const v=read();v[id]={credId:credId||'',at:Date.now()};write(v)}
  function forget(id){const v=read();delete v[id];write(v)}
  async function signIn(accountId){const o=await options('login',accountId);const mine=(read()[accountId]||{}).credId;const allow=(mine&&o.allow.includes(mine)?[mine]:o.allow).map(id=>({type:'public-key',id:dec(id)}));
@@ -5632,7 +5689,8 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
 'use strict';
 const KC_ICON={"bell": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 9.5a6 6 0 0 1 12 0c0 4.6 1.6 6.3 2.3 7a.6.6 0 0 1-.4 1H4.1a.6.6 0 0 1-.4-1c.7-.7 2.3-2.4 2.3-7Z\"/><path d=\"M10 20.5a2.2 2.2 0 0 0 4 0\"/></svg>", "belloff": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8.2 4.6A6 6 0 0 1 18 9.5c0 2.3.4 3.9.9 5M17 17.5H4.1a.6.6 0 0 1-.4-1c.7-.7 2.3-2.4 2.3-7 0-.6.1-1.2.3-1.8\"/><path d=\"M10 20.5a2.2 2.2 0 0 0 4 0M3.5 3.5l17 17\"/></svg>", "close": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6 6 18\"/></svg>", "back": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 5-7 7 7 7\"/></svg>", "plus": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>", "send": "<svg viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M3.4 20.4 21 12 3.4 3.6 3.3 10l12.4 2-12.4 2 .1 6.4Z\"/></svg>", "photo": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"3\"/><circle cx=\"9\" cy=\"10\" r=\"1.6\"/><path d=\"m4 17 5-4.5 3.5 3 3-2.5L20 17\"/></svg>"};
 let panelView=null; const activeView=()=>panelView;
-const pages={community:'팀 채팅',song_requests:'신청곡',inbox:'내 알림함'};
+const pages={community:'팀 채팅',inbox:'내 알림함'};
+const PAGE_VIEWS={song_requests:'신청곡'};/* 사이드바의 다른 메뉴처럼 본문에 열리는 화면 */
 const $c=s=>document.querySelector(s), escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>window.KZ_FIREBASE_AUTH?.currentUser?.uid||'';
 const ready=()=>!!uid()&&!document.getElementById('kzLoginLock')&&!!authAccount();
@@ -5657,7 +5715,7 @@ function clearError(){const e=$c('#kcError');if(e)e.textContent='';}
 function badge(){const b=$c('#kcMailCount');if(b){b.hidden=!unread;b.textContent=unread>=100?'99+':String(unread);}const btn=$c('#kcMail');if(btn)btn.setAttribute('aria-label','내 알림함'+(unread?', 안 읽은 알림 '+unread+'개':''));}
 function top(){const tr=$c('#tr');if(!tr||$c('#kcMail'))return;const b=document.createElement('button');b.type='button';b.id='kcMail';b.className='kc-mail';b.title='내 알림함';b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span id="kcMailCount" class="kc-badge" hidden></span>';b.onclick=()=>go('inbox');tr.prepend(b);const chat=document.createElement('button');chat.type='button';chat.id='kcChatOpen';chat.className='kc-mail';chat.setAttribute('aria-label','팀 채팅');chat.title='팀 채팅';chat.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 10 10 0 0 1-4-.8L3 21l1.8-5.5a9 9 0 1 1 16.2-4Z"/><path d="M8 11h8"/></svg>';chat.onclick=()=>openPanel('community');b.after(chat);badge();}
 function chrome(){}
-function shell(title,sub,extra=''){const b=$c('#kcPanelBody');if(!b)return false;b.innerHTML=`<section class="kc-page"><div class="kc-head"><h1>${title}</h1>${extra}</div><p class="kc-sub">${sub}</p><div class="kc-error" id="kcError" role="status"></div><div id="kcContent"></div></section>`;chrome();return true;}
+function shell(title,sub,extra=''){if(PAGE_VIEWS[panelView]&&view===panelView){const host=$c('#body');if(!host)return false;host.innerHTML=`<div class="wk mnw kc-pageview"><div class="ro-h"><div><h1 class="ht2">${title}</h1><div class="mu">${sub}</div></div><span class="sp"></span>${extra}</div><div class="kc-error" id="kcError" role="status"></div><div id="kcContent"></div></div>`;return true;}const b=$c('#kcPanelBody');if(!b)return false;b.innerHTML=`<section class="kc-page"><div class="kc-head"><h1>${title}</h1>${extra}</div><p class="kc-sub">${sub}</p><div class="kc-error" id="kcError" role="status"></div><div id="kcContent"></div></section>`;chrome();return true;}
 async function status(){
  if(actor&&Date.now()-statusAt<15000)return {account:actor,unread};
  if(statusRequest)return statusRequest;
@@ -5869,8 +5927,8 @@ function paintInbox(){const c=$c('#kcContent');if(!c||activeView()!=='inbox')ret
 }
 const oldTop=renderTop;renderTop=function(){oldTop();top();};
 const oldTitle=pageTitle;pageTitle=function(){return view==='mobile_my'?'내 순서':pages[view]?'홈':oldTitle();};
-const oldBody=body;body=function(){if(pages[view]){const target=view;view='home';LS('view','home');const result=oldBody();openPanel(target);return result;}return oldBody();};
-const oldGo=go;go=function(v){if(pages[v])return openPanel(v);closePanel();return oldGo(v);};
+const oldBody=body;body=function(){if(PAGE_VIEWS[view]){if(!$c('#body'))return;closePanel();panelView=view;songsView();try{stat();setBH()}catch(e){}return;}if(pages[view]){const target=view;view='home';LS('view','home');const result=oldBody();openPanel(target);return result;}return oldBody();};
+const oldGo=go;go=function(v){if(pages[v])return openPanel(v);closePanel();if(PAGE_VIEWS[v]&&!ready())return toast('로그인 후 이용해 주세요.');return oldGo(v);};
 function setupPanelLayout(panel){
  const mq=matchMedia('(max-width:820px)'),key='kz-chat-window-v5';let drag=null;
  const handle=document.createElement('button');handle.type='button';handle.className='kc-resize-handle';handle.setAttribute('aria-label','창 크기 조절: 방향키로 조절');handle.title='드래그 또는 방향키로 크기 조절';panel.append(handle);
@@ -5992,10 +6050,6 @@ function scorePageDialog(item,where){
  d.close();if(where==='library'&&view==='library')libraryView();toast(where==='editor'?'페이지를 지정했어요. 홈에 업로드하면 저장돼요.':'곡과 페이지를 저장했어요');
  }catch(err){error.textContent='저장하지 못했어요. 다시 시도해 주세요.';button.disabled=false;console.error(err)}};
 }
-function addScoreGroup(where){
- if(!canEdit)return;const d=document.createElement('dialog');d.className='kz-score-dialog';d.innerHTML='<form><h2>여러 장짜리 곡 추가</h2><p>파일 이름 순서로 1장부터 지정해요. 등록 후 곡·페이지에서 바꿀 수 있어요.</p><label>곡 이름<input name="title" required maxlength="120" placeholder="예: 목마른 사슴"></label><label>악보 이미지 여러 장<input name="files" type="file" accept="image/*" multiple required></label><p class="kz-score-error" role="status"></p><footer><button type="button" class="sm" data-cancel>취소</button><button type="submit" class="btn">등록</button></footer></form>';
- d.querySelector('[data-cancel]').onclick=()=>d.close();d.addEventListener('close',()=>d.remove());document.body.append(d);d.showModal();d.querySelector('form').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget,name=f.elements.title.value.trim(),files=[...f.elements.files.files].sort((a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true}));if(!name||!files.length)return;const btn=f.querySelector('[type=submit]');btn.disabled=true;const group={id:newScoreGroupId(),name};try{if(where==='library'){await libAdd(files,group)}else{let no=1;for(const file of files){await addFile(file);Object.assign(P(),{name,songId:group.id,pageNo:no++,pageMetaDirty:true})}pages=orderedScores(pages);cur=pages.findIndex(x=>x.songId===group.id);drawList();drawStage();stat();toast(files.length+'장을 한 곡으로 추가했어요')}d.close()}catch(err){d.querySelector('.kz-score-error').textContent='등록하지 못했어요. 다시 시도해 주세요.';btn.disabled=false;console.error(err)}};
-}
 function bindScoreEditor(){
  const host=document.querySelector('.ed3 .tb-l');if(!host||document.getElementById('kzScoreGroup'))return;
  const b=document.createElement('button');b.id='kzScoreGroup';b.className='sm';b.type='button';b.textContent='페이지 설정';b.disabled=!canEdit;b.onclick=()=>{if(P())scorePageDialog(P(),'editor');else toast('악보를 먼저 추가하세요')};host.append(b);
@@ -6006,14 +6060,6 @@ function bindScoreEditor(){
 function syncScorePageField(){const field=document.getElementById('kzScorePage');if(!field)return;const p=P();field.innerHTML='';if(!p)return;const siblings=p.songId?orderedScores(pages.filter(x=>x.songId===p.songId)):[p];siblings.forEach(x=>{const b=document.createElement('button');b.type='button';b.className='sm'+(x===p?' on':'');b.textContent=scoreMeta(x).pageNo+'장';b.setAttribute('aria-current',x===p?'page':'false');b.onclick=()=>goPage(pages.indexOf(x));field.append(b)})}
 
 const scorePagesDrawList=drawList;drawList=function(){scorePagesDrawList();groupEditorSongList();syncScorePageField()};
-function bindScoreLibrary(){
- const add=document.getElementById('libadd');if(add){const b=document.createElement('button');b.className='btn';b.textContent='＋ 여러 장짜리 곡';b.onclick=()=>addScoreGroup('library');add.before(b)}
- document.querySelectorAll('[data-append-page]').forEach(b=>b.onclick=()=>{const item=libItems().find(x=>x.oaid===b.dataset.appendPage);if(item)appendScorePages(item,'library')});
- document.querySelectorAll('[data-multipage]').forEach(b=>b.onclick=()=>{const item=libItems().find(x=>x.oaid===b.dataset.multipage);if(item)scorePageDialog(item,'library')});
- const grid=document.querySelector('.libg');if(!grid)return;const items=libItems(),groups=new Map();
- [...grid.querySelectorAll('.libc')].forEach(card=>{const e=items.find(x=>x.oaid===card.dataset.o);if(!e?.songId)return;let group=groups.get(e.songId);if(!group){group=document.createElement('details');group.className='kz-score-group';const count=items.filter(x=>x.songId===e.songId).length;group.innerHTML='<summary><b>'+esc(e.name)+'</b><small>악보 '+count+'장 · 펼치기</small></summary><div class="kz-score-group-actions"></div><div class="kz-score-group-pages"></div>';grid.insertBefore(group,card);groups.set(e.songId,group);const show=document.createElement('button');show.className='sm';show.textContent='악보 보기';show.onclick=()=>lightbox(0,orderedScores(items.filter(x=>x.songId===e.songId)));group.querySelector('.kz-score-group-actions').append(show);if(canEdit){const b=document.createElement('button');b.className='sm';b.textContent='＋ 뒷장 추가';b.onclick=()=>appendScorePages(e,'library');group.querySelector('.kz-score-group-actions').append(b)}}const add=card.querySelector('[data-append-page]');if(add)add.remove();group.querySelector('.kz-score-group-pages').append(card)});
-}
-
 function appendScorePages(item,where){
  if(!canEdit)return;const d=document.createElement('dialog');d.className='kz-score-dialog';d.setAttribute('aria-label','뒷장 추가');
  const source=where==='editor'?pages:libItems(),siblings=item.songId?source.filter(x=>x.songId===item.songId):[item];
@@ -6035,9 +6081,118 @@ function appendScorePages(item,where){
 
 function groupEditorSongList(){const l=document.getElementById('plist');if(!l)return;const groups=new Map();[...l.querySelectorAll('.pgi')].forEach(card=>{const index=Number(card.dataset.i),p=pages[index];if(!p?.songId)return;let g=groups.get(p.songId);if(!g){g=document.createElement('section');g.className='kz-editor-song';const count=pages.filter(x=>x.songId===p.songId).length;g.innerHTML='<button type="button"><b>'+esc(p.name)+'</b><small>악보 '+count+'장</small></button><div class="kz-editor-song-pages"></div>';l.insertBefore(g,card);groups.set(p.songId,g);g.querySelector('button').onclick=()=>goPage(pages.indexOf(orderedScores(pages.filter(x=>x.songId===p.songId))[0]));g.querySelector('.kz-editor-song-pages').hidden=P()?.songId!==p.songId}g.querySelector('.kz-editor-song-pages').append(card)})}
 
-function foldContiSongs(root,scores){const groups=new Map();scores.forEach((x,i)=>{if(!x.songId)return;const card=root.querySelector('#kzwp'+i);if(!card)return;let group=groups.get(x.songId);if(!group){group=document.createElement('details');group.className='kz-conti-song';const count=scores.filter(y=>y.songId===x.songId).length;group.innerHTML='<summary>'+esc(x.name||'악보')+'<small>악보 '+count+'장</small></summary>';card.before(group);groups.set(x.songId,group)}group.append(card)})}
+
 
 /* 홈 곡 카드·이번 주 찬양에서 곡을 누르면: 여러 장 곡은 전체 페이지를 넘겨 보기, 한 장이면 기존처럼 크게 보기 */
 function openHomeScore(i){const all=data.scores||[],x=all[i];if(!x)return;const list=x.songId?orderedScores(all.filter(y=>y.songId===x.songId&&(y.aid||y.oaid))):[x];if(list.length>1)return lightbox(Math.max(0,list.indexOf(x)),list);const aid=x.aid||x.oaid;if(aid)bigView(BLOB(aid),(x.name||'송폼')+' · 송폼')}
+
+/* ===== 여러 장 곡 보기: 곡 하나 = 카드 하나. 모바일은 옆으로 밀어 넘기고, PC는 ‹ › · 방향키로 넘김 ===== */
+function scoreCarousel(list){return `<div class="kz-car" data-car><div class="kz-car-track" tabindex="0" role="group" aria-label="악보 ${list.length}장 · 옆으로 넘겨 보기">${list.map((x,i)=>`<button type="button" class="kz-car-page" data-ci="${i}" aria-label="${i+1}장 크게 보기"><img src="${BLOB(x.aid||x.oaid)}" alt="${i+1}장" loading="lazy" draggable="false"></button>`).join('')}</div><button type="button" class="kz-car-nav prev" aria-label="이전 장">‹</button><button type="button" class="kz-car-nav next" aria-label="다음 장">›</button><span class="kz-car-count" aria-hidden="true"><b>1</b> / ${list.length}</span></div>`}
+function bindCarousel(root,total,onOpen){const track=root.querySelector('.kz-car-track'),count=root.querySelector('.kz-car-count b'),prev=root.querySelector('.kz-car-nav.prev'),next=root.querySelector('.kz-car-nav.next');if(!track)return;
+ const w=()=>track.firstElementChild?track.firstElementChild.getBoundingClientRect().width||1:1,per=()=>Math.max(1,Math.round(track.clientWidth/w())),at=()=>Math.round(track.scrollLeft/w());
+ const sync=()=>{const i=Math.min(at(),total-1),p=per();if(count)count.textContent=p>1&&total>1?`${i+1}–${Math.min(total,i+p)}`:String(i+1);if(prev)prev.disabled=i<=0;if(next)next.disabled=i+p>=total};
+ let raf=0;track.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(sync)},{passive:true});
+ const go=d=>track.scrollBy({left:d*w(),behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
+ if(prev)prev.onclick=e=>{e.stopPropagation();go(-1)};if(next)next.onclick=e=>{e.stopPropagation();go(1)};
+ track.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();e.stopPropagation();go(-1)}else if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();go(1)}});
+ if(onOpen)track.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>onOpen(+b.dataset.ci));
+ new ResizeObserver(sync).observe(track);sync()}
+
+/* 모음집 페이지(원본)를 휴지통으로 — 모음집 화면의 삭제와 같은 방식 */
+async function libTrashPage(oa){const all=libItems(),e=all.find(x=>x.oaid===oa),ids=(e&&e.dups)||[oa];for(const id of ids){const ref=db.doc('library/'+id),sn=await ref.get();if(!sn.exists)await ref.set({name:e?.name||'악보',oaid:id,nw:e?.nw||0,nh:e?.nh||0,at:Date.now()});await toTrash('score',id,'library');await ref.set({name:e?.name||'악보',oaid:id,hidden:true,_trashPlaceholder:true})}}
+
+/* 장 관리: 순서 바꾸기·장 빼기를 한 창에서 */
+function scorePagesManage(songId){if(!canEdit)return;let pages=orderedScores(libItems().filter(x=>x.songId===songId));if(!pages.length)return;const removed=[];
+ const d=document.createElement('dialog');d.className='kz-score-dialog kz-add-dialog';d.setAttribute('aria-label','장 관리');
+ const paint=()=>{d.innerHTML=`<form><h2>${esc(pages[0]?.name||'악보')} · 장 관리</h2><p>순서를 바꾸거나 빼고 저장하세요. 뺀 장은 휴지통으로 가요.</p><ol class="kz-add-pages">${pages.map((x,i)=>`<li><button type="button" class="kz-add-thumb" data-view="${i}" aria-label="${i+1}장 크게 보기"><img src="${BLOB(x.oaid)}" alt=""></button><div class="kz-add-cap"><b>${i+1}장</b></div><span class="kz-add-act"><button type="button" class="sm" data-up="${i}" aria-label="앞으로" ${i?'':'disabled'}>↑</button><button type="button" class="sm" data-down="${i}" aria-label="뒤로" ${i<pages.length-1?'':'disabled'}>↓</button><button type="button" class="sm" data-del="${i}" aria-label="이 장 빼기" ${pages.length>1?'':'disabled'}>✕</button></span></li>`).join('')}</ol><p class="kz-score-error" role="status"></p><footer><button type="button" class="sm" data-cancel>취소</button><button type="submit" class="btn">저장</button></footer></form>`;
+  d.querySelector('[data-cancel]').onclick=()=>d.close();
+  d.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>lightbox(+b.dataset.view,pages));
+  d.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;[pages[i-1],pages[i]]=[pages[i],pages[i-1]];paint()});
+  d.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>{const i=+b.dataset.down;[pages[i+1],pages[i]]=[pages[i],pages[i+1]];paint()});
+  d.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{removed.push(...pages.splice(+b.dataset.del,1));paint()});
+  d.querySelector('form').onsubmit=async e=>{e.preventDefault();const btn=d.querySelector('[type=submit]');btn.disabled=true;btn.textContent='저장하는 중…';
+   try{for(const x of removed)await libTrashPage(x.oaid);
+    for(const [i,x] of pages.entries()){if(scoreMeta(x).pageNo===i+1)continue;for(const id of x.dups||[x.oaid]){const patch={songId,pageNo:i+1,oaid:id};await db.doc('library/'+id).set(patch,{merge:true});const l=library.find(y=>y.oaid===id||y._id===id);if(l)Object.assign(l,patch)}}
+    d.close();toast(removed.length?`${removed.length}장을 휴지통으로 옮기고 순서를 저장했어요`:'순서를 저장했어요');if(view==='library')libraryView()}
+   catch(err){console.error(err);d.querySelector('.kz-score-error').textContent='저장하지 못했어요. 다시 시도해 주세요.';btn.disabled=false;btn.textContent='저장'}}};
+ d.addEventListener('close',()=>d.remove());document.body.append(d);paint();d.showModal()}
+
+function bindScoreLibrary(){
+ document.querySelectorAll('[data-append-page]').forEach(b=>b.onclick=()=>{const item=libItems().find(x=>x.oaid===b.dataset.appendPage);if(item)appendScorePages(item,'library')});
+ document.querySelectorAll('[data-multipage]').forEach(b=>b.onclick=()=>{const item=libItems().find(x=>x.oaid===b.dataset.multipage);if(item)scorePageDialog(item,'library')});
+ const grid=document.querySelector('.libg');if(!grid)return;const items=libItems(),seen=new Set();
+ [...grid.querySelectorAll('.libc')].forEach(card=>{const e=items.find(x=>x.oaid===card.dataset.o);if(!e?.songId)return;
+  if(seen.has(e.songId)){card.remove();return}seen.add(e.songId);
+  const pages=orderedScores(items.filter(x=>x.songId===e.songId));if(pages.length<2)return;
+  card.classList.add('kz-song-card');const t=card.querySelector('.libt');if(t){t.insertAdjacentHTML('afterend',scoreCarousel(pages));t.remove()}
+  bindCarousel(card.querySelector('[data-car]'),pages.length,i=>lightbox(i,pages));
+  const meta=card.querySelector('.libi .mu');if(meta)meta.textContent=libMeta(e).replace(/^\d+장 · /,pages.length+'장 · ');
+  const pg=card.querySelector('[data-multipage]');if(pg){pg.removeAttribute('data-multipage');pg.textContent='장 관리';pg.onclick=()=>scorePagesManage(e.songId)}
+  const del=card.querySelector('[data-d]');if(del){del.removeAttribute('data-d');del.textContent='곡 삭제';del.onclick=()=>arm2(del,async()=>{try{for(const x of pages)await libTrashPage(x.oaid);toast(`${pages.length}장을 휴지통으로 옮겼어요`)}catch(x){toast('삭제하지 못했어요')}},'')}
+ });
+}
+
+/* 콘티 창: 여러 장 곡은 한 줄에서 옆으로 넘겨 보기 (넓은 화면은 두 장씩 나란히) */
+function foldContiSongs(root,scores){const groups=new Map(),songNo=scoreSongNumbers(scores);scores.forEach((x,i)=>{if(!x.songId)return;const card=root.querySelector('#kzwp'+i);if(!card)return;let group=groups.get(x.songId);
+ if(!group){const count=scores.filter(y=>y.songId===x.songId).length;if(count<2)return;group=document.createElement('section');group.className='kz-conti-song';group.innerHTML=`<div class="kz-conti-song-h"><b>${songNo[i]}. ${esc(x.name||'악보')}</b><small>${count}장 · 옆으로 넘겨 보기</small></div><div class="kz-car" data-car><div class="kz-car-track" tabindex="0" role="group" aria-label="${esc(x.name||'악보')} ${count}장"></div><button type="button" class="kz-car-nav prev" aria-label="이전 장">‹</button><button type="button" class="kz-car-nav next" aria-label="다음 장">›</button><span class="kz-car-count" aria-hidden="true"><b>1</b> / ${count}</span></div>`;card.before(group);groups.set(x.songId,group)}
+ group.querySelector('.kz-car-track').append(card)});
+ requestAnimationFrame(()=>groups.forEach(g=>bindCarousel(g.querySelector('[data-car]'),g.querySelectorAll('.kz-wv-p').length,null)))}
+
+/* ===== 악보 추가 (모음집 · 인도자 시트 공통) =====
+   사진을 고르면 한 화면에서: 곡 이름, 장 순서(↑↓), 장 빼기, '＋ 다음 장 추가'.
+   여러 장을 고르면 [한 곡의 여러 장] / [장마다 다른 곡] 중 선택. */
+function scoreAddDialog(where,files){
+ if(!canEdit)return;
+ const base=f=>String(f&&f.name||'악보').replace(/\.[^.]+$/,'').trim()||'악보';
+ const byName=(a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true});
+ let list=[...files].filter(f=>/^image\//.test(f.type||'image/')).sort(byName).map(f=>({f,name:base(f),url:URL.createObjectURL(f)}));
+ if(!list.length)return toast('이미지 파일을 골라 주세요');
+ let mode='song',title=list[0].name.replace(/[\s_-]*\(?\d+\)?$/,'').trim()||list[0].name;
+ const d=document.createElement('dialog');d.className='kz-score-dialog kz-add-dialog';d.setAttribute('aria-label','악보 추가');
+ d.innerHTML=`<form novalidate><h2>악보 추가</h2>
+  <div class="kz-add-mode" role="radiogroup" aria-label="여러 장을 어떻게 넣을까요" hidden>
+   <button type="button" role="radio" data-mode="song">한 곡의 여러 장</button><button type="button" role="radio" data-mode="each">장마다 다른 곡</button></div>
+  <label class="kz-add-title">곡 이름<input name="title" maxlength="120" autocomplete="off" required></label>
+  <ol class="kz-add-pages" aria-label="추가할 악보"></ol>
+  <button type="button" class="kz-add-more" data-more>＋ 다음 장 추가</button><input type="file" accept="image/*" multiple hidden>
+  <p class="kz-score-error" role="status"></p>
+  <footer><button type="button" class="sm" data-cancel>취소</button><button type="submit" class="btn" data-ok></button></footer></form>`;
+ const f=d.querySelector('form'),ti=f.elements.title,ol=d.querySelector('.kz-add-pages'),err=d.querySelector('.kz-score-error'),ok=d.querySelector('[data-ok]'),more=d.querySelector('input[type=file]');
+ ti.value=title;ti.oninput=()=>{title=ti.value};
+ const paint=()=>{const many=list.length>1,each=many&&mode==='each';
+  d.querySelector('.kz-add-mode').hidden=!many;d.querySelectorAll('[data-mode]').forEach(b=>{const on=b.dataset.mode===mode;b.classList.toggle('on',on);b.setAttribute('aria-checked',String(on))});
+  d.querySelector('.kz-add-title').hidden=each;ti.required=!each;
+  ol.innerHTML=list.map((x,i)=>`<li><img src="${x.url}" alt=""><div class="kz-add-cap">${each?`<input data-name="${i}" value="${esc(x.name)}" maxlength="120" aria-label="${i+1}번째 곡 이름">`:`<b>${i+1}장</b><small>${esc(x.f.name||'')}</small>`}</div><span class="kz-add-act"><button type="button" class="sm" data-up="${i}" aria-label="앞으로" ${i?'':'disabled'}>↑</button><button type="button" class="sm" data-down="${i}" aria-label="뒤로" ${i<list.length-1?'':'disabled'}>↓</button><button type="button" class="sm" data-del="${i}" aria-label="빼기">✕</button></span></li>`).join('');
+  ol.querySelectorAll('[data-name]').forEach(inp=>inp.oninput=()=>{list[+inp.dataset.name].name=inp.value});
+  ol.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;[list[i-1],list[i]]=[list[i],list[i-1]];paint()});
+  ol.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>{const i=+b.dataset.down;[list[i+1],list[i]]=[list[i],list[i+1]];paint()});
+  ol.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const [x]=list.splice(+b.dataset.del,1);URL.revokeObjectURL(x.url);if(!list.length)return d.close();paint()});
+  ok.textContent=each?`${list.length}곡 추가`:list.length>1?`${list.length}장을 한 곡으로 추가`:'추가';
+  d.querySelector('[data-more]').textContent=list.length>1?'＋ 장 더 추가':'＋ 다음 장 추가'};
+ d.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;paint()});
+ d.querySelector('[data-more]').onclick=()=>more.click();
+ more.onchange=()=>{const add=[...more.files].sort(byName).map(x=>({f:x,name:base(x),url:URL.createObjectURL(x)}));more.value='';if(!add.length)return;list.push(...add);paint()};
+ d.querySelector('[data-cancel]').onclick=()=>d.close();
+ d.addEventListener('close',()=>{list.forEach(x=>URL.revokeObjectURL(x.url));d.remove()});
+ f.onsubmit=async e=>{e.preventDefault();err.textContent='';const each=list.length>1&&mode==='each',name=title.trim();
+  if(!each&&!name){err.textContent='곡 이름을 입력해 주세요.';ti.focus();return}
+  if(each&&list.some(x=>!x.name.trim())){err.textContent='곡 이름이 비어 있는 장이 있어요.';return}
+  ok.disabled=true;ok.textContent='추가하는 중…';
+  const rename=(x,n)=>{try{return new File([x.f],n+(String(x.f.name).match(/\.[^.]+$/)||['.jpg'])[0],{type:x.f.type})}catch(_){return x.f}};
+  try{
+   if(where==='library'){
+    if(each)await libAdd(list.map(x=>rename(x,x.name.trim())));
+    else if(list.length===1)await libAdd([rename(list[0],name)]);
+    else await libAdd(list.map(x=>x.f),{id:newScoreGroupId(),name,startPage:1});
+   }else{
+    const id=each||list.length===1?'':newScoreGroupId();let no=1,first=null;
+    for(const x of list){await addFile(x.f);const p=P();Object.assign(p,{name:each?x.name.trim():name,titleRenamed:true},id?{songId:id,pageNo:no++,pageMetaDirty:true}:{});first=first||p}
+    pages=orderedScores(pages);cur=Math.max(0,pages.indexOf(first));drawList();drawStage();stat();sched();
+    toast(each?`${list.length}곡을 추가했어요`:list.length>1?`${list.length}장을 한 곡으로 추가했어요`:'악보를 추가했어요');
+   }
+   d.close();if(where==='library'&&view==='library')libraryView();
+  }catch(x){console.error(x);err.textContent='추가하지 못했어요. 다시 시도해 주세요.';ok.disabled=false;paint()}};
+ document.body.append(d);paint();d.showModal();if(list.length===1){ti.focus();ti.select()}
+}
 </script>
 
