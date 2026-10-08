@@ -2164,7 +2164,7 @@ drawList();drawPre();drawStage();syncInsp()}
 function openNm(){if(!canEdit)return;if(insNew){insNew=false;syncInsp();return}insNew=true;sel=null;const ins=$('#ins'),b=$('#nm');if(!ins||!b)return;const r=b.getBoundingClientRect(),rc=($('.rcol')||b).getBoundingClientRect(),W=300,left=Math.max(8,Math.min(rc.left-W-12,innerWidth-W-8)),top=Math.max(8,r.top);
 ins.style.setProperty('--pl',left+'px');ins.style.setProperty('--pt',top+'px');ins.style.setProperty('--pm',Math.max(260,innerHeight-top-16)+'px');drawStage();syncInsp();const c=$('#ct');if(c)setTimeout(()=>c.focus(),30)}
 document.addEventListener('pointerdown',e=>{if(!insNew)return;if(e.target.closest('#ins,#nm'))return;insNew=false;if($('#ins'))syncInsp()},true);
-function syncInsp(){if(!$('#ins'))return;const isI=!!(sel&&sel.k==='i'&&P()&&P().lay);if(target()||isI)insNew=false;$('#ins').classList.toggle('open',!!target()||insNew);$('#ins').classList.toggle('pop',insNew&&!target());const ob=$('#optb');if(ob){const on=isI&&canEdit;$$('[data-im],.io',ob).forEach(b=>b.disabled=!on);$$('[data-im]',ob).forEach(b=>b.classList.toggle('on',isI&&b.dataset.im===imgMode));const sn=$('#snp');if(sn){sn.classList.toggle('on',snapOn);sn.disabled=!canEdit}const ot=$('#optt');if(ot)ot.textContent=isI?`악보 ${Math.round(P().lay.w)}×${Math.round(P().lay.h)}mm${imgMode==='crop'?' · 자르기':''}`:'악보를 누르면 도구가 켜져요'}
+function syncInsp(){if(!$('#ins'))return;const isI=!!(sel&&sel.k==='i'&&P()&&P().lay);if(target()||isI)insNew=false;$('#ins').classList.toggle('open',insNew||(!matchMedia('(max-width:820px)').matches&&!!target()));$('#ins').classList.toggle('pop',insNew&&!target());const ob=$('#optb');if(ob){const on=isI&&canEdit;$$('[data-im],.io',ob).forEach(b=>b.disabled=!on);$$('[data-im]',ob).forEach(b=>b.classList.toggle('on',isI&&b.dataset.im===imgMode));const sn=$('#snp');if(sn){sn.classList.toggle('on',snapOn);sn.disabled=!canEdit}const ot=$('#optt');if(ot)ot.textContent=isI?`악보 ${Math.round(P().lay.w)}×${Math.round(P().lay.h)}mm${imgMode==='crop'?' · 자르기':''}`:'악보를 누르면 도구가 켜져요'}
 if(isI)return;const tl=$('.tools');if(tl)document.documentElement.style.setProperty('--tbh',tl.offsetHeight+'px');const t=target(),s=St(),free=t&&t.free,ct=$('#ct');
 $('#ih').textContent=t?(free?'선택한 노트':'선택한 마커 · '+t.t):'새 마커 만들기';$('#ihelp').textContent=t?'바꾸면 바로 적용돼요':'이름과 색을 정해 추가하면 위 마커 줄에 생겨요. 끌어다 악보에 놓아 쓰세요';$('#bsec').classList.toggle('off',s.b===false);$('#rn').hidden=!!t&&!free;
 if(document.activeElement!==ct)ct.value=t?(free?t.t.trim():''):ct.value;
@@ -5294,9 +5294,14 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  t.querySelectorAll('[data-mobile-view]').forEach(b=>b.onclick=()=>{if(b.dataset.mobileView==='notice'){ntTab=LS('kzHomeInfoTab')==='calendar'?'e':'n';ntEdit=null;evEdit=null;ntFocus=null;}go(b.dataset.mobileView);window.scrollTo({top:0,behavior:'instant'})});document.getElementById('shell')?.classList.toggle('no-tab',view==='edit');
  };
  const menuRow=(id,icon,title,sub)=>`<button type="button" data-mobile-action="${id}">${id==='song_requests'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v4a3 3 0 0 0 0 6v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a3 3 0 0 0 0-6V5a1 1 0 0 1 1-1Z"/><path d="M12 15.5 8.8 12.3a2 2 0 0 1 2.8-2.8l.4.4.4-.4a2 2 0 0 1 2.8 2.8Z"/></svg>':V13I(icon)}<span><b>${title}</b><small>${sub}</small></span><em aria-hidden="true">›</em></button>`;
- function myPage(){const a=authAccount(),name=a?.name||me||'',weeks=name&&name!=='관리계정'?myWeeks(name):[];
- return `<section class="km-page"><p class="km-kicker">MY SCHEDULE</p><h1>${esc(name||'나')}님의 순서</h1><p class="km-intro">앞으로 6주간의 섬김 일정이에요.<br>날짜를 누르면 그 주의 콘티와 악보를 볼 수 있어요.</p>${weeks.length?`<div class="km-weeks">${weeks.map(w=>{const dt=new Date(w.d+'T12:00:00');return `<button class="km-week" type="button" data-mobile-date="${w.d}"><span class="km-date"><small>${dt.getMonth()+1}월</small><b>${dt.getDate()}</b></span><span class="km-week-body"><strong>${esc(lbl(w.d)||'주일예배')}</strong><span>${w.r.length?w.r.map(([r,c])=>`<i class="km-chip ${c==='off'?'off':''}">${esc(r)}</i>`).join(''):'<span class="km-rest">배정된 순서가 없어요</span>'}</span></span><span class="km-arrow">›</span></button>`}).join('')}</div>`:'<div class="km-empty">'+(name==='관리계정'?'관리계정에는 개인 순서가 없어요. 팀원 계정으로 접속하면 내 순서를 확인할 수 있어요.':'표시할 개인 일정이 없어요.')+'</div>'}<p class="km-section">일정 변경이 필요할 때</p><div class="km-menu">${menuRow('swap','mic','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','guitar','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
+ function myPage(){const a=authAccount(),name=a?.name||me||'',weeks=name&&name!=='관리계정'?myWeeks(name):[],assigned=weeks.filter(w=>w.r.some(r=>r[1]==='on')),next=assigned[0];
+ const chips=w=>w.r.length?w.r.map(([r,c])=>`<span class="km-role ${c==='off'?'is-off':''}">${esc(r)}</span>`).join(''):'<span class="km-no-role">배정 없음</span>';
+ const shortDate=d=>{const dt=new Date(d+'T12:00:00');return `${dt.getMonth()+1}.${String(dt.getDate()).padStart(2,'0')}`;};
+ return `<section class="km-page km-my-compact"><div class="km-my-heading"><h1>${esc(name||'나')}님의 순서</h1><span>앞으로 6주</span></div>${next?`<button type="button" class="km-next-duty" data-mobile-date="${next.d}"><span class="km-next-label">가장 가까운 순서 <b>${daysTo(next.d)===0?'오늘':'D-'+daysTo(next.d)}</b></span><span class="km-next-line"><strong>${shortDate(next.d)} <small>일요일</small></strong><span>${chips(next)}</span><i aria-hidden="true">›</i></span></button>`:''}
+ ${weeks.length?`<div class="km-list-heading"><b>주별 일정</b><span>배정 ${assigned.length}주</span></div><div class="km-duty-list">${weeks.map(w=>`<button type="button" class="km-duty-row ${w.r.some(r=>r[1]==='on')?'has-duty':''}" data-mobile-date="${w.d}"><span class="km-duty-date"><b>${shortDate(w.d)}</b><small>${esc(lbl(w.d)||'일요일')}</small></span><span class="km-duty-roles">${chips(w)}</span><span class="km-duty-arrow" aria-hidden="true">›</span></button>`).join('')}</div><p class="km-my-hint">날짜를 누르면 해당 주의 예배 정보를 볼 수 있어요.</p>`:'<div class="km-empty">'+(name==='관리계정'?'팀원 계정으로 접속하면 내 순서를 볼 수 있어요.':'표시할 개인 일정이 없어요.')+'</div>'}
+ <p class="km-section">일정 변경</p><div class="km-menu">${menuRow('swap','mic','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','guitar','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
  }
+
  function morePage(){return `<section class="km-page"><p class="km-kicker">KKUMJARI WORSHIP</p><h1>더보기</h1><p class="km-intro">자주 확인하는 자료와 계정 설정을 모았어요.</p><div class="km-menu">${menuRow('account','users','내 계정 · 알림','계정 정보와 푸시 알림 설정')}${menuRow('archive','archive','콘티 보관함','지난 콘티와 악보 보기')}${menuRow('events','calendar','팀 일정','다가오는 모임과 행사')}${menuRow('library','music','악보 모음집','곡 이름으로 악보 찾아보기')}${menuRow('attend','list','출결','출석 현황 확인')}${menuRow('minutes','archive','회의록','팀에서 나눈 이야기')}</div><p class="km-section">예배 준비 · 작업</p><div class="km-menu">${menuRow('leader','leader','인도자 작업실','송폼 편집 · 콘티 작성 · 업로드')}${menuRow('lyrics','music','가사 · PPT','가사 편집과 PPT 만들기')}${menuRow('all','list','전체 메뉴','PC와 동일한 기능 모두 보기')}</div></section>`}
  body=function(){if(view!=='mobile_my'&&view!=='mobile_more')return oldBody();const b=document.getElementById('body');if(!b)return;b.innerHTML=view==='mobile_my'?myPage():morePage();const bar=document.getElementById('dbar');if(bar)bar.hidden=true;
  b.querySelectorAll('[data-mobile-date]').forEach(x=>x.onclick=()=>{go('home');goDate(x.dataset.mobileDate);window.scrollTo({top:0,behavior:'instant'})});
@@ -6114,4 +6119,25 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  #tabbar .tb-l>.kh-tab-dot{position:absolute;top:0;right:-8px}
  #body .mnw .seg button{display:flex;align-items:center;gap:7px}
 }
+</style><style id="my-schedule-compact">
+#body .km-my-compact{padding-top:16px!important}
+.km-my-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}
+#body .km-my-heading h1{font-family:inherit;font-size:22px!important;line-height:1.35;margin:0!important;letter-spacing:-.7px}
+.km-my-heading>span{font-size:11px;color:var(--mu);white-space:nowrap}
+.km-next-duty{display:block;width:100%;text-align:left;padding:16px;border:1px solid var(--bd);border-radius:16px;background:var(--golds,var(--bg));color:var(--tx);font:inherit;cursor:pointer}
+.km-next-label{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--goldt);font-weight:600}
+.km-next-label b{padding:2px 7px;border-radius:20px;background:var(--card);font-size:10px}
+.km-next-line{display:flex;align-items:center;gap:12px;margin-top:10px}
+.km-next-line>strong{font-size:23px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.km-next-line small{font-size:11px;color:var(--mu);font-weight:400}
+.km-next-line>span{display:flex;flex:1;justify-content:flex-end;gap:5px;flex-wrap:wrap}.km-next-line>i{font-style:normal;color:var(--goldt)}
+.km-list-heading{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px;font-size:13px}.km-list-heading>span{color:var(--mu);font-size:11px}
+.km-duty-list{border:1px solid var(--bd);border-radius:15px;overflow:hidden;background:var(--card)}
+.km-duty-row{display:flex;align-items:center;gap:12px;width:100%;min-height:57px;text-align:left;border:0;border-bottom:1px solid var(--bd);background:transparent;color:var(--tx);padding:10px 14px;font:inherit;cursor:pointer}.km-duty-row:last-child{border-bottom:0}
+.km-duty-date{display:flex;align-items:baseline;gap:8px;min-width:110px}.km-duty-date b{font-size:15px;font-variant-numeric:tabular-nums}.km-duty-date small{font-size:10px;color:var(--mu)}
+.km-duty-roles{display:flex;flex:1;flex-wrap:wrap;justify-content:flex-end;gap:4px}.km-role{display:inline-block;padding:4px 8px;border-radius:7px;background:var(--golds,var(--bg));color:var(--goldt);font-size:12px;font-weight:600;line-height:1.4}.km-role.is-off{background:#fbeeea;color:#a54b3c}.km-no-role{color:var(--mu);font-size:11px}.km-duty-arrow{font-size:17px;color:var(--mu)}
+.km-my-hint{font-size:11px;color:var(--mu);margin:10px 2px 0;line-height:1.5}
+#body .km-my-compact .km-section{margin-top:22px!important}
+#body .km-my-compact .km-menu button{padding:12px 14px!important;min-height:58px}
+.km-duty-row:focus-visible,.km-next-duty:focus-visible{outline:2px solid var(--goldt);outline-offset:-3px}
 </style></body></html>
