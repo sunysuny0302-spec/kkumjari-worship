@@ -4329,6 +4329,24 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 auto;display:flex;flex-direction:column}
  :root .hm.hm-v13 #khInfo .kh-info-content .kz-empty{flex:1;display:grid;place-items:center;min-height:160px}
 }
+@media (min-width:1100px){
+ /* 가운데 줄은 높이를 고정: 공지·신청곡·팀 알림이 늘어나도 페이지가 밀리지 않고 칸 안에서 스크롤 */
+ :root .hm.hm-v13 .home-grid-mid{height:640px;align-items:stretch!important}
+ :root .hm.hm-v13 .home-grid-mid>*{min-height:0!important;height:100%!important;max-height:100%}
+ :root .hm.hm-v13 .kh-left-stack,:root .hm.hm-v13 .kz-info-stack{display:flex!important;flex-direction:column!important;gap:14px!important;min-height:0}
+ :root .hm.hm-v13 .kh-left-stack>.kz-nx{flex:0 0 auto!important}
+ :root .hm.hm-v13 .kh-left-stack>.kz-fd{flex:1 1 0!important;min-height:0!important}
+ :root .hm.hm-v13 .kz-fd>.kz-fd-l,:root .hm.hm-v13 .kz-fd>.kz-empty{flex:1 1 0;min-height:0;overflow:auto}
+ :root .hm.hm-v13 .kz-info-stack>#khInfo{flex:1.15 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+ :root .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:1 1 0!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+ :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 0!important;min-height:0!important;overflow:auto!important}
+ :root .hm.hm-v13 .kh-song-card #khSongList{flex:1 1 0;min-height:0;overflow:auto;margin-bottom:10px}
+ :root .hm.hm-v13 .kh-song-card .kh-song-add{flex:0 0 auto}
+ :root .hm.hm-v13 :is(.kz-fd-l,.kh-info-content,#khSongList){scrollbar-width:thin;scrollbar-color:rgba(120,88,56,.25) transparent;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);padding-bottom:12px}
+ /* 오른쪽: 영상 아래 그림이 카드 바닥까지 꽉 */
+ :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{flex:0 0 auto}
+ :root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:0!important;height:0!important;object-fit:contain!important;object-position:center bottom!important;background:#fcf8f1!important}
+}
 </style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
@@ -8020,10 +8038,17 @@ window.kzPrac=(function(){
   const a=await answers(d,false)||{};const y=list.filter(o=>a[o.n]&&a[o.n].s==='yes').length,no=list.filter(o=>a[o.n]&&a[o.n].s==='no').length,w=list.length-y-no;
   t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전'}
  async function openList(d){const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
-  const grp=s=>list.filter(o=>s==='wait'?!a[o.n]:a[o.n]&&a[o.n].s===s);
-  const row=o=>`<li><b>${esc(o.n)}</b><small>${esc(o.r.join(' · '))}</small>${a[o.n]&&a[o.n].note?`<p>${esc(a[o.n].note)}</p>`:''}</li>`;
-  const sec=(t,s,c)=>{const l=grp(s);return `<section class="pl-s ${c}"><h4>${t} <em>${l.length}</em></h4>${l.length?`<ul>${l.map(row).join('')}</ul>`:'<p class="pl-n">없어요</p>'}</section>`};
-  const w=document.createElement('div');w.id='kzPracList';w.className='pr-ov';w.innerHTML=`<div class="pr-sh pl" role="dialog" aria-modal="true" aria-label="토요 연습 참석"><div class="pl-h"><div><small>${md(d)} 주일</small><b>${md(sat(d))}(토) 연습 참석</b></div><button type="button" class="pl-x" aria-label="닫기">✕</button></div>${sec('어려워요','no','no')}${sec('참석','yes','yes')}${sec('아직 응답 안 함','wait','wait')}</div>`;
+  const no=list.filter(o=>a[o.n]&&a[o.n].s==='no'),yes=list.filter(o=>a[o.n]&&a[o.n].s==='yes'),wait=list.filter(o=>!a[o.n]),t=list.length||1;
+  const av=o=>`<span class="pl-av">${esc(String(o.n).slice(0,1))}</span>`;
+  const w=document.createElement('div');w.id='kzPracList';w.className='pr-ov';
+  w.innerHTML=`<div class="pr-sh pl" role="dialog" aria-modal="true" aria-label="토요 연습 참석"><div class="pl-h"><div><small>${md(d)} 주일 콘티</small><b>${md(sat(d))}(토) 연습</b></div><button type="button" class="pl-x" aria-label="닫기">✕</button></div>
+   <div class="pl-sum"><div class="pl-k yes"><b>${yes.length}</b><span>참석</span></div><div class="pl-k no"><b>${no.length}</b><span>어려워요</span></div><div class="pl-k wait"><b>${wait.length}</b><span>아직</span></div></div>
+   <div class="pl-bar"><i class="yes" style="flex:${yes.length}"></i><i class="no" style="flex:${no.length}"></i><i class="wait" style="flex:${wait.length}"></i></div>
+   <div class="pl-body">
+   ${no.length?`<section class="pl-g"><h4><i class="dot no"></i>어려워요 · 사유</h4>${no.map(o=>`<div class="pl-row no">${av(o)}<div><b>${esc(o.n)}</b><small>${esc(o.r.join(' · '))}</small>${a[o.n].note?`<p>“${esc(a[o.n].note)}”</p>`:''}</div></div>`).join('')}</section>`:''}
+   ${wait.length?`<section class="pl-g"><h4><i class="dot wait"></i>아직 응답 안 함</h4><div class="pl-chips">${wait.map(o=>`<span class="pl-chip">${esc(o.n)}<small>${esc(o.r.join('·'))}</small></span>`).join('')}</div></section>`:''}
+   ${yes.length?`<section class="pl-g"><h4><i class="dot yes"></i>참석</h4><div class="pl-chips">${yes.map(o=>`<span class="pl-chip yes">✓ ${esc(o.n)}<small>${esc(o.r.join('·'))}</small></span>`).join('')}</div></section>`:''}
+   ${!list.length?'<p class="pl-n">이 주에 배정된 싱어·세션이 없어요.</p>':''}</div></div>`;
   document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),200)};w.onclick=e=>{if(e.target===w)close()};w.querySelector('.pl-x').onclick=close}
  function home(){setTimeout(()=>{paintTile();check()},700)}
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,800)});
@@ -8052,12 +8077,22 @@ window.kzPrac=(function(){
 .pr-send{border:0;border-radius:12px;padding:12px;background:#3a2c20;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .pr-later{display:block;margin:12px auto 0;border:0;background:none;color:var(--mu);font:inherit;font-size:13px;padding:8px;cursor:pointer}
 .pr-sh button:disabled{opacity:.55}
-.pl-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}.pl-h div{flex:1}.pl-h small{font-size:12px;color:var(--mu)}.pl-h b{display:block;font-size:18px}
+
+.pl-h{display:flex;align-items:flex-start;gap:10px}.pl-h div{flex:1}.pl-h small{font-size:12px;color:var(--mu)}.pl-h b{display:block;font-size:19px}
 .pl-x{width:34px;height:34px;border-radius:50%;border:0;background:rgba(120,88,56,.08);cursor:pointer}
-.pl-s{margin-top:12px}.pl-s h4{margin:0 0 6px;font-size:13px;color:#6b5442}.pl-s h4 em{font-style:normal;color:#a07a55}
-.pl-s ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pl-s li{background:#fff;border:1px solid rgba(120,88,56,.1);border-radius:12px;padding:9px 12px}
-.pl-s li b{font-size:14px}.pl-s li small{margin-left:6px;font-size:12px;color:var(--mu)}.pl-s li p{margin:5px 0 0;font-size:13px;color:#a3392a;line-height:1.45}
-.pl-s.yes li{border-color:rgba(47,107,74,.2)}.pl-n{margin:0;font-size:12.5px;color:var(--mu)}
+.pl-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 8px}
+.pl-k{border-radius:14px;padding:10px 12px;display:grid;gap:1px;background:#fff;border:1px solid rgba(120,88,56,.1)}.pl-k b{font-size:24px;line-height:1.1}.pl-k span{font-size:12px;color:var(--mu);font-weight:600}
+.pl-k.yes b{color:#2f6b4a}.pl-k.no b{color:#b23a2f}.pl-k.wait b{color:#9a8672}
+.pl-bar{display:flex;height:6px;border-radius:99px;overflow:hidden;background:rgba(120,88,56,.08);margin-bottom:6px}.pl-bar i{display:block}.pl-bar .yes{background:#2f6b4a}.pl-bar .no{background:#c4573f}.pl-bar .wait{background:#e3d8ca}
+.pl-body{display:grid;gap:14px;margin-top:10px}
+.pl-g h4{display:flex;align-items:center;gap:6px;margin:0 0 8px;font-size:13px;color:#5c4a3a}.dot{width:8px;height:8px;border-radius:50%;display:inline-block}.dot.yes{background:#2f6b4a}.dot.no{background:#c4573f}.dot.wait{background:#c9bba8}
+.pl-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid rgba(196,87,63,.22);margin-bottom:6px}
+.pl-av{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#fbecea;color:#a3392a;font-weight:700;font-size:13px}
+.pl-row b{font-size:14.5px}.pl-row small{margin-left:6px;font-size:12px;color:var(--mu)}.pl-row p{margin:4px 0 0;font-size:13.5px;color:#7a3a2e;line-height:1.5}
+.pl-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pl-chip{display:inline-flex;align-items:baseline;gap:5px;padding:7px 11px;border-radius:99px;background:#fff;border:1px solid rgba(120,88,56,.14);font-size:13.5px;font-weight:700}
+.pl-chip small{font-size:11px;color:var(--mu);font-weight:500}.pl-chip.yes{background:#eef6f0;border-color:rgba(47,107,74,.2);color:#24543a}
+.pl-n{margin:0;font-size:13px;color:var(--mu)}
 </style>
 <script id="kz-att2">
 /* 토요연습 응답(서버 rsvp) 불러오기 · 기본값 · 주일 지나면 자동 저장 */
