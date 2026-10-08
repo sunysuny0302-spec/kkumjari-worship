@@ -18,13 +18,21 @@ self.addEventListener('push',event=>{
  const title=d.title||n.title||'새 알림',body=d.body||n.body||'';
  const existing=await self.registration.getNotifications({tag}),old=existing[0]?.data||{};
  const messageId=p.fcmMessageId||p.messageId||'';if(messageId&&(old.ids||[]).includes(messageId))return;
- const lines=[...(old.lines||[]),body?title+' · '+body:title].slice(-5),count=(old.count||0)+1;
- const names={'chat-all':'전체 채팅','chat-admin':'관리자방',notice:'공지',event:'일정',song:'신청곡',conti:'콘티',sched:'일정 변경',other:'새 알림'};
+ const chat=key.startsWith('chat-');
+ let sender=d.sender||'',message=body;
+ if(chat&&!sender){const legacy=body.match(/^(.+?) · ([\s\S]*)$/);if(/새 메시지|전체 채팅|관리자방/.test(title)&&legacy){sender=legacy[1];message=legacy[2];}else sender=title;}
+ const clean=x=>String(x||'').replace(/^[📢📅🎵🔁🎤🎸]\s*/u,'').trim();
+ const entry=chat?{sender:clean(sender)||'팀원',body:message}: {sender:clean(title),body};
+ const entries=[...(old.entries||[]),entry].slice(-3),count=(old.count||0)+1;
+ const displayTitle=chat?entry.sender+(key==='chat-admin'?' · 관리자방':''):entry.sender;
+ // Keep the latest message first; older messages remain compact within the same room.
+ const displayBody=chat?[...entries].reverse().map(x=>(x.sender===entry.sender?'':x.sender+': ')+x.body).join('\n'):body;
  let link=d.link||p.fcmOptions?.link||n.click_action||'/?kz_open=inbox';
  try{const u=new URL(link,self.location.origin);link=u.origin===self.location.origin?u.href:self.location.origin+'/?kz_open=inbox';}catch{link='/?kz_open=inbox';}
- await self.registration.showNotification((names[key]||'새 알림')+' · '+count+'개',{
- body:(count>lines.length?'최근 '+lines.length+'개\n':'')+lines.join('\n'),icon:'/icon-192.png',badge:'/icon-192.png',tag,renotify:true,
- data:{link,lines,count,ids:[...(old.ids||[]),messageId].filter(Boolean).slice(-20)}
+ for(const notification of existing)notification.close();
+ await self.registration.showNotification(displayTitle,{
+ body:displayBody,icon:'/icon-192.png',badge:'/icon-192.png',tag,renotify:true,
+ data:{link,entries,count,ids:[...(old.ids||[]),messageId].filter(Boolean).slice(-20)}
  });
  });notificationQueue=task;event.waitUntil(task);
 });
