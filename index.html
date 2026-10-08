@@ -4312,6 +4312,24 @@ window.kzLoginSkin=function(root,isLogin){if(!root||root.dataset.lx)return;root.
 window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const C='#fbfaf7';
  if(on){if(window.__lxObs)return;const keep=()=>{if(!document.getElementById('kzLoginLock')){window.__lxObs.disconnect();window.__lxObs2.disconnect();window.__lxObs=null;m.content='#fbfaf7';return}if(m.content!==C)m.content=C};window.__lxObs=new MutationObserver(keep);window.__lxObs.observe(m,{attributes:true});window.__lxObs2=new MutationObserver(keep);window.__lxObs2.observe(document.body,{childList:true});keep()}};
 </script>
+<style id="kz-homegrid">
+@media (min-width:821px){
+ :root .hm.hm-v13 .home-grid-top.kz-top,:root .hm.hm-v13 .home-grid-mid{gap:14px!important}
+ :root .hm.hm-v13 :is(.kz-top>section,.kz-mid section,.kh-left-stack>section,.kz-stack>section,.devotion-card,.shortcut-card){border:1px solid rgba(120,88,56,.17)!important;box-shadow:0 1px 2px rgba(60,40,20,.05),0 10px 26px -16px rgba(60,40,20,.28)!important;background-color:rgba(255,255,255,.82)!important}
+ :root .hm.hm-v13 :is(.kz-top>section,.kh-left-stack>section,.kz-stack>section)>.kz-h{padding-bottom:10px;margin-bottom:12px!important;border-bottom:1px solid rgba(120,88,56,.10)}
+ :root .hm.hm-v13 .kz-wk-in{border:1px solid rgba(120,88,56,.12);border-radius:14px;overflow:hidden}
+ :root .hm.hm-v13 .kz-song-r+.kz-song-r{border-top:1px solid rgba(120,88,56,.07);padding-top:4px}
+ /* 주일 예배 영상: 그림이 남는 칸을 채움 */
+ :root .hm.hm-v13 .devotion-card.kz-dev{display:flex!important;flex-direction:column!important;overflow:hidden}
+ :root .hm.hm-v13 .devotion-card.kz-dev>.kw-video{border-bottom:1px solid rgba(120,88,56,.10)}
+ :root .hm.hm-v13 .devotion-card.kz-dev{background:#fcf8f1!important}
+ :root .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{flex:1 1 0!important;min-height:220px!important;height:0!important;width:100%!important;object-position:center center!important;background:#fcf8f1}
+ /* 공지가 없을 때: 가운데 정렬 */
+ :root .hm.hm-v13 #khInfo{display:flex!important;flex-direction:column!important}
+ :root .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 auto;display:flex;flex-direction:column}
+ :root .hm.hm-v13 #khInfo .kh-info-content .kz-empty{flex:1;display:grid;place-items:center;min-height:160px}
+}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -4653,8 +4671,8 @@ const add=(st,lab,det,act)=>items.push({st,lab,det,act});
 add(ment?'ok':'no','콘티',ment?(data.by?data.by+' 작성':'작성 완료'):'아직 안 올라왔어요','ment');
 const m=Math.max(cs.length,1);add(sc.length>=m&&sc.length?'ok':sc.length?'part':'no','송폼',sc.length?(cs.length&&sc.length<cs.length?`${sc.length}/${cs.length}곡`:`${sc.length}곡 업로드`):'업로드 전','edit');
 const lk=cs.filter(c=>c.links.length).length;add(!cs.length?'na':lk===cs.length?'ok':lk?'part':'no','레퍼런스',!cs.length?'콘티 작성 후':`${lk}/${cs.length}곡 링크`,'reference');
-let sg=[];try{sg=String(singersFor(date)||'').split(',').map(v=>v.trim()).filter(Boolean)}catch(e){}add(sg.length?'ok':'no','싱어',sg.length?sg.length+'명 배정':'배정 전','singer');
-let f={};try{f=sessFill(date)||{}}catch(e){}const ks=Object.keys(f).filter(k=>k!=='인도'),emp=ks.filter(k=>!f[k]);add(!ks.length?'no':emp.length?'part':'ok','세션',!ks.length?'배정 전':emp.length?`${emp.slice(0,2).join('·')} 비어 있음`:`${ks.length}자리 모두 배정`,'session');
+let sg=[];try{sg=String(singersFor(date)||'').split(',').map(v=>v.trim()).filter(Boolean)}catch(e){}
+let f={};try{f=sessFill(date)||{}}catch(e){}const ks=Object.keys(f).filter(k=>k!=='인도'),emp=ks.filter(k=>!f[k]);{const ss=!ks.length?'no':emp.length?'part':'ok',sgs=sg.length?'ok':'no',st=ss==='ok'&&sgs==='ok'?'ok':ss==='no'&&sgs==='no'?'no':'part';add(st,'싱어·세션',`싱어 ${sg.length?sg.length+'명':'배정 전'} · 세션 ${!ks.length?'배정 전':emp.length?(ks.length-emp.length)+'/'+ks.length:'모두'}`,sgs!=='ok'?'singer':'session')}
 let ab=[];try{ab=ovr.filter(o=>o.date===date&&!o.to&&o.k!=='L');ab=ab.concat((sessAbs||[]).filter(a=>a.date===date).map(a=>({from:a.name,k:'session'})))}catch(e){}add(ab.length?'part':'ok','변경',ab.length?`불참 ${ab.length}명 · 대타 확인`:'불참 없음',ab.some(a=>a.k==='session')?'abs':'swap');
 const ok=items.filter(x=>x.st==='ok').length,tot=items.filter(x=>x.st!=='na').length,dd=daysTo(date),ico={ok:'✓',part:'!',no:'✕',na:'–'};
 return `<section class="kz-rd"><div class="kz-h">${V13I('list')}<h2>이번 주 준비</h2><span class="kz-dd2">${dd>0?'D-'+dd:dd===0?'오늘 예배':'지난 주일'}</span><span class="sp"></span><span class="kz-rd-n"><b>${ok}</b>/${tot} 준비</span></div><div class="kz-bar"><i style="width:${tot?Math.round(ok/tot*100):0}%"></i></div><div class="kz-rd-g">${items.map(x=>`<button type="button" class="kz-ck ${x.st}" data-kz-act="${x.act}"><i>${ico[x.st]}</i><span><b>${x.lab}</b><small>${esc(x.det)}</small></span></button>`).join('')}</div></section>`}
@@ -6032,7 +6050,13 @@ sub();stat()}catch(e){console.error(e)}})();
   const wait=new Promise(r=>setTimeout(()=>r(auth.currentUser||null),7000));
   Promise.race([new Promise(r=>{if(auth.currentUser)return r(auth.currentUser);if(typeof auth.onAuthStateChanged!=='function')return (window.KZ_FIREBASE_AUTH_READY||Promise.resolve(null)).then(r);let off=null;off=auth.onAuthStateChanged(u=>{try{off&&off()}catch(e){}r(u||null)})}),wait]).then(async u=>{if(u&&u.uid===k.uid){try{if(await finishLogin(a,u,'keep')){sp.remove();return}}catch(e){console.warn('[꿈자리] 로그인 유지',e)}}
    kzKeep.clear();sp.remove();draftAccountId=a.id;draftAccountName=a.name;login('login','로그인 유지가 끝났어요. 한 번만 다시 확인해 주세요.')}).catch(()=>{sp.remove();login()});return true}
- function boot(){const last=remembered();if(!last&&rememberDevice){try{const oldId=sessionStorage.getItem(S),oldName=localStorage.getItem('me');const a=read().find(x=>x.status==='approved'&&(oldId?x.id===oldId:x.name===oldName));if(a)remember(a)}catch(e){}}read();watchAccounts();setTimeout(()=>syncAccounts(),700);setTimeout(()=>ensureManagerAuth(),1200);try{sessionStorage.removeItem(S);localStorage.removeItem('kzTrialModeV92')}catch(e){}if(!keepResume())login();}
+ /* 같은 창에서 새로고침된 경우: Firebase 로그인이 살아 있으면 PIN 없이 그대로 */
+ function sessResume(id){const auth=FB();if(!id||!auth||!FS())return false;const a=read().find(x=>x.id===id&&x.status==='approved');if(!a)return false;
+  const sp=document.createElement('div');sp.id='kzKeepSplash';sp.innerHTML=`<div><b>꿈자리 찬양팀</b><small>${esc(a.name)}님으로 들어가는 중…</small><i></i></div>`;document.body.append(sp);
+  const wait=new Promise(r=>setTimeout(()=>r(auth.currentUser||null),6000));
+  Promise.race([new Promise(r=>{if(auth.currentUser)return r(auth.currentUser);if(typeof auth.onAuthStateChanged!=='function')return (window.KZ_FIREBASE_AUTH_READY||Promise.resolve(null)).then(r);let off=null;off=auth.onAuthStateChanged(u=>{try{off&&off()}catch(e){}r(u||null)})}),wait]).then(async u=>{const ok=u&&(a.id==='management'?u.email===manager.authEmail:u.uid===a.id);if(ok){try{if(await finishLogin(a,u,'keep')){sp.remove();return}}catch(e){console.warn('[꿈자리] 새로고침 후 이어서',e)}}
+   sp.remove();if(!keepResume()){draftAccountId=a.id;draftAccountName=a.name;login()}}).catch(()=>{sp.remove();login()});return true}
+ function boot(){const last=remembered();if(!last&&rememberDevice){try{const oldId=sessionStorage.getItem(S),oldName=localStorage.getItem('me');const a=read().find(x=>x.status==='approved'&&(oldId?x.id===oldId:x.name===oldName));if(a)remember(a)}catch(e){}}read();watchAccounts();setTimeout(()=>syncAccounts(),700);setTimeout(()=>ensureManagerAuth(),1200);const sid=(()=>{try{return sessionStorage.getItem(S)||''}catch(e){return ''}})();try{sessionStorage.removeItem(S);localStorage.removeItem('kzTrialModeV92')}catch(e){}if(!sessResume(sid)&&!keepResume())login();}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
@@ -7974,7 +7998,7 @@ window.kzPrac=(function(){
  async function answers(d,force){const r=R();if(!r.api)return {};if(!force&&r.RS&&r.RS[d])return r.RS[d];try{const j=await r.api({action:'rsvpGet',date:d});if(r.RS)r.RS[d]=j.answers||{};return j.answers||{}}catch(e){return null}}
  async function check(){if(checking||document.getElementById('kzPrac')||document.getElementById('kzLoginLock')||document.getElementById('kzTour')||document.getElementById('kzLiveWelcome'))return;
   let d;try{d=date;if(d!==nextSun()||!data||!data.up)return}catch(e){return}
-  const n=myName();if(!n||rank()==='관리계정'||dis(d))return;const me=(R().assigned?R().assigned(d):[]).find(o=>o.n===n);if(!me)return;
+  const n=myName();if(!n||rank()==='관리계정'||dis(d))return;const me=(R().assigned?R().assigned(d):[]).find(o=>o.n===n);if(!me||me.r.includes('인도'))return;
   checking=true;try{const a=await answers(d,true);if(a===null||a[n])return;show(d,me)}finally{checking=false}}
  function show(d,me){const songs=(R().songsOf?R().songsOf(d):[])||[];const w=document.createElement('div');w.id='kzPrac';w.className='pr-ov';
   w.innerHTML=`<div class="pr-sh" role="dialog" aria-modal="true" aria-labelledby="prT"><div class="pr-top"><span class="pr-ic">🎵</span><div><small>${md(d)} 주일 · ${esc(me.r.join(' · '))}</small><b id="prT">새 콘티가 올라왔어요</b></div></div>
@@ -7992,10 +8016,10 @@ window.kzPrac=(function(){
   w.querySelector('.pr-send').onclick=()=>{const t=w.querySelector('#prNote').value.trim();if(t.length<2){w.querySelector('.pr-err').textContent='이유를 짧게라도 적어 주세요.';return}send('no',t)};}
  /* 인도자·단장·관리계정: '이번 주 준비'에 토요 연습 칸 */
  async function paintTile(){const g=document.querySelector('#body .kz-rd .kz-rd-g');if(!g||!canSee())return;let d;try{d=date}catch(e){return}
-  const list=R().assigned?R().assigned(d):[];let t=g.querySelector('[data-kz-act=prac]');if(!t){g.insertAdjacentHTML('beforeend','<button type="button" class="kz-ck na" data-kz-act="prac"><i>…</i><span><b>토요 연습</b><small>불러오는 중</small></span></button>');t=g.querySelector('[data-kz-act=prac]');t.onclick=e=>{e.stopPropagation();e.preventDefault();openList(d)}}
+  const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));let t=g.querySelector('[data-kz-act=prac]');if(!t){g.insertAdjacentHTML('beforeend','<button type="button" class="kz-ck na" data-kz-act="prac"><i>…</i><span><b>토요 연습</b><small>불러오는 중</small></span></button>');t=g.querySelector('[data-kz-act=prac]');t.onclick=e=>{e.stopPropagation();e.preventDefault();openList(d)}}
   const a=await answers(d,false)||{};const y=list.filter(o=>a[o.n]&&a[o.n].s==='yes').length,no=list.filter(o=>a[o.n]&&a[o.n].s==='no').length,w=list.length-y-no;
   t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전'}
- async function openList(d){const list=R().assigned?R().assigned(d):[];const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
+ async function openList(d){const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
   const grp=s=>list.filter(o=>s==='wait'?!a[o.n]:a[o.n]&&a[o.n].s===s);
   const row=o=>`<li><b>${esc(o.n)}</b><small>${esc(o.r.join(' · '))}</small>${a[o.n]&&a[o.n].note?`<p>${esc(a[o.n].note)}</p>`:''}</li>`;
   const sec=(t,s,c)=>{const l=grp(s);return `<section class="pl-s ${c}"><h4>${t} <em>${l.length}</em></h4>${l.length?`<ul>${l.map(row).join('')}</ul>`:'<p class="pl-n">없어요</p>'}</section>`};
@@ -8041,7 +8065,7 @@ const AT_RS={},AT_RSP={};
 function atRsvpLoad(sun){if(AT_RS[sun]||AT_RSP[sun])return AT_RSP[sun]||Promise.resolve(AT_RS[sun]);const r=window.kzRsvp;if(!r||!r.api)return Promise.resolve({});
  AT_RSP[sun]=r.api({action:'rsvpGet',date:sun}).then(j=>{AT_RS[sun]=j.answers||{};return AT_RS[sun]}).catch(()=>{AT_RS[sun]={};return {}}).finally(()=>{delete AT_RSP[sun];try{atRefresh()}catch(e){}});return AT_RSP[sun]}
 function atDefaults(type,sun,list,recs){const out={...recs};
- if(type==='토요연습'){const a=AT_RS[sun];if(!a){atRsvpLoad(sun);return out}list.forEach(p=>{const cur=out[p.n]||{};if(cur.s)return;const x=a[p.n];if(!x)return;out[p.n]=x.s==='yes'?{s:'출석',n:cur.n||''}:x.s==='no'?{s:'무단 결석',n:'불참 사유: '+(x.note||'(사유 없음)')}:cur})}
+ if(type==='토요연습'){const a=AT_RS[sun]||{};if(!AT_RS[sun])atRsvpLoad(sun);list.forEach(p=>{const cur=out[p.n]||{};if(cur.s)return;if(/인도/.test(p.r||'')){out[p.n]={s:'출석',n:cur.n||''};return}const x=a[p.n];if(!x)return;out[p.n]=x.s==='yes'?{s:'출석',n:cur.n||''}:x.s==='no'?{s:'무단 결석',n:'불참 사유: '+(x.note||'(사유 없음)')}:cur})}
  else list.forEach(p=>{const cur=out[p.n]||{};if(!cur.s)out[p.n]={s:'출석',n:cur.n||''}});
  return out}
 let atFinDone=false;
