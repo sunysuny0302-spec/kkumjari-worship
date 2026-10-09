@@ -8455,7 +8455,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
    T('이 기기 알림',async()=>{if(!('Notification' in window))throw Error('이 브라우저는 알림을 못 받아요');if(Notification.permission!=='granted')throw Error(Notification.permission==='denied'?'기기에서 막혀 있어요':'꺼져 있어요');return '켜짐'}),
    T('저장 공간',async()=>{const el=[...document.querySelectorAll('.side *')].find(x=>/MB|KB|GB/.test(x.textContent||'')&&x.children.length===0);return el?el.textContent.trim():'저장 공간 화면에서 확인'})]);
   S.checks=res;paint()}
- async function loadLog(){S.logErr='';try{const r=await A({action:'logs'});S.log=r.items||[]}catch(e){S.logErr=e.message}paint()}
+ async function loadLog(){S.logErr='';try{const r=await A({action:'logs'});S.log=(r.items||[]).slice(0,3)}catch(e){S.logErr=e.message}paint()}
  function paint(){const p=document.getElementById('kzSitePane');if(!p)return;const c=S.checks;
   p.innerHTML=`<section class="st-card"><div class="st-h"><b>사이트 상태</b><button type="button" class="kad-btn" data-st="check">${c?'다시 점검':'점검 중…'}</button></div>
    ${c?`<div class="st-grid">${c.map(x=>`<div class="st-i ${x.ok?'ok':'bad'}"><i>${x.ok?'✓':'!'}</i><span><b>${esc(x.name)}</b><small>${esc(x.d)}${x.ms&&x.ok?` · ${x.ms}ms`:''}</small></span></div>`).join('')}</div>`:'<p class="st-wait">하나씩 확인하는 중이에요…</p>'}</section>
@@ -8463,7 +8463,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
     <input class="st-in" id="stT" maxlength="60" placeholder="제목 (예: 이번 주 연습 장소 변경)"><textarea class="st-in" id="stB" maxlength="160" rows="2" placeholder="내용 (선택 · 알림에는 제목만 보여요)"></textarea>
     <div class="st-row"><span class="st-note">앱 안 알림함에도 남아요</span><button type="button" class="kad-btn pri" data-st="send">알림 보내기</button></div></section>
    <section class="st-card"><div class="st-h"><b>모든 기기 새 버전 적용</b></div><p class="st-note">업데이트했는데 옛날 화면이 보인다는 사람이 있으면 눌러 주세요. 모든 기기가 다음에 앱을 열 때 한 번 새로고침돼요. 로그인은 그대로예요.</p><div class="st-row"><span></span><button type="button" class="kad-btn" data-st="ver">새 버전 적용하기</button></div></section>
-   <section class="st-card"><div class="st-h"><b>변경 기록</b><small>최근 200개</small><button type="button" class="kad-btn" data-st="log">새로고침</button></div>
+   <section class="st-card"><div class="st-h"><b>변경 기록</b><small>최근 3개</small><button type="button" class="kad-btn" data-st="log">새로고침</button></div>
     ${S.logErr?`<p class="st-note bad">${esc(S.logErr)}</p>`:S.log==null?'<p class="st-wait">불러오는 중…</p>':S.log.length?`<div class="st-log">${S.log.map(x=>`<div class="st-l"><em class="k">${esc(x.kind)}</em><span>${esc(x.text)}</span><small>${esc(x.by||'')} · ${ago(x.at)}</small></div>`).join('')}</div>`:'<p class="st-wait">아직 기록이 없어요. 이제부터 콘티·공지·일정 알림, 삭제, 멤버 명단, 계정 관리 작업이 쌓여요.</p>'}</section>`;
   p.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{const k=b.dataset.st;
    if(k==='check')return runChecks();if(k==='log'){S.log=null;paint();return loadLog()}
