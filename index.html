@@ -8794,7 +8794,6 @@ function pickImages(fn){const i=document.createElement('input');i.type='file';i.
 :root[data-season=spring]{--deco:url(assets/deco-spring.webp)}:root[data-season=summer]{--deco:url(assets/deco-summer.webp)}
 :root[data-season=autumn]{--deco:url(assets/deco-autumn.webp)}:root[data-season=winter]{--deco:url(assets/deco-winter.webp)}
 @media (min-width:821px){
- :root[data-season] #side{position:relative}
  :root[data-season] #side>*{position:relative;z-index:1}
  :root[data-season] #side::after{content:"";position:absolute;inset:0;background-image:var(--leaf),var(--leaf);background-size:300px 300px,210px 210px;background-repeat:repeat;opacity:1;filter:saturate(1.4) contrast(1.15);animation:kzLeafFall 70s linear infinite;pointer-events:none;z-index:0}
  :root[data-season] body::after{content:"";position:fixed;top:0;right:0;width:min(32vw,460px);height:min(40vh,360px);background:var(--deco) center top/cover no-repeat;opacity:.34;-webkit-mask-image:radial-gradient(120% 120% at 100% 0%,#000 0%,rgba(0,0,0,.5) 35%,transparent 70%);mask-image:radial-gradient(120% 120% at 100% 0%,#000 0%,rgba(0,0,0,.5) 35%,transparent 70%);pointer-events:none;z-index:0}
