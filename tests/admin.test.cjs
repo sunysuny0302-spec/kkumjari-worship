@@ -131,7 +131,9 @@ t('loginFail counts per day and ignores unknown ids', async () => {
 
 t('version bump and logs', async () => {
   let n = 100;const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth(), now: () => ++n});
-  assert.deepStrictEqual(await s.publicRun({action: 'versionInfo'}), {v: 0});
+  assert.deepStrictEqual(await s.publicRun({action: 'versionInfo'}), {v: 0, theme: 'auto'});
+  await s.run(ADMIN, {action: 'themeSet', season: 'winter'});
+  assert.strictEqual((await s.publicRun({action: 'versionInfo'})).theme, 'winter');
   await s.run(ADMIN, {action: 'versionBump'});
   assert.ok((await s.publicRun({action: 'versionInfo'})).v > 0);
   await s.run(ME, {action: 'log', kind: '콘티', text: '10/11 콘티 업로드'});

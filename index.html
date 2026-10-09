@@ -4464,6 +4464,47 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
 #kzMkSz input{width:96px;accent-color:#e3b06a}
 #kzMkSz b{min-width:22px;text-align:center;font-weight:700}
 </style>
+<script id="kz-season-early">
+/* 계절 테마: 날짜로 자동(봄 3–5 · 여름 6–8 · 가을 9–11 · 겨울 12–2), 관리계정이 고정 가능 (서버 versionInfo.theme) */
+(function(){const auto=()=>{const m=new Date().getMonth()+1;return m>=3&&m<=5?'spring':m<=8&&m>=6?'summer':m>=9&&m<=11?'autumn':'winter'};
+ let fix='auto';try{fix=localStorage.getItem('kzSeasonV1')||'auto'}catch(e){}
+ window.kzSeason=()=>fix==='auto'?auto():fix;
+ window.kzSeasonSet=v=>{fix=v||'auto';try{localStorage.setItem('kzSeasonV1',fix)}catch(e){}document.documentElement.dataset.season=kzSeason();document.dispatchEvent(new Event('kzseason'))};
+ document.documentElement.dataset.season=kzSeason();})();
+</script>
+<style id="kz-season-css">
+:root[data-season=spring] #body .church-hero-main.church-banner-v15{background-image:url(assets/banner-spring.webp)!important}
+:root[data-season=summer] #body .church-hero-main.church-banner-v15{background-image:url(assets/banner-summer.webp)!important}
+:root[data-season=autumn] #body .church-hero-main.church-banner-v15{background-image:url(assets/banner-autumn.webp)!important}
+:root[data-season=winter] #body .church-hero-main.church-banner-v15{background-image:url(assets/banner-winter.webp)!important}
+:root[data-season=spring] .lx .lx-art{background-image:url(assets/login-bg-spring-m.webp)!important}
+:root[data-season=summer] .lx .lx-art{background-image:url(assets/login-bg-summer-m.webp)!important}
+:root[data-season=autumn] .lx .lx-art{background-image:url(assets/login-bg-autumn-m.webp)!important}
+:root[data-season=winter] .lx .lx-art{background-image:url(assets/login-bg-winter-m.webp)!important}
+@media (min-width:860px){
+:root[data-season=spring] .lx .lx-art{background-image:url(assets/login-bg-spring.webp)!important}
+:root[data-season=summer] .lx .lx-art{background-image:url(assets/login-bg-summer.webp)!important}
+:root[data-season=autumn] .lx .lx-art{background-image:url(assets/login-bg-autumn.webp)!important}
+:root[data-season=winter] .lx .lx-art{background-image:url(assets/login-bg-winter.webp)!important}}
+</style>
+<style id="kz-season-tone">
+/* 왼쪽 메뉴 아래 말씀 카드: 계절 그림(글씨 포함)을 그대로 */
+:root[data-season] .side-devotion{min-height:0!important;padding:0!important;aspect-ratio:666/373;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+:root[data-season] .side-devotion>p,:root[data-season] .side-devotion>small{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:root[data-season=spring] .side-devotion{background-image:url(assets/side-spring.webp)!important}
+:root[data-season=summer] .side-devotion{background-image:url(assets/side-summer.webp)!important}
+:root[data-season=autumn] .side-devotion{background-image:url(assets/side-autumn.webp)!important}
+:root[data-season=winter] .side-devotion{background-image:url(assets/side-winter.webp)!important}
+/* 계절 톤: 배경 빛과 강조색을 그림에 맞춰 살짝 */
+:root[data-season=spring]{--sz1:rgba(255,214,222,.55);--sz2:rgba(250,226,214,.6);--sz3:#f6ece6}
+:root[data-season=summer]{--sz1:rgba(226,240,200,.55);--sz2:rgba(244,236,208,.6);--sz3:#f1efe2}
+:root[data-season=autumn]{--sz1:rgba(255,214,160,.65);--sz2:rgba(240,206,170,.6);--sz3:#f3e8d8}
+:root[data-season=winter]{--sz1:rgba(226,236,248,.65);--sz2:rgba(240,232,222,.6);--sz3:#f2efea}
+:root[data-season] body{background:var(--sz3) radial-gradient(1200px 700px at 85% -10%,var(--sz1),transparent 60%) fixed,radial-gradient(900px 600px at 0% 40%,var(--sz2),transparent 60%) fixed!important}
+:root[data-season] .side{background-image:linear-gradient(180deg,var(--sz1),transparent 45%)!important}
+:root[data-season=spring] .lx-cross{filter:hue-rotate(-12deg) saturate(.9)}
+:root[data-season=winter] .lx-cross{filter:saturate(.75)}
+</style>
 </head><body>
 <div id="app"></div><div id="toast"></div>
 <!-- 팀 공유 모드(Firebase)를 쓸 때 필요한 SDK. 체험 모드에서는 없어도 돼요. -->
@@ -8400,6 +8441,23 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 .st-l .k{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(150,110,70,.12);color:#7a5531;white-space:nowrap}
 .st-l span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-l small{font-size:11.5px;color:var(--mu);white-space:nowrap}
 </style>
+<script id="kz-season">
+(function(){
+ const img=()=>{const s=kzSeason();document.querySelectorAll('img.kz-dev-image').forEach(i=>{const u='assets/devotion-'+s+'.webp';if(!i.src.endsWith(u))i.src=u})};
+ new MutationObserver(img).observe(document.body,{childList:true,subtree:true});document.addEventListener('kzseason',img);img();
+ /* 서버 설정 받아오기 (관리계정이 고정한 테마) */
+ setTimeout(async()=>{try{const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'versionInfo'})});const j=await r.json();if(j&&j.theme)kzSeasonSet(j.theme)}catch(e){}},1500);
+ /* 관리계정 사이트 탭: 계절 테마 칸 */
+ const NM={auto:'자동',spring:'봄',summer:'여름',autumn:'가을',winter:'겨울'};
+ new MutationObserver(()=>{const p=document.getElementById('kzSitePane');if(!p||p.hidden||p.querySelector('.ss-th'))return;const first=p.querySelector('.st-card');if(!first)return;
+  let cur='auto';try{cur=localStorage.getItem('kzSeasonV1')||'auto'}catch(e){}
+  const c=document.createElement('section');c.className='st-card ss-th';
+  c.innerHTML=`<div class="st-h"><b>계절 테마</b><small>지금 ${NM[kzSeason()]} · 배너·로그인·홈 그림이 바뀌어요</small></div><div class="ss-seg">${Object.entries(NM).map(([k,t])=>`<button type="button" data-ss="${k}" class="${k===cur?'on':''}">${t}</button>`).join('')}</div><p class="st-note">자동: 봄 3–5월 · 여름 6–8월 · 가을 9–11월 · 겨울 12–2월. 고르면 모든 기기에 적용돼요.</p>`;
+  first.after(c);
+  c.querySelectorAll('[data-ss]').forEach(b=>b.onclick=async()=>{const v=b.dataset.ss;c.querySelectorAll('[data-ss]').forEach(x=>x.classList.toggle('on',x===b));kzSeasonSet(v);c.querySelector('small').textContent=`지금 ${NM[kzSeason()]} · 배너·로그인·홈 그림이 바뀌어요`;try{await kzAdm({action:'themeSet',season:v});toast('계절 테마를 '+NM[v]+'(으)로 바꿨어요')}catch(e){toast(e.message)}})}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+})();
+</script>
+<style>.ss-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:3px;border-radius:11px;background:rgba(120,88,56,.08)}.ss-seg button{border:0;background:none;border-radius:8px;padding:8px 0;font:inherit;font-size:13px;font-weight:700;color:#6b5442;cursor:pointer}.ss-seg button.on{background:#3a2c20;color:#fff}</style>
 </body></html>
 
 <script id="kz-score-pages-script">
