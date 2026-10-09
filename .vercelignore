@@ -1,0 +1,9 @@
+# 배포에서 빼는 파일 (저장소에는 그대로 남음)
+index (*).html
+index_sidebar_ux_revised.html
+index_wood_sidebar_borders_theme.html
+kkumjari-vercel-deploy.zip
+icon-master.png
+tests
+UPLOAD.txt
+README.md
