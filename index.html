@@ -4501,11 +4501,17 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
 <style id="kz-season-tone">
 /* 왼쪽 메뉴 아래 말씀 카드: 계절 그림(글씨 포함)을 그대로 */
 :root[data-season] .side-devotion{min-height:0!important;padding:0!important;aspect-ratio:666/373;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
-:root[data-season] .side-devotion>p,:root[data-season] .side-devotion>small{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-:root[data-season=spring] .side-devotion{background-image:url(assets/side-spring.webp)!important}
-:root[data-season=summer] .side-devotion{background-image:url(assets/side-summer.webp)!important}
-:root[data-season=autumn] .side-devotion{background-image:url(assets/side-autumn.webp)!important}
-:root[data-season=winter] .side-devotion{background-image:url(assets/side-winter.webp)!important}
+:root[data-season] .side-devotion{aspect-ratio:1619/971!important;position:relative!important;display:block!important}
+/* 말씀 카드: 글자 없는 이미지 위에 화면 글씨 (선명하게) */
+:root[data-season] .side-devotion>p,:root[data-season] .side-devotion>small{position:absolute!important;left:8%;right:8%;width:auto;height:auto;overflow:visible;clip:auto;text-align:center;z-index:1;margin:0!important;color:#3a2b20!important;text-shadow:0 0 10px rgba(255,251,246,.95),0 0 3px rgba(255,251,246,.9)}
+:root[data-season] .side-devotion::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;background:radial-gradient(70% 90% at 50% 100%,rgba(255,250,244,.85) 0%,rgba(255,250,244,.55) 45%,rgba(255,250,244,0) 80%);pointer-events:none;z-index:0}
+:root[data-season] .side-devotion>p{bottom:21%;font-family:var(--serif);font-size:clamp(12px,1vw,14px)!important;font-weight:600;line-height:1.5!important}
+:root[data-season] .side-devotion>small{bottom:7%;font-size:clamp(10px,.8vw,11.5px)!important;color:#5d4a3c!important}
+:root[data-season=winter] .side-devotion>p{color:#2a3442!important}:root[data-season=winter] .side-devotion>small{color:#4a5868!important}
+:root[data-season=spring] .side-devotion{background-image:url(assets/side-spring.webp?v=2)!important}
+:root[data-season=summer] .side-devotion{background-image:url(assets/side-summer.webp?v=2)!important}
+:root[data-season=autumn] .side-devotion{background-image:url(assets/side-autumn.webp?v=2)!important}
+:root[data-season=winter] .side-devotion{background-image:url(assets/side-winter.webp?v=2)!important}
 /* 계절 톤: 배경 빛과 강조색을 그림에 맞춰 살짝 */
 :root[data-season=spring]{--sz1:rgba(255,214,222,.55);--sz2:rgba(250,226,214,.6);--sz3:#f6ece6}
 :root[data-season=summer]{--sz1:rgba(226,240,200,.55);--sz2:rgba(244,236,208,.6);--sz3:#f1efe2}
