@@ -8258,6 +8258,33 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  addEventListener('scroll',q,true);addEventListener('resize',q);
 })();
 </script>
+<script id="kz-fold">
+(function(){
+ const K='kzFoldV1',get=k=>{try{return JSON.parse(sessionStorage.getItem(K)||'{}')[k]===true}catch(e){return false}},put=(k,v)=>{try{const o=JSON.parse(sessionStorage.getItem(K)||'{}');o[k]=v;sessionStorage.setItem(K,JSON.stringify(o))}catch(e){}};
+ function fold(host,key,label,count,targets){if(!host||host.dataset.fold)return;host.dataset.fold='1';const open=get(key);
+  const b=document.createElement('button');b.type='button';b.className='kf-t';b.setAttribute('aria-expanded',open);
+  const paint=o=>{b.innerHTML=`<span>${label}</span>${count!=null?`<em>${count}</em>`:''}<i>${o?'접기':'펼치기'} ▾</i>`;b.classList.toggle('open',o);b.setAttribute('aria-expanded',o);targets().forEach(t=>t.hidden=!o)};
+  b.onclick=()=>{const o=b.getAttribute('aria-expanded')!=='true';put(key,o);paint(o)};
+  return [b,()=>paint(open)]}
+ function apply(root){
+  /* 가입 계정 관리 */
+  const rows=[...root.querySelectorAll('.kz-acct')];
+  if(rows.length){const sec=rows[0].closest('.kz-admin-section')||rows[0].parentElement;if(sec&&!sec.dataset.fold){const r=fold(sec,'acct','계정 목록',rows.length,()=>[...sec.querySelectorAll('.kz-acct')]);if(r){rows[0].before(r[0]);r[1]()}}}
+  /* 알림 종류 */
+  const ty=root.querySelector('.kzp-types');
+  if(ty&&!ty.dataset.fold){const tools=root.querySelector('.kzp-tools'),on=ty.querySelectorAll('input:checked').length,all=ty.querySelectorAll('input').length;const r=fold(ty,'push','알림 종류 고르기',`${on}/${all} 켜짐`,()=>[ty,tools].filter(Boolean));if(r){ty.before(r[0]);r[0].classList.add('kf-in');r[1]()}}
+ }
+ new MutationObserver(()=>{const p=document.getElementById('kzAdminPanel');if(p)apply(p)}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<style id="kz-fold-css">
+.kf-t{display:flex;align-items:center;gap:8px;width:100%;margin:6px 0 0;padding:10px 12px;border:1px solid rgba(110,80,50,.16);border-radius:12px;background:rgba(255,255,255,.7);font:inherit;font-size:13.5px;font-weight:700;color:#3a2c20;cursor:pointer;text-align:left}
+.kf-t em{font-style:normal;font-size:12px;font-weight:700;color:#8a5a2b;background:rgba(150,110,70,.12);padding:1px 8px;border-radius:99px}
+.kf-t i{margin-left:auto;font-style:normal;font-size:12px;color:var(--mu);font-weight:600}
+.kf-t.open i{color:#8a5a2b}
+.kf-t.kf-in{margin:0;border:0;border-top:1px solid rgba(110,80,50,.12);border-radius:0;background:transparent;padding:12px 16px}
+.kz-acct[hidden],.kzp-types[hidden],.kzp-tools[hidden]{display:none!important}
+</style>
 </body></html>
 
 <script id="kz-score-pages-script">
