@@ -924,7 +924,9 @@ input::placeholder,textarea::placeholder{color:color-mix(in srgb,var(--mu) 78%,t
 .mnw .ment{background:var(--bg)!important;border:1px solid var(--bd2)!important;color:var(--tx)!important}
 :root[data-theme="dark"] .mnw .ment{background:#07111d!important}
 /* make all subtle fields readable */
-.dp,.dpp,.ss,.ssp,.stg-g,.guest{background:var(--bg)!important;border-color:var(--bd)!important;color:var(--tx)!important}
+.dp,.dpp,.ssp,.stg-g,.guest{background:var(--bg)!important;border-color:var(--bd)!important;color:var(--tx)!important}.ss{color:var(--tx)!important}
+/* 드롭다운 감싸는 칸은 투명하게 (네모난 배경이 둥근 버튼 뒤로 비치던 문제) */
+.ss,.ss.ss-auto{background:transparent!important;border:0!important;box-shadow:none!important}
 .mu{color:var(--mu)!important}
 @media(max-width:760px){.side-b:before,.side-b:after{display:none!important}.church-banner-v15{min-height:150px!important;background-position:center!important}.verse-card{min-height:auto!important}}
 </style>
@@ -4062,6 +4064,11 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 </style>
 <style id="kz-admin-hub">
 .kad-ov{display:grid;place-items:end center;z-index:2147483000}
+/* 모바일: 시트 위쪽이 상태바·노치 밑으로 잘리지 않게 */
+.kz-admin-overlay.kad-ov{padding:0!important;padding-top:calc(env(safe-area-inset-top) + 10px)!important;overflow:hidden!important;align-content:end}
+.kad-ov .kad-sheet{max-height:calc(100vh - env(safe-area-inset-top) - 10px)!important;max-height:calc(100dvh - env(safe-area-inset-top) - 10px)!important;min-height:0}
+.kad-ov .kad-top{flex:none}.kad-ov .kad-scroll{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+@media (min-width:700px){.kz-admin-overlay.kad-ov{padding:20px!important;align-content:center}.kad-ov .kad-sheet{max-height:min(92vh,900px)!important}}
 @media (min-width:700px){.kad-ov{place-items:center}}
 .kad-sheet{width:min(560px,100%);max-height:min(92vh,900px);background:rgba(250,247,242,.94);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid rgba(120,88,56,.12);border-radius:22px 22px 0 0;box-shadow:0 -10px 40px -12px rgba(60,40,20,.3);display:flex;flex-direction:column;overflow:hidden;color:#2b2118}
 @media (min-width:700px){.kad-sheet{border-radius:22px}}
@@ -5503,7 +5510,7 @@ return{...m,rank,parts,slots,roles:[...(rank==='단장'||rank==='인도자'?[ran
 const normMembers=l=>(Array.isArray(l)?l:[]).map(normMember);
 const inGrp=(m,k)=>k==='단장'?m.rank==='단장':k==='인도자'?m.rank==='인도자':(m.parts||[]).includes(k);
 const grpOf=m=>m.rank==='단장'?'단장':m.rank==='인도자'?'인도자':(['싱어','세션','엔지니어'].find(p=>(m.parts||[]).includes(p))||'기타');
-function saveMembers(l){l=normMembers(l);members=l;try{const ak='kzAuthAccountsV92',aa=JSON.parse(localStorage.getItem(ak)||'[]');let ch=false;l.forEach(m=>{const a=aa.find(x=>(m.accountId&&x.id===m.accountId)||x.name===m.name);if(a&&a.rank!=='관리계정'){a.rank=m.rank;a.parts=[...(m.parts||[])];a.slots=[...(m.slots||[])];ch=true}});if(ch)localStorage.setItem(ak,JSON.stringify(aa))}catch(e){console.error(e)}if(!db)return;db.doc('settings/members').set({list:l}).then(()=>{try{l.filter(m=>m.accountId).forEach(m=>db.doc('accounts/'+m.accountId).set({id:m.accountId,name:m.name,rank:m.rank,status:'approved',parts:[...(m.parts||[])],slots:[...(m.slots||[])],approvedAt:Date.now()},{merge:true}))}catch(e){console.error(e)}}).catch(e=>{console.error(e);toast('저장하지 못했어요. 편집 권한이 필요해요')})}
+function saveMembers(l){l=normMembers(l);members=l;try{const ak='kzAuthAccountsV92',aa=JSON.parse(localStorage.getItem(ak)||'[]');let ch=false;l.forEach(m=>{const a=aa.find(x=>(m.accountId&&x.id===m.accountId)||(!m.accountId&&x.status==='approved'&&x.name===m.name));if(a&&a.rank!=='관리계정'&&a.status==='approved'){a.rank=m.rank;a.parts=[...(m.parts||[])];a.slots=[...(m.slots||[])];ch=true}});if(ch)localStorage.setItem(ak,JSON.stringify(aa))}catch(e){console.error(e)}if(!db)return;db.doc('settings/members').set({list:l}).then(()=>{try{/* 멤버 명단 → 계정에는 직책·파트만 반영. 승인 상태·이름은 건드리지 않고, 지워졌거나 승인 전·정지된 계정은 되살리지 않음 */const acc=(()=>{try{return JSON.parse(localStorage.getItem('kzAuthAccountsV92')||'[]')}catch(e){return []}})();l.filter(m=>m.accountId).forEach(m=>{const a=acc.find(x=>x.id===m.accountId);if(!a||a.status!=='approved'||a.rank==='관리계정')return;const same=a.rank===m.rank&&JSON.stringify(a.parts||[])===JSON.stringify(m.parts||[])&&JSON.stringify(a.slots||[])===JSON.stringify(m.slots||[]);if(same)return;db.doc('accounts/'+m.accountId).update({rank:m.rank,parts:[...(m.parts||[])],slots:[...(m.slots||[])]}).catch(e=>console.warn('[꿈자리] 계정 직책 반영 실패',e&&e.code))})}catch(e){console.error(e)}}).catch(e=>{console.error(e);toast('저장하지 못했어요. 편집 권한이 필요해요')})}
 let mbEdit=false;
 function membersView(){return((canEdit||members.length===0)&&mbEdit)?membersEdit():rosterView()}
 function rosterView(){const E=canEdit||members.length===0,cnt=k=>members.filter(m=>inGrp(m,k)).length,g={};
@@ -5999,7 +6006,9 @@ function sessionRuleView(){
   $('#erSave').onclick=async()=>{const r={};$$('[data-er]').forEach(x=>r[x.dataset.er]=x.value);sessionRules=r;try{await db.doc('settings/sessionRules').set({rules:r,anchor:nextSun()});toast('세션 배정 규칙을 저장했어요 ✓');sessionRuleView()}catch(e){toast('저장하지 못했어요')}};
 }
 // 세션 규칙 구독
-setTimeout(()=>{if(db)db.doc('settings/sessionRules').onSnapshot(x=>{if(x.exists&&x.data().rules)sessionRules=x.data().rules;if(view==='rule_e')sessionRuleView()},()=>{})},1200);
+/* 로그인 뒤에야 db가 준비되므로 준비될 때까지 기다렸다가 구독 (예전엔 1.2초 안에 로그인 못 하면 영영 안 불러옴) */
+window.kzWhenDb=f=>{const t=()=>{if(db)try{f()}catch(e){console.error(e)}else setTimeout(t,400)};t()};
+kzWhenDb(()=>{db.doc('settings/sessionRules').onSnapshot(x=>{if(x.exists&&x.data().rules)sessionRules=x.data().rules;if(view==='rule_e')sessionRuleView()},e=>console.warn('[꿈자리] sessionRules',e&&e.code))});
 
 renderApp();
 skin(document.body);iconObs.observe(document.body,{childList:true,subtree:true,characterData:true});
@@ -6098,7 +6107,7 @@ sub();stat()}catch(e){console.error(e)}})();
  let joining=false;const approvedSig=()=>read().filter(x=>x.status==='approved').map(x=>x.id+':'+x.name+':'+(x.rank||'')).sort().join('|');
  function watchAccounts(){const fs=FS();if(!fs)return;let un=null;const sub=()=>{try{un&&un()}catch(e){}un=null;try{un=fs.collection('accounts').onSnapshot(s=>{const before=approvedSig();const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote);try{checkRevoked()}catch(e){}
   /* 로그인 화면은 승인된 계정 목록이 바뀌었을 때만, 입력 중이 아닐 때만 새로 그림 (가입 요청 중·가입 탭은 건드리지 않음) */
-  const l=document.getElementById('kzLoginLock');if(!joining&&l&&l.isConnected&&!l.querySelector('.kz-pending-ok')&&before!==approvedSig()){const active=l.querySelector('.kz-login-tabs button.on')?.dataset.tab||'login';const typing=[...l.querySelectorAll('input')].some(i=>i.type!=='checkbox'&&i.value&&i.id!=='kzNameInput')||l.contains(document.activeElement)&&document.activeElement.tagName==='INPUT';if(active==='login'&&!typing)login('login')}} ,e=>console.warn('[꿈자리] accounts 구독 실패',e))}catch(e){console.warn(e)}};sub();
+  const l=document.getElementById('kzLoginLock');if(!joining&&l&&l.isConnected&&!l.querySelector('.kz-pending-ok')&&before!==approvedSig()){const active=l.querySelector('.kz-login-tabs button.on')?.dataset.tab||'login';if(active==='login'){const pin=l.querySelector('#kzPin')?.value||'',ni=l.querySelector('#kzNameInput'),nv=ni?ni.value:'',hid=ni?ni.closest('.kz-account-picker')?.hidden:true,fid=document.activeElement&&l.contains(document.activeElement)?document.activeElement.id:'';login('login');const n=document.getElementById('kzLoginLock');if(!n)return;const ni2=n.querySelector('#kzNameInput');if(ni2&&!hid&&nv&&ni2.value!==nv){ni2.value=nv;ni2.dispatchEvent(new Event('input',{bubbles:true}))}const p2=n.querySelector('#kzPin');if(p2&&pin)p2.value=pin;if(fid){const f=n.querySelector('#'+CSS.escape(fid));if(f)try{f.focus({preventScroll:true})}catch(e){}}}}} ,e=>console.warn('[꿈자리] accounts 구독 실패',e))}catch(e){console.warn(e)}};sub();
   /* 로그인 전에는 규칙 때문에 구독이 막힐 수 있어서, 로그인 상태가 바뀌면 다시 구독 */
   try{const au=FB();if(au&&au.onAuthStateChanged){let first=true;au.onAuthStateChanged(()=>{if(first){first=false;return}sub()})}}catch(e){}}
  async function ensureManagerAuth(){
@@ -6267,7 +6276,7 @@ sub();stat()}catch(e){console.error(e)}})();
  async function run(body,ok){try{H.busy=true;const r=await ADM(body);if(ok)toast(ok);return r||{}}catch(e){toast(e.message||'처리하지 못했어요');return null}finally{H.busy=false}}
  async function hubAct(k,id,b){const x=H.list.find(v=>v.id===id),w=document.getElementById('kzHub');
   if(k==='close')return w&&w.remove();if(k==='reload')return hubLoad();if(k==='panel'){w&&w.remove();return panel()}
-  if(k==='approve'){w&&w.remove();return panel()}
+  if(k==='approve'){w&&w.remove();return panel().then(()=>setTimeout(()=>{const r=document.querySelector(`#kzAdminPanel .kz-request[data-id="${CSS.escape(id||'')}"]`)||document.querySelector('#kzAdminPanel .kz-request')?.closest('.kz-admin-section');if(r)r.scrollIntoView({block:'start',behavior:'smooth'})},120))}
   if(k==='toggle'){H.open=H.open===id?'':id;if(H.res&&H.res.id!==H.open)H.res=null;hubPaint();if(H.open)setTimeout(()=>document.querySelector('#kzHub .kad-item.open')?.scrollIntoView({block:'nearest',behavior:'smooth'}),30);return}
   if(k==='copy'||k==='copycode'){const t=k==='copy'?H.res&&H.res.pin:H.signup.code;try{await navigator.clipboard.writeText(t);toast('복사했어요')}catch(e){toast(t)}return}
   if(k==='suopen'){const open=!H.signup.open;if(!open&&!confirm('새 가입을 닫을까요?\n\n가입 화면에 "지금은 새 가입을 받지 않아요"가 보여요.\n이미 가입한 멤버는 그대로 로그인할 수 있어요.'))return;const r=await run({action:'signupSet',open,code:H.signup.code},open?'가입을 열었어요':'가입을 닫았어요');if(r){H.signup=r.signup;suInfo=null;hubPaint()}return}
@@ -6482,13 +6491,13 @@ function arMonthWeek(d){const x=new Date(d+'T12:00:00');return Math.ceil(x.getDa
 function arInRange(r,d){return (!r.start||d>=r.start)&&(!r.end||d<=r.end)&&!(r.skip||'').split(',').map(x=>x.trim()).filter(Boolean).includes(d)}
 function arBasic(r,d){if(!r||!arInRange(r,d))return false;const w=arWeek(d,r.anchor||nextSun());if(r.mode==='fixed')return true;if(r.mode==='off'||r.mode==='manual'||r.mode==='rotation')return false;if(r.mode==='interval')return ((w-(+r.offset||0))%(Math.max(1,+r.every||2))+Math.max(1,+r.every||2))%Math.max(1,+r.every||2)===0;if(r.mode==='odd')return ((w-(+r.offset||0))%2+2)%2===0;if(r.mode==='monthly')return (r.monthWeeks||[1,3]).includes(arMonthWeek(d));return false}
 function arRules(kind){return assignCfg[kind]||{}}
-function arActiveMap(kind,d,names){const rules=arRules(kind),out={};names.forEach(n=>out[n]=arBasic(rules[n],d));const groups={};names.forEach(n=>{const r=rules[n];if(r&&r.mode==='rotation'){const g=r.group||'기본 로테이션';(groups[g]||(groups[g]=[])).push(n)}});Object.entries(groups).forEach(([g,arr])=>{arr.sort((a,b)=>(+(rules[a].order||0))-(+(rules[b].order||0)));if(!arr.length)return;const r=rules[arr[0]], every=Math.max(1,+r.every||1),w=Math.floor((arWeek(d,r.anchor||nextSun())-(+r.offset||0))/every),idx=((w%arr.length)+arr.length)%arr.length;arr.forEach((n,i)=>out[n]=i===idx&&arInRange(rules[n],d))});return out}
+function arActiveMap(kind,d,names){const raw=arRules(kind),out={},ro=(()=>{try{return kind==='singer'?singRoster():sessRoster()}catch(e){return []}})(),rules={};names.forEach(n=>{const m=ro.find(x=>x.n===n);rules[n]={...arDefault(kind,n,m&&m.tag),...(raw[n]||{})}});names.forEach(n=>out[n]=arBasic(rules[n],d));const groups={};names.forEach(n=>{const r=rules[n];if(r&&r.mode==='rotation'){const g=r.group||'기본 로테이션';(groups[g]||(groups[g]=[])).push(n)}});Object.entries(groups).forEach(([g,arr])=>{arr.sort((a,b)=>(+(rules[a].order||0))-(+(rules[b].order||0)));if(!arr.length)return;const r=rules[arr[0]], every=Math.max(1,+r.every||1),w=Math.floor((arWeek(d,r.anchor||nextSun())-(+r.offset||0))/every),idx=((w%arr.length)+arr.length)%arr.length;arr.forEach((n,i)=>out[n]=i===idx&&arInRange(rules[n],d))});return out}
 function arHas(kind){return Object.keys(arRules(kind)).length>0}
 /* Make the existing singer engine consume advanced rules without changing the rest of the app. */
 const _v7OldSingParts=singParts;
 singParts=function(d,o){if(!arHas('singer'))return _v7OldSingParts(d,o);const names=singRoster().map(x=>x.n),on=arActiveMap('singer',d,names);return [names.filter(n=>on[n]),null]}
 const _v7OldSessFill=sessFill;
-sessFill=function(d){if(!arHas('session'))return _v7OldSessFill(d);const out={}, roster=sessRoster(),names=roster.map(x=>x.n),on=arActiveMap('session',d,names);for(const m of roster){if(!on[m.n])continue;for(const sl of (m.slots||[])){if(!LINES.includes(sl)||sl==='인도'||out[sl])continue;out[sl]=m.n}}for(const m of roster)for(const sl of (m.slots||[]))if(LINES.includes(sl)&&sl!=='인도'&&!(sl in out))out[sl]='';for(const a of sessAbs.filter(x=>x.date===d))for(const sl of Object.keys(out))if(out[sl]===a.name)out[sl]='';for(const x of ovr.filter(x=>x.date===d&&x.k==='session'))for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||'';return out}
+sessFill=function(d){if(!arHas('session'))return _v7OldSessFill(d);/* 규칙 화면 명단(sessRoster)에는 악기 칸(slots)이 없어서 멤버 명단에서 직접 가져옴 · 세션 치는 인도자도 포함 */const out={}, roster=members.filter(m=>(m.roles||[]).includes('세션')||(m.roles||[]).includes('인도자')).map(m=>({n:m.name,tag:(m.slots||[]).join('/'),slots:m.slots||[]})),names=roster.map(x=>x.n),on=arActiveMap('session',d,names);for(const m of roster){if(!on[m.n])continue;for(const sl of (m.slots||[])){if(!LINES.includes(sl)||sl==='인도'||out[sl])continue;out[sl]=m.n}}for(const m of roster)for(const sl of (m.slots||[]))if(LINES.includes(sl)&&sl!=='인도'&&!(sl in out))out[sl]='';for(const a of sessAbs.filter(x=>x.date===d))for(const sl of Object.keys(out))if(out[sl]===a.name)out[sl]='';for(const x of ovr.filter(x=>x.date===d&&x.k==='session'))for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||'';return out}
 function arDefault(kind,n,tag){if(kind==='singer'){if(sing.fixed.includes(n))return{mode:'fixed',anchor:sing.anchor};if(sing.rot.includes(n))return{mode:'rotation',group:'싱어 로테이션',every:sing.every,anchor:sing.anchor,order:sing.rot.indexOf(n)}}return{mode:kind==='session'?'fixed':'off',anchor:nextSun(),group:tag||'기본',every:1,offset:0,monthWeeks:[1,3]}}
 function arGet(kind,n,tag){return {...arDefault(kind,n,tag),...(arRules(kind)[n]||{})}}
 function arDesc(r){if(r.mode==='fixed')return '매주 자동 배정';if(r.mode==='rotation')return `${r.group||'기본'} · ${r.every||1}주 단위`;if(r.mode==='interval')return `${r.every||2}주마다`;if(r.mode==='monthly')return `매월 ${(r.monthWeeks||[]).join('·')}주`;if(r.mode==='odd')return '격주 배정';if(r.mode==='manual')return '자동 배정 없이 일정 변경에서 직접';return '자동 배정 안 함'}
@@ -6530,23 +6539,32 @@ singerRuleView=function(){arPage('singer')};sessionRuleView=function(){arPage('s
    <datalist id="r2Groups">${groups.map(g=>`<option value="${esc(g)}">`).join('')}</datalist>
    <div class="r2-bar ${dirty?'show':''}" role="status"><span>${dirty?'저장하지 않은 변경이 있어요':'모두 저장됐어요'}</span><button type="button" class="r2-undo" ${dirty?'':'disabled'}>되돌리기</button><button type="button" class="btn r2-save" ${dirty?'':'disabled'}>저장</button></div></div>`;
   const set=(n,patch)=>{const m=roster.find(x=>x.n===n);assignCfg[kind][n]={...arGet(kind,n,m&&m.tag),...patch};page(kind)};
+  /* 숫자·그룹 입력은 화면을 다시 그리지 않고 점·인원·저장 바만 갱신 (입력 직후 저장을 눌러도 눌림) */
+  const soft=(n,patch)=>{const m=roster.find(x=>x.n===n);assignCfg[kind][n]={...arGet(kind,n,m&&m.tag),...patch};
+   const f={};roster.forEach(x=>f[x.n]=arGet(kind,x.n,x.tag));const kp=assignCfg[kind];assignCfg[kind]=f;let mp;try{mp=W.map(d=>arActiveMap(kind,d,roster.map(x=>x.n)))}finally{assignCfg[kind]=kp}
+   roster.forEach(x=>{const row=document.querySelector(`[data-r2-row="${CSS.escape(x.n)}"]`);if(!row)return;row.querySelectorAll('.r2-dots i').forEach((el,i)=>el.classList.toggle('on',!!mp[i][x.n]));const sm=row.querySelector('.r2-who small');if(sm)sm.textContent=(isS?'':(x.tag||'세션')+' · ')+desc(arGet(kind,x.n,x.tag))});
+   document.querySelectorAll('.r2-dates em b').forEach((el,i)=>el.textContent=roster.filter(x=>mp[i][x.n]).length+'명');
+   const dt=saved!==kind+'|'+JSON.stringify(assignCfg[kind]),bar=document.querySelector('.r2-bar');if(bar){bar.classList.toggle('show',dt);bar.querySelector('span').textContent=dt?'저장하지 않은 변경이 있어요':'모두 저장됐어요';bar.querySelector('.r2-undo').disabled=!dt;bar.querySelector('.r2-save').disabled=!dt}};
   $$('[data-r2-mode]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mode,v=b.dataset.v,r=arGet(kind,n);const p={mode:v};if(v==='interval')p.every=Math.max(2,r.mode==='odd'?2:+r.every||2);if(v==='rotation'){p.group=r.group&&r.group!=='기본'?r.group:(groups[0]||(isS?'싱어 로테이션':'세션 로테이션'));p.every=Math.max(1,+r.every||1);p.anchor=r.anchor||nextSun()}if(v==='monthly'&&!(r.monthWeeks||[]).length)p.monthWeeks=[1,3];set(n,p)});
   $$('[data-r2-mw]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mw,r=arGet(kind,n),w=+b.dataset.w;let a=[...(r.monthWeeks||[])];a=a.includes(w)?a.filter(x=>x!==w):[...a,w].sort((x,y)=>x-y);set(n,{monthWeeks:a})});
-  const num=(sel,key,min)=>$$(`[${sel}]`).forEach(i=>i.onchange=()=>set(i.getAttribute(sel),{[key]:Math.max(min,Math.round(+i.value||min))}));
-  num('data-r2-order','order',0);num('data-r2-every','every',1);
-  $$('[data-r2-offset]').forEach(s=>s.onchange=()=>set(s.dataset.r2Offset,{offset:+s.value||0}));
-  $$('[data-r2-group]').forEach(i=>i.onchange=()=>set(i.dataset.r2Group,{group:i.value.trim()||'기본 로테이션'}));
+  const num=(sel,key,min,full)=>$$(`[${sel}]`).forEach(i=>{const go=hard=>{const v=Math.round(+i.value);if(i.value===''||!Number.isFinite(v))return;(hard&&full?set:soft)(i.getAttribute(sel),{[key]:Math.max(min,v)})};i.oninput=()=>go(false);i.onchange=()=>{const n=i.getAttribute(sel),r=arGet(kind,n);if(i.value===''){i.value=r[key]??min}if(full&&norm(r.mode)==='interval')setTimeout(()=>{if(!document.querySelector('.r2-save:active'))set(n,{[key]:Math.max(min,Math.round(+i.value)||min)})},250);else go(false)}});
+  num('data-r2-order','order',0);num('data-r2-every','every',1,true);
+  $$('[data-r2-offset]').forEach(s=>s.onchange=()=>soft(s.dataset.r2Offset,{offset:+s.value||0}));
+  $$('[data-r2-group]').forEach(i=>{i.oninput=()=>soft(i.dataset.r2Group,{group:i.value.trim()||'기본 로테이션'});i.onchange=i.oninput});
   $$('[data-r2-all]').forEach(b=>b.onclick=()=>{const v=b.dataset.r2All;roster.forEach((m,i)=>assignCfg[kind][m.n]={...arGet(kind,m.n,m.tag),mode:v,...(v==='rotation'?{group:isS?'싱어 로테이션':(m.tag||'세션 로테이션'),order:i,every:1,anchor:nextSun()}:{})});page(kind)});
   $('.r2-undo').onclick=()=>{assignCfg[kind]=JSON.parse(saved.slice(kind.length+1));page(kind)};
-  $('.r2-save').onclick=async()=>{const b=$('.r2-save');b.disabled=true;b.textContent='저장 중…';try{if(!db)throw 0;await db.doc('settings/assignmentRules').set(assignCfg);saved=kind+'|'+JSON.stringify(assignCfg[kind]);toast('배정 규칙을 저장했어요 ✓');page(kind)}catch(e){b.disabled=false;b.textContent='저장';toast('저장하지 못했어요')}};
+  $('.r2-save').onclick=async()=>{const b=$('.r2-save');b.disabled=true;b.textContent='저장 중…';try{if(!db)throw 0;const out={singer:assignCfg.singer||{},session:assignCfg.session||{}};await db.doc('settings/assignmentRules').set(JSON.parse(JSON.stringify(out)));saved=kind+'|'+JSON.stringify(assignCfg[kind]);toast('배정 규칙을 저장했어요 ✓ 일정표·홈·콘티에 반영돼요');page(kind)}catch(e){console.error('[꿈자리] 배정 규칙 저장 실패',e);b.disabled=false;b.textContent='저장';toast(String(e&&e.code||'').includes('permission')?'저장 권한이 없어요. 관리자급 계정으로 다시 로그인해 주세요':'저장하지 못했어요. 인터넷 연결을 확인해 주세요')}};
  }
  window.kzRulePage=page;
+ window.kzRuleRemote=d=>{const next={singer:d.singer||{},session:d.session||{}};const onPage=(view==='rule_s'&&kindNow==='singer')||(view==='rule_e'&&kindNow==='session');
+  const dirty=onPage&&saved&&saved!==kindNow+'|'+JSON.stringify(assignCfg[kindNow]);const mine=dirty?assignCfg[kindNow]:null;assignCfg=next;
+  if(onPage){saved=kindNow+'|'+JSON.stringify(next[kindNow]);if(mine)assignCfg[kindNow]=mine;const a=document.activeElement;if(!(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName)&&a.closest('.r2')))page(kindNow)}else saved=''};
  singerRuleView=function(){if(kindNow!=='singer')saved='';page('singer')};
  sessionRuleView=function(){if(kindNow!=='session')saved='';page('session')};
 })();
 
 /* Load the advanced rules. Empty document keeps the old rules fully compatible. */
-setTimeout(()=>{if(db)db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){const d=x.data();assignCfg={singer:d.singer||{},session:d.session||{}};if(view==='rule_s')singerRuleView();if(view==='rule_e')sessionRuleView();if(view==='sched_s')schedSView();if(view==='sched_e')schedEView();}},()=>{})},1400);
+kzWhenDb(()=>{db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){const d=x.data();if(window.kzRuleRemote)kzRuleRemote(d);else assignCfg={singer:d.singer||{},session:d.session||{}};if(view==='sched_s')schedSView();if(view==='sched_e')schedEView();if(view==='home'&&document.getElementById('body'))try{homeView()}catch(e){}}},e=>console.warn('[꿈자리] assignmentRules',e&&e.code))});
 </script>
 
 <script>
