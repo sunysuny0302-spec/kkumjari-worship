@@ -41,21 +41,22 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['id', 'name', 'rank', 'status', 'parts', 'slots', 'authEmail', 'requestedAt']);
       // 상태(승인·정지)·삭제는 관리계정만 (승인·정지·삭제는 서버 api/admin 이 처리)
       // 단장은 멤버 명단을 고칠 때 다른 사람의 직책·파트·악기만 맞출 수 있음 (자기 자신·관리계정 직책 불가)
-      allow update: if isMgr() || (chief() && request.auth.uid != uid
+      allow update: if isMgr() || (chief() && request.auth.uid != uid && uid != 'management'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rank', 'parts', 'slots'])
         && request.resource.data.rank in ['팀원', '선임싱어', '선임세션', '인도자', '단장']);
       allow delete: if isMgr();
     }
-    // 관리계정 문서(id = 'management')
+    // 관리계정 문서(id = 'management') — 위 규칙에서 단장 수정은 막혀 있음
     match /accounts/management {
       allow read: if approved();
       allow write: if isMgr();
     }
 
     // ---------- 설정 ----------
+    // 규칙은 겹치면 '하나라도 허용'이라, backup 은 여기서 빼고 아래에서 따로 정함
     match /settings/{doc} {
-      allow read: if approved();
-      allow write: if staff();
+      allow read: if approved() && doc != 'backup';
+      allow write: if staff() && doc != 'backup';
     }
     match /settings/backup {
       allow read, write: if chief();
