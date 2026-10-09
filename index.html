@@ -8810,7 +8810,10 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .hm.hm-v13 .church-hero{aspect-ratio:2136/694!important;height:auto!important;max-height:400px!important}
 .hm.hm-v13 .church-hero .church-hero-main.church-banner-v15{background-size:cover!important;background-position:center!important}
 /* 3) 이번 주 콘티 카드: 흰 막 대신 은은한 어두운 막 + 흰 글씨 */
-#body .hm.hm-v13 .kz-hero{background:linear-gradient(100deg,rgba(38,26,16,.66) 0%,rgba(38,26,16,.42) 48%,rgba(38,26,16,.10) 85%,rgba(38,26,16,0) 100%),url("assets/hero-b.a4610934.webp") 58% center/cover no-repeat!important}
-#body .hm.hm-v13 .kz-hero .kz-hero-date{color:rgba(255,255,255,.9)!important}
-#body .hm.hm-v13 .kz-hero h3{color:#fff!important;text-shadow:0 1px 12px rgba(0,0,0,.28)}
+#body .hm.hm-v13 .kz-hero{background:url("assets/hero-b.a4610934.webp") 58% center/cover no-repeat!important;position:relative!important;overflow:hidden!important}
+/* 왼쪽만 은은하게 흐리고 살짝 밝게 → 검은 글씨가 잘 읽히게 (흰 막처럼 뜨지 않을 정도로) */
+#body .hm.hm-v13 .kz-hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);background:linear-gradient(90deg,rgba(251,246,238,.58) 0%,rgba(251,246,238,.38) 38%,rgba(251,246,238,.08) 62%,rgba(251,246,238,0) 75%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 72%);mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 72%)}
+#body .hm.hm-v13 .kz-hero>*{position:relative;z-index:1}
+#body .hm.hm-v13 .kz-hero .kz-hero-date{color:#3e342b!important;text-shadow:0 0 10px rgba(255,250,244,.8)}
+#body .hm.hm-v13 .kz-hero h3{color:#1f1914!important;text-shadow:0 0 14px rgba(255,250,244,.85)}
 </style>
