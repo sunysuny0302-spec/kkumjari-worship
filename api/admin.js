@@ -18,7 +18,8 @@ module.exports = async function handler(req, res) {
   if (!input || typeof input !== 'object' || !(PUBLIC.has(a) || ADMIN.has(a) || SELF.has(a)) || JSON.stringify(input).length > 4000) return res.status(400).json({error: '요청 내용을 확인해 주세요.'});
   try {
     const svc = getService();
-    const out = PUBLIC.has(a) ? await svc.publicRun(input) : await svc.run(await authenticate(req), input);
+    const ip = String(req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    const out = PUBLIC.has(a) ? await svc.publicRun(input, ip) : await svc.run(await authenticate(req), input);
     return res.status(200).json(out);
   } catch (e) {
     const status = Number(e && e.status) || 500;

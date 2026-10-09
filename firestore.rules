@@ -1,0 +1,119 @@
+rules_version = '2';
+// =====================================================================
+// 꿈자리 찬양팀 — Firestore 보안 규칙 (권장안, 2026-10-09)
+//
+// 이 파일은 Vercel이 아니라 Firebase에 적용해야 해요.
+//   Firebase 콘솔 → Firestore Database → 규칙 탭에 붙여넣기 → 게시
+//   (또는 firebase deploy --only firestore:rules)
+// 적용 전에 지금 콘솔에 있는 규칙을 꼭 따로 복사해 두세요. 문제가 생기면 그대로 되돌리면 돼요.
+// 적용 후 확인: 가입 → 승인 → 로그인, 콘티 업로드, 공지 작성, 출결 체크, 개인 메모, 신청곡, 채팅.
+//
+// 원칙
+//  - 로그인 전에는 아무것도 읽을 수 없음 (로그인은 서버 api/admin 의 loginLookup 으로 이름을 찾음)
+//  - 승인된 팀원만 읽기, 쓰기는 기능별로 (화면의 권한 표와 같음)
+//  - 서버 전용 데이터(_kz*, passkeys)는 화면에서 접근 불가 (서버는 관리자 키라 규칙과 무관)
+// =====================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- 도우미 ----------
+    function signedIn() { return request.auth != null; }
+    function isMgr() {
+      return signedIn() && request.auth.token.email == 'management@kkumjari-worship.firebaseapp.com';
+    }
+    function me() { return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data; }
+    function hasMe() { return signedIn() && exists(/databases/$(database)/documents/accounts/$(request.auth.uid)); }
+    function approved() { return isMgr() || (hasMe() && me().status == 'approved'); }
+    function rankIn(list) { return isMgr() || (approved() && me().rank in list); }
+    // 관리자급: 단장 · 인도자 · 선임싱어 · 선임세션 (+ 관리계정)
+    function staff() { return rankIn(['단장', '인도자', '선임싱어', '선임세션']); }
+    function leader() { return rankIn(['인도자']); }
+    function chief() { return rankIn(['단장']); }
+
+    // ---------- 계정 ----------
+    match /accounts/{uid} {
+      // 승인된 팀원은 명단을 볼 수 있고, 승인 전인 사람도 자기 문서는 볼 수 있음
+      allow read: if approved() || (signedIn() && request.auth.uid == uid);
+      // 가입: 자기 문서만, '승인 대기 · 팀원'으로만 만들 수 있음
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.rank == '팀원'
+        && request.resource.data.keys().hasOnly(['id', 'name', 'rank', 'status', 'parts', 'slots', 'authEmail', 'requestedAt']);
+      // 상태(승인·정지)·삭제는 관리계정만 (승인·정지·삭제는 서버 api/admin 이 처리)
+      // 단장은 멤버 명단을 고칠 때 다른 사람의 직책·파트·악기만 맞출 수 있음 (자기 자신·관리계정 직책 불가)
+      allow update: if isMgr() || (chief() && request.auth.uid != uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rank', 'parts', 'slots'])
+        && request.resource.data.rank in ['팀원', '선임싱어', '선임세션', '인도자', '단장']);
+      allow delete: if isMgr();
+    }
+    // 관리계정 문서(id = 'management')
+    match /accounts/management {
+      allow read: if approved();
+      allow write: if isMgr();
+    }
+
+    // ---------- 설정 ----------
+    match /settings/{doc} {
+      allow read: if approved();
+      allow write: if staff();
+    }
+    match /settings/backup {
+      allow read, write: if chief();
+    }
+
+    // ---------- 콘티 · 악보 · 사진 ----------
+    match /weeks/{date} {
+      allow read: if approved();
+      allow write: if staff();
+    }
+    match /library/{id} {
+      allow read: if approved();
+      allow write: if staff();
+    }
+    match /_assets/{id} {
+      allow read: if approved();
+      allow write: if staff();
+      match /c/{chunk} {
+        allow read: if approved();
+        allow write: if staff();
+      }
+    }
+
+    // ---------- 공지 · 일정 · 회의록 · 휴지통 ----------
+    match /notices/{id} { allow read: if approved(); allow write: if staff(); }
+    match /events/{id}  { allow read: if approved(); allow write: if staff(); }
+    match /minutes/{id} { allow read: if approved(); allow write: if staff(); }
+    match /trash/{id}   { allow read: if approved(); allow write: if staff(); }
+
+    // ---------- 누구나 쓰는 것 ----------
+    // 가사 PPT: 승인된 팀원 누구나
+    match /lyrics/{id} { allow read, write: if approved(); }
+    // 불참·대타·교대, 세션 불참: 본인이 직접 등록하므로 승인된 팀원 누구나
+    match /overrides/{id} { allow read, write: if approved(); }
+    match /sessAbs/{id}   { allow read, write: if approved(); }
+
+    // ---------- 출결 · 메모 ----------
+    match /attendance/{id} { allow read, write: if staff(); }
+    match /care/{id}       { allow read, write: if chief(); }
+    match /privateMemos/{owner}/items/{id} {
+      allow read, write: if approved() && request.auth.uid == owner;
+    }
+
+    // ---------- 알림 기기 ----------
+    // 문서 id 는 토큰에서 만든 값이라 추측이 어려움. 본인 uid 로만 등록·삭제
+    match /pushTokens/{id} {
+      allow create, update: if approved() && request.resource.data.uid == request.auth.uid;
+      allow delete: if approved() && (resource == null || resource.data.uid == request.auth.uid);
+      allow read: if false;
+    }
+
+    // ---------- 서버 전용 (화면에서 접근 불가) ----------
+    match /passkeys/{id}          { allow read, write: if false; }
+    match /passkeyChallenges/{id} { allow read, write: if false; }
+    match /_kzAdmin/{doc=**}      { allow read, write: if false; }
+    match /_kzLog/{doc=**}        { allow read, write: if false; }
+    match /_kzCommunity/{doc=**}  { allow read, write: if false; }
+
+    // 위에 없는 경로는 모두 막힘 (Firestore 기본값)
+  }
+}

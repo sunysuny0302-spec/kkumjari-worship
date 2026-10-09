@@ -122,7 +122,10 @@ t('loginFail counts per day and ignores unknown ids', async () => {
   await s.publicRun({action: 'loginFail', id: 'u1', locked: true});
   await s.publicRun({action: 'loginFail', id: 'zzz'});
   let f = db.store.get('_kzAdmin/loginFails');
-  assert.deepStrictEqual(f.u1, {n: 2, last: 1000, locked: true});
+  assert.deepStrictEqual(f.u1, {n: 2, last: 1000, locked: false});
+  await s.publicRun({action: 'loginFail', id: 'u1', locked: true});
+  f = db.store.get('_kzAdmin/loginFails');
+  assert.deepStrictEqual(f.u1, {n: 3, last: 1000, locked: true});
   assert.ok(!f.zzz);
   await s.run(ADMIN, {action: 'unlock', id: 'u1'});
   assert.ok(!db.store.get('_kzAdmin/loginFails').u1);
@@ -161,6 +164,26 @@ t('approve turns a pending request into an approved account', async () => {
   await assert.rejects(s.run(ADMIN, {action: 'approve', id: 'u4'}), e => e.status === 409);
   const logs = await s.run(ADMIN, {action: 'logs'});
   assert.ok(logs.items.some(x => x.text.includes('가입 승인')));
+});
+
+t('public requests are throttled per IP', async () => {
+  let now = 1000;
+  const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth(), now: () => now});
+  await s.run(ADMIN, {action: 'signupSet', open: true, code: 'DREAM26'});
+  for (let i = 0; i < 10; i++) assert.strictEqual((await s.publicRun({action: 'checkInvite', code: 'WRONG' + i}, '1.2.3.4')).ok, false);
+  const r = await s.publicRun({action: 'checkInvite', code: 'DREAM26'}, '1.2.3.4');
+  assert.strictEqual(r.ok, false); assert.ok(/15분/.test(r.reason));
+  assert.strictEqual((await s.publicRun({action: 'checkInvite', code: 'DREAM26'}, '5.6.7.8')).ok, true);
+  now += 16 * 60e3;
+  assert.strictEqual((await s.publicRun({action: 'checkInvite', code: 'DREAM26'}, '1.2.3.4')).ok, true);
+});
+
+t('loginLookup finds only approved accounts by name', async () => {
+  const s = createAdminService({db: fakeDb(seed()), auth: fakeAuth()});
+  const r = await s.publicRun({action: 'loginLookup', name: ' 김 태양 '}, '9.9.9.9');
+  assert.strictEqual(r.found, true); assert.strictEqual(r.account.id, 'u1'); assert.ok(!('rank' in r.account));
+  assert.strictEqual((await s.publicRun({action: 'loginLookup', name: '이하늘'}, '9.9.9.9')).found, false);
+  assert.strictEqual((await s.publicRun({action: 'loginLookup', name: '관리계정'}, '9.9.9.9')).found, false);
 });
 
 (async () => {

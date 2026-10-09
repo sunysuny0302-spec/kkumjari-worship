@@ -1,3 +1,14 @@
+[v46 — 보안 정리 · 로그인 이름 목록 숨김]  (2026-10-09)
+올릴 파일: index.html, lib/admin-service.cjs, api/admin.js, vercel.json, tests/admin.test.cjs, firestore.rules(새 파일, Firebase에 따로 적용)
+- 로그인 화면에 팀원 이름 목록을 보여주지 않음. 이름을 직접 입력하면 서버(api/admin loginLookup)가 승인된 계정만 찾아 줌.
+  이 기기에 계정을 기억해 둔 사람은 지금처럼 이름이 바로 뜸.
+- 로그인 없이 부르는 요청(초대 코드 확인·PIN 틀림 기록·이름 찾기)에 IP별 횟수 제한. '잠김' 표시는 3번 이상 틀렸을 때만.
+- 화면에서 관리계정을 자동으로 만들던 코드 제거(기본 PIN 1111로 만들던 것 포함).
+- vercel.json 보안 헤더: 다른 사이트에 끼워 넣기 금지, nosniff, Referrer-Policy, 쓰지 않는 권한(위치·마이크·카메라) 차단.
+- firestore.rules: 권장 보안 규칙. Firebase 콘솔 → Firestore → 규칙에 적용(기존 규칙은 먼저 복사해 두기). 로그인 전 읽기 차단 포함.
+- 예전 백업 html 8개·zip 저장소에서 삭제(필요하면 git 기록에서 되살릴 수 있음).
+검증: 서버 테스트 48개 통과(이름 찾기·횟수 제한 테스트 추가), 가입→승인, 이름 입력 로그인, 배정 규칙 저장 확인.
+
 [v45 — 오류 정리 · 배정 규칙 · 승인 대기 · 모바일 편집 · 색감]  (2026-10-09)
 올릴 파일: index.html, lib/admin-service.cjs, tests/admin.test.cjs, .vercelignore (새 파일)
 - 가입 승인: 승인 대기 목록을 서버 목록 기준으로(옛 요청·같은 이름 요청도 보임), 승인·요청 삭제를 서버(/api/admin approve·remove)로.
