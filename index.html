@@ -5022,7 +5022,7 @@ const mentLines=ment?ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean):[];con
 $('#body').innerHTML=`<div class="hm hm-v13">
 <div class="church-hero"><section class="church-hero-main church-banner-v15" aria-label="꿈꾸는 자들의 소리"><div class="kz-ban-tx" aria-hidden="true"><div class="kz-ban-l"><span class="kz-ban-k">WORSHIP TEAM</span><b>꿈꾸는 자들의 소리</b><p>하나님을 예배하는 마음으로,<br>함께 꿈꾸며 만들어가는 찬양의 자리입니다.</p></div><div class="kz-ban-r"><q>이는 만물이 주에게서 나오고<br>주로 말미암고 주에게로 돌아감이라<br>그에게 영광이 세세에 있을지어다.</q><cite>로마서 11:36</cite></div></div></section><aside class="verse-card"><blockquote>“이는 만물이 주에게서 나오고<br>주로 말미암고 주에게로 돌아감이라<br>그에게 영광이 세세에 있을지어다.”</blockquote><cite>로마서 11:36</cite></aside></div>
 ${kzTop(dt,pub,ment)}
-<div class="home-grid-mid kz-mid"><div class="kh-left-stack">${kzNextCard()}${kzFeedCard()}</div><div class="kz-stack kz-info-stack">${kzNoticeCard()}${homeSongCard()}</div><section class="devotion-card kz-dev"><img class="kz-dev-image" src="assets/devotion.66155b40.webp" alt="우리의 목소리가 모여 하나의 찬양이 됩니다. 꿈꾸는 자들의 소리, 오늘도 예배를 준비합니다."></section></div>
+<div class="home-grid-mid kz-mid"><div class="kh-left-stack">${kzNextCard()}${kzFeedCard()}</div><div class="kz-stack kz-info-stack">${kzNoticeCard()}${homeSongCard()}</div><section class="devotion-card kz-dev"><img class="kz-dev-image" src="assets/side-autumn.webp?v=2" alt=""><div class="kz-dev-tx"><b>우리의 목소리가 모여<br>하나의 찬양이 됩니다.</b><span>꿈꾸는 자들의 소리, 오늘도 예배를 준비합니다.</span></div></section></div>
 <div class="shortcut-grid"><button class="shortcut-card" data-short="edit">${V13I('leader')}<b>인도자 작업실</b><span>송폼 작성과 콘티를 한 곳에서</span><em>›</em></button><button class="shortcut-card" data-short="archive">${V13I('archive')}<b>콘티 보관함</b><span>지금까지의 예배 콘티를 보관하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-short="library">${V13I('music')}<b>악보 모음집</b><span>필요한 악보를 쉽게 검색하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-role-short="singer">${V13I('mic')}<b>싱어</b><span>멤버 관리와 일정을 확인해요</span><em>›</em></button><button class="shortcut-card" data-role-short="session">${V13I('guitar')}<b>세션</b><span>포지션별 멤버와 일정을 확인해요</span><em>›</em></button></div>
 <div class="home-old"><div class="hm-main"><article class="hm-card hm-conti"><div class="hm-ch"><h2>이번 주 콘티</h2>${pub&&data.by?`<span class="mu">${esc(data.by)} 작성</span>`:''}<span class="sp"></span>${ment?'<button class="sm" id="cp">복사</button>':''}</div>${ment?`<pre class="hm-raw">${esc(ment)}</pre>`:'<div class="hm-empty"><b>아직 올라온 콘티가 없어요</b><span class="mu">인도자가 업로드하면 여기에 나와요</span></div>'}</article><article class="hm-card"><div class="hm-ch"><h2>악보</h2>${sc.length?`<span class="mu">${sc.length}장 · 누르면 크게 보여요</span><span class="sp"></span><button class="sm" id="sva">전체 저장 ▾</button>`:''}</div>${sc.length?`<div class="gal">${sc.map((o,n)=>`<figure data-i="${o.i}"><div class="gal-t">${scImg(date,o.i,o.x,900)}<span class="gal-n">${n+1}</span></div><figcaption>${esc(o.x.name)}</figcaption></figure>`).join('')}</div>`:'<div class="hm-empty"><b>아직 올라온 악보가 없어요</b><span class="mu">인도자가 업로드하면 여기에 나와요</span></div>'}</article></div></div></div>`;
 if($('#cp'))$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(data.ment);toast('콘티를 복사했어요')}catch(e){toast('복사하지 못했어요')}};if($('#sva'))$('#sva').onclick=e=>{const l=sc.map(o=>o.x);chipMenu(e.currentTarget,[{t:`PDF 한 파일로 저장 (${l.length}장)`,f:()=>saveScores(l,'pdf')},{t:`이미지로 각각 저장 (${l.length}장)`,f:()=>saveScores(l,'img')}])};$$('[data-go-home]').forEach(b=>b.onclick=()=>go(b.dataset.goHome));$$('[data-conti-open]').forEach(b=>b.onclick=()=>kzWeekView());$$('[data-home-score]').forEach(b=>b.onclick=()=>openHomeScore(+b.dataset.homeScore));
@@ -8549,7 +8549,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 </style>
 <script id="kz-season">
 (function(){
- const img=()=>{const s=kzSeason();document.querySelectorAll('img.kz-dev-image').forEach(i=>{const u='assets/devotion-'+s+'.webp';if(!i.src.endsWith(u))i.src=u})};
+ const img=()=>{const s=kzSeason();document.querySelectorAll('img.kz-dev-image').forEach(i=>{const u='assets/side-'+s+'.webp?v=2';if(!i.src.endsWith(u))i.src=u})};
  new MutationObserver(img).observe(document.body,{childList:true,subtree:true});document.addEventListener('kzseason',img);img();
  /* 서버 설정 받아오기 (관리계정이 고정한 테마) */
  setTimeout(async()=>{try{const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'versionInfo'})});const j=await r.json();if(j&&j.theme)kzSeasonSet(j.theme)}catch(e){}},1500);
@@ -8780,6 +8780,13 @@ function pickImages(fn){const i=document.createElement('input');i.type='file';i.
 .kz-ban-r q{quotes:"“" "”";display:block}.kz-ban-r cite{display:block;margin-top:.8cqw;font-style:normal;opacity:.8}
 @container (max-width:1000px){.kz-ban-r{display:none}}
 @media (max-width:700px){.kz-ban-r{display:none}.kz-ban-l{max-width:70%}}
+/* 홈 말씀 카드: 글자 없는 계절 이미지 + 화면 글씨 */
+#body .hm.hm-v13 .devotion-card.kz-dev{position:relative!important;container-type:inline-size}
+#body .hm.hm-v13 .devotion-card.kz-dev::after{content:""!important;display:block!important;position:absolute;left:0;right:0;bottom:0;height:55%;background:radial-gradient(75% 95% at 50% 100%,rgba(255,250,244,.88) 0%,rgba(255,250,244,.55) 45%,rgba(255,250,244,0) 82%);pointer-events:none;z-index:0}
+.kz-dev-tx{position:absolute;left:6%;right:6%;bottom:6%;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.4cqw;pointer-events:none}
+.kz-dev-tx b{font-family:var(--serif);font-weight:600;font-size:clamp(14px,4.6cqw,22px);line-height:1.4;color:#33261c;text-shadow:0 0 14px rgba(255,251,246,.95),0 0 4px rgba(255,251,246,.9)}
+.kz-dev-tx span{font-size:clamp(10.5px,2.8cqw,13px);color:#5a473a;text-shadow:0 0 10px rgba(255,251,246,.95)}
+:root[data-season=winter] .kz-dev-tx b{color:#24303e}:root[data-season=winter] .kz-dev-tx span{color:#465567}
 /* 배경 무늬·번짐 오버레이 없애고 단색으로 (눈 피로) */
 html:root body,html:root[data-season] body{background-image:none!important;background-attachment:scroll!important}
 /* 2) 상단 배너: 이미지 비율(2136×694)대로 보여서 좌우로 늘어나지 않게 */
