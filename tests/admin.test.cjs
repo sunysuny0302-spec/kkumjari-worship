@@ -144,6 +144,25 @@ t('version bump and logs', async () => {
   await assert.rejects(s.run(ME, {action: 'logs'}), e => e.status === 403);
 });
 
+t('approve turns a pending request into an approved account', async () => {
+  const db = fakeDb({...seed(), 'accounts/u3': {id: 'u3', name: '박새벽'}, 'accounts/u4': {id: 'u4', name: '김 태양', status: 'pending'}});
+  const s = createAdminService({db, auth: fakeAuth(), now: () => 500});
+  await assert.rejects(s.run(ME, {action: 'approve', id: 'u2'}), e => e.status === 403);
+  await assert.rejects(s.run(ADMIN, {action: 'approve', id: 'u2', rank: '팀원', parts: ['세션']}), e => e.status === 400);
+  const r = await s.run(ADMIN, {action: 'approve', id: 'u2', rank: '선임싱어', parts: ['엔지니어', '없는파트'], slots: ['드럼']});
+  assert.strictEqual(r.account.status, 'approved');
+  const u2 = db.store.get('accounts/u2');
+  assert.deepStrictEqual([u2.status, u2.rank, u2.parts.sort(), u2.slots, u2.approvedAt, u2.name], ['approved', '선임싱어', ['싱어', '엔지니어'].sort(), [], 500, '이하늘']);
+  await assert.rejects(s.run(ADMIN, {action: 'approve', id: 'u2'}), e => e.status === 409);
+  /* status가 없는 옛 문서도 승인 가능 */
+  await s.run(ADMIN, {action: 'approve', id: 'u3', rank: '팀원', parts: ['세션'], slots: ['건반']});
+  assert.deepStrictEqual(db.store.get('accounts/u3').slots, ['건반']);
+  /* 이미 승인된 같은 이름이 있으면 막음 */
+  await assert.rejects(s.run(ADMIN, {action: 'approve', id: 'u4'}), e => e.status === 409);
+  const logs = await s.run(ADMIN, {action: 'logs'});
+  assert.ok(logs.items.some(x => x.text.includes('가입 승인')));
+});
+
 (async () => {
   let fail = 0;
   for (const [n, f] of tests) { try { await f(); console.log('ok -', n); } catch (e) { fail++; console.log('FAIL -', n, e); } }
