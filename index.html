@@ -8761,6 +8761,8 @@ function pickImages(fn){const i=document.createElement('input');i.type='file';i.
 :root[data-season] body{background-color:var(--bz3)!important}
 :root[data-season=spring]{--bg:#faf1f2}:root[data-season=summer]{--bg:#f1f6eb}:root[data-season=autumn]{--bg:#f9f0e4}:root[data-season=winter]{--bg:#eff3f7}
 :root[data-season] #top{background:color-mix(in srgb,var(--bz3) 82%,transparent)!important}
+/* 배경 무늬·번짐 오버레이 없애고 단색으로 (눈 피로) */
+html:root body,html:root[data-season] body{background-image:none!important;background-attachment:scroll!important}
 /* 2) 상단 배너: 이미지 비율(2136×694)대로 보여서 좌우로 늘어나지 않게 */
 .hm.hm-v13 .church-hero{aspect-ratio:2136/694!important;height:auto!important;max-height:400px!important}
 .hm.hm-v13 .church-hero .church-hero-main.church-banner-v15{background-size:cover!important;background-position:center!important}
