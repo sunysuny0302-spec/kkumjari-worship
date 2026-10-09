@@ -8784,24 +8784,10 @@ function pickImages(fn){const i=document.createElement('input');i.type='file';i.
 .kz-ban-r q{quotes:"“" "”";display:block}.kz-ban-r cite{display:block;margin-top:.8cqw;font-style:normal;opacity:.8}
 @container (max-width:1000px){.kz-ban-r{display:none}}
 @media (max-width:700px){.kz-ban-r{display:none}.kz-ban-l{max-width:70%}}
-/* 로그인 화면 계절 꾸미기: 왼쪽 그림은 계절 예배당, 오른쪽 입력 쪽은 작은 잎·꽃잎·눈 무늬 */
-:root[data-season=spring] .lx .lx-art{background-image:url(assets/login-art-spring-m.webp)!important}
-:root[data-season=summer] .lx .lx-art{background-image:url(assets/login-art-summer-m.webp)!important}
-:root[data-season=autumn] .lx .lx-art{background-image:url(assets/login-art-autumn-m.webp)!important}
-:root[data-season=winter] .lx .lx-art{background-image:url(assets/login-art-winter-m.webp)!important}
-:root[data-season] .lx .lx-art{background-size:cover!important;background-position:center 30%!important}
-@media (min-width:860px){
- :root[data-season=spring] .lx .lx-art{background-image:url(assets/login-art-spring.webp)!important}
- :root[data-season=summer] .lx .lx-art{background-image:url(assets/login-art-summer.webp)!important}
- :root[data-season=autumn] .lx .lx-art{background-image:url(assets/login-art-autumn.webp)!important}
- :root[data-season=winter] .lx .lx-art{background-image:url(assets/login-art-winter.webp)!important}
- :root[data-season] .lx .lx-art{background-position:center center!important}
- /* 왼쪽 아래 글씨 뒤만 은은하게 밝힘 */
- :root[data-season] .lx .lx-floor{height:46%!important;background:radial-gradient(90% 85% at 18% 100%,rgba(255,250,244,.82) 0%,rgba(255,250,244,.5) 45%,rgba(255,250,244,0) 80%)!important;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);-webkit-mask-image:radial-gradient(95% 90% at 18% 100%,#000 40%,transparent 85%);mask-image:radial-gradient(95% 90% at 18% 100%,#000 40%,transparent 85%)}
- :root[data-season] .lx .lx-brand{text-shadow:0 0 14px rgba(255,250,244,.9)}
-}
-:root[data-season] .lx .lx-brand{isolation:isolate;text-shadow:0 0 14px rgba(255,250,244,.95)}
-:root[data-season] .lx .lx-brand::before{content:"";position:absolute;inset:-30px -70px -80px -50px;z-index:-1;pointer-events:none;background:radial-gradient(farthest-side,rgba(255,250,244,.82) 0%,rgba(255,250,244,.82) 45%,transparent 100%);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:radial-gradient(farthest-side,#000 45%,transparent 100%);mask-image:radial-gradient(farthest-side,#000 45%,transparent 100%)}
+/* 알림함·채팅 창: 뒤 화면이 비치지 않게 (PC 떠 있는 창 포함) */
+html #kcPanel{background:rgba(252,248,242,.95)!important;-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1)}
+html #kcPanel .kc-panel-head{background:transparent!important}
+/* 로그인 화면: 그림은 그대로, 입력 쪽 흰 배경에만 작은 잎·꽃잎·눈 무늬와 옅은 계절 장식 */
 :root[data-season] .lx .lx-main{position:relative;isolation:isolate}
 :root[data-season] .lx .lx-main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:var(--leaf),var(--leaf);background-size:300px 300px,210px 210px;filter:saturate(1.4) contrast(1.15);animation:kzLeafFall 70s linear infinite}
 :root[data-season] .lx .lx-main::after{content:"";position:absolute;top:0;right:0;width:min(60%,360px);height:min(40%,300px);z-index:-1;pointer-events:none;background:var(--deco) center top/cover no-repeat;opacity:.32;-webkit-mask-image:radial-gradient(120% 120% at 100% 0%,#000 0%,rgba(0,0,0,.45) 35%,transparent 70%);mask-image:radial-gradient(120% 120% at 100% 0%,#000 0%,rgba(0,0,0,.45) 35%,transparent 70%)}
