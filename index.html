@@ -4114,6 +4114,40 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 #kzLoginLock label[hidden],.kz-join-closed[hidden],#kzJoinCodeL[hidden]{display:none!important}
 #kzOpenHub,#kzMyPin{width:100%}
 </style>
+<style id="kz-admin-hub2">
+.kad-sheet.kad-hub{width:min(860px,100%);background:#f7f2ea}
+.kad-top{padding:14px 16px 12px;background:#fff;border-bottom:1px solid rgba(110,80,50,.12)}
+.kad-top b{font-size:17px}
+.kad-scroll{gap:10px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))}
+/* 가입 설정: 한 줄 */
+.kad-card.kad-su{padding:10px 12px;border-radius:14px;background:#fff;border:1px solid rgba(110,80,50,.14);box-shadow:none}
+.kad-su .kad-row small{font-size:12px}
+.kad-su .kad-code{margin-top:8px;padding-top:8px}
+.kad-pend{margin-top:8px;padding:9px 12px;background:#fff4e2;border:1px solid rgba(214,150,60,.35);font-weight:600}
+/* 필터 + 검색 한 줄 */
+.kad-filter{flex-wrap:wrap}
+.kad-filter button{padding:6px 11px;font-size:12.5px;background:#fff}
+.kad-q{padding:9px 12px;font-size:14px;background:#fff}
+@media (min-width:700px){.kad-scroll{display:grid!important;grid-template-columns:auto 1fr;align-items:center}.kad-scroll>.kad-su,.kad-scroll>.kad-list,.kad-scroll>.kad-foot,.kad-scroll>.kad-errbox,.kad-scroll>.kad-load{grid-column:1/-1}.kad-q{max-width:none}}
+/* 목록: 한 줄 촘촘하게, PC 2열 */
+.kad-list{gap:6px}
+@media (min-width:700px){.kad-list{grid-template-columns:1fr 1fr}.kad-item.open{grid-column:1/-1}}
+.kad-item{border-radius:12px;background:#fff;box-shadow:none;border:1px solid rgba(110,80,50,.13)}
+.kad-head{padding:8px 10px;gap:9px}
+.kad-av{width:32px;height:32px;font-size:13px}
+.kad-nm{display:flex!important;align-items:baseline;flex-wrap:wrap;column-gap:6px;row-gap:3px}
+.kad-nm b{font-size:14.5px}
+.kad-nm small{font-size:12px}
+.kad-nm em{flex-basis:100%;gap:3px}
+.kad-b{font-size:10.5px;padding:1px 6px}
+.kad-when{font-size:11.5px}
+.kad-item:has(.kad-av.pending){border-color:rgba(214,150,60,.45);background:#fffaf1}
+.kad-item:has(.kad-av.suspended){opacity:.75}
+.kad-det{background:#fbf8f3;border-top-color:rgba(110,80,50,.1)}
+.kad-acts .kad-btn{padding:7px 11px}
+@media (min-width:700px){.kad-dl{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kad-dl div{padding:6px 9px}.kad-dl dd{font-size:13px}
+</style>
 <style id="kz-rules2">
 .r2{display:grid;gap:14px;padding:20px 0 90px;max-width:1240px;width:100%;margin:0 auto;box-sizing:border-box}
 .r2-hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}.r2-hero>div{flex:1 1 320px}.r2-hero p{margin:4px 0 0;color:var(--mu);font-size:13.5px;line-height:1.5}
