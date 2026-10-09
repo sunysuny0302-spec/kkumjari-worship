@@ -8319,6 +8319,87 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 .kf-t.kf-in{margin:0;border:0;border-top:1px solid rgba(110,80,50,.12);border-radius:0;background:transparent;padding:12px 16px}
 .kz-acct[hidden],.kzp-types[hidden],.kzp-tools[hidden]{display:none!important}
 </style>
+<script id="kz-site">
+/* ===== 관리계정: 사이트 관리 (상태 점검 · 전체 알림 · 새 버전 적용 · 변경 기록) + 모든 기기 자동 새 버전 + 변경 기록 남기기 ===== */
+(function(){
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const A=(b,authed)=>window.kzAdm?kzAdm(b,authed!==false):Promise.reject(Error('준비 중'));
+ const ago=t=>{if(!t)return '';const m=Math.round((Date.now()-t)/6e4);if(m<1)return '방금';if(m<60)return m+'분 전';const h=Math.round(m/60);if(h<24)return h+'시간 전';const d=Math.round(h/24);if(d<8)return d+'일 전';const x=new Date(t);return `${x.getMonth()+1}/${x.getDate()}`};
+ const me=()=>{try{return authAccount()||null}catch(e){return null}};
+ /* ---- 새 버전: 관리계정이 [모든 기기 새 버전]을 누르면, 다른 기기는 다음에 앱을 열 때 한 번 새로고침 ---- */
+ const VK='kzVerV1';let vBusy=false;
+ async function verCheck(){if(vBusy||document.getElementById('kzLoginLock'))return;vBusy=true;try{const r=await A({action:'versionInfo'},false);const v=+r.v||0,seen=+(localStorage.getItem(VK)||0);
+  if(!seen){localStorage.setItem(VK,String(v||1));return}
+  if(v>seen){localStorage.setItem(VK,String(v));try{const rs=await navigator.serviceWorker?.getRegistrations?.()||[];await Promise.all(rs.map(x=>x.update().catch(()=>{})))}catch(e){}try{if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){}location.reload()}}catch(e){}finally{vBusy=false}}
+ setTimeout(verCheck,4000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(verCheck,1500)});
+ /* ---- 변경 기록 남기기 ---- */
+ const log=(kind,text)=>{if(!window.KZ_FIREBASE_AUTH?.currentUser)return;A({action:'log',kind,text}).catch(()=>{})};
+ window.kzLog=log;
+ const KIND={conti:'콘티',notice:'공지',event:'일정',sched:'일정 변경'};
+ const of=window.fetch;window.fetch=async function(u,o){const r=await of.apply(this,arguments);try{if(String(u).includes('/api/notify')&&o&&o.method==='POST'&&r.ok){const b=JSON.parse(o.body||'{}');if(!b.kzBroadcast)log(KIND[b.type]||'알림',[b.title,b.body].filter(Boolean).join(' · ').slice(0,150))}}catch(e){}return r};
+ const hook=(name,kind,fmt)=>{const f=window[name];if(typeof f!=='function'||f.__kzLog)return;const w=function(){const out=f.apply(this,arguments);try{const t=fmt.apply(null,arguments);if(t)log(kind,t)}catch(e){}return out};w.__kzLog=1;window[name]=w};
+ setTimeout(()=>{hook('toTrash','삭제',(k,ref,col)=>`${k==='score'?'악보':k==='week'?'콘티':k==='minutes'?'회의록':k==='notice'?'공지':k} 휴지통으로 이동`);hook('saveMembers','멤버',l=>`멤버 명단 저장 (${(l||[]).length}명)`)},2000);
+ /* ---- 화면 ---- */
+ const S={log:null,logErr:'',checks:null,busy:false};
+ async function runChecks(){S.checks=null;paint();const T=async(name,f)=>{const t0=performance.now();try{const d=await f();return{name,ok:true,d:d||'',ms:Math.round(performance.now()-t0)}}catch(e){return{name,ok:false,d:e.message||'실패'}}};
+  const post=async(url,body,auth)=>{const h={'Content-Type':'application/json'};if(auth){const u=window.KZ_FIREBASE_AUTH?.currentUser;if(!u)throw Error('로그인 필요');h.Authorization='Bearer '+await u.getIdToken()}const r=await fetch(url,{method:'POST',headers:h,body:JSON.stringify(body),cache:'no-store'});let j={};try{j=await r.json()}catch(e){}if(r.status===404)throw Error('서버 파일이 없어요');if(r.status>=500)throw Error(j.error||'서버 오류');return j};
+  const res=await Promise.all([
+   T('로그인 서버(Firebase)',async()=>{const u=window.KZ_FIREBASE_AUTH?.currentUser;if(!u)throw Error('로그인 상태가 아니에요');await u.getIdToken(true);return '연결됨'}),
+   T('데이터베이스',async()=>{await firebase.firestore().doc('settings/members').get();return '읽기 정상'}),
+   T('계정 관리 서버',async()=>{await post('/api/admin',{action:'signupInfo'});return '정상'}),
+   T('채팅·신청곡 서버',async()=>{await post('/api/community',{action:'members'},true);return '정상'}),
+   T('Face ID 서버',async()=>{const j=await post('/api/passkey',{action:'loginOptions',accountId:'_check_'});return j.error&&/등록|선택/.test(j.error)?'정상':'정상'}),
+   T('알림 발송 서버',async()=>{const r=await fetch('/api/notify',{cache:'no-store'});let j={};try{j=await r.json()}catch(e){throw Error('서버 파일이 없어요')}if(!j.ready)throw Error('서버 키 설정이 없어요');return '준비됨'}),
+   T('이 기기 알림',async()=>{if(!('Notification' in window))throw Error('이 브라우저는 알림을 못 받아요');if(Notification.permission!=='granted')throw Error(Notification.permission==='denied'?'기기에서 막혀 있어요':'꺼져 있어요');return '켜짐'}),
+   T('저장 공간',async()=>{const el=[...document.querySelectorAll('.side *')].find(x=>/MB|KB|GB/.test(x.textContent||'')&&x.children.length===0);return el?el.textContent.trim():'저장 공간 화면에서 확인'})]);
+  S.checks=res;paint()}
+ async function loadLog(){S.logErr='';try{const r=await A({action:'logs'});S.log=r.items||[]}catch(e){S.logErr=e.message}paint()}
+ function paint(){const p=document.getElementById('kzSitePane');if(!p)return;const c=S.checks;
+  p.innerHTML=`<section class="st-card"><div class="st-h"><b>사이트 상태</b><button type="button" class="kad-btn" data-st="check">${c?'다시 점검':'점검 중…'}</button></div>
+   ${c?`<div class="st-grid">${c.map(x=>`<div class="st-i ${x.ok?'ok':'bad'}"><i>${x.ok?'✓':'!'}</i><span><b>${esc(x.name)}</b><small>${esc(x.d)}${x.ms&&x.ok?` · ${x.ms}ms`:''}</small></span></div>`).join('')}</div>`:'<p class="st-wait">하나씩 확인하는 중이에요…</p>'}</section>
+   <section class="st-card"><div class="st-h"><b>전체 알림 보내기</b><small>알림을 켠 모든 팀원에게 가요</small></div>
+    <input class="st-in" id="stT" maxlength="60" placeholder="제목 (예: 이번 주 연습 장소 변경)"><textarea class="st-in" id="stB" maxlength="160" rows="2" placeholder="내용 (선택 · 알림에는 제목만 보여요)"></textarea>
+    <div class="st-row"><span class="st-note">앱 안 알림함에도 남아요</span><button type="button" class="kad-btn pri" data-st="send">알림 보내기</button></div></section>
+   <section class="st-card"><div class="st-h"><b>모든 기기 새 버전 적용</b></div><p class="st-note">업데이트했는데 옛날 화면이 보인다는 사람이 있으면 눌러 주세요. 모든 기기가 다음에 앱을 열 때 한 번 새로고침돼요. 로그인은 그대로예요.</p><div class="st-row"><span></span><button type="button" class="kad-btn" data-st="ver">새 버전 적용하기</button></div></section>
+   <section class="st-card"><div class="st-h"><b>변경 기록</b><small>최근 200개</small><button type="button" class="kad-btn" data-st="log">새로고침</button></div>
+    ${S.logErr?`<p class="st-note bad">${esc(S.logErr)}</p>`:S.log==null?'<p class="st-wait">불러오는 중…</p>':S.log.length?`<div class="st-log">${S.log.map(x=>`<div class="st-l"><em class="k">${esc(x.kind)}</em><span>${esc(x.text)}</span><small>${esc(x.by||'')} · ${ago(x.at)}</small></div>`).join('')}</div>`:'<p class="st-wait">아직 기록이 없어요. 이제부터 콘티·공지·일정 알림, 삭제, 멤버 명단, 계정 관리 작업이 쌓여요.</p>'}</section>`;
+  p.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{const k=b.dataset.st;
+   if(k==='check')return runChecks();if(k==='log'){S.log=null;paint();return loadLog()}
+   if(k==='ver'){if(!confirm('모든 기기에 새 버전을 적용할까요?\n\n다음에 앱을 열 때 한 번 새로고침돼요.'))return;b.disabled=true;try{const r=await A({action:'versionBump'});localStorage.setItem(VK,String(r.v));toast('적용했어요. 다른 기기는 다음에 열 때 새 버전이 돼요');loadLog()}catch(e){toast(e.message)}b.disabled=false;return}
+   if(k==='send'){const t=p.querySelector('#stT').value.trim(),body=p.querySelector('#stB').value.trim();if(!t)return toast('제목을 적어 주세요');if(!confirm(`팀 전체에 알림을 보낼까요?\n\n${t}`))return;b.disabled=true;b.textContent='보내는 중…';
+    try{const u=window.KZ_FIREBASE_AUTH?.currentUser;if(!u)throw Error('로그인이 필요해요');const r=await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({type:'notice',title:'📢 '+t,body,includeSelf:true,kzBroadcast:true})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||'보내지 못했어요');
+     log('알림','전체 알림 · '+t);toast(`보냈어요 · ${j.sent??0}개 기기`);p.querySelector('#stT').value='';p.querySelector('#stB').value='';setTimeout(loadLog,800)}catch(e){toast(e.message)}b.disabled=false;b.textContent='알림 보내기'}})}
+ /* 계정 관리 창에 [계정 | 사이트] 탭 */
+ new MutationObserver(()=>{const w=document.getElementById('kzHub');if(!w)return;const top=w.querySelector('.kad-top');if(!top||top.querySelector('.st-tabs'))return;
+  const tabs=document.createElement('div');tabs.className='st-tabs';tabs.innerHTML='<button type="button" class="on" data-tab="a">계정</button><button type="button" data-tab="s">사이트</button>';top.querySelector('b').after(tabs);top.querySelector('small')?.remove();
+  let pane=w.querySelector('#kzSitePane');if(!pane){pane=document.createElement('div');pane.id='kzSitePane';pane.className='kad-scroll';pane.hidden=true;w.querySelector('.kad-sheet').append(pane)}
+  const sel=t=>{tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const sc=w.querySelector('.kad-scroll:not(#kzSitePane)');if(sc)sc.hidden=t==='s';pane.hidden=t!=='s';w.dataset.tab=t;top.querySelector('[data-k=reload]').hidden=t==='s';if(t==='s'){paint();if(!S.checks)runChecks();if(S.log==null)loadLog()}};
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>sel(b.dataset.tab));if(w.dataset.tab==='s')sel('s')}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<style id="kz-site-css">
+.st-tabs{display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:rgba(120,88,56,.09);margin-left:6px}
+.st-tabs button{border:0;background:none;border-radius:8px;padding:5px 12px;font:inherit;font-size:13px;font-weight:700;color:#6b5442;cursor:pointer}
+.st-tabs button.on{background:#3a2c20;color:#fff}
+#kzSitePane[hidden],.kad-scroll[hidden]{display:none!important}
+#kzSitePane{display:flex!important;flex-direction:column;align-items:stretch!important;gap:10px}
+#kzSitePane>.st-card{width:100%;box-sizing:border-box;grid-column:1/-1}
+.st-card{background:#fff;border:1px solid rgba(110,80,50,.14);border-radius:14px;padding:12px 14px;display:grid;gap:8px}
+.st-h{display:flex;align-items:center;gap:8px}.st-h b{font-size:15px}.st-h small{font-size:12px;color:var(--mu)}.st-h .kad-btn{margin-left:auto}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+@media (min-width:700px){.st-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.st-i{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:11px;background:#f4f9f5;border:1px solid rgba(47,107,74,.15)}
+.st-i i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:12px;background:#2f6b4a;color:#fff}
+.st-i.bad{background:#fdf1ef;border-color:rgba(196,87,63,.25)}.st-i.bad i{background:#c4573f}
+.st-i span{display:grid;min-width:0}.st-i b{font-size:13px}.st-i small{font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-wait,.st-note{margin:0;font-size:12.5px;color:var(--mu);line-height:1.5}.st-note.bad{color:#b23a2f}
+.st-in{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:9px 11px;border-radius:10px;border:1px solid rgba(110,80,50,.18);background:#fff;resize:vertical}
+.st-row{display:flex;align-items:center;gap:8px}.st-row .kad-btn{margin-left:auto}
+.st-log{display:grid;max-height:340px;overflow:auto}
+.st-l{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:7px 2px;border-top:1px solid rgba(110,80,50,.08);font-size:13px}
+.st-l .k{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(150,110,70,.12);color:#7a5531;white-space:nowrap}
+.st-l span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-l small{font-size:11.5px;color:var(--mu);white-space:nowrap}
+</style>
 </body></html>
 
 <script id="kz-score-pages-script">

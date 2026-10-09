@@ -129,6 +129,19 @@ t('loginFail counts per day and ignores unknown ids', async () => {
   now += 2 * 864e5;
 });
 
+t('version bump and logs', async () => {
+  let n = 100;const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth(), now: () => ++n});
+  assert.deepStrictEqual(await s.publicRun({action: 'versionInfo'}), {v: 0});
+  await s.run(ADMIN, {action: 'versionBump'});
+  assert.ok((await s.publicRun({action: 'versionInfo'})).v > 0);
+  await s.run(ME, {action: 'log', kind: '콘티', text: '10/11 콘티 업로드'});
+  await s.run(ADMIN, {action: 'setStatus', id: 'u1', status: 'suspended'});
+  const r = await s.run(ADMIN, {action: 'logs'});
+  assert.ok(r.items.length >= 3);
+  assert.ok(r.items.some(x => x.text.includes('김태양 · 상태 변경 (정지)')));
+  await assert.rejects(s.run(ME, {action: 'logs'}), e => e.status === 403);
+});
+
 (async () => {
   let fail = 0;
   for (const [n, f] of tests) { try { await f(); console.log('ok -', n); } catch (e) { fail++; console.log('FAIL -', n, e); } }
