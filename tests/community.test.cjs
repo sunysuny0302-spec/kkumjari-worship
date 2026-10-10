@@ -143,3 +143,10 @@ test('rsvp reminder: only weekdays, only targets without an answer, inbox + push
  const saved=data.get('_kzCommunity/rsvp_2026-10-18');assert.equal(saved.targets.length,2);assert.ok(saved.answers['가수2']);
  await assert.rejects(run(people[0],{action:'rsvpRemind'}),{status:400});
  clock=Date.UTC(2026,9,17,10,0);/* 토요일 */const r2=await run({system:true},{action:'rsvpRemind'});assert.equal(r2.skipped,'not-weekday');});
+test('profile big photo: stored alongside, served by profileBig, not in profiles list',async()=>{const f=fixture();
+ await f.run(f.user,{action:'profileSave',photo:jpeg,photoL:jpeg});const r=await f.run(f.admin,{action:'profiles',ids:[f.user.id]});assert.equal(r.profiles[0].photo,jpeg);assert.equal(r.profiles[0].photoL,undefined);
+ assert.equal((await f.run(f.admin,{action:'profileBig',id:f.user.id})).photo,jpeg);
+ await f.run(f.user,{action:'profileSave',photo:jpeg});assert.equal((await f.run(f.admin,{action:'profileBig',id:f.user.id})).photo,jpeg,'falls back to small photo');
+ await f.run(f.user,{action:'profileSave',photo:''});assert.equal((await f.run(f.admin,{action:'profileBig',id:f.user.id})).photo,'');
+ await assert.rejects(f.run(f.user,{action:'profileSave',photo:jpeg,photoL:'https://bad.test/x'}),{status:400});
+ assert.equal((await f.run(f.admin,{action:'profileBig',id:'nobody'})).photo,'');});

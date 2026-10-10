@@ -7700,11 +7700,20 @@ return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':'
  const older=$c('#kcOlder');if(older)older.onclick=async()=>{older.disabled=true;const h=l.scrollHeight,y=l.scrollTop;try{await loadChat(true,pageGeneration);if(l.isConnected)l.scrollTop=y+(l.scrollHeight-h);}catch(e){error(e);if(older.isConnected)older.disabled=false;}};
  if(!force&&!near&&l.scrollHeight>previous)$c('#kcNew').hidden=false;
 }
+/* 채팅에서 상대 프로필 사진을 누르면 크게 보기 */
+document.addEventListener('click',e=>{const av=e.target.closest('#kcPanel .kc-avatar');if(!av)return;const im=av.querySelector('img');if(!im)return;e.preventDefault();e.stopPropagation();
+ const who=av.dataset.profileId||'',nm=(av.closest('.kc-message')?.querySelector('.kc-name')?.textContent||'').trim();
+ const d=document.createElement('dialog');d.className='kz-image-viewer kc-pf-view';d.setAttribute('aria-label',(nm||'팀원')+' 프로필 사진');
+ d.innerHTML='<div class="kc-pf-h"><b></b><button type="button" aria-label="닫기">✕ 닫기</button></div><img alt="">';d.querySelector('b').textContent=nm;const big=d.querySelector('img');big.src=im.src;big.alt=(nm||'팀원')+' 프로필 사진';
+ d.querySelector('button').onclick=()=>d.close();d.addEventListener('click',ev=>{if(ev.target===d)d.close()});d.addEventListener('close',()=>d.remove());document.body.append(d);d.showModal();
+ if(who){const c=profileCache.get(who);if(c&&c.big){big.src=c.big}else api({action:'profileBig',id:who}).then(r=>{if(r&&r.photo&&d.isConnected){big.src=r.photo;const cc=profileCache.get(who);if(cc)cc.big=r.photo}}).catch(()=>{})}},true);
 function paintProfiles(){document.querySelectorAll('[data-profile-id]').forEach(el=>{const p=profileCache.get(el.dataset.profileId);if(!p)return;if(p.photo){el.innerHTML='<img alt="" src="'+escape(p.photo)+'">';}else if(el.querySelector('img'))el.textContent=el.dataset.initial||'?';});}
 async function refreshProfiles(){
  if(profilesBusy)return;const ids=[...new Set(chatItems.map(m=>m.owner).filter(Boolean))].filter(id=>Date.now()-(profileCache.get(id)?.at||0)>60000).slice(0,30);if(!ids.length)return;
  profilesBusy=true;const ticket=epoch;try{const r=await api({action:'profiles',ids});if(ticket!==epoch)return;for(const p of r.profiles||[])profileCache.set(p.id,{photo:p.photo,at:Date.now()});paintProfiles();}catch{}finally{profilesBusy=false;}
 }
+/* 크게 보기용: 긴 변 640px 이하, 정사각형으로 자르지 않음 */
+async function profilePhotoBig(file){const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const r=Math.min(1,640/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*r)),h=Math.max(1,Math.round(img.naturalHeight*r));const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);for(const q of [.82,.7,.55,.4]){const p=c.toDataURL('image/jpeg',q);if(p.length<=148000)return p}return ''}catch(e){return ''}finally{URL.revokeObjectURL(url)}}
 async function profilePhoto(file){
  if(file.size>20*1024*1024)throw Error('사진은 20MB 이하로 선택해 주세요.');
  const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const canvas=document.createElement('canvas');canvas.width=canvas.height=160;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,160,160);const side=Math.min(img.naturalWidth,img.naturalHeight);ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,160,160);for(const q of [.85,.65,.45,.25]){const photo=canvas.toDataURL('image/jpeg',q);if(photo.length<=24000)return photo;}throw Error('사진을 줄이지 못했어요. 다른 사진을 선택해 주세요.');}finally{URL.revokeObjectURL(url);}
@@ -7713,12 +7722,12 @@ function mountProfile(){
  const card=document.querySelector('#kzAdminPanel .kz-admin-card');if(!card||card.querySelector('#kcProfileSettings')||!ready())return;
  const section=document.createElement('section');section.id='kcProfileSettings';section.className='kz-admin-section';section.classList.add('kzp-prof');const _e=v=>String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));section.innerHTML='<div class="kcp"><label class="kcp-av" title="사진 바꾸기"><span class="kc-profile-preview"></span><input type="file" accept="image/*" hidden><i class="kcp-cam"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.3-2h6.4l1.3 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="12.5" r="3.3"/></svg></i></label><div class="kcp-id"><b>'+_e(card.dataset.name)+'</b><small>'+_e(card.dataset.role)+'</small><div class="kcp-btns"><button type="button" class="kcp-l" data-profile-pick>사진 바꾸기</button><button type="button" class="kcp-l sub" data-profile-remove>기본 사진으로</button></div></div></div><button type="button" data-profile-save hidden disabled>저장</button><p role="status" class="kc-profile-message">사진을 불러오는 중…</p>';
  card.querySelector('.kz-admin-top')?.after(section);if(!section.isConnected)card.prepend(section);{const pk=section.querySelector('[data-profile-pick]'),fi=section.querySelector('input[type=file]');if(pk&&fi)pk.onclick=()=>fi.click()}
- let photo='',edited=false,processing=false;const who=uid(),preview=section.querySelector('.kc-profile-preview'),message=section.querySelector('.kc-profile-message'),save=section.querySelector('[data-profile-save]'),file=section.querySelector('input');
+ let photo='',photoL='',edited=false,processing=false;const who=uid(),preview=section.querySelector('.kc-profile-preview'),message=section.querySelector('.kc-profile-message'),save=section.querySelector('[data-profile-save]'),file=section.querySelector('input');
  const paint=()=>{preview.innerHTML=photo?'<img alt="내 프로필 사진" src="'+escape(photo)+'">':escape((authAccount()?.name||'?').slice(0,1));};paint();
  api({action:'profileGet'}).then(r=>{if(who!==uid()||!section.isConnected||edited)return;photo=r.photo;paint();message.textContent='사진을 누르면 바꿀 수 있어요 · 채팅에 표시돼요';}).catch(e=>{if(section.isConnected)message.textContent=e.message;});
- file.onchange=async()=>{if(!file.files[0])return;edited=true;processing=true;save.disabled=true;file.disabled=true;message.textContent='사진 준비 중…';try{photo=await profilePhoto(file.files[0]);paint();message.textContent='저장 중…';setTimeout(()=>save.click(),0);}catch(e){message.textContent=e.message||'이 사진을 읽지 못했어요.';}finally{processing=false;file.disabled=false;save.disabled=false;file.value='';}};
- section.querySelector('[data-profile-remove]').onclick=()=>{if(processing)return;if(!photo)return;edited=true;photo='';paint();save.disabled=false;message.textContent='저장 중…';setTimeout(()=>save.click(),0);};
- save.onclick=async()=>{if(processing||who!==uid())return;save.disabled=true;file.disabled=true;section.querySelector('[data-profile-remove]').disabled=true;try{const r=await api({action:'profileSave',photo});if(who!==uid())return;const id=authAccount()?.id;if(id)profileCache.set(id,{photo:r.photo,at:Date.now()});paintProfiles();message.textContent=photo?'프로필 사진을 바꿨어요 ✓':'기본 사진으로 바꿨어요 ✓';}catch(e){message.textContent=e.message;save.disabled=false;}finally{file.disabled=false;section.querySelector('[data-profile-remove]').disabled=false;}};
+ file.onchange=async()=>{if(!file.files[0])return;edited=true;processing=true;save.disabled=true;file.disabled=true;message.textContent='사진 준비 중…';try{const f0=file.files[0];photo=await profilePhoto(f0);photoL=await profilePhotoBig(f0);paint();message.textContent='저장 중…';setTimeout(()=>save.click(),0);}catch(e){message.textContent=e.message||'이 사진을 읽지 못했어요.';}finally{processing=false;file.disabled=false;save.disabled=false;file.value='';}};
+ section.querySelector('[data-profile-remove]').onclick=()=>{if(processing)return;if(!photo)return;edited=true;photo='';photoL='';paint();save.disabled=false;message.textContent='저장 중…';setTimeout(()=>save.click(),0);};
+ save.onclick=async()=>{if(processing||who!==uid())return;save.disabled=true;file.disabled=true;section.querySelector('[data-profile-remove]').disabled=true;try{const r=await api({action:'profileSave',photo,...(photoL?{photoL}:{})});if(who!==uid())return;const id=authAccount()?.id;if(id)profileCache.set(id,{photo:r.photo,at:Date.now()});paintProfiles();message.textContent=photo?'프로필 사진을 바꿨어요 ✓':'기본 사진으로 바꿨어요 ✓';}catch(e){message.textContent=e.message;save.disabled=false;}finally{file.disabled=false;section.querySelector('[data-profile-remove]').disabled=false;}};
 }
 new MutationObserver(mountProfile).observe(document.body,{childList:true,subtree:true});
 async function loadChat(older=false,gen=pageGeneration){
@@ -8718,6 +8727,12 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   /* 마커를 복사한 뒤 다른 곳에서 이미지를 새로 복사했다면 이미지가 붙음 */
   if(img&&!txt.startsWith(TAG))return;e.preventDefault();e.stopImmediatePropagation();pasteClip()},true);
 })();</script>
+<style id="kc-pf-view-css">#kcPanel .kc-avatar:has(img){cursor:zoom-in}#kcPanel .kc-avatar:has(img):active{transform:scale(.95)}
+.kc-pf-view{width:min(420px,92vw);padding:12px}.kc-pf-view .kc-pf-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}.kc-pf-view .kc-pf-h b{flex:1;font-size:15px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kc-pf-view .kc-pf-h button{background:transparent;color:#fff;border:0;padding:4px 6px;font-size:13px;cursor:pointer}
+.kc-pf-view img{display:block;width:100%;height:auto;max-height:78dvh;object-fit:contain;border-radius:12px;background:#111;image-rendering:auto}</style>
+<style id="kc-mention-chip">#kcPanel .kc-mention,.kc-mention{display:inline-block;font-weight:700;color:#1f5fae;background:#e3eefb;border-radius:7px;padding:0 6px;margin:0 1px;line-height:1.5;text-decoration:none!important}
+#kcPanel .kc-message.mine .kc-mention,.kc-message.mine .kc-mention{color:#fff;background:rgba(255,255,255,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);text-decoration:none!important}
+#kcPanel .kc-mention.me,.kc-mention.me{color:#7a4f00;background:#ffe9a8;box-shadow:none}</style>
 </html>
 
 <script id="kz-score-pages-script">
