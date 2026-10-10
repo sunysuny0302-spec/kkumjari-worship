@@ -8935,6 +8935,40 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #body .hm.hm-v13 .kz-hero .kz-hero-date{color:#3e342b!important;text-shadow:0 0 10px rgba(255,250,244,.8)}
 #body .hm.hm-v13 .kz-hero h3{color:#1f1914!important;text-shadow:0 0 14px rgba(255,250,244,.85)}
 </style>
+<style id="kz-lib2">
+/* 악보 모음집 정리: 그룹 머리줄 대신 위쪽 초성 바로가기 + 카드 왼쪽 위 초성 표시, 빈 공간 없이 이어서 배치 */
+#body .libg{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))!important;gap:14px!important;align-items:start}
+#body .libg>.libh{display:none!important}
+#body .libc{position:relative;padding:10px!important;gap:8px!important;border-radius:16px!important;transition:transform .15s,box-shadow .15s}
+#body .libc:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(70,45,20,.35)!important}
+#body .libc .libt{border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+#body .libc .lib-ini{position:absolute;left:4px;top:4px;z-index:2;min-width:26px;height:26px;padding:0 7px;border-radius:9px;display:grid;place-items:center;background:#7b5638;color:#fff;font-size:12.5px;font-weight:700;box-shadow:0 2px 6px rgba(60,40,20,.25)}
+#body .libc .kv{min-height:30px}
+#body .libc .libi{gap:2px}
+#body .libc .libnm{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important;font-weight:700;line-height:1.35}
+#body .libc .libi .mu{font-size:11.5px!important;line-height:1.4}
+#body .libc .liba{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center}
+#body .libc .liba>.sm{flex:1 1 auto;min-width:0;min-height:32px!important;padding:0 8px!important;font-size:12.5px!important;border:1px solid #d9c4ab!important;background:#fffaf3!important;color:#6b4423!important;font-weight:600}
+#body .libc .liba>.sm:hover{background:#f6e7d6!important}
+#body .libc .liba>.libm-b{flex:none;min-height:32px;padding:0 10px}
+.lib-jump{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 12px}
+.lib-jump button{min-width:32px;height:30px;padding:0 9px;border:1px solid var(--bd2);background:var(--card);border-radius:99px;font-size:13px;font-weight:700;color:var(--tx);cursor:pointer}
+.lib-jump button:hover{background:#f6e7d6;border-color:#d9c4ab}
+.lib-jump small{font-weight:500;color:var(--mu);margin-left:3px;font-size:11px}
+#body .libc.lib-flash{box-shadow:0 0 0 3px #e0a96d!important}
+@media (max-width:760px){#body .libg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}#body .libc .liba>.sm{font-size:12px!important;padding:0 6px!important}#body .libc .liba>.libm-b{font-size:0;gap:0;width:34px;padding:0;justify-content:center}#body .libc .liba>.libm-b svg{width:15px;height:15px}}
+</style>
+<script id="kz-lib2-js">
+(function(){
+ function deco(){const g=document.querySelector('#body .libg');if(!g||g.dataset.ini===String(g.childElementCount))return;g.dataset.ini=String(g.childElementCount);
+  document.querySelector('#body .lib-jump')?.remove();const hs=[...g.querySelectorAll(':scope>.libh')];if(!hs.length)return;const jump=document.createElement('div');jump.className='lib-jump';
+  hs.forEach(h=>{const t=h.textContent.trim();let c=h.nextElementSibling,n=0,first=null;while(c&&!c.classList.contains('libh')){if(c.classList.contains('libc')&&!c.hidden){n++;if(!first)first=c}c=c.nextElementSibling}
+   if(!first)return;first.querySelector('.lib-ini')?.remove();const b=document.createElement('span');b.className='lib-ini';b.textContent=t;first.append(b);
+   const j=document.createElement('button');j.type='button';j.innerHTML=t+'<small>'+n+'</small>';j.onclick=()=>{first.scrollIntoView({behavior:'smooth',block:'center'});first.classList.add('lib-flash');setTimeout(()=>first.classList.remove('lib-flash'),1200)};jump.append(j)});
+  if(jump.childElementCount>1)g.before(jump)}
+ new MutationObserver(()=>{if(typeof view!=='undefined'&&view==='library')requestAnimationFrame(deco)}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 <script id="kz-draft">
 /* ===== 인도자 작업 시트 자동 보관: 홈에 올리기 전이라도 새로고침·창 닫기에 사라지지 않게 (이 기기 안에만 저장) ===== */
 (function(){
