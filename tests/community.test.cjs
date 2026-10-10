@@ -126,3 +126,20 @@ test('mention: muted member still gets a mention notice; @모두 reaches everyon
  const note=(await f.run(f.outsider,{action:'inbox'})).items[0];assert.equal(note.type,'mention');assert.match(note.title,/언급/);
  f.advance();const before=f.pushed.length;await f.run(f.user,{action:'send',room:'all',id:'mention_req2',text:'@모두 내일 연습해요'});
  const ids2=f.pushed.slice(before).flatMap(p=>p.recipients.map(a=>a.id));assert.deepEqual([...new Set(ids2)].sort(),[f.admin.id,f.outsider.id].sort());});
+test('rsvp reminder: only weekdays, only targets without an answer, inbox + push; targets need staff',async()=>{const f=fixture();
+ // fixture clock: find date fields from service by running at a known Monday KST
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가수1',rank:'싱어',status:'approved'},{id:'a2',name:'가수2',rank:'싱어',status:'approved'},{id:'m1',name:'선임',rank:'선임싱어',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,12,10,0);/* 2026-10-12 (월) 19:00 KST */
+ const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),collection:n=>({doc:k=>ref(path+'/'+n+'/'+k)})});
+ const db={collection:n=>({doc:k=>ref(n+'/'+k)}),runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v)),update:(x,v)=>w.push(()=>data.set(x.path,{...data.get(x.path),...v})),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ await assert.rejects(run(people[0],{action:'rsvpTargets',date:'2026-10-18',targets:[{n:'가수1'}]}),{status:403});
+ await run(people[2],{action:'rsvpTargets',date:'2026-10-18',targets:[{n:'가수1',r:['싱어']},{n:'가수2',r:['싱어']}]});
+ await run(people[1],{action:'rsvpSet',date:'2026-10-18',s:'yes'});
+ const r=await run({system:true},{action:'rsvpRemind'});assert.equal(r.date,'2026-10-18');assert.equal(r.reminded,1);assert.deepEqual(pushed[0].r.map(a=>a.id),['a1']);
+ assert.ok(data.get('_kzCommunity/inbox_a1/items/rsvp_2026-10-18'));
+ const saved=data.get('_kzCommunity/rsvp_2026-10-18');assert.equal(saved.targets.length,2);assert.ok(saved.answers['가수2']);
+ await assert.rejects(run(people[0],{action:'rsvpRemind'}),{status:400});
+ clock=Date.UTC(2026,9,17,10,0);/* 토요일 */const r2=await run({system:true},{action:'rsvpRemind'});assert.equal(r2.skipped,'not-weekday');});

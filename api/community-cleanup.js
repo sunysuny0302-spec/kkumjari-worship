@@ -11,6 +11,8 @@ module.exports=async function handler(req,res){
    const s=await db.collection('_kzCommunity').doc('room_'+room).collection('kzChatMessages').where('expiresAt','<=',admin.firestore.Timestamp.now()).limit(400).get();if(s.empty)break;
    const batch=db.batch();s.docs.forEach(d=>batch.delete(d.ref));await batch.commit();deleted+=s.size;
   }
-  return res.json({deleted});
+  /* 같은 크론에서 토요 연습 미응답자 알림 (월~금 저녁 7시) */
+  let remind=null;try{remind=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpRemind'});}catch(e){console.error('[rsvp-remind]',e.code||e.name||e.message);remind={error:true};}
+  return res.json({deleted,remind});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };

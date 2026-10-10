@@ -1,6 +1,6 @@
 {
   "crons": [
-    { "path": "/api/community-cleanup", "schedule": "0 18 * * *" }
+    { "path": "/api/community-cleanup", "schedule": "0 10 * * *" }
   ],
   "headers": [
     {
