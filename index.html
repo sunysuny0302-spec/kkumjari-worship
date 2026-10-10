@@ -8985,36 +8985,75 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #body .hm.hm-v13 .kz-hero h3{color:#1f1914!important;text-shadow:0 0 14px rgba(255,250,244,.85)}
 </style>
 <style id="kz-lib2">
-/* 악보 모음집 정리: 그룹 머리줄 대신 위쪽 초성 바로가기 + 카드 왼쪽 위 초성 표시, 빈 공간 없이 이어서 배치 */
-#body .libg{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))!important;gap:14px!important;align-items:start}
-#body .libg>.libh{display:none!important}
-#body .libc{position:relative;padding:10px!important;gap:8px!important;border-radius:16px!important;transition:transform .15s,box-shadow .15s}
-#body .libc:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(70,45,20,.35)!important}
-#body .libc .libt{border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:#fff}
-#body .libc .lib-ini{position:absolute;left:4px;top:4px;z-index:2;min-width:26px;height:26px;padding:0 7px;border-radius:9px;display:grid;place-items:center;background:#7b5638;color:#fff;font-size:12.5px;font-weight:700;box-shadow:0 2px 6px rgba(60,40,20,.25)}
-#body .libc .kv{min-height:30px}
-#body .libc .libi{gap:2px}
-#body .libc .libnm{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important;font-weight:700;line-height:1.35}
-#body .libc .libi .mu{font-size:11.5px!important;line-height:1.4}
-#body .libc .liba{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center}
-#body .libc .liba>.sm{flex:1 1 auto;min-width:0;min-height:32px!important;padding:0 8px!important;font-size:12.5px!important;border:1px solid #d9c4ab!important;background:#fffaf3!important;color:#6b4423!important;font-weight:600}
-#body .libc .liba>.sm:hover{background:#f6e7d6!important}
-#body .libc .liba>.libm-b{flex:none;min-height:32px;padding:0 10px}
-.lib-jump{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 12px}
-.lib-jump button{min-width:32px;height:30px;padding:0 9px;border:1px solid var(--bd2);background:var(--card);border-radius:99px;font-size:13px;font-weight:700;color:var(--tx);cursor:pointer}
+/* 악보 모음집: 초성별 구역(머리줄 + 곡 수) · 목록/카드 보기 전환 · 위쪽 초성 바로가기 */
+.lib-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px;position:sticky;top:var(--bh,0px);z-index:5;padding:8px 0;background:var(--page,#faf6f0)}
+.lib-jump{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0}
+.lib-jump button{min-width:34px;height:30px;padding:0 10px;border:1px solid var(--bd2);background:var(--card);border-radius:99px;font-size:13px;font-weight:700;color:var(--tx);cursor:pointer}
 .lib-jump button:hover{background:#f6e7d6;border-color:#d9c4ab}
 .lib-jump small{font-weight:500;color:var(--mu);margin-left:3px;font-size:11px}
+.lib-vw{display:inline-flex;padding:3px;border-radius:10px;background:rgba(120,88,56,.08);gap:2px;flex:none}
+.lib-vw button{border:0;background:none;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:700;color:var(--mu);cursor:pointer}
+.lib-vw button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(60,40,20,.15)}
+#body .libg>.libh{display:flex!important;grid-column:1/-1;align-items:center;gap:8px;margin:10px 0 0!important;padding:0 2px 8px!important;border:0!important;border-bottom:2px solid #ead9c4!important;border-radius:0!important;font-size:0!important;background:none!important;position:static!important;box-shadow:none!important;min-height:0!important}
+#body .libg>.libh b{display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 8px;border-radius:9px;background:#7b5638;color:#fff;font-size:15px;font-weight:800}
+#body .libg>.libh[hidden]{display:none!important}
+#body .libg>.libh:first-child{margin-top:0}
+#body .libg>.libh small{font-size:12.5px;font-weight:600;color:var(--mu)}
+#body .libc .lib-ini{display:none}
 #body .libc.lib-flash{box-shadow:0 0 0 3px #e0a96d!important}
-@media (max-width:760px){#body .libg{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}#body .libc .liba>.sm{font-size:12px!important;padding:0 6px!important}#body .libc .liba>.libm-b{font-size:0;gap:0;width:34px;padding:0;justify-content:center}#body .libc .liba>.libm-b svg{width:15px;height:15px}}
+#body .libc{position:relative;transition:box-shadow .15s,transform .15s}
+#body .libc .libnm{font-weight:700;line-height:1.35}
+#body .libc .liba{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center}
+#body .libc .liba>.sm{min-height:32px!important;padding:0 10px!important;font-size:12.5px!important;border:1px solid #d9c4ab!important;background:#fffaf3!important;color:#6b4423!important;font-weight:600;white-space:nowrap}
+#body .libc .liba>.sm:hover{background:#f6e7d6!important}
+#body .libc .liba>.libm-b{flex:none;min-height:32px;padding:0 10px;white-space:nowrap}
+/* ── 카드 보기 ── */
+#body .libg.lib-cards{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;gap:12px!important;align-items:start}
+#body .lib-cards .libc{padding:9px!important;gap:7px!important;border-radius:14px!important}
+#body .lib-cards .libc:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(70,45,20,.35)!important}
+#body .lib-cards .libc .libt{border-radius:9px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+#body .lib-cards .libc .kv{min-height:28px}
+#body .lib-cards .libc .libnm{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;display:block;font-size:14px!important}
+#body .lib-cards .libc .libi .mu{font-size:11.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#body .lib-cards .libc .liba>.sm{flex:1 1 auto;min-width:0}
+/* ── 목록 보기 ── */
+#body .libg.lib-list{display:grid!important;grid-template-columns:1fr!important;gap:0!important}
+#body .lib-list>.libh{margin-top:18px}
+#body .lib-list .libc{display:grid!important;grid-template-columns:44px minmax(0,1fr) 150px auto;grid-template-areas:"th info key act";align-items:center;gap:14px!important;padding:8px 10px!important;border-radius:0!important;border:0!important;border-bottom:1px solid var(--bd)!important;background:transparent!important;box-shadow:none!important}
+#body .lib-list .libc:hover{background:rgba(224,169,109,.08)!important}
+#body .lib-list .libc .libt{grid-area:th;width:44px;height:56px;padding:0;border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:#fff}
+#body .lib-list .libc .libt img{width:100%;height:100%;object-fit:cover;object-position:top}
+#body .lib-list .libc .libt>:not(img){display:none}
+#body .lib-list .libc .libi{grid-area:info;display:flex;flex-direction:column;gap:2px;min-width:0}
+#body .lib-list .libc .libnm{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;display:block;font-size:15px!important}
+#body .lib-list .libc .libnm .kz-key{display:none}
+#body .lib-list .libc .libi .mu{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#body .lib-list .libc .kv{grid-area:key;min-height:32px;margin:0}
+#body .lib-list .libc .liba{grid-area:act}
+@media (max-width:760px){
+ .lib-bar{gap:6px}
+ #body .libg.lib-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ #body .lib-cards .libc .liba>.libm-b{font-size:0;gap:0;width:34px;padding:0;justify-content:center}
+ #body .lib-list .libc{grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"th info key" "th act act";gap:6px 10px!important;padding:8px 4px!important}
+ #body .lib-list .libc .libt{width:40px;height:52px}
+ #body .lib-list .libc .kv{width:116px}
+ #body .lib-list .libc .liba>.sm{flex:1}
+}
 </style>
 <script id="kz-lib2-js">
 (function(){
- function deco(){const g=document.querySelector('#body .libg');if(!g||g.dataset.ini===String(g.childElementCount))return;g.dataset.ini=String(g.childElementCount);
-  document.querySelector('#body .lib-jump')?.remove();const hs=[...g.querySelectorAll(':scope>.libh')];if(!hs.length)return;const jump=document.createElement('div');jump.className='lib-jump';
-  hs.forEach(h=>{const t=h.textContent.trim();let c=h.nextElementSibling,n=0,first=null;while(c&&!c.classList.contains('libh')){if(c.classList.contains('libc')&&!c.hidden){n++;if(!first)first=c}c=c.nextElementSibling}
-   if(!first)return;first.querySelector('.lib-ini')?.remove();const b=document.createElement('span');b.className='lib-ini';b.textContent=t;first.append(b);
-   const j=document.createElement('button');j.type='button';j.innerHTML=t+'<small>'+n+'</small>';j.onclick=()=>{first.scrollIntoView({behavior:'smooth',block:'center'});first.classList.add('lib-flash');setTimeout(()=>first.classList.remove('lib-flash'),1200)};jump.append(j)});
-  if(jump.childElementCount>1)g.before(jump)}
+ const getV=()=>{try{return localStorage.getItem('kzLibView')==='cards'?'cards':'list'}catch(e){return 'list'}};
+ function deco(){const g=document.querySelector('#body .libg');if(!g)return;const v=getV();g.classList.toggle('lib-list',v==='list');g.classList.toggle('lib-cards',v==='cards');
+  const sig=v+':'+g.childElementCount;if(g.dataset.ini===sig&&document.querySelector('#body .lib-bar'))return;g.dataset.ini=sig;
+  document.querySelector('#body .lib-bar')?.remove();document.querySelector('#body .lib-jump')?.remove();
+  const bar=document.createElement('div');bar.className='lib-bar';const jump=document.createElement('div');jump.className='lib-jump';
+  const hs=[...g.querySelectorAll(':scope>.libh')];
+  hs.forEach(h=>{if(!h.dataset.t)h.dataset.t=h.textContent.trim();const t=h.dataset.t;let c=h.nextElementSibling,n=0;while(c&&!c.classList.contains('libh')){if(c.classList.contains('libc')&&!c.hidden)n++;c=c.nextElementSibling}
+   h.hidden=!n;h.innerHTML='';const tb=document.createElement('b');tb.textContent=t;h.append(tb);const sm=document.createElement('small');sm.textContent=n+'곡';h.append(sm);if(!n)return;
+   const j=document.createElement('button');j.type='button';j.innerHTML=t+'<small>'+n+'</small>';j.onclick=()=>{const y=h.getBoundingClientRect().top+scrollY-(bar.offsetHeight+70);scrollTo({top:y,behavior:'smooth'})};jump.append(j)});
+  const vw=document.createElement('div');vw.className='lib-vw';vw.innerHTML='<button type="button" data-lv="list">목록</button><button type="button" data-lv="cards">카드</button>';
+  vw.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.lv===v);b.onclick=()=>{try{localStorage.setItem('kzLibView',b.dataset.lv)}catch(e){}g.dataset.ini='';deco()}});
+  if(jump.childElementCount>1)bar.append(jump);else{const sp=document.createElement('span');sp.style.flex='1';bar.append(sp)}bar.append(vw);g.before(bar)}
  new MutationObserver(()=>{if(typeof view!=='undefined'&&view==='library')requestAnimationFrame(deco)}).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
