@@ -4620,6 +4620,7 @@ window.kzLoginBar=function(on){const m=document.querySelector('meta[name=theme-c
  .tools.tb2>#optb{order:4;flex:1 1 320px!important;min-width:0;margin:0 0 0 6px!important;padding:0 0 0 10px!important;border:0!important;border-left:1px solid var(--bd)!important;border-top:0!important}
 }
 </style>
+<style id="kc-mention-css">.kc-chat-composer{position:relative}.kc-mention-pop{position:absolute;left:10px;right:10px;bottom:calc(100% + 6px);max-height:260px;overflow:auto;background:var(--card,#fffdf9);border:1px solid var(--bd,#e6d9c8);border-radius:14px;box-shadow:0 12px 30px -12px rgba(40,25,10,.35);padding:5px;z-index:30;display:grid;gap:2px}.kc-mention-pop button{display:flex;align-items:center;gap:9px;width:100%;border:0;background:none;padding:7px 9px;border-radius:10px;text-align:left;font:inherit;font-size:14px;color:var(--tx,#2a1f17);cursor:pointer}.kc-mention-pop button.on,.kc-mention-pop button:hover{background:#f4ebe0}.kc-mention-pop small{color:var(--mu,#8a7764);font-size:12px}.kc-mention-av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#eadccb;color:#6b4b2f;font-size:12px;font-weight:700;flex:none}.kc-mention{font-weight:700;color:#2f6fbf}.kc-message.mine .kc-mention{color:inherit;text-decoration:underline}.kc-mention.me{background:#fff2c9;color:#8a5a00;border-radius:4px;padding:0 2px}</style>
 <style id="kz-scrollbar">
 /* 스크롤바: 얇게, 위아래 화살표 없이, 둥근 창 모서리에 닿지 않게 */
 @supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:rgba(120,88,56,.32) transparent}}
@@ -7638,7 +7639,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  const notifyButton=$c('#kcChatNotify');notifyButton.onclick=async()=>{const enabled=notifyButton.getAttribute('aria-pressed')!=='true';notifyButton.disabled=true;try{const r=await api({action:'chatPreference',room:attachedRoom,enabled});if(notifyButton.isConnected)paintNotify(notifyButton,r.enabled);toast(r.enabled?'채팅 알림을 켰어요. 휴대폰 알림은 내 계정에서 허용해 주세요.':'채팅 알림을 껐어요.');}catch(e){error(e);}finally{if(notifyButton.isConnected)notifyButton.disabled=false;}};
 
  $c('#kcChatText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229&&matchMedia('(min-width:821px)').matches){e.preventDefault();$c('#kcCompose').requestSubmit();}};
- $c('#kcChatText').value=drafts[room];requestAnimationFrame(()=>{const t=$c('#kcChatText');if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}});$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
+ mentionSetup($c('#kcChatText'));$c('#kcChatText').value=drafts[room];requestAnimationFrame(()=>{const t=$c('#kcChatText');if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}});$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
  if(loadedRoom!==room){const cached=roomCache.get(room);chatItems=cached?.items||[];chatCursor=cached?.cursor||null;loadedRoom=room;}
  if(chatItems.length){paintChat(true);const c=$c('#kcConnection');if(c)c.textContent='최근 대화 표시 중 · 새 대화 확인 중';}
  else $c('#kcChatLog').innerHTML='<div class="kc-empty" role="status">최근 대화를 불러오는 중…</div>';
@@ -7646,6 +7647,21 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  }catch(e){if(activeView()==='community'&&gen===pageGeneration){if(e.status===401||e.status===403){roomCache.clear();chatItems=[];loadedRoom='';$c('#kcChatLog')?.replaceChildren();const f=$c('#kcCompose');if(f)f.hidden=true;}error(e);const log=$c('#kcChatLog');if(log&&!chatItems.length){log.innerHTML='<button class="kc-btn" id="kcRetry">다시 연결</button>';$c('#kcRetry').onclick=communityView;}}}
 }
 function paintNotify(btn,on){if(!btn)return;btn.setAttribute('aria-pressed',String(on));const t=on?'알림 켜짐 · 누르면 끄기':'알림 꺼짐 · 누르면 켜기';btn.setAttribute('aria-label',t);btn.title=t;btn.innerHTML=on?KC_ICON.bell:KC_ICON.belloff;}
+/* @언급: 입력 중 '@'를 치면 이름 고르기, 말풍선에서는 언급된 이름 강조 */
+function mentionNames(){try{return roomMemberListData().map(m=>String(m.name)).filter(Boolean)}catch(e){return []}}
+function mentionHTML(text){let h=escape(text);const names=mentionNames().sort((a,b)=>b.length-a.length);if(!names.length||h.indexOf('@')<0)return h;
+ const me=String(actor?.name||'');const re=new RegExp('@('+names.map(n=>escape(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+'|모두)(?![가-힣A-Za-z0-9])','g');
+ return h.replace(re,(all,n)=>`<b class="kc-mention${n===escape(me)||n==='모두'?' me':''}">@${n}</b>`)}
+function mentionSetup(t){if(!t||t._mention)return;t._mention=true;const host=t.closest('.kc-chat-composer')||t.parentElement;let box=null,list=[],idx=0,q=null;
+ const close=()=>{if(box){box.remove();box=null}q=null};
+ const pick=name=>{if(q==null)return;const v=t.value,end=t.selectionStart,start=end-q.length-1;t.value=v.slice(0,start)+'@'+name+' '+v.slice(end);const c=start+name.length+2;t.setSelectionRange(c,c);close();t.dispatchEvent(new Event('input',{bubbles:true}));t.focus()};
+ const paint=()=>{if(!list.length){close();return}if(!box){box=document.createElement('div');box.className='kc-mention-pop';box.setAttribute('role','listbox');host.append(box)}
+  box.innerHTML=list.map((n,i)=>`<button type="button" role="option" class="${i===idx?'on':''}" data-n="${escape(n)}"><span class="kc-mention-av">${escape(n.slice(0,1))}</span>${n==='모두'?'<b>모두</b><small>이 방 모두에게 알림</small>':`<b>${escape(n)}</b>`}</button>`).join('');
+  box.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();pick(b.dataset.n)}})};
+ const check=()=>{const v=t.value.slice(0,t.selectionStart),m=v.match(/(^|\s)@([^\s@]{0,12})$/);if(!m){close();return}q=m[2];const me=String(actor?.name||''),all=mentionNames().filter(n=>n!==me);const ql=q.toLowerCase();
+  list=['모두',...all].filter(n=>!ql||n.toLowerCase().includes(ql)).sort((a,b)=>(b.toLowerCase().startsWith(ql))-(a.toLowerCase().startsWith(ql))).slice(0,8);idx=0;paint()};
+ t.addEventListener('input',check);t.addEventListener('click',check);t.addEventListener('blur',()=>setTimeout(close,150));
+ t.addEventListener('keydown',e=>{if(!box)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();e.stopImmediatePropagation();idx=(idx+(e.key==='ArrowDown'?1:list.length-1))%list.length;paint()}else if((e.key==='Enter'||e.key==='Tab')&&!e.isComposing){e.preventDefault();e.stopImmediatePropagation();pick(list[idx])}else if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true)}
 function isMyChatMessage(m){
  const ids=[m?.owner,m?.uid,m?.userId,m?.senderId,m?.authorId,m?.accountId].filter(Boolean).map(String);
  return m?._mine===true||m?.mine===true||m?.isMine===true||ids.includes(String(uid()))||!!actor?.id&&ids.includes(String(actor.id));
@@ -7663,7 +7679,7 @@ const initial=String(m.name||'?').trim().slice(0,1)||'?',text=String(m.text||'')
 const photo=m.imageCount?`<div class="kc-message-images" data-images="${escape(m.id)}"><button type="button">${KC_ICON.photo}<span>사진 ${m.imageCount}장 보기</span></button></div>`:'';
 const face=mine?'':first?`<span class="kc-avatar" data-profile-id="${escape(m.owner||'')}" data-initial="${escape(initial)}" aria-hidden="true">${escape(initial)}</span>`:'<span class="kc-avatar-gap" aria-hidden="true"></span>';
 const stamp=m._pending?'<time class="pending" role="status">전송 중</time>':last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
-return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${escape(text)}${photo}</div>${stamp}</div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
+return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${mentionHTML(text)}${photo}</div>${stamp}</div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  paintProfiles();refreshProfiles();
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
  l.querySelectorAll('[data-images]').forEach(el=>{const key=room+'|'+el.dataset.images;const show=images=>{el.innerHTML=KZImages.gallery(images);el.querySelectorAll('img').forEach(im=>im.addEventListener('load',()=>{if(l.isConnected&&l.scrollHeight-l.scrollTop-l.clientHeight<im.clientHeight+160)l.scrollTop=l.scrollHeight},{once:true}));};if(imageCache.has(key))show(imageCache.get(key));else el.querySelector('button').onclick=async e=>{e.target.disabled=true;try{const r=await api({action:'chatImages',room,id:el.dataset.images});if(el.isConnected){if(imageCache.size>=20)imageCache.delete(imageCache.keys().next().value);imageCache.set(key,r.images);show(r.images);}}catch(err){error(err);e.target.disabled=false;}};});

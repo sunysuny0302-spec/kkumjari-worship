@@ -120,3 +120,9 @@ test('rsvp: everyone reads, each person sets only own answer, date window enforc
  await assert.rejects(f.run(f.user,{action:'rsvpGet',date:'2020-01-05'}),{status:400});
  await assert.rejects(f.run(f.user,{action:'rsvpGet',date:'../x'}),{status:400});
 });
+test('mention: muted member still gets a mention notice; @모두 reaches everyone in the room',async()=>{const f=fixture();await f.run(f.outsider,{action:'chatPreference',room:'all',enabled:false});
+ await f.run(f.user,{action:'send',room:'all',id:'mention_req1',text:'@'+f.outsider.name+' 확인 부탁해요'});
+ const ids=f.pushed.flatMap(p=>p.recipients.map(a=>a.id));assert.ok(ids.includes(f.outsider.id));assert.ok(ids.includes(f.admin.id));
+ const note=(await f.run(f.outsider,{action:'inbox'})).items[0];assert.equal(note.type,'mention');assert.match(note.title,/언급/);
+ f.advance();const before=f.pushed.length;await f.run(f.user,{action:'send',room:'all',id:'mention_req2',text:'@모두 내일 연습해요'});
+ const ids2=f.pushed.slice(before).flatMap(p=>p.recipients.map(a=>a.id));assert.deepEqual([...new Set(ids2)].sort(),[f.admin.id,f.outsider.id].sort());});
