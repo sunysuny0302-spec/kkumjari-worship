@@ -8733,17 +8733,45 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 <style id="kc-mention-chip">#kcPanel .kc-mention,.kc-mention{display:inline-block;font-weight:700;color:#1f5fae;background:#e3eefb;border-radius:7px;padding:0 6px;margin:0 1px;line-height:1.5;text-decoration:none!important}
 #kcPanel .kc-message.mine .kc-mention,.kc-message.mine .kc-mention{color:#fff;background:rgba(255,255,255,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);text-decoration:none!important}
 #kcPanel .kc-mention.me,.kc-mention.me{color:#7a4f00;background:#ffe9a8;box-shadow:none}</style>
-<style id="kz-home-cal-fit">/* 홈: 일정 달력은 한 달이 한눈에(안쪽 스크롤 없음), 신청곡은 1~2곡만 보이게 작게 */
-html:root body #body .hm.hm-v13 .kz-info-stack{display:flex!important;flex-direction:column!important;gap:12px!important;height:auto!important;align-self:start}
-html:root body #body .hm.hm-v13 .kz-info-stack>#khInfo{flex:none!important;height:auto!important;min-height:0!important}
-html:root body #body .hm.hm-v13 #khInfo .kh-info-content{flex:none!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important;padding-bottom:0!important;min-height:0!important}
-html:root body #body .hm.hm-v13 #khInfo .kh-info-scroll{position:static!important;overflow:visible!important}
-html:root body #body .hm.hm-v13 #khInfo .kh-info-content:not(:has(.kec)) .kh-info-scroll{max-height:320px;min-height:180px;overflow:auto!important;scrollbar-width:thin}
-html:root body #body .hm.hm-v13 #khInfo .kec-day{min-height:44px!important}
+<style id="kz-home-cal-fit">/* 홈: 공지·일정 + 신청곡 묶음은 줄 높이를 키우지 않음(옆 카드에 빈칸 안 생기게).
+   그 높이 안에서 달력이 한 달 전체가 들어가도록 칸 크기를 줄이고, 신청곡은 1~2곡만 */
+@media (min-width:821px){
+html:root body #body .hm.hm-v13 .kz-info-stack{display:flex!important;flex-direction:column!important;gap:12px!important;height:0!important;min-height:max(100%,520px)!important;align-self:stretch!important}
+html:root body #body .hm.hm-v13 .kz-info-stack>#khInfo{flex:1 1 0!important;height:auto!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-content{flex:1 1 0!important;min-height:0!important;overflow:hidden!important;-webkit-mask-image:none!important;mask-image:none!important;padding-bottom:0!important;display:flex!important;flex-direction:column!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-scroll{position:static!important;flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-content:not(:has(.kec)) .kh-info-scroll{overflow:auto!important;scrollbar-width:thin;display:block}
+html:root body #body .hm.hm-v13 #khInfo .kec{flex:1 1 0;min-height:0;display:flex;flex-direction:column;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:none!important}
+html:root body #body .hm.hm-v13 #khInfo .kec-head{flex:none;margin-bottom:4px!important;min-height:0!important}
+html:root body #body .hm.hm-v13 #khInfo .kec-head h2{font-size:15px!important;line-height:1.3}
+html:root body #body .hm.hm-v13 #khInfo .kec-head button{min-height:26px!important;min-width:26px!important;padding:2px 8px!important;font-size:12px}
+html:root body #body .hm.hm-v13 #khInfo .kec-grid{flex:1 1 0;min-height:0;grid-template-rows:auto!important;grid-auto-rows:minmax(0,1fr)!important;gap:3px!important}
+html:root body #body .hm.hm-v13 #khInfo .kec-week{padding:2px 0!important;font-size:11px!important;min-height:0!important;height:auto!important}
+html:root body #body .hm.hm-v13 #khInfo .kec-day,html:root body #body .hm.hm-v13 #khInfo .kec-blank{min-height:0!important;height:auto!important;padding:2px!important;gap:1px!important;overflow:hidden}
+html:root body #body .hm.hm-v13 #khInfo .kec-number{width:22px!important;height:22px!important;font-size:12px!important;line-height:22px}
+html:root body #body .hm.hm-v13 #khInfo .kec-labels{min-height:0;overflow:hidden}
+html:root body #body .hm.hm-v13 #khInfo .kec-labels>*{font-size:10px!important;line-height:1.25!important;padding:0 3px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root body #body .hm.hm-v13 #khInfo .kh-day-detail{flex:none;display:flex!important;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:6px!important;padding:6px 10px!important;border-radius:10px}
+html:root body #body .hm.hm-v13 #khInfo .kh-day-detail>b{font-size:12.5px}
+html:root body #body .hm.hm-v13 #khInfo .kh-day-detail>p{margin:0!important;font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root body #body .hm.hm-v13 #khInfo .kh-day-detail .kz-mini{min-height:24px;padding:2px 8px;font-size:11.5px}
 html:root body #body .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:none!important;height:auto!important;min-height:0!important}
-html:root body #body .hm.hm-v13 .kh-song-card #khSongList{flex:none!important;max-height:152px!important;min-height:0!important;overflow:auto!important;margin-bottom:8px!important}
+html:root body #body .hm.hm-v13 .kz-info-stack>.kh-song-card{padding:12px 16px!important}
+html:root body #body .hm.hm-v13 .kh-song-card .kz-h{margin-bottom:4px!important;padding-bottom:6px!important;min-height:0!important}
+html:root body #body .hm.hm-v13 .kh-song-card .kh-song-row{gap:1px!important}
+html:root body #body .hm.hm-v13 .kh-song-card .kh-song-add{min-height:34px!important;height:34px!important;padding:0 12px!important}
+html:root body #body .hm.hm-v13 .kz-info-stack>#khInfo{padding:12px 16px!important}
+html:root body #body .hm.hm-v13 #khInfo .kz-h{margin-bottom:6px!important;padding-bottom:6px!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-tabs button{min-height:30px!important;padding:4px 14px!important}
+html:root body #body .hm.hm-v13 .kh-song-card #khSongList{flex:none!important;max-height:96px!important;min-height:0!important;overflow:auto!important;margin-bottom:8px!important}
+html:root body #body .hm.hm-v13 .kh-song-card .kh-song-row{padding-top:7px!important;padding-bottom:7px!important}
 html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3))){-webkit-mask-image:none!important;mask-image:none!important;padding-bottom:0!important}
+}
 </style>
+<style id="kz-dev-fill">/* 주일 예배 영상 카드: 사진은 자르지 않고 아래에 두고, 위 남는 칸은 사진 색으로 이어지는 은은한 그라데이션 */
+:root #body .hm.hm-v13 .devotion-card.kz-dev{background:linear-gradient(180deg,var(--card,#fffaf3) 0%,var(--card,#fffaf3) 18%,#f8ead8 62%,#f3dcc0 100%)!important}
+:root #body .hm.hm-v13 .devotion-card.kz-dev>.kw-video{background:transparent!important}
+:root #body .hm.hm-v13 .devotion-card.kz-dev>img.kz-dev-image{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22%);mask-image:linear-gradient(180deg,transparent 0,#000 22%)}</style>
 </html>
 
 <script id="kz-score-pages-script">
@@ -9012,7 +9040,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 </style>
 <style id="kz-lib2">
 /* 악보 모음집: 초성별 구역(머리줄 + 곡 수) · 목록/카드 보기 전환 · 위쪽 초성 바로가기 */
-.lib-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px;position:sticky;top:var(--bh,0px);z-index:5;padding:8px 0;background:var(--page,#faf6f0)}
+.lib-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px;padding:6px 0;background:none}
 .lib-jump{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0}
 .lib-jump button{min-width:34px;height:30px;padding:0 10px;border:1px solid var(--bd2);background:var(--card);border-radius:99px;font-size:13px;font-weight:700;color:var(--tx);cursor:pointer}
 .lib-jump button:hover{background:#f6e7d6;border-color:#d9c4ab}
@@ -9050,6 +9078,15 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #body .lib-list .libc .libt{grid-area:th;width:44px;height:56px;padding:0;border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:#fff}
 #body .lib-list .libc .libt img{width:100%;height:100%;object-fit:cover;object-position:top}
 #body .lib-list .libc .libt>:not(img){display:none}
+#body .lib-list .libc>.kz-car{grid-area:th;position:relative;width:44px;height:56px;border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:#fff;aspect-ratio:auto!important}
+#body .lib-list .libc>.kz-car .kz-car-track{display:block!important;width:100%;height:100%;overflow:hidden!important}
+#body .lib-list .libc>.kz-car .kz-car-page{display:none!important;width:100%;height:100%;padding:0;border:0;aspect-ratio:auto!important}
+#body .lib-list .libc>.kz-car .kz-car-page:first-child{display:block!important}
+#body .lib-list .libc>.kz-car .kz-car-page img{width:100%;height:100%;object-fit:cover;object-position:top}
+#body .lib-list .libc>.kz-car .kz-car-nav{display:none!important}
+#body .lib-list .libc>.kz-car .kz-car-count{position:absolute!important;right:2px!important;bottom:2px!important;left:auto!important;top:auto!important;transform:none!important;padding:0 4px!important;min-width:0!important;height:auto!important;border-radius:5px!important;font-size:9.5px!important;line-height:1.5!important;background:rgba(40,30,20,.75)!important;color:#fff!important;white-space:nowrap}
+#body .lib-list .libc>.kz-car .kz-car-count b{font-weight:700}
+@media (max-width:760px){#body .lib-list .libc>.kz-car{width:40px;height:52px}}
 #body .lib-list .libc .libi{grid-area:info;display:flex;flex-direction:column;gap:2px;min-width:0}
 #body .lib-list .libc .libnm{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;display:block;font-size:15px!important}
 #body .lib-list .libc .libnm .kz-key{display:none}
