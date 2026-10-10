@@ -8702,17 +8702,21 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  const os=syncInsp;syncInsp=function(){const v=os.apply(this,arguments);try{paint()}catch(e){}return v};
  const oc=paintClip;paintClip=function(){const v=oc.apply(this,arguments);try{paint()}catch(e){}return v};
 })();</script>
-<script id="kz-mk-clip">/* 마커 복사·붙여넣기: 직책·한글 입력 상태와 관계없이 송폼 작업창에서 동작 */
-(function(){const inField=t=>!!t&&(/INPUT|TEXTAREA|SELECT/.test(t.tagName||'')||t.isContentEditable);
+<script id="kz-mk-clip">/* 마커 복사·붙여넣기: 직책·한글 입력 상태와 관계없이 송폼 작업창에서 동작.
+   복사할 때 시스템 클립보드에도 마커 표시 글자를 써서, 예전에 복사해 둔 이미지가 대신 붙는 일이 없게 함 */
+(function(){const TAG='[꿈자리 마커] ';const inField=t=>!!t&&(/INPUT|TEXTAREA|SELECT/.test(t.tagName||'')||t.isContentEditable);
  const onEd=()=>typeof view!=='undefined'&&view==='edit'&&typeof canEdit!=='undefined'&&canEdit;
  const hasTextSel=()=>{try{return String(getSelection()||'').trim().length>0}catch(e){return false}};
- let lastKey=0;
+ let lastCopy=0,lastPaste=0;
+ const writeSys=t=>{try{navigator.clipboard&&navigator.clipboard.writeText&&navigator.clipboard.writeText(TAG+t).catch(()=>{})}catch(e){}};
  document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.shiftKey||e.altKey||!onEd()||inField(e.target)||inField(document.activeElement))return;
-  if(e.code==='KeyC'){if(!target()||hasTextSel())return;e.preventDefault();lastKey=Date.now();copySel()}
-  else if(e.code==='KeyV'&&mkClip){const k0=Date.now();lastKey=k0;/* 보통은 paste 이벤트가 처리(이미지가 먼저). paste 이벤트가 안 오는 브라우저만 여기서 */setTimeout(()=>{if(lastPaste<k0&&onEd())pasteClip()},250)}},true);
- let lastPaste=0;document.addEventListener('paste',()=>{lastPaste=Date.now()},true);
- document.addEventListener('copy',e=>{if(!onEd()||inField(e.target)||hasTextSel()||!target())return;e.preventDefault();if(Date.now()-lastKey>300)copySel()},true);
- document.addEventListener('paste',e=>{if(!onEd()||!mkClip||inField(e.target)||inField(document.activeElement))return;const f=[...(e.clipboardData&&e.clipboardData.files||[])].some(x=>x.type.startsWith('image/'));if(f)return;e.preventDefault();e.stopImmediatePropagation();pasteClip()},true);
+  if(e.code==='KeyC'){if(!target()||hasTextSel())return;const k0=Date.now();/* 기본 복사는 막지 않음 → copy 이벤트에서 클립보드를 마커로 덮어씀. copy 이벤트가 안 오는 브라우저만 여기서 */setTimeout(()=>{if(lastCopy<k0&&onEd()&&target()){copySel();writeSys(mkClip.it.t)}},200)}
+  else if(e.code==='KeyV'&&mkClip){const k0=Date.now();setTimeout(()=>{if(lastPaste<k0&&onEd())pasteClip()},250)}},true);
+ document.addEventListener('copy',e=>{lastCopy=Date.now();if(!onEd()||inField(e.target)||inField(document.activeElement)||hasTextSel()||!target())return;e.preventDefault();copySel();try{e.clipboardData.setData('text/plain',TAG+mkClip.it.t)}catch(x){writeSys(mkClip.it.t)}},true);
+ document.addEventListener('paste',e=>{lastPaste=Date.now();if(!onEd()||!mkClip||inField(e.target)||inField(document.activeElement))return;const cd=e.clipboardData;let txt='';try{txt=cd?cd.getData('text/plain')||'':''}catch(x){}
+  const img=[...(cd&&cd.files||[])].some(x=>x.type.startsWith('image/'));
+  /* 마커를 복사한 뒤 다른 곳에서 이미지를 새로 복사했다면 이미지가 붙음 */
+  if(img&&!txt.startsWith(TAG))return;e.preventDefault();e.stopImmediatePropagation();pasteClip()},true);
 })();</script>
 </html>
 
