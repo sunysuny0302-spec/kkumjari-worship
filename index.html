@@ -5035,8 +5035,8 @@ r.querySelectorAll('.kz-nt-r[data-gi]').forEach(b=>b.onclick=()=>{const[k,id]=b.
 r.querySelectorAll('[data-kz-fgo]').forEach(b=>b.onclick=()=>{const v=b.dataset.kzFgo,ro=b.dataset.kzRole;if(v==='lsw')openLeaderRoom(),go('lsw');else if(v==='swap'||v==='abs')goRole(ro==='session'?'session':'singer',ro==='session'?'abs':'swap');else go(v)})}
 function kzPeople(pub,ment){const out=[];const add=(k,v)=>{v=String(v||'').trim();if(v)out.push([k,v])};
 if(pub&&ment){const L=ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);let sg='';const seen=[];L.forEach(v=>{if(/^::/.test(v)||/https?:\/\/|www\./i.test(v)||/^\d+\s*[.)]/.test(v))return;const m=/^([^:：\d]{1,6})\s*[:：]\s*(.*)$/.exec(v);if(!m)return;const k=m[1].trim(),val=m[2].trim();if(/^싱어/.test(k)){sg=val;return}if(val)seen.push([k,val])});const ord=k=>{const i=LINES.indexOf(k);return i<0?99:i};seen.sort((a,b)=>ord(a[0])-ord(b[0])).forEach(([k,v])=>add(k,v));add('싱어',sg);if(out.length)return out}
-try{add('인도',ldrOf(date))}catch(e){}try{const f=sessFill(date)||{};LINES.filter(k=>k!=='인도').forEach(k=>add(k,f[k]))}catch(e){}try{add('싱어',singersFor(date))}catch(e){}return out}
-function kzPeopleFor(d){const out=[],add=(k,v)=>{v=String(v||'').trim();if(v)out.push([k,v])};try{add('인도',ldrOf(d))}catch(e){}try{const f=sessFill(d)||{};LINES.filter(k=>k!=='인도').forEach(k=>add(k,f[k]))}catch(e){}try{add('싱어',singersFor(d))}catch(e){}return out}
+try{add('인도',ldrOf(date))}catch(e){}try{const f=sessFill(date)||{};LINES.filter(k=>k!=='인도').forEach(k=>add(slotLbl(k),f[k]))}catch(e){}try{add('싱어',singersFor(date))}catch(e){}return out}
+function kzPeopleFor(d){const out=[],add=(k,v)=>{v=String(v||'').trim();if(v)out.push([k,v])};try{add('인도',ldrOf(d))}catch(e){}try{const f=sessFill(d)||{};LINES.filter(k=>k!=='인도').forEach(k=>add(slotLbl(k),f[k]))}catch(e){}try{add('싱어',singersFor(d))}catch(e){}return out}
 function kzNextCard(){const nd=shiftDate(date,7),x=new Date(nd+'T12:00:00'),dd=daysTo(nd),ppl=kzPeopleFor(nd);let L='';try{L=ldrOf(nd)}catch(e){}
 const ses=ppl.filter(([k])=>k!=='인도'&&k!=='싱어'),sg=(ppl.find(([k])=>k==='싱어')||[])[1]||'',sgl=sg?sg.split(',').map(v=>v.trim()).filter(Boolean):[];
 return `<section class="kz-nx"><div class="kz-h">${V13I('calendar')}<h2>다음 주일</h2><span class="sp"></span>${dd>0?`<span class="kz-dd2">D-${dd}</span>`:''}</div>
@@ -5069,7 +5069,7 @@ if(!l.length)return `<div class="hc-up hc-up-empty"><span class="mu">다가오�
 return `<div class="hc-up">${l.map(e=>{const d=new Date(e.date+'T12:00:00'),n=daysTo(e.date);return `<button type="button" class="hc-ev" data-gi="e|${e._id}"><span class="hc-d">${d.getMonth()+1}/${d.getDate()} <small>(${wd(e.date)})</small></span><b>${esc(e.title)}</b>${e.time?`<span class="hc-t">${esc(e.time)}</span>`:''}<span class="hc-dd ${n<=3?'soon':''}">${dday(e.date)}</span></button>`}).join('')}</div>`}
 function homeDayPop(btn,key){document.querySelectorAll('.kz-pop').forEach(x=>x.remove());const d=new Date(key+'T12:00:00'),sun=d.getDay()===0,evs=hcEvents().filter(e=>e&&e.date===key);let h=`<div class="kz-pop-h"><b>${d.getMonth()+1}월 ${d.getDate()}일 (${wd(key)})</b>${sun&&lbl(key)?`<span class="lr-tag">${lbl(key)}</span>`:''}<span class="sp"></span><button type="button" class="kz-x" data-k="x">✕</button></div>`;
 if(sun){let L='',sg=[],ss={};try{L=ldrOf(key)}catch(e){}try{sg=String(singersFor(key)||'').split(',').map(v=>v.trim()).filter(Boolean)}catch(e){}try{ss=sessFill(key)||{}}catch(e){}const sl=Object.entries(ss).filter(([k,v])=>v);
-h+=`<div class="kz-pop-sec"><div class="kz-pop-row">${V13I('leader')}<span>인도</span><b>${esc(L||'-')}</b></div><div class="kz-pop-row">${V13I('mic')}<span>싱어</span><b>${sg.length?esc(sg.join(', ')):'배정 전'}</b></div><div class="kz-pop-row">${V13I('guitar')}<span>세션</span><b>${sl.length?sl.map(([k,v])=>`<em>${esc(k)}</em> ${esc(v)}`).join(' · '):'배정 전'}</b></div></div>`}
+h+=`<div class="kz-pop-sec"><div class="kz-pop-row">${V13I('leader')}<span>인도</span><b>${esc(L||'-')}</b></div><div class="kz-pop-row">${V13I('mic')}<span>싱어</span><b>${sg.length?esc(sg.join(', ')):'배정 전'}</b></div><div class="kz-pop-row">${V13I('guitar')}<span>세션</span><b>${sl.length?sl.map(([k,v])=>`<em>${esc(slotLbl(k))}</em> ${esc(v)}`).join(' · '):'배정 전'}</b></div></div>`}
 if(evs.length)h+=`<div class="kz-pop-sec">${evs.map(e=>`<button type="button" class="kz-pop-ev" data-gi="e|${e._id}"><b>${esc(e.title)}</b><small>${[e.time,e.place].filter(Boolean).map(esc).join(' · ')||'상세 없음'}</small></button>`).join('')}</div>`;
 if(!sun&&!evs.length)h+=`<div class="kz-pop-sec mu" style="font-size:12.5px">등록된 일정이 없어요</div>`;
 if(sun)h+=`<div class="kz-pop-f"><button type="button" class="sm" data-k="go">이 주 콘티 · 송폼 보기 ›</button></div>`;
@@ -5563,6 +5563,8 @@ window.addEventListener('beforeunload',e=>{if(dirty()||Object.values(ws).some(w=
 function fitTa(t){if(!t)return;t.style.height='auto';t.style.height=Math.max(300,t.scrollHeight+4)+'px'}
 function setWm(v){wm=v;wmDirty=true;stat();try{LS('wm:'+ldr,v)}catch(e){}sched()}
 const LINES=['인도','메인','세컨','드럼','E.G','B.G','A.G'];
+/* 일정표에서는 메인·세컨을 그냥 '건반'으로 (어느 쪽인지는 콘티가 올라와야 정해짐) */
+const slotLbl=k=>(k==='메인'||k==='세컨')?'건반':k;
 const esc2=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function getLine(t,l){const m=t.match(new RegExp('^'+esc2(l)+'\\s*:[ \\t]*(.*)$','m'));return m?m[1].trim():''}
 function setLine(t,l,v){const re=new RegExp('^'+esc2(l)+'\\s*:.*$','m'),line=l==='싱어'?`싱어: ${v}`:`${l} : ${v}`;if(re.test(t))return t.replace(re,()=>line);
@@ -6556,12 +6558,12 @@ function v6SessState(m,d){const c=ovr.find(x=>x.date===d&&x.k==='session'&&x.fro
 function schedEView(){const ns=nextSun(),ws=v6Weeks(),ms=sessRoster().map(m=>({...m,slots:((members.find(x=>x.name===m.n)||{}).slots)||String(m.tag||'').split('/').filter(Boolean)}));
 const slotOf=(m,d)=>{const f=sessFill(d);return Object.keys(f).find(k=>f[k]===m.n)||''};
 const mem=n=>members.find(x=>x.name===n)||{};
-const cell=(m,d)=>{const x=v6SessState(m,d);if(x.t==='on'){const sl=slotOf(m,d);return `<i class="sx-slot">${esc(sl||'참여')}</i>`}return x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
+const cell=(m,d)=>{const x=v6SessState(m,d);if(x.t==='on'){const sl=slotOf(m,d);return `<i class="sx-slot">${esc(sl?slotLbl(sl):'참여')}</i>`}return x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
 const cnt=d=>ms.filter(m=>{const t=v6SessState(m,d).t;return t==='on'||t==='rep'}).length;
 const head=`<div class="sx-c sx-hd sx-nm">세션</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=ms.map(m=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(m.n).slice(-2))}</span><span><b>${esc(m.n)}</b><small>${esc(m.tag||'세션')}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(m,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);return `<div class="sx-lines">${l.length?l.map(k=>`<div class="sx-ln"><span>${esc(k)}</span>${f[k]?`<b>${esc(f[k])}</b>`:'<em>비어 있음</em>'}</div>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
+const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);return `<div class="sx-names">${l.length?l.map(k=>f[k]?`<span class="sx-chip">${V13I('guitar')}<em class="sx-chip-k">${esc(slotLbl(k))}</em>${esc(f[k])}</span>`:`<span class="sx-chip empty">${V13I('guitar')}<em class="sx-chip-k">${esc(slotLbl(k))}</em>비어 있음</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">세션 일정표</h1><div class="mu">악기별로 앞으로 5주 동안 누가 연주하는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goAbs">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend().replace('<i class="sx-dot"></i>참여','<i class="sx-slot">악기</i>참여')}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goAbs'))$('#goAbs').onclick=()=>go('abs')}
 /* 세션 변경 시트도 불참 / 대타 / 서로 교대 지원 */
@@ -6779,7 +6781,7 @@ function atLineup(d){
  const out=new Map(),add=(n,r)=>{n=String(n||'').trim();if(!n||n==='-')return;const a=out.get(n)||[];if(!a.includes(r))a.push(r);out.set(n,a)};
  const w=(archive||[]).find(x=>x.id===d);let src='자동 배정 기준';
  if(w&&w.up&&w.ment){String(w.ment).split(/\r?\n/).map(v=>v.trim()).forEach(v=>{if(/^::/.test(v)||/https?:\/\/|www\./i.test(v)||/^\d+\s*[.)]/.test(v))return;const m=/^([^:：\d]{1,6})\s*[:：]\s*(.*)$/.exec(v);if(!m)return;const k=m[1].trim();m[2].split(/[,，、\/]+/).forEach(n=>add(n,/^싱어/.test(k)?'싱어':k))});if(out.size)src='업로드된 콘티 기준'}
- if(!out.size){try{add(ldrOf(d),'인도')}catch(e){}try{singEff(d).filter(x=>!x.abs).forEach(x=>add(x.n,'싱어'))}catch(e){}try{const f=sessFill(d)||{};Object.keys(f).forEach(k=>add(f[k],k))}catch(e){}}
+ if(!out.size){try{add(ldrOf(d),'인도')}catch(e){}try{singEff(d).filter(x=>!x.abs).forEach(x=>add(x.n,'싱어'))}catch(e){}try{const f=sessFill(d)||{};Object.keys(f).forEach(k=>add(f[k],slotLbl(k)))}catch(e){}}
  return{src,list:[...out].map(([n,r])=>({n,r:r.join(', ')})).sort((a,b)=>a.n.localeCompare(b.n,'ko'))}}
 function atAbsent(sun){const ab=new Map();try{singEff(sun).filter(x=>x.abs).forEach(x=>ab.set(x.from,'싱어'))}catch(e){}try{(sessAbs||[]).filter(a=>a.date===sun).forEach(a=>ab.set(a.name,atRoleOf(a.name)||'세션'))}catch(e){}return ab}
 /* ---------- 활동 상태 (휴식·비활동 기간) ---------- */
@@ -8234,7 +8236,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   if(!u){let all={};try{all=JSON.parse(localStorage.getItem('kzRsvpDemo')||'{}')}catch(e){}const a=all[body.date]||{},n=myName()||me||'나';if(body.action==='rsvpSet'){if(body.s)a[n]={s:body.s,at:Date.now()};else delete a[n];all[body.date]=a;try{localStorage.setItem('kzRsvpDemo',JSON.stringify(all))}catch(e){}}return{date:body.date,answers:a}}
   const r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'연결하지 못했어요');return j}
  function assigned(d){const out=[],add=(n,r)=>{if(!n)return;let x=out.find(o=>o.n===n);if(!x){x={n,r:[]};out.push(x)}if(!x.r.includes(r))x.r.push(r)};
-  try{add(ldrOf(d),'인도')}catch(e){}try{String(singersFor(d)||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(n=>add(n,'싱어'))}catch(e){}try{Object.entries(sessFill(d)||{}).forEach(([sl,n])=>add(n,sl))}catch(e){}return out}
+  try{add(ldrOf(d),'인도')}catch(e){}try{String(singersFor(d)||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(n=>add(n,'싱어'))}catch(e){}try{Object.entries(sessFill(d)||{}).forEach(([sl,n])=>add(n,slotLbl(sl)))}catch(e){}return out}
  function songsOf(d){try{if(d===date&&data&&data.up){const s=scoreSongs(data.scores||[]).map(x=>(x.name||'제목 없음')+(kzScoreKey(x)?'\u0001'+kzScoreKey(x):''));if(s.length)return s;return String(data.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''))}}catch(e){}return []}
  const josa=(w,a,b)=>{const c=String(w).charCodeAt(String(w).length-1)-0xAC00;return w+(c>=0&&c<11172&&c%28?a:b)};
  function nextDuty(d,n){for(let k=1;k<=8;k++){const x=shiftDate(d,7*k),me_=assigned(x).find(o=>o.n===n);if(me_)return{d:x,r:me_.r}}return null}
@@ -8886,6 +8888,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 <style id="kz-side-dev-sz">/* 사이드바 말씀: 글자 아주 살짝 작게 (첫 줄이 사진 밝은 부분 안에 들어오도록) — 모든 계절 공통 */
 :root[data-season] .side-devotion>p{font-size:clamp(11px,.86vw,12.5px)!important;line-height:1.45!important;bottom:26%!important}
 :root[data-season] .side-devotion>small{font-size:clamp(9.5px,.72vw,10.5px)!important}</style>
+<style id="kz-sx-chip-k">.sx-chip .ico,.sx-chip .ico svg,.sx-chip svg{width:14px!important;height:14px!important;flex:none}.sx-chip .sx-chip-k{font-style:normal;font-size:11.5px;font-weight:700;color:var(--goldt,#9a5525);margin-right:1px}.sx-chip.empty{color:var(--mu);font-weight:500;border-style:dashed}</style>
 </html>
 
 <script id="kz-score-pages-script">
