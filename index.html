@@ -8935,3 +8935,43 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #body .hm.hm-v13 .kz-hero .kz-hero-date{color:#3e342b!important;text-shadow:0 0 10px rgba(255,250,244,.8)}
 #body .hm.hm-v13 .kz-hero h3{color:#1f1914!important;text-shadow:0 0 14px rgba(255,250,244,.85)}
 </style>
+<script id="kz-draft">
+/* ===== 인도자 작업 시트 자동 보관: 홈에 올리기 전이라도 새로고침·창 닫기에 사라지지 않게 (이 기기 안에만 저장) ===== */
+(function(){
+ if(typeof pages==='undefined'||typeof mkPage!=='function')return;
+ const DBN='kzDraftsV1';let dbp=null;
+ const idb=()=>dbp||(dbp=new Promise((res,rej)=>{try{const r=indexedDB.open(DBN,1);r.onupgradeneeded=()=>r.result.createObjectStore('d');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}));
+ const tx=async(mode,fn)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('d',mode),st=t.objectStore('d'),q=fn(st);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+ const put=(k,v)=>tx('readwrite',s=>s.put(v,k)),get=k=>tx('readonly',s=>s.get(k)),del=k=>tx('readwrite',s=>s.delete(k));
+ const who=()=>{try{return (authAccount()||{}).id||'anon'}catch(e){return 'anon'}};
+ const KEY=L=>'ws:'+who()+':'+L;
+ const toData=async src=>{if(!src)return '';if(String(src).startsWith('data:'))return src;if(String(src).startsWith('blob:')){try{const b=await (await fetch(src)).blob();return await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r('');f.readAsDataURL(b)})}catch(e){return ''}}return ''};
+ let T=null,restoring=false;
+ async function save(){if(restoring||typeof ldr==='undefined')return;const L=ldr,ps=pages.slice();
+  try{const hasWork=ps.length||(wm!=null&&wmDirty);if(!hasWork){await del(KEY(L));return}
+   const out={v:1,at:Date.now(),date,cur,od,wm,wmDirty,loadedDate:typeof loadedDate!=='undefined'?loadedDate:null,pages:await Promise.all(ps.map(async p=>({songId:p.songId,pageNo:p.pageNo,key:p.key,name:p.name,aid:p.aid,oaid:p.oaid,src:p.oaid?'':await toData(p.src),seq:p.seq,marks:p.marks,lay:p.lay,nw:p.nw,nh:p.nh,dirty:!!p.dirty,titleRenamed:!!p.titleRenamed,pageMetaDirty:!!p.pageMetaDirty,
+    adds:await Promise.all((p.adds||[]).map(async a=>({k:a.k,oaid:a.oaid,nw:a.nw,nh:a.nh,lay:a.lay,src:a.oaid?'':await toData(a.src)})))})))};
+   if(L!==ldr)return;await put(KEY(L),out)}catch(e){console.warn('[꿈자리] 작업 보관 실패',e)}}
+ const later=()=>{clearTimeout(T);T=setTimeout(save,700)};
+ window.sched=function(){later()};
+ const baseClear=clearWorkspace;window.clearWorkspace=function(){const r=baseClear.apply(this,arguments);later();return r};
+ document.addEventListener('input',e=>{if(typeof view!=='undefined'&&(view==='edit'||view==='ment'))later()},true);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){clearTimeout(T);save()}});
+ addEventListener('pagehide',()=>{clearTimeout(T);save()});
+ async function restore(L){if(typeof ldr==='undefined'||ldr!==L||pages.length)return false;let d=null;try{d=await get(KEY(L))}catch(e){}if(!d||!Array.isArray(d.pages)||ldr!==L||pages.length)return false;
+  restoring=true;try{pages=d.pages.map(x=>{const p=mkPage({...x,src:x.src||undefined,adds:(x.adds||[]).map(a=>({...a,src:a.src||undefined}))});p.dirty=!!x.dirty;p.titleRenamed=!!x.titleRenamed;p.pageMetaDirty=!!x.pageMetaDirty;if(x.lay)p.legacy=false;return p});
+   cur=Math.min(d.cur||0,Math.max(0,pages.length-1));od=!!d.od;if(d.wm!=null&&(wm==null||!wmDirty)){wm=d.wm;wmDirty=!!d.wmDirty}if(d.loadedDate&&typeof loadedDate!=='undefined')loadedDate=d.loadedDate;
+   try{if(view==='edit'){drawList();drawStage()}stat();renderNav()}catch(e){}}finally{restoring=false}
+  if(pages.length&&typeof toast==='function')toast('작업하던 송폼을 그대로 불러왔어요');return true}
+ if(typeof switchLeader==='function'){const baseSw=switchLeader;window.switchLeader=function(L){const r=baseSw.apply(this,arguments);if(!pages.length)restore(L);return r}}
+ /* 새로고침해도 보던 작업 화면 그대로 */
+ const WORK=['edit','ment'];const baseGo=go;
+ window.go=function(v){const r=baseGo.apply(this,arguments);try{if(WORK.includes(v))localStorage.setItem('kzLastWork',JSON.stringify({v,ldr,at:Date.now()}));else if(v!==view||!WORK.includes(view))localStorage.removeItem('kzLastWork')}catch(e){}return r};
+ let booted=false;
+ function boot(){if(booted)return;if(document.getElementById('kzLoginLock')||!document.querySelector('#body')||typeof canEdit==='undefined')return;booted=true;
+  restore(ldr).then(()=>{let w=null;try{w=JSON.parse(localStorage.getItem('kzLastWork')||'null')}catch(e){}
+   if(w&&WORK.includes(w.v)&&Date.now()-w.at<12*3600000&&view==='home'){try{if(w.ldr&&w.ldr!==ldr&&typeof switchLeader==='function')switchLeader(w.ldr);role='leader';LS('role','leader');go(w.v)}catch(e){}}})}
+ const mo=new MutationObserver(()=>{if(!booted&&typeof view!=='undefined'&&view==='home'&&document.querySelector('#body .hm'))setTimeout(boot,300)});mo.observe(document.documentElement,{childList:true,subtree:true});
+ window.kzDraft={save,restore};
+})();
+</script>
