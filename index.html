@@ -4827,10 +4827,11 @@ let mine='';
 const LV=['lpick','edit','ment','lsw'],inLead=role==='leader'&&LV.includes(view);
 const openL=view==='lpick'?lrPick:(view==='edit'||view==='ment')?ldr:null;
 const leadSub=inLead?`<div class="nv-lead">${LEADERS.map(L=>{const op=openL===L;return `<button type="button" class="nv-i nv-ldr ${op?'open':''}" data-lpick="${esc(L)}" aria-expanded="${op}"><i class="ldot ${ldrCls(L)}"></i><span class="nv-t">${esc(L)}</span>${ldDirty(L)?'<u class="nv-dirty" title="업로드 안 한 작업이 있어요"></u>':''}<span class="nv-car">${op?'▾':'▸'}</span></button>${op?`<div class="nv-lsub">${[['edit','송폼 · 악보 관리','music'],['ment','주간 콘티 작성','archive']].map(([v,l,ic])=>`<button type="button" class="nv-i ${view===v&&ldr===L?'on':''}" data-lv2="${esc(L)}|${v}">${V13I(ic)}<span class="nv-t">${l}</span></button>`).join('')}</div>`:''}`}).join('')}${it('lsw','인도자 일정',0,'calendar')}</div>`:'';
-const leadBlock=`<div class="nv-l">인도자</div><button type="button" class="nv-i nv-leadroom ${view==='lpick'&&role==='leader'&&!lrPick?'on':''} ${inLead&&(view!=='lpick'||lrPick)?'open':''}" data-lead="1">${V13I('leader')}<span class="nv-t">인도자 작업실</span></button>${leadSub}`;
-if(role==='leader')mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
+/* 인도자는 '내 자리' 상자 맨 위 한 줄(가운데)로, 그 아래 싱어 · 세션 */
+const leadBlock='';
+if(role==='leader')mine=inLead?leadSub:'<p class="nv-h">인도자 · 싱어 · 세션을 고르면 내 화면이 여기에 나와요</p>';
 else if(role&&TABS[role].includes(view)){const roleNavIcon=v=>(v==='sched_s'||v==='sched_e')?'calendar':(v==='abs'||v==='swap')?'swap':(v==='rule_s'||v==='rule_e')?'users':null;mine=TABS[role].map(v=>it(v,TAB[v][1],0,roleNavIcon(v))).join('');}
-else mine='<p class="nv-h">싱어·세션을 고르면 내 일정표와 배정 규칙이 여기에 나와요</p>';
+else mine='<p class="nv-h">인도자 · 싱어 · 세션을 고르면 내 화면이 여기에 나와요</p>';
 const p=stg?Math.max(...stgPcts()):null;
 sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="home">${BRAND}<span><b>꿈자리</b><small>꿈꾸는 자들의 소리</small><em class="brand-en"><i></i>WORSHIP TEAM</em></span></button><button type="button" class="ib side-x" id="sdx" title="닫기">✕</button></div>
 <button type="button" class="nv-s" data-qk="1"><span>🔍 검색 · 바로 가기</span><kbd>${isMac?'⌘':'Ctrl'} K</kbd></button>
@@ -4854,7 +4855,7 @@ ${it('minutes','회의록',0,'note')}
 
 ${leadBlock}
 <div class="nv-l">내 자리</div>
-<div class="rsw rsw2" role="tablist">${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='leader'?'leader':k==='singer'?'mic':'guitar')}<span>${t}</span></button>`).join('')}</div>
+<div class="rsw rsw2 rsw3" role="tablist"><button type="button" role="tab" class="rsw-lead ${role==='leader'?'on':''}" aria-selected="${role==='leader'}" data-lead="1">${V13I('leader')}<span>인도자</span></button>${ROLES.filter(r=>r[0]!=='leader').map(([k,i,t])=>`<button type="button" role="tab" aria-selected="${role===k}" class="${role===k?'on':''}" data-r="${k}">${V13I(k==='leader'?'leader':k==='singer'?'mic':'guitar')}<span>${t}</span></button>`).join('')}</div>
 <div class="nv-m">${mine}</div>
 <div class="side-b">${p!=null?`<button type="button" class="stm" data-go="storage" title="꿈자리 전체 저장 공간 ${fmtB(stg.bytes)}${stg.maxBytes?' / 무료 '+fmtB(stg.maxBytes):''}"><span>저장 공간</span><b>${stg.maxBytes?fmtB(stg.bytes)+' / '+fmtB(stg.maxBytes):fmtB(stg.bytes)}</b>${stg.maxBytes?`<div class="stg-bar ${stCls(p)}"><i style="width:${Math.min(100,p>0?Math.max(1.2,p):0)}%"></i></div>`:''}</button>`:''}<div class="side-devotion" aria-label="히브리서 10장 24절"><div class="side-devotion-img"></div><p>서로 돌아보아<br>사랑과 선행을 격려하며</p><small>(히브리서 10:24)</small></div>${it('trash','휴지통',trash.length,'trash')}${(()=>{try{return isManagementAccount()}catch(e){return false}})()?'<button type="button" class="nv-i" data-kzhub="1">'+V13I('shield')+'<span class="nv-t">계정 · 사이트 관리</span></button>':''}</div>`;
 $$('[data-go]',sd).forEach(b=>b.onclick=()=>go(b.dataset.go));$$('[data-kzhub]',sd).forEach(b=>b.onclick=()=>window.kzAdminHub&&kzAdminHub());
@@ -4871,7 +4872,7 @@ const b=(on,attr,ic,lab)=>`<button type="button" class="${on?'on':''}" ${attr}><
 t.innerHTML=b(view==='home','data-tgo="home"',V13I('home'),'홈')+b(view==='notice','data-tgo="notice"',V13I('bell'),'공지')+b(view==='archive','data-tgo="archive"',V13I('archive'),'보관함')+b(inRole,R?`data-tgo="${ROLE_HOME[role]}"`:'data-tmenu="1"',R?V13I(role==='singer'?'mic':role==='session'?'guitar':'leader'):V13I('mic'),R?R[2]:'내 자리')+b(false,'data-tmenu="1"','☰','메뉴');
 $$('[data-tgo]',t).forEach(x=>x.onclick=()=>go(x.dataset.tgo));$$('[data-tmenu]',t).forEach(x=>x.onclick=()=>$('#shell').classList.add('open'));
 const sh=$('#shell');if(sh)sh.classList.toggle('no-tab',view==='edit')}
-function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자 작업실</span>`;if(view==='lsw')return `${V13I('calendar')}<span>인도자 일정</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
+function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자</span>`;if(view==='lsw')return `${V13I('calendar')}<span>인도자 일정</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
 function renderTop(){
 $('#tl').innerHTML=`<button class="ib mb" id="mn" title="메뉴">☰</button><div class="pt">${pageTitle()}</div>`;$('#tr').innerHTML=`<span class="mu" id="stat"></span>${role==='leader'&&['edit','ment'].includes(view)?'<button class="btn upb" id="upl">업로드</button>':''}<button class="kz-account-btn" id="acct" title="내 계정과 권한">${esc(permLabel())}</button><button class="ib" id="kzMembersButton" title="멤버 접속 상태" aria-label="멤버 접속 상태" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v3"/></svg></button>`;
 $('#mn').onclick=()=>$('#shell').classList.add('open');if($('#upl'))$('#upl').onclick=uploadNow;$('#kzMembersButton').onclick=()=>window.kzOpenMembers();if($('#acct'))$('#acct').onclick=openAccountPicker;
@@ -5085,7 +5086,7 @@ $('#body').innerHTML=`<div class="hm hm-v13">
 <div class="church-hero"><section class="church-hero-main church-banner-v15" aria-label="꿈꾸는 자들의 소리"><div class="kz-ban-tx" aria-hidden="true"><div class="kz-ban-l"><span class="kz-ban-k">WORSHIP TEAM</span><b>꿈꾸는 자들의 소리</b><p>하나님을 예배하는 마음으로,<br>함께 꿈꾸며 만들어가는 찬양의 자리입니다.</p></div><div class="kz-ban-r"><q>이는 만물이 주에게서 나오고<br>주로 말미암고 주에게로 돌아감이라<br>그에게 영광이 세세에 있을지어다.</q><cite>로마서 11:36</cite></div></div></section><aside class="verse-card"><blockquote>“이는 만물이 주에게서 나오고<br>주로 말미암고 주에게로 돌아감이라<br>그에게 영광이 세세에 있을지어다.”</blockquote><cite>로마서 11:36</cite></aside></div>
 ${kzTop(dt,pub,ment)}
 <div class="home-grid-mid kz-mid"><div class="kh-left-stack">${kzNextCard()}${kzFeedCard()}</div><div class="kz-stack kz-info-stack">${kzNoticeCard()}${homeSongCard()}</div><section class="devotion-card kz-dev"><img class="kz-dev-image" src="assets/devotion.66155b40.webp" alt="우리의 목소리가 모여 하나의 찬양이 됩니다. 꿈꾸는 자들의 소리, 오늘도 예배를 준비합니다."></section></div>
-<div class="shortcut-grid"><button class="shortcut-card" data-short="edit">${V13I('leader')}<b>인도자 작업실</b><span>송폼 작성과 콘티를 한 곳에서</span><em>›</em></button><button class="shortcut-card" data-short="archive">${V13I('archive')}<b>콘티 보관함</b><span>지금까지의 예배 콘티를 보관하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-short="library">${V13I('music')}<b>악보 모음집</b><span>필요한 악보를 쉽게 검색하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-role-short="singer">${V13I('mic')}<b>싱어</b><span>멤버 관리와 일정을 확인해요</span><em>›</em></button><button class="shortcut-card" data-role-short="session">${V13I('guitar')}<b>세션</b><span>포지션별 멤버와 일정을 확인해요</span><em>›</em></button></div>
+<div class="shortcut-grid"><button class="shortcut-card" data-short="edit">${V13I('leader')}<b>인도자</b><span>송폼 작성과 콘티를 한 곳에서</span><em>›</em></button><button class="shortcut-card" data-short="archive">${V13I('archive')}<b>콘티 보관함</b><span>지금까지의 예배 콘티를 보관하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-short="library">${V13I('music')}<b>악보 모음집</b><span>필요한 악보를 쉽게 검색하고 관리해요</span><em>›</em></button><button class="shortcut-card" data-role-short="singer">${V13I('mic')}<b>싱어</b><span>멤버 관리와 일정을 확인해요</span><em>›</em></button><button class="shortcut-card" data-role-short="session">${V13I('guitar')}<b>세션</b><span>포지션별 멤버와 일정을 확인해요</span><em>›</em></button></div>
 <div class="home-old"><div class="hm-main"><article class="hm-card hm-conti"><div class="hm-ch"><h2>이번 주 콘티</h2>${pub&&data.by?`<span class="mu">${esc(data.by)} 작성</span>`:''}<span class="sp"></span>${ment?'<button class="sm" id="cp">복사</button>':''}</div>${ment?`<pre class="hm-raw">${esc(ment)}</pre>`:'<div class="hm-empty"><b>아직 올라온 콘티가 없어요</b><span class="mu">인도자가 업로드하면 여기에 나와요</span></div>'}</article><article class="hm-card"><div class="hm-ch"><h2>악보</h2>${sc.length?`<span class="mu">${sc.length}장 · 누르면 크게 보여요</span><span class="sp"></span><button class="sm" id="sva">전체 저장 ▾</button>`:''}</div>${sc.length?`<div class="gal">${sc.map((o,n)=>`<figure data-i="${o.i}"><div class="gal-t">${scImg(date,o.i,o.x,900)}<span class="gal-n">${n+1}</span></div><figcaption>${esc(o.x.name)}</figcaption></figure>`).join('')}</div>`:'<div class="hm-empty"><b>아직 올라온 악보가 없어요</b><span class="mu">인도자가 업로드하면 여기에 나와요</span></div>'}</article></div></div></div>`;
 if($('#cp'))$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(data.ment);toast('콘티를 복사했어요')}catch(e){toast('복사하지 못했어요')}};if($('#sva'))$('#sva').onclick=e=>{const l=sc.map(o=>o.x);chipMenu(e.currentTarget,[{t:`PDF 한 파일로 저장 (${l.length}장)`,f:()=>saveScores(l,'pdf')},{t:`이미지로 각각 저장 (${l.length}장)`,f:()=>saveScores(l,'img')}])};$$('[data-go-home]').forEach(b=>b.onclick=()=>go(b.dataset.goHome));$$('[data-conti-open]').forEach(b=>b.onclick=()=>kzWeekView());$$('[data-home-score]').forEach(b=>b.onclick=()=>openHomeScore(+b.dataset.homeScore));
 $$('[data-short]').forEach(b=>b.onclick=()=>{const v=b.dataset.short;if(v==='edit')openLeaderRoom();else go(v)});$$('[data-role-short]').forEach(b=>b.onclick=()=>setRole(b.dataset.roleShort));$$('.gal figure').forEach(f=>f.onclick=()=>lightbox(+f.dataset.i));hydrateSc();$$('[data-gn]').forEach(b=>b.onclick=()=>{ntTab=b.dataset.gn;ntEdit=null;evEdit=null;go('notice')});$$('[data-gi]').forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.gi.split('|');ntTab=k;ntEdit=null;evEdit=null;ntFocus=id;go('notice')});bindHomeCal(dt);bindKzSide();bindKzMid();$$('[data-next-go]').forEach(b=>b.onclick=()=>goDate(b.dataset.nextGo));}
@@ -5653,7 +5654,7 @@ const tagOf=L=>nowL===L?'<span class="lr-tag now">이번 주 인도</span>':next
 const steps=n=>`<div class="lr-steps"><span class="${n===1?'on':'done'}"><i>1</i>인도자 선택</span><em></em><span class="${n===2?'on':''}"><i>2</i>작업 선택</span></div>`;
 if(!lrPick||!LEADERS.includes(lrPick)){
  const card=L=>{const dl=ldDirty(L);return `<button type="button" class="lr-card" data-leader="${esc(L)}"><span class="lr-ico">${V13I('leader')}</span><span class="lr-main"><span class="lr-name"><b>${esc(L)}</b>${tagOf(L)}</span><span class="lr-sub">${dl?'<i class="lr-dot"></i>업로드 안 한 작업이 있어요':'이 인도자의 작업 시트로 들어가요'}</span></span><span class="lr-go">›</span></button>`};
- $('#body').innerHTML=`<div class="wk mnw lroom"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 작업실</h1><div class="mu">먼저 작업할 인도자를 선택하세요 · ${fmtD(date)} 주일</div></div></div>${steps(1)}<div class="lr-grid">${LEADERS.map(card).join('')}</div></div>`;
+ $('#body').innerHTML=`<div class="wk mnw lroom"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자</h1><div class="mu">먼저 작업할 인도자를 선택하세요 · ${fmtD(date)} 주일</div></div></div>${steps(1)}<div class="lr-grid">${LEADERS.map(card).join('')}</div></div>`;
  $$('.lr-card').forEach(b=>b.onclick=()=>{openRole=null;openLead=null;switchLeader(b.dataset.leader);lrPick=b.dataset.leader;renderNav();renderTop();lpickView()});
  return}
 const L=lrPick,dl=ldDirty(L);
@@ -6031,7 +6032,7 @@ function qkSearch(q){const Q=q.trim().toLowerCase(),out=[],has=s=>String(s||'').
 const dm=/^(?:(\d{4})\s*[.\-\/년]\s*)?(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*일?$/.exec(q.trim());
 if(dm){const y=+(dm[1]||new Date().getFullYear()),d=`${y}-${String(+dm[2]).padStart(2,'0')}-${String(+dm[3]).padStart(2,'0')}`,x=new Date(d+'T12:00:00');if(!isNaN(x)&&x.getMonth()+1===+dm[2]){x.setDate(x.getDate()+(7-x.getDay())%7);const s=shiftDate(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`,0);out.push({g:'날짜',ic:I('calendar'),t:`${fmtD(s)} 주일로 이동`,s:s===d?'그 주 콘티와 송폼':`${fmtD(d)}이 있는 주`,f:()=>openConti(s)})}}
 const lead=v=>()=>{openRole=null;openLead=null;if(role!=='leader'){role='leader';LS('role','leader')}if(typeof lrPick!=='undefined')lrPick=ldr;go(v)};
-const pages=[{ic:I('home'),t:'홈',f:()=>go('home'),chip:1},{ic:I('bell'),t:'공지 · 일정',f:()=>go('notice'),chip:1},{ic:I('archive'),t:'콘티 보관함',f:()=>go('archive'),chip:1},{ic:I('music'),t:'악보 모음집',f:()=>go('library'),chip:1},{ic:I('users'),t:'멤버 명단',f:()=>go('members'),chip:1},{ic:I('note'),t:'회의록',f:()=>go('minutes'),chip:1},{ic:I('leader'),t:'인도자 작업실',f:()=>openLeaderRoom(),chip:1},{ic:I('mic'),t:'싱어 일정표',f:()=>goRole('singer','sched_s'),chip:1},{ic:I('guitar'),t:'세션 일정표',f:()=>goRole('session','sched_e'),chip:1},
+const pages=[{ic:I('home'),t:'홈',f:()=>go('home'),chip:1},{ic:I('bell'),t:'공지 · 일정',f:()=>go('notice'),chip:1},{ic:I('archive'),t:'콘티 보관함',f:()=>go('archive'),chip:1},{ic:I('music'),t:'악보 모음집',f:()=>go('library'),chip:1},{ic:I('users'),t:'멤버 명단',f:()=>go('members'),chip:1},{ic:I('note'),t:'회의록',f:()=>go('minutes'),chip:1},{ic:I('leader'),t:'인도자',f:()=>openLeaderRoom(),chip:1},{ic:I('mic'),t:'싱어 일정표',f:()=>goRole('singer','sched_s'),chip:1},{ic:I('guitar'),t:'세션 일정표',f:()=>goRole('session','sched_e'),chip:1},
 {ic:I('music'),t:'송폼 · 악보 관리',s:`인도자 · ${ldr}`,f:lead('edit')},{ic:I('archive'),t:'주간 콘티 작성',s:`인도자 · ${ldr}`,f:lead('ment')},{ic:I('calendar'),t:'인도자 일정',s:'인도자',f:lead('lsw')},{ic:I('list'),t:'싱어 일정 변경',s:'싱어',f:()=>goRole('singer','swap')},{ic:I('users'),t:'싱어 배정 규칙',s:'싱어',f:()=>goRole('singer','rule_s')},{ic:I('list'),t:'세션 일정 변경',s:'세션',f:()=>goRole('session','abs')},{ic:I('users'),t:'세션 배정 규칙',s:'세션',f:()=>goRole('session','rule_e')},{ic:I('cloud'),t:'저장 공간',f:()=>go('storage')},{ic:I('trash'),t:'휴지통',f:()=>go('trash')}];
 const acts=[{ic:I('calendar'),t:'이번 주 콘티 보기',s:fmtD(nextSun()),f:()=>openConti(nextSun())},...(canEdit?[{ic:I('bell'),t:'새 공지 쓰기',f:()=>{ntTab='n';ntEdit='new';evEdit=null;go('notice')}},{ic:I('calendar'),t:'새 일정 등록',f:()=>{ntTab='e';evEdit='new';ntEdit=null;go('notice')}},{ic:I('note'),t:'회의록 쓰기',f:()=>{minTab='write';go('minutes')}}]:[])];
 if(!Q){pages.filter(p=>p.chip).forEach(p=>out.push({g:'바로 가기',...p}));acts.forEach(a=>out.push({g:'자주 하는 일',...a}));return out}
@@ -6137,7 +6138,7 @@ sub();stat()}catch(e){console.error(e)}})();
     const body=document.getElementById('body'); if(!body||body.querySelector('.kz-readonly-notice')) return;
     const n=document.createElement('div');
     n.className='kz-readonly-notice';
-    n.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>열람 전용 · 인도자 작업실은 내용을 볼 수 있지만 편집은 인도자만 가능합니다.</span>';
+    n.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>열람 전용 · 인도자 메뉴는 내용을 볼 수 있지만 편집은 인도자만 가능합니다.</span>';
     body.prepend(n);
   }
   function editingTarget(el){
@@ -8136,7 +8137,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
    <div class="ab-tr">${leaders.length>1?`<div class="ab-chips">${['',...leaders].map(n=>`<button type="button" class="ab-chip ${who===n?'on':''}" data-abw="${esc(n)}">${n?`<i class="ldot ${ldrCls(n)}"></i>${esc(n)}`:'전체'}</button>`).join('')}</div>`:''}<span class="sp"></span>
    <button type="button" class="ab-sort" id="abSort" title="정렬 바꾸기">${I.sort}${abAsc?'오래된 순':'최신 순'}</button>
    <div class="seg ab-seg">${[['list','목록'],['grid','갤러리']].map(([k,t])=>`<button type="button" class="${abView===k?'on':''}" data-av="${k}">${t}</button>`).join('')}</div></div></div>`;
-  const body=!l.length?`<div class="ab-empty"><b>${q||who?'찾는 콘티가 없어요':'아직 보관된 콘티가 없어요'}</b><span>${q||who?'다른 곡 이름이나 날짜로 찾아보세요':'인도자 작업실에서 홈에 업로드하면 날짜별로 여기에 쌓여요'}</span></div>`
+  const body=!l.length?`<div class="ab-empty"><b>${q||who?'찾는 콘티가 없어요':'아직 보관된 콘티가 없어요'}</b><span>${q||who?'다른 곡 이름이나 날짜로 찾아보세요':'인도자 메뉴에서 홈에 업로드하면 날짜별로 여기에 쌓여요'}</span></div>`
    :(showHero?hero(l[0]):'')+months.map(m=>`<section class="ab-mo"><h3>${+m.slice(0,4)}년 ${+m.slice(5)}월<small>${by[m].length}주</small></h3><div class="${abView==='grid'?'ab-grid':'ab-list'}">${by[m].map(abView==='grid'?tile:row).join('')}</div></section>`).join('');
   $('#body').innerHTML=`<div class="wk mnw kz-arch ab"><div class="ro-h kz-page-h"><div><h1 class="ht2">콘티 보관함</h1><div class="mu">홈에 올린 콘티와 송폼이 날짜별로 쌓여요 · 지금까지 ${all.length}주</div></div></div>${tools}${body}</div>`;
   try{hydrateSc()}catch(e){}
@@ -8292,7 +8293,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
    {ic:I.cloud,t:'저장 공간 · 백업',d:`${more('저장 공간')}에서 사진이 얼마나 찼는지 보고, 한 달에 한 번쯤 <b>전체 백업</b>을 받아 두세요.`},
    {ic:I.shield,t:'관리계정 PIN',d:'관리계정 PIN은 처음 값 그대로 두지 말고, 추측하기 어려운 번호로 꼭 바꿔 주세요.',btn:['account','내 계정 열기']}];
   if(rank==='인도자')return [hello,
-   {ic:I.music,t:'인도자 작업실',d:`${at('인도자','인도자 작업실')}에서 주일을 고르고 <b>주간 콘티</b>를 써요. 곡 순서·멘트·싱어 줄이 자동으로 들어가 있어요.`},
+   {ic:I.music,t:'인도자',d:`${at('인도자','인도자')}에서 주일을 고르고 <b>주간 콘티</b>를 써요. 곡 순서·멘트·싱어 줄이 자동으로 들어가 있어요.`},
    {ic:I.music,t:'송폼 만들기',d:'<b>송폼 · 악보 관리</b>에서 악보 사진을 넣고 Intro·Verse 같은 마커를 끌어다 붙여요. <b>＋ 이 장에 붙이기</b>로 한 장에 악보 여러 장도 넣을 수 있어요. 예전 악보는 <b>가져오기</b>로 불러와요.'},
    {ic:I.bell,t:'올리기 = 모두에게 알림',d:'<b>올리기</b>를 누르면 홈에 콘티와 악보가 뜨고, 팀원들에게 알림과 토요 연습 참석 확인이 가요. 고칠 게 있으면 다시 올리면 돼요.'},
    notice,bell,fast];
@@ -8873,6 +8874,15 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kz-ppt-pop .kpp-ic{width:52px;height:52px;margin:0 auto 12px;border-radius:16px;display:grid;place-items:center;background:#f3e3cf;color:#9a5525}.kz-ppt-pop .kpp-ic svg{width:28px;height:28px}
 .kz-ppt-pop b{display:block;font-size:18px;margin-bottom:6px;color:var(--tx)}.kz-ppt-pop p{margin:0 0 18px;color:var(--mu);font-size:14px;line-height:1.5}
 .kz-ppt-pop .kpp-a{display:flex;gap:8px}.kz-ppt-pop .kpp-a button{flex:1;min-height:42px}</style>
+<style id="kz-rsw3">/* 내 자리: 인도자(위, 가운데 한 줄) + 싱어 · 세션 */
+.rsw.rsw3{grid-template-columns:repeat(2,1fr)!important}
+.rsw.rsw3 .rsw-lead{grid-column:1/-1;display:flex!important;flex-direction:row;align-items:center;justify-content:center;gap:7px;padding:9px 8px!important;font-size:13px}
+.rsw.rsw3 .rsw-lead .ico,.rsw.rsw3 .rsw-lead .ic{color:var(--gold,#c9902f)!important}
+.rsw.rsw3 .rsw-lead.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(16,24,48,.14)}
+/* 휴대폰 더보기 '역할별' 고르기도 같은 모양 */
+.km-rseg{display:inline-grid!important;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:12px!important;padding:3px!important;gap:3px!important;min-width:150px}
+.km-rseg button[data-rs="l"]{grid-column:1/-1}
+.km-rseg button{border-radius:9px!important;text-align:center;padding:4px 10px!important}</style>
 </html>
 
 <script id="kz-score-pages-script">
