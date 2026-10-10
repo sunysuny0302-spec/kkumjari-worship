@@ -3949,7 +3949,7 @@ window.kzOpt=(()=>{const MAX=2400,Q=.88,SKIP=1.2*1048576;
 #kzTour{position:fixed;inset:0;z-index:1000001;display:grid;place-items:center;padding:20px;background:rgba(40,30,20,.32);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:ktin .2s ease-out}
 @keyframes ktin{from{opacity:0}to{opacity:1}}
 .kt-c{position:relative;width:min(400px,100%);display:grid;justify-items:center;gap:10px;padding:34px 24px 20px;border-radius:26px;background:rgba(255,253,250,.94);box-shadow:0 30px 80px -20px rgba(40,30,20,.45);text-align:center}
-.kt-skip{position:absolute;top:12px;right:12px;border:0;background:none;color:var(--mu);font-size:13px;font-weight:700;padding:6px 8px;cursor:pointer}
+.kt-skip{position:absolute;top:12px;right:12px;border:0;background:none;color:var(--mu);font-size:13px;font-weight:700;padding:6px 8px;cursor:pointer}.kt-never{position:absolute;top:12px;left:12px;border:0;background:none;color:var(--mu);font-size:12.5px;text-decoration:underline;padding:6px 8px;cursor:pointer}.kt-later{margin:10px 0 0;font-size:12.5px;color:var(--mu)}
 .kt-ic{display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:color-mix(in srgb,var(--ac) 12%,#fff);color:var(--ac);margin-bottom:4px}
 .kt-ic svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .kt-c h2{margin:0;font-size:21px;letter-spacing:-.02em}
@@ -8237,11 +8237,15 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
    {ic:I.users,t:`${P} 배정 규칙`,d:`${at(P,P)}의 <b>배정 규칙</b>에서 ${P} 순서를 자동으로 돌리는 규칙을 정해요. 저장하면 모두의 일정표에 바로 반영돼요. 불참·교대 신청도 여기서 확인해요.`},
    att,notice,bell,fast]}
   return [hello,home,mine,extra,bell,fast]}
- function show(force){const k0=id();if(!k0||document.getElementById('kzLoginLock')||document.getElementById('kzTour'))return;const k='v2:'+k0+':'+who().rank;if(!force&&seen(k))return;mark(k);
+ /* 자동 안내: 계정마다 처음 3번 접속할 때까지만. 그 뒤엔 내 계정 → 사용법 다시 보기로 직접 열기 */
+ const VK=k=>'kzTourVisits:'+k,visits=k=>{try{return +localStorage.getItem(VK(k))||0}catch(e){return 99}},setVisits=(k,n)=>{try{localStorage.setItem(VK(k),String(n))}catch(e){}};
+ let counted='',shownLoad=false;
+ function autoOK(k){if(counted!==k){counted=k;setVisits(k,visits(k)+1)}if(visits(k)>3)return false;let a={};try{a=authAccount()||{}}catch(e){}const t=a.approvedAt||a.requestedAt||0;if(t&&Date.now()-t>21*864e5)return false;return true}
+ function show(force){const k0=id();if(!k0||document.getElementById('kzLoginLock')||document.getElementById('kzTour'))return;if(!force){if(shownLoad||!autoOK(k0))return;shownLoad=true}
   const st=steps();let i=0;const o=document.createElement('div');o.id='kzTour';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','사용법 안내');
-  const draw=()=>{const s=st[i],last=i===st.length-1;o.innerHTML=`<div class="kt-c"><button type="button" class="kt-skip" data-t="skip">${last?'닫기':'건너뛰기'}</button><div class="kt-ic">${s.ic}</div><h2>${s.t}</h2><p>${s.d}</p>${s.btn?`<button type="button" class="kt-link" data-t="${s.btn[0]}">${s.btn[1]} ›</button>`:''}
-   <div class="kt-dots">${st.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div><div class="kt-nav">${i?'<button type="button" class="sm" data-t="prev">이전</button>':'<span></span>'}<button type="button" class="btn" data-t="${last?'done':'next'}">${last?'시작하기':'다음'}</button></div></div>`;
-   o.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==='next'){i++;draw()}else if(t==='prev'){i--;draw()}else if(t==='account'){o.remove();try{openAccountPicker()}catch(e){}}else o.remove()})};
+  const draw=()=>{const s=st[i],last=i===st.length-1;o.innerHTML=`<div class="kt-c"><button type="button" class="kt-skip" data-t="skip">${last?'닫기':'건너뛰기'}</button>${!force&&visits(id())<99?'<button type="button" class="kt-never" data-t="never">다시 보지 않기</button>':''}<div class="kt-ic">${s.ic}</div><h2>${s.t}</h2><p>${s.d}</p>${s.btn?`<button type="button" class="kt-link" data-t="${s.btn[0]}">${s.btn[1]} ›</button>`:''}
+   <div class="kt-dots">${st.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>${last?'<p class="kt-later">다시 보고 싶으면 <b>내 계정 → 사용법 다시 보기</b></p>':''}<div class="kt-nav">${i?'<button type="button" class="sm" data-t="prev">이전</button>':'<span></span>'}<button type="button" class="btn" data-t="${last?'done':'next'}">${last?'시작하기':'다음'}</button></div></div>`;
+   o.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==='next'){i++;draw()}else if(t==='prev'){i--;draw()}else if(t==='account'){o.remove();try{openAccountPicker()}catch(e){}}else if(t==='never'){setVisits(id(),99);o.remove()}else o.remove()})};
   draw();o.onclick=e=>{if(e.target===o)o.remove()};document.body.append(o);
   let sx=0;o.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});o.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50){if(dx<0&&i<st.length-1){i++;draw()}else if(dx>0&&i>0){i--;draw()}}},{passive:true})}
  window.kzTour=show;
@@ -8510,6 +8514,9 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  const q=()=>{if(!raf)raf=requestAnimationFrame(place)};
  new MutationObserver(q).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
  addEventListener('scroll',q,true);addEventListener('resize',q);
+ /* 막대 밖(마커 · 편집 패널 제외)을 누르면 마커 선택을 풀어서 막대도 닫기 */
+ document.addEventListener('pointerdown',e=>{if(!bar||bar.hidden)return;const t=e.target;if(!t.closest||t.closest('#kzMkSz,#stage .mk,#ins,.tools,.lp-s,.rcol,.kme-bar,.ddp,.chip'))return;
+  setTimeout(()=>{try{if(sel&&sel.k==='m'){sel=null;drawStage();syncInsp()}}catch(err){}hide()},0)},true);
 })();
 </script>
 <script id="kz-fold">
