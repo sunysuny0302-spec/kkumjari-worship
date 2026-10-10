@@ -5355,7 +5355,7 @@ function pickAdds(){const p=P();if(!p||!canEdit)return toast(p?'편집 권한이
 async function addAdds(p,fs){try{if(!p.nw){const m=await loadImg(p.src);ensureLay(p,m.naturalWidth,m.naturalHeight)}let n=0;for(const f of fs){if(!/^image\//.test(f.type||'image/'))continue;const src=await new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)}),m=await loadImg(src),a=mkAdd({src,nw:m.naturalWidth,nh:m.naturalHeight});(p.adds=p.adds||[]).push(a);n++}
  if(!n)return toast('사진 파일만 붙일 수 있어요');stackAdds(p);cur=pages.indexOf(p);sel={k:'i',j:p.adds.length-1};commit();toast(`이 장에 악보 ${n}장을 붙였어요 · 끌어서 옮기고 모서리로 크기를 바꿀 수 있어요`)}catch(e){console.error(e);toast('사진을 붙이지 못했어요')}}
 function rmAdd(){const p=P(),a=selAdd();if(!p||!a||!canEdit)return;p.adds.splice(p.adds.indexOf(a),1);sel=null;commit();toast('붙인 악보를 뺐어요 · Ctrl+Z로 되돌릴 수 있어요')}
-document.addEventListener('paste',e=>{if(role!=='leader'||view!=='edit')return;const f=[...(e.clipboardData?.files||[])].find(x=>x.type.startsWith('image/'));if(f){addFile(f);return}if(mkClip&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')&&!(e.target&&e.target.isContentEditable)){e.preventDefault();pasteClip()}});
+document.addEventListener('paste',e=>{if(role!=='leader'||view!=='edit')return;const f=[...(e.clipboardData?.files||[])].find(x=>x.type.startsWith('image/'));if(f){addFile(f);return}});
 function setZoom(z){zoom=Math.min(3,Math.max(.4,+z.toFixed(2)));$('#zl').textContent=Math.round(zoom*100)+'%';drawStage()}
 
 /* 편집 + 되돌리기 */
@@ -5373,7 +5373,7 @@ function paintClip(){const b=$('#mkpaste');if(!b)return;b.hidden=!mkClip||!canEd
 function dupSel(){const p=P(),t=target();if(!t)return;if(sel.k==='s'){p.seq.splice(sel.i+1,0,{...t});sel.i++}else{p.marks.push({...t,x:Math.min(1,t.x+.03),y:Math.min(1,t.y+.03)});sel.i=p.marks.length-1}commit()}
 function moveSeq(a,b){const p=P();if(b<0||b>=p.seq.length||a===b)return;const [x]=p.seq.splice(a,1);p.seq.splice(b,0,x);sel={k:'s',i:b};commit()}
 document.addEventListener('keydown',e=>{if(role!=='leader'||view!=='edit')return;if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){e.preventDefault();movePage(e.key==='ArrowUp'?-1:1);return}if(e.key==='Escape'&&(insNew||sel)){armed=null;sel=null;insNew=false;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();drawStage();return}const ty=/INPUT|TEXTAREA/.test(e.target.tagName),k=e.key.toLowerCase(),c=e.ctrlKey||e.metaKey;
-if(c&&k==='z'&&!ty){e.preventDefault();if(!e.shiftKey&&undoRm())return;hist(e.shiftKey?1:-1)}else if(c&&k==='y'&&!ty){e.preventDefault();hist(1)}else if(c&&k==='d'&&!ty){e.preventDefault();dupSel()}else if(c&&k==='c'&&!ty&&target()&&!(getSelection()+'')){e.preventDefault();copySel()}
+if(c&&k==='z'&&!ty){e.preventDefault();if(!e.shiftKey&&undoRm())return;hist(e.shiftKey?1:-1)}else if(c&&k==='y'&&!ty){e.preventDefault();hist(1)}else if(c&&k==='d'&&!ty){e.preventDefault();dupSel()}
 else if(ty)return;else if(e.key==='Escape'){armed=null;sel=null;insNew=false;hint();drawStage()}else if(e.key==='Delete'||e.key==='Backspace'){if(target())delSel();else if(selAdd())rmAdd();else if(e.key==='Delete')rmPageKey()}
 else if(sel&&sel.k==='i'&&e.key.startsWith('Arrow')&&P()&&curLay()){e.preventDefault();const L=curLay(),d=e.shiftKey?5:1;if(e.key==='ArrowLeft')L.x-=d;if(e.key==='ArrowRight')L.x+=d;if(e.key==='ArrowUp')L.y-=d;if(e.key==='ArrowDown')L.y+=d;drawStage();clearTimeout(window._n);window._n=setTimeout(commit,400)}
 else if(sel&&sel.k==='m'&&e.key.startsWith('Arrow')){e.preventDefault();const t=target(),s=e.shiftKey?.01:.002;if(e.key==='ArrowLeft')t.x-=s;if(e.key==='ArrowRight')t.x+=s;if(e.key==='ArrowUp')t.y-=s;if(e.key==='ArrowDown')t.y+=s;drawStage();clearTimeout(window._n);window._n=setTimeout(commit,400)}});
@@ -8701,6 +8701,18 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   r.querySelector('[data-kc]').onclick=()=>{copySel();paint()};r.querySelector('[data-kd]').onclick=()=>{dupSel();paint()};r.querySelector('[data-kp]').onclick=()=>{pasteClip();paint()};paint()};
  const os=syncInsp;syncInsp=function(){const v=os.apply(this,arguments);try{paint()}catch(e){}return v};
  const oc=paintClip;paintClip=function(){const v=oc.apply(this,arguments);try{paint()}catch(e){}return v};
+})();</script>
+<script id="kz-mk-clip">/* 마커 복사·붙여넣기: 직책·한글 입력 상태와 관계없이 송폼 작업창에서 동작 */
+(function(){const inField=t=>!!t&&(/INPUT|TEXTAREA|SELECT/.test(t.tagName||'')||t.isContentEditable);
+ const onEd=()=>typeof view!=='undefined'&&view==='edit'&&typeof canEdit!=='undefined'&&canEdit;
+ const hasTextSel=()=>{try{return String(getSelection()||'').trim().length>0}catch(e){return false}};
+ let lastKey=0;
+ document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.shiftKey||e.altKey||!onEd()||inField(e.target)||inField(document.activeElement))return;
+  if(e.code==='KeyC'){if(!target()||hasTextSel())return;e.preventDefault();lastKey=Date.now();copySel()}
+  else if(e.code==='KeyV'&&mkClip){const k0=Date.now();lastKey=k0;/* 보통은 paste 이벤트가 처리(이미지가 먼저). paste 이벤트가 안 오는 브라우저만 여기서 */setTimeout(()=>{if(lastPaste<k0&&onEd())pasteClip()},250)}},true);
+ let lastPaste=0;document.addEventListener('paste',()=>{lastPaste=Date.now()},true);
+ document.addEventListener('copy',e=>{if(!onEd()||inField(e.target)||hasTextSel()||!target())return;e.preventDefault();if(Date.now()-lastKey>300)copySel()},true);
+ document.addEventListener('paste',e=>{if(!onEd()||!mkClip||inField(e.target)||inField(document.activeElement))return;const f=[...(e.clipboardData&&e.clipboardData.files||[])].some(x=>x.type.startsWith('image/'));if(f)return;e.preventDefault();e.stopImmediatePropagation();pasteClip()},true);
 })();</script>
 </html>
 
