@@ -8733,6 +8733,17 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 <style id="kc-mention-chip">#kcPanel .kc-mention,.kc-mention{display:inline-block;font-weight:700;color:#1f5fae;background:#e3eefb;border-radius:7px;padding:0 6px;margin:0 1px;line-height:1.5;text-decoration:none!important}
 #kcPanel .kc-message.mine .kc-mention,.kc-message.mine .kc-mention{color:#fff;background:rgba(255,255,255,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);text-decoration:none!important}
 #kcPanel .kc-mention.me,.kc-mention.me{color:#7a4f00;background:#ffe9a8;box-shadow:none}</style>
+<style id="kz-home-cal-fit">/* 홈: 일정 달력은 한 달이 한눈에(안쪽 스크롤 없음), 신청곡은 1~2곡만 보이게 작게 */
+html:root body #body .hm.hm-v13 .kz-info-stack{display:flex!important;flex-direction:column!important;gap:12px!important;height:auto!important;align-self:start}
+html:root body #body .hm.hm-v13 .kz-info-stack>#khInfo{flex:none!important;height:auto!important;min-height:0!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-content{flex:none!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important;padding-bottom:0!important;min-height:0!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-scroll{position:static!important;overflow:visible!important}
+html:root body #body .hm.hm-v13 #khInfo .kh-info-content:not(:has(.kec)) .kh-info-scroll{max-height:320px;min-height:180px;overflow:auto!important;scrollbar-width:thin}
+html:root body #body .hm.hm-v13 #khInfo .kec-day{min-height:44px!important}
+html:root body #body .hm.hm-v13 .kz-info-stack>.kh-song-card{flex:none!important;height:auto!important;min-height:0!important}
+html:root body #body .hm.hm-v13 .kh-song-card #khSongList{flex:none!important;max-height:152px!important;min-height:0!important;overflow:auto!important;margin-bottom:8px!important}
+html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3))){-webkit-mask-image:none!important;mask-image:none!important;padding-bottom:0!important}
+</style>
 </html>
 
 <script id="kz-score-pages-script">
