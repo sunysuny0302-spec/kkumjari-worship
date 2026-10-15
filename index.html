@@ -9300,6 +9300,8 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  document.addEventListener('mousedown',e=>{if(btnOf(e)&&typing())e.preventDefault()},true);
  document.addEventListener('click',e=>{if(btnOf(e)&&Date.now()-fired<700){e.preventDefault();e.stopPropagation()}},true);
 })();</script>
+<style id="kz-chat-down-css">.kz-chat-down{position:absolute;right:12px;bottom:12px;z-index:3;display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--c-line,#e3dbd1);border-radius:50%;background:var(--c-card,#fff);color:var(--c-ink,#3b2f25);box-shadow:0 6px 16px rgba(47,38,29,.22);cursor:pointer}
+.kz-chat-down svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.kz-chat-down[hidden]{display:none}</style>
 <script id="kz-chat-kbd">/* 휴대폰: 자판이 열려 채팅 칸이 줄어들면 마지막 메시지가 가려지던 문제.
  맨 아래를 보고 있었다면 칸 크기가 바뀌어도 맨 아래(최신 메시지)를 계속 보여 줌 */
 (function(){
@@ -9308,7 +9310,14 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const pin=l=>{l.scrollTop=l.scrollHeight};
  const ro=typeof ResizeObserver==='function'?new ResizeObserver(es=>es.forEach(e=>{const l=e.target,s=st.get(l);if(!s)return;const h=l.clientHeight;if(h!==s.h){if(s.bottom)pin(l);s.h=h}})):null;
  function attach(){const l=document.getElementById('kcChatLog');if(!l||l===cur)return;cur=l;st.set(l,{h:l.clientHeight,bottom:true});
-  l.addEventListener('scroll',()=>{const s=st.get(l);if(s&&l.clientHeight===s.h)s.bottom=near(l)},{passive:true});if(ro)ro.observe(l)}
+  l.addEventListener('scroll',()=>{const s=st.get(l);if(s&&l.clientHeight===s.h)s.bottom=near(l);arrow(l)},{passive:true});if(ro)ro.observe(l);
+  /* 옛날 메시지를 보는 중이면 오른쪽 아래 ↓ 버튼: 누르면 맨 아래(최신)로 */
+  const box=l.parentElement;if(box&&!box.querySelector('.kz-chat-down')){const d=document.createElement('button');d.type='button';d.className='kz-chat-down';d.hidden=true;d.setAttribute('aria-label','맨 아래로');d.title='맨 아래로';
+   d.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v13M6 12l6 6 6-6"/></svg>';
+   d.addEventListener('mousedown',e=>e.preventDefault());d.addEventListener('touchend',e=>{e.preventDefault();go2(l)},{passive:false});d.onclick=()=>go2(l);box.append(d)}
+  arrow(l)}
+ function go2(l){l.scrollTo({top:l.scrollHeight,behavior:'smooth'});const s=st.get(l);if(s)s.bottom=true;const n=document.getElementById('kcNew');if(n)n.hidden=true;setTimeout(()=>arrow(l),400)}
+ function arrow(l){const d=l.parentElement&&l.parentElement.querySelector('.kz-chat-down');if(!d)return;const show=l.scrollHeight-l.scrollTop-l.clientHeight>240;if(d.hidden===show)d.hidden=!show}
  new MutationObserver(attach).observe(document.documentElement,{childList:true,subtree:true});attach();
  /* 입력칸을 누른 순간 맨 아래 근처였다면, 자판이 다 올라온 뒤에도 맨 아래로 */
  document.addEventListener('focusin',e=>{if(!e.target||e.target.id!=='kcChatText')return;const l=document.getElementById('kcChatLog');if(!l)return;const s=st.get(l),was=s?s.bottom:near(l);if(!was)return;[60,250,500,800].forEach(t=>setTimeout(()=>{if(document.activeElement===e.target)pin(l)},t))});
