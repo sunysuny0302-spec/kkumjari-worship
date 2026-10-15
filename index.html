@@ -7824,7 +7824,11 @@ new MutationObserver(mountProfile).observe(document.body,{childList:true,subtree
 /* 읽음 표시: 메시지마다 아직 안 읽은 사람 수(카톡처럼), 누르면 읽은 사람 · 안 읽은 사람 */
 let kzSeen={},kzReaders=[];
 function kzUnreadOf(el){const at=+el.dataset.at||0,own=el.dataset.own||'';return kzReaders.filter(r=>r.id!==own&&(kzSeen[r.id]||0)<at)}
-function paintReads(){const l=$c('#kcChatLog');if(!l||!kzReaders.length)return;l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{const b=el.querySelector('.kc-rc');if(!b)return;const n=kzUnreadOf(el).length;if(n){b.textContent=n;b.hidden=false;b.setAttribute('aria-label',`안 읽은 사람 ${n}명 · 누르면 누가 읽었는지 보여요`)}else{b.hidden=true;b.textContent=''}})}
+function paintReads(){const l=$c('#kcChatLog');if(!l||!kzReaders.length)return;
+ {const all=[...l.querySelectorAll('.kc-message[data-mid]')],last=all[all.length-1];l.querySelectorAll('.kc-readline').forEach(x=>{if(!last||x.previousElementSibling!==last)x.remove()});
+  if(last){const own=last.dataset.own||'',total=kzReaders.filter(r=>r.id!==own).length,un=kzUnreadOf(last).length,read=total-un;let rl=last.nextElementSibling&&last.nextElementSibling.classList.contains('kc-readline')?last.nextElementSibling:null;
+   if(!rl){rl=document.createElement('button');rl.type='button';rl.className='kc-readline';rl.onclick=()=>showReads(last);last.after(rl)}
+   rl.classList.toggle('mine',last.classList.contains('mine'));rl.classList.toggle('all',un===0);rl.innerHTML=un===0?`<i></i>모두 읽음 · ${total}명`:`<i></i>${total}명 중 <b>${read}명</b> 읽음`}}l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{const b=el.querySelector('.kc-rc');if(!b)return;const n=kzUnreadOf(el).length;if(n){b.textContent=n;b.hidden=false;b.setAttribute('aria-label',`안 읽은 사람 ${n}명 · 누르면 누가 읽었는지 보여요`)}else{b.hidden=true;b.textContent=''}})}
 function showReads(el){const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),read=others.filter(r=>(kzSeen[r.id]||0)>=at),un=others.filter(r=>(kzSeen[r.id]||0)<at),never=[];
  document.querySelectorAll('.kf-ov').forEach(o=>o.remove());const o=document.createElement('div');o.className='kf-ov';const li=a=>a.map(r=>`<div>${escape(r.name)}</div>`).join('')||'<div class="kf-none" style="padding:10px 0">없어요</div>';
  o.innerHTML=`<div class="kf-sheet" role="dialog" aria-modal="true" aria-label="읽음 확인"><div class="kf-sh"><b>읽음 확인</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">${(el.querySelector('.kc-bubble')?.innerText||'').trim()?'<button type="button" class="kc-rd-copy">메시지 복사</button>':''}<p class="kc-rd-h">안 읽음 <b>${un.length}</b></p><div class="kf-likers">${li(un)}</div><p class="kc-rd-h">읽음 <b>${read.length}</b></p><div class="kf-likers">${li(read)}</div>${never.length?`<p class="kc-rd-h">채팅을 아직 안 열어 본 사람 <b>${never.length}</b></p><div class="kf-likers kc-rd-never">${li(never)}</div>`:''}</div></div>`;
@@ -9691,6 +9695,11 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  try{if(typeof renderTabbar==='function')renderTabbar()}catch(e){}
 })();</script>
 <style id="kz-chat-read-css">
+#kcPanel .kc-readline{display:flex;align-items:center;gap:5px;margin:2px 4px 6px auto;padding:3px 9px;border:0;border-radius:999px;background:rgba(0,0,0,.045);color:#7a6f65;font:inherit;font-size:11px;cursor:pointer;width:max-content}
+#kcPanel .kc-readline:not(.mine){margin-left:46px;margin-right:auto}
+#kcPanel .kc-readline b{color:#3b2f25;font-weight:700}#kcPanel .kc-readline i{width:6px;height:6px;border-radius:50%;background:#d6a200}
+#kcPanel .kc-readline.all i{background:#2f9e5b}
+
 #kcPanel .kc-line .kc-meta{display:flex;flex-direction:column;justify-content:flex-end;flex:none;gap:1px;padding-bottom:2px}
 #kcPanel .kc-message.mine .kc-meta{align-items:flex-end}#kcPanel .kc-message.other .kc-meta{align-items:flex-start}
 #kcPanel .kc-line .kc-meta time{padding-bottom:0}
