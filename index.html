@@ -7768,7 +7768,7 @@ const mine=isMyChatMessage(m),first=!!header||!same(items[i-1],m),last=!same(m,i
 const initial=String(m.name||'?').trim().slice(0,1)||'?',text=String(m.text||''),big=!m.imageCount&&emojiOnly(text.trim());
 const photo=m.imageCount?`<div class="kc-message-images" data-images="${escape(m.id)}"><button type="button">${KC_ICON.photo}<span>사진 ${m.imageCount}장 보기</span></button></div>`:'';
 const face=mine?'':first?`<span class="kc-avatar" data-profile-id="${escape(m.owner||'')}" data-initial="${escape(initial)}" aria-hidden="true">${escape(initial)}</span>`:'<span class="kc-avatar-gap" aria-hidden="true"></span>';
-const stamp=m._pending?'<time class="pending" role="status">전송 중</time>':last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
+const stamp=m._pending?`<time class="pending" datetime="${new Date(m.createdAt).toISOString()}"><i class="kc-sendwait" aria-label="보내는 중"></i>${escape(clock(m.createdAt))}</time>`:last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
 return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${mentionHTML(text)}${photo}</div>${stamp}</div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  paintProfiles();refreshProfiles();
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
@@ -9342,6 +9342,11 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  if(typeof body==='function'){const o=body;body=function(){const r=o.apply(this,arguments);try{if(view==='mobile_my'&&window.kzUrgent&&kzUrgent.link){const nd=document.querySelector('#body .km-next-duty');const h=kzUrgent.link();if(nd&&h&&!document.querySelector('#body .kz-urg-l')){nd.insertAdjacentHTML('afterend',h);const x=document.querySelector('#body [data-kz-urg]');if(x)x.onclick=()=>kzUrgent.open(kzUrgent.weekNow())}}}catch(e){console.warn(e)}return r}}
 })();
 </script>
+<style id="kz-chat-instant-css">/* 보낸 메시지는 바로 일반 말풍선처럼. 1.5초 넘게 걸릴 때만 작은 표시 */
+#kcPanel #kcChatLog time.pending{background:none!important;color:var(--c-sub)!important}
+#kcChatLog .kc-sendwait{display:inline-block;width:9px;height:9px;margin-right:4px;vertical-align:-1px;border:1.6px solid currentColor;border-right-color:transparent;border-radius:50%;opacity:0;animation:kzSendShow 0s linear 1.5s forwards,kzSpin .9s linear 1.5s infinite}
+@keyframes kzSendShow{to{opacity:.7}}@keyframes kzSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#kcChatLog .kc-sendwait{animation:kzSendShow 0s linear 1.5s forwards}}</style>
 </html>
 
 <script id="kz-score-pages-script">
