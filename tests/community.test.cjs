@@ -241,17 +241,34 @@ test('sub request accept: appears in target list, accept writes override and not
  const snap=p=>({id:p.split('/').at(-1),exists:data.has(p),data:()=>data.get(p)});
  const ref=p=>({path:p,id:p.split('/').at(-1),get:async()=>snap(p),collection:c=>col(p+'/'+c)});
  const col=n=>({doc:k=>ref(n+'/'+k),where:(f,op,v)=>({get:async()=>({docs:[...data.keys()].filter(k=>k.startsWith(n+'/')&&k.split('/').length===n.split('/').length+1&&data.get(k)[f]===v).map(k=>({id:k.split('/').at(-1),data:()=>data.get(k)}))})})});
- const db={collection:col,runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v))});w.forEach(f=>f());return r;}};
+ const db={collection:col,runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v)),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
  const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
  await run(people[0],{action:'subRequest',to:'나',date:'2026-10-25',role:'드럼',for:'가',kind:'session'});clock+=6000;
  await run(people[0],{action:'subRequest',to:'다',date:'2026-10-25',role:'드럼',for:'가',kind:'session'});
  let l=await run(people[1],{action:'subReqList'});assert.equal(l.items.length,1);assert.equal(l.items[0].fromName,'가');
  await assert.rejects(run(people[2],{action:'subRespond',id:l.items[0].id,accept:true}),{status:403});
+ data.set('overrides/ug1',{date:'2026-10-25',from:'가',to:'',k:'session',urgent:true});data.set('overrides/keep',{date:'2026-10-25',from:'가',to:'',urgent:true});
  const r=await run(people[1],{action:'subRespond',id:l.items[0].id,accept:true});assert.equal(r.status,'accepted');
- const ov=[...data.entries()].find(([k])=>k.startsWith('overrides/'));assert.ok(ov);assert.deepEqual([ov[1].date,ov[1].from,ov[1].to,ov[1].k],['2026-10-25','가','나','session']);
+ const ov=[...data.entries()].find(([k])=>k.startsWith('overrides/sr'));assert.ok(ov);assert.deepEqual([ov[1].date,ov[1].from,ov[1].to,ov[1].k],['2026-10-25','가','나','session']);
  assert.equal(pushed.at(-1).r[0].id,'a1');assert.match(pushed.at(-1).n.title,/수락/);
  await assert.rejects(run(people[1],{action:'subRespond',id:l.items[0].id,accept:true}),{status:409});
  assert.equal((await run(people[1],{action:'subReqList'})).items.length,0);
  const l3=await run(people[2],{action:'subReqList'});await run(people[2],{action:'subRespond',id:l3.items[0].id,accept:false});
- assert.equal([...data.keys()].filter(k=>k.startsWith('overrides/')).length,1);});
+ assert.deepEqual([...data.keys()].filter(k=>k.startsWith('overrides/')).length,2);assert.ok(data.has('overrides/keep'));assert.ok(!data.has('overrides/ug1'));});
 
+
+test('urgent absence after deadline notifies leader of that week, chief and part seniors with reason',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'u1',name:'가',rank:'팀원',status:'approved'},{id:'c1',name:'단',rank:'단장',status:'approved'},{id:'l1',name:'인1',rank:'인도자',status:'approved'},{id:'l2',name:'인2',rank:'인도자',status:'approved'},{id:'ss',name:'선싱',rank:'선임싱어',status:'approved'},{id:'se',name:'선세',rank:'선임세션',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,15,3,0);
+ const snap=p=>({id:p.split('/').at(-1),exists:data.has(p),data:()=>data.get(p)});
+ const ref=p=>({path:p,id:p.split('/').at(-1),get:async()=>snap(p),collection:c=>col(p+'/'+c)});
+ const col=n=>({doc:k=>ref(n+'/'+k)});
+ const db={collection:col,runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ await assert.rejects(run(people[0],{action:'urgentAbs',date:'2026-10-18',kinds:['singer'],reason:'  '}),{status:400});
+ await assert.rejects(run(people[0],{action:'urgentAbs',date:'2026-11-01',kinds:['singer'],reason:'야근'}),{status:400});
+ const r=await run(people[0],{action:'urgentAbs',date:'2026-10-18',kinds:['singer'],reason:'갑자기 야근',leader:'인2'});
+ assert.equal(r.ok,true);const ids=pushed.at(-1).r.map(a=>a.id).sort();assert.deepEqual(ids,['c1','l2','ss']);assert.match(pushed.at(-1).n.body,/가님 · 10월 18일 주일 싱어 · 갑자기 야근/);
+ clock+=11000;await run(people[0],{action:'urgentAbs',date:'2026-10-18',kinds:['session','singer'],reason:'몸살'});
+ assert.deepEqual(pushed.at(-1).r.map(a=>a.id).sort(),['c1','l1','l2','se','ss']);});

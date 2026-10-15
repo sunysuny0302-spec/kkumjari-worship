@@ -8364,7 +8364,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   const roleName=rank==='관리계정'?'관리계정':rank==='팀원'?(part?part+' 팀원':'팀원'):rank;
   const hello={ic:I.heart,t:`환영해요${n&&rank!=='관리계정'?', '+n+'님':''}!`,d:`<b>${roleName}</b>에게 필요한 것만 30초 만에 알려 드릴게요. 언제든 건너뛸 수 있어요.`};
   const home={ic:I.home,t:'홈 맨 위 = 이번 주 나',d:'내 순서와 연습할 곡이 가장 먼저 보여요. 콘티가 올라오면 그 주에 서는 사람에게 <b>토요 연습 참석 확인</b> 창이 떠요. 알림함 옆 <b>참석 확인</b> 아이콘에서 연습·수련회 같은 행사 참석 여부와 대타 요청에 답할 수 있고, 답한 것은 목록에서 사라져요.'};
-  const mine={ic:I.cal,t:'내 순서 · 불참 신청',d:`${part?at(part,part==='싱어'?'싱어':'세션'):at('내 순서','싱어 · 세션')}에서 앞으로 6주 순서를 봐요. 못 오는 날은 <b>불참·대타·교대</b>를 직접 신청하면 순서가 바로 바뀌어요. 신청·변경은 <b>예배 전주 일요일까지</b> 할 수 있어요. 대타 추천 목록에서 바로 <b>대타 요청</b>을 보내면 상대가 수락할 때 순서가 바뀌어요.`};
+  const mine={ic:I.cal,t:'내 순서 · 불참 신청',d:`${part?at(part,part==='싱어'?'싱어':'세션'):at('내 순서','싱어 · 세션')}에서 앞으로 6주 순서를 봐요. 못 오는 날은 <b>불참·대타·교대</b>를 직접 신청하면 순서가 바로 바뀌어요. 신청·변경은 <b>예배 전주 일요일까지</b> 할 수 있어요. 마감 뒤 이번 주에 갑자기 못 오게 되면 홈이나 참석 확인의 <b>급한 불참 알리기</b>로 사유와 함께 알려 주세요. 대타 추천 목록에서 바로 <b>대타 요청</b>을 보내면 상대가 수락할 때 순서가 바뀌어요.`};
   const extra={ic:I.music,t:'신청곡 · 가사 PPT',d:`부르고 싶은 곡은 ${more('신청곡')}에 올려요. 콘티 곡 가사로 예배용 PPT도 ${M?'더보기에서':'왼쪽 메뉴에서'} 바로 만들 수 있어요. <b>PPT 담당</b> 차례가 되면 미리 알림이 가요.`};
   const bell={ic:I.bell,t:'알림 켜기',d:/iPhone|iPad/.test(navigator.userAgent)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)?'아이폰은 Safari 아래 <b>공유(□↑) → 홈 화면에 추가</b>한 뒤, 그 앱에서 <b>내 계정 → 휴대폰 알림</b>을 켜 주세요.':'오른쪽 위 <b>내 계정 → 휴대폰 알림</b>을 켜면 새 콘티·공지·내 순서 변경을 바로 알려 드려요.',btn:['account','알림 설정 열기']};
   const fast={ic:I.face,t:'빠르게 들어오기',d:`<b>${fid} 로그인</b>으로 PIN 없이 들어오고, <b>로그인 유지</b>를 켜면 정한 기간 동안 바로 열려요. 둘 다 <b>내 계정</b>에 있어요.`,btn:['account','내 계정 열기']};
@@ -9048,7 +9048,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const rec=cands.filter(n=>n&&n!==S.n).map(n=>({n,c:serves(n,kind)})).sort((a,b)=>a.c-b.c||a.n.localeCompare(b.n,'ko')).slice(0,3);
   const head=`<div class="sub-rec-h"><b>대타 추천</b><small>${S.ds.map(d=>wkLbl(d)).join(', ')} 에 비어 있고 최근 3달 동안 덜 선 순서예요</small></div>`;
   if(!rec.length)return `<div class="sub-rec">${head}<span class="mu" style="font-size:13px">그 주에 비어 있는 ${kind==='s'?'싱어가':'같은 악기 세션이'} 없어요</span></div>`;
-  return `<div class="sub-rec">${head}<div class="sub-rec-l">${rec.map(x=>`<div class="sub-rec-i"><b>${E(x.n)}</b><small>최근 ${x.c}번 섬김</small><button type="button" data-sr-pick="${E(x.n)}">대신 서기로</button><button type="button" class="pri" data-sr-ask="${E(x.n)}" data-sr-role="${E(role||'')}" data-sr-kind="${kind==='e'?'session':'singer'}">요청 보내기</button></div>`).join('')}</div></div>`}
+  return `<div class="sub-rec">${head}<div class="sub-rec-l">${rec.map(x=>`<div class="sub-rec-i"><b>${E(x.n)}</b><small>최근 ${x.c}번 섬김</small>${S.ds.some(d=>typeof kzChgOk==='function'&&!kzChgOk(d))?'':`<button type="button" data-sr-pick="${E(x.n)}">대신 서기로</button>`}<button type="button" class="pri" data-sr-ask="${E(x.n)}" data-sr-role="${E(role||'')}" data-sr-kind="${kind==='e'?'session':'singer'}">요청 보내기</button></div>`).join('')}</div></div>`}
  function bind(S,rerender){document.querySelectorAll('[data-sr-pick]').forEach(b=>b.onclick=()=>{S.mode='rep';S.sub=b.dataset.srPick;rerender()});
   document.querySelectorAll('[data-sr-ask]').forEach(b=>b.onclick=async()=>{const to=b.dataset.srAsk;const R=window.kzRsvp;if(!R||!R.api)return toast('지금은 보낼 수 없어요');b.disabled=true;b.textContent='보내는 중…';
    try{for(const d of S.ds)await R.api({action:'subRequest',to,date:d,role:b.dataset.srRole||'',for:S.n,kind:b.dataset.srKind||'singer'});b.textContent='보냈어요 ✓';toast(`${to}님에게 대타 요청을 보냈어요 · 수락하면 일정표에 바로 반영돼요`)}catch(e){b.disabled=false;b.textContent='요청 보내기';toast('보내지 못했어요: '+(e.message||e))}})}
@@ -9180,7 +9180,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   if(done.length)b.insertAdjacentHTML('beforeend',`<details class="kzh-done" ${b.dataset.doneOpen?'open':''}><summary>응답한 항목 · 지난 항목 ${done.length}개</summary><div class="kzh-dl">${done.map(card).join('')}</div></details>`);
   if(!SR.length&&!items.length)b.innerHTML='<div class="kzh-empty">지금 응답할 참석 확인이 없어요<br><small>토요 연습, 참석 여부를 받는 일정, 대타 요청이 여기에 모여요</small></div>';
   const dd=b.querySelector('.kzh-done');if(dd)dd.ontoggle=()=>{b.dataset.doneOpen=dd.open?'1':''};
-  b.querySelectorAll('.kzh-c').forEach(c=>{if(opened.includes(c.dataset.id||'prac')){c.querySelector('.kzh-names').hidden=false;c.querySelector('.kzh-more').textContent='명단 닫기'}});bind(b);badge()}
+  b.querySelectorAll('.kzh-c').forEach(c=>{if(opened.includes(c.dataset.id||'prac')){c.querySelector('.kzh-names').hidden=false;c.querySelector('.kzh-more').textContent='명단 닫기'}});bind(b);try{window.kzUrgent&&kzUrgent.hub(b)}catch(e){}badge()}
  function copyText(c){const isP=c.dataset.k==='prac';let title,list,ans;if(isP){const p=pracItem();title=`${md(p.sat)} 토요 연습`;list=p.list.map(o=>o.n);ans=PR[p.d]||{}}else{const e=evItems().find(x=>x._id===c.dataset.id);if(!e)return '';title=`${e.title} (${md(e.date)})`;list=roster().filter(n=>n!=='관리계정');ans=EV[e._id]||{}}
   const g=names(list,ans).g,L=(k,l)=>g[k].length?`${l} ${g[k].length}명: ${g[k].map(x=>x.n+(x.note?`(${x.note})`:'')).join(', ')}`:'';
   return [`[꿈자리 찬양팀] ${title} 참석 확인`,L('yes','참석'),L('maybe','미정'),L('no','불참'),L('none','미응답')].filter(Boolean).join('\n')}
@@ -9204,6 +9204,79 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  new MutationObserver(()=>{const m=document.getElementById('kcMail'),b=document.getElementById('kzRsvpBtn');if(m&&(!b||b.previousElementSibling!==m))try{topBtn()}catch(e){}}).observe(document.documentElement,{childList:true,subtree:true});
  /* 알림의 '참석 확인' 링크 */
  try{const q=new URLSearchParams(location.search).get('kz_open');if(q==='rsvp')setTimeout(()=>open(),3500)}catch(e){}
+})();</script>
+<style id="kz-urgent-css">
+.kz-urg-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#fff4ec;border:1px solid #f1c9a9;color:#5a3a22;font-size:14px;line-height:1.45}
+.kz-urg-card>div{flex:1;min-width:200px}.kz-urg-card b{color:#8a3f12}.kz-urg-card small{display:block;color:#8a6a55;font-size:12.5px}
+.kz-urg-card button{border:0;border-radius:10px;padding:9px 14px;background:#c2551c;color:#fff;font-weight:700;font-size:14px;cursor:pointer}
+.kz-urg-card.done{background:#f2f6f1;border-color:#cfe0cb;color:#2f4d2b}.kz-urg-card.done b{color:#2f6b3f}
+.kz-urg-l{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:12px;padding:10px 12px;border:1px dashed #e3b28d;border-radius:12px;background:#fff8f2;color:#8a4a20;font-size:13.5px;text-align:left;cursor:pointer;font:inherit}
+.kz-urg-l b{color:#c2551c;white-space:nowrap}.kz-urg-l.done{border-style:solid;border-color:#cfe0cb;background:#f2f6f1;color:#2f4d2b;cursor:default}
+.kzh-urg{padding:4px 2px 2px}
+.kz-urg-who{margin-top:10px;padding:8px 12px;border-radius:10px;background:#fff1e8;color:#8a4a20;font-size:13px}.kz-urg-who b{color:#b2481a}
+.kz-urg-ov{position:fixed;inset:0;z-index:9300;background:rgba(30,20,12,.45);display:grid;place-items:center;padding:16px}
+.kz-urg-m{width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--card,#fff);color:var(--ink,#2b2118);border-radius:18px;padding:20px 18px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
+.kz-urg-m h2{margin:0 0 6px;font-size:18px}.kz-urg-m p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--mu,#6b5a4b)}
+.kz-urg-m .ku-k{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}.kz-urg-m .ku-k label{display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid #e2d6ca;border-radius:999px;font-size:14px}
+.kz-urg-m textarea{width:100%;box-sizing:border-box;min-height:76px;padding:10px 12px;border:1px solid #dccfc2;border-radius:12px;font:inherit;font-size:15px;resize:vertical}
+.kz-urg-m .ku-n{font-size:12px;color:#8a7a6b;margin:4px 0 12px}.kz-urg-m .ku-b{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.kz-urg-m .ku-b button{border-radius:10px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer;border:1px solid #dccfc2;background:#fff;color:inherit}
+.kz-urg-m .ku-b .go{background:#c2551c;border-color:#c2551c;color:#fff}.kz-urg-m .ku-b .go:disabled{opacity:.5}
+.kz-urg-m .ku-ok{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#e6f2e3;color:#2f6b3f;font-size:22px;margin-bottom:8px}
+</style>
+<script id="kz-urgent">/* 급한 불참: 변경 마감(전주 일요일)이 지난 이번 주에 갑자기 못 오게 된 싱어·세션.
+ 불참은 일정표에 바로 표시하고, 인도자·단장·선임에게 사유와 함께 알림 → 이어서 대타 요청 */
+(function(){
+ const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const myName=()=>{try{const a=authAccount();return (a&&a.rank!=='관리계정'&&a.name)||''}catch(e){return ''}};
+ const staff=()=>{try{return typeof kzChgStaff==='function'&&kzChgStaff()}catch(e){return false}};
+ const locked=d=>!!d&&d>=todayStr()&&typeof kzChgOpen==='function'&&!kzChgOpen(d)&&!(typeof isNoSvc==='function'&&isNoSvc(d));
+ function roles(d,n){try{const a=window.kzRsvp&&kzRsvp.assigned(d)||[];const m=a.find(o=>o.n===n);return m?m.r:[]}catch(e){return []}}
+ const kindsOf=r=>[...(r.includes('싱어')?['singer']:[]),...(r.some(x=>x!=='싱어'&&x!=='인도')?['session']:[])];
+ function weekNow(){const t=todayStr();for(let i=0;i<8;i++){const d=shiftDate(t,i);if(new Date(d+'T12:00:00').getDay()===0)return d}return ''}
+ function need(d,mine){if(staff()||!locked(d))return false;const r=mine?mine.r:roles(d,myName());return kindsOf(r||[]).length>0}
+ function reported(d,n){try{return ovr.some(x=>x.date===d&&x.from===n&&x.urgent)}catch(e){return false}}
+ function close(){document.querySelector('.kz-urg-ov')?.remove()}
+ function open(d){d=d||weekNow();const n=myName();if(!n)return;if(!locked(d))return toast('아직 변경 마감 전이에요 · 일정 변경에서 바로 바꿀 수 있어요');
+  const ks=kindsOf(roles(d,n));if(!ks.length)return toast(`${fmtD(d)}에는 서는 순서가 없어요`);
+  close();const ov=document.createElement('div');ov.className='kz-urg-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','급한 불참 알리기');
+  const lbl={singer:'싱어',session:'세션'};
+  ov.innerHTML=`<div class="kz-urg-m"><h2>급한 불참 알리기</h2><p><b>${E(fmtD(d))} 주일</b> 변경 마감(전주 일요일)은 지났지만, 갑자기 못 오게 됐다면 여기서 알려 주세요. 일정표에 바로 <b>불참</b>으로 표시되고 인도자 · 단장 · 선임에게 알림이 가요.</p>
+   ${ks.length>1?`<div class="ku-k">${ks.map(k=>`<label><input type="checkbox" value="${k}" checked> ${lbl[k]}</label>`).join('')}</div>`:`<div class="ku-k"><label style="border-style:dashed">${lbl[ks[0]]} 불참</label></div>`}
+   <textarea maxlength="120" placeholder="사유 (예: 갑자기 야근이 잡혔어요, 몸살이 심해요)" aria-label="사유"></textarea><div class="ku-n">사유는 알림을 받는 사람만 봐요</div>
+   <div class="ku-b"><button type="button" data-x>닫기</button><button type="button" class="go" data-go disabled>알리기</button></div></div>`;
+  document.body.append(ov);const ta=ov.querySelector('textarea'),go=ov.querySelector('[data-go]');ta.focus();
+  ta.oninput=()=>{go.disabled=!ta.value.trim()};ov.querySelector('[data-x]').onclick=close;ov.onclick=e=>{if(e.target===ov)close()};
+  go.onclick=async()=>{const reason=ta.value.trim();if(!reason)return;const sel=ks.length>1?[...ov.querySelectorAll('.ku-k input:checked')].map(i=>i.value):ks;if(!sel.length)return toast('싱어 · 세션 중 하나는 골라 주세요');
+   go.disabled=true;go.textContent='알리는 중…';
+   try{for(const k of sel){const kk=k==='session'?'session':'';for(const x of ovr.filter(x=>x.date===d&&x.from===n&&(x.k||'')===kk))await db.doc('overrides/'+x._id).delete();
+     await db.doc('overrides/ug'+d.replace(/-/g,'')+(kk?'e':'s')+Date.now().toString(36)+Math.random().toString(36).slice(2,5)).set({date:d,from:n,to:'',at:Date.now(),urgent:true,by:'urgent',...(kk?{k:kk}:{})})}
+    let sent=0;try{const r=await window.kzRsvp.api({action:'urgentAbs',date:d,kinds:sel,reason,leader:(()=>{try{return ldrOf(d)}catch(e){return ''}})()});sent=r&&r.notified||0}catch(e){toast('불참은 표시했지만 알림을 보내지 못했어요: '+(e.message||e))}
+    const m=ov.querySelector('.kz-urg-m');m.innerHTML=`<div class="ku-ok">✓</div><h2>알렸어요</h2><p>${E(fmtD(d))} 주일 <b>${sel.map(k=>lbl[k]).join(' · ')}</b> 불참으로 표시했어요.${sent?` ${sent}명에게 알림이 갔어요.`:''}<br>대신 서 줄 사람을 찾으면 팀에 큰 도움이 돼요.</p>
+     <div class="ku-b"><button type="button" data-x>닫기</button><button type="button" class="go" data-sub>대타 요청 보내기</button></div>`;
+    m.querySelector('[data-x]').onclick=()=>{close();try{if(view==='home')homeView();else if(view==='swap')swapView();else if(view==='abs')absView()}catch(e){}};
+    m.querySelector('[data-sub]').onclick=()=>{close();pf={n,d};if(sel[0]==='singer')goRole('singer','swap');else goRole('session','abs')};
+   }catch(e){console.error(e);go.disabled=false;go.textContent='알리기';toast('알리지 못했어요. 인터넷 연결을 확인해 주세요')}}}
+ /* 일정 변경 화면 맨 위 안내 */
+ function card(kind){if(staff())return;const n=myName(),d=weekNow();if(!n||!locked(d))return;const r=roles(d,n),ks=kindsOf(r),on=kind==='s'?ks.includes('singer'):ks.includes('session');
+  const body=document.querySelector('#body .wiz')||document.querySelector('#body .change-v6')||document.querySelector('#body .wk');if(!body||document.querySelector('#body .kz-urg-card'))return;const hero=body.querySelector(':scope > .cv6-hero');
+  const done=(()=>{try{return ovr.some(x=>x.date===d&&x.from===n&&x.urgent&&(kind==='s'?!x.k:x.k==='session'))}catch(e){return false}})();
+  if(!on&&!done)return;
+  const el=document.createElement('div');el.className='kz-urg-card'+(done?' done':'');
+  el.innerHTML=done?`<div><b>${E(fmtD(d))} 급한 불참을 알렸어요</b><small>대신 서 줄 사람이 생기면 아래 대타 추천에서 요청을 보내 주세요</small></div>`:`<div><b>이번 주(${E(fmtD(d))}) 갑자기 못 오게 됐나요?</b><small>변경 마감은 지났지만 급한 불참은 알릴 수 있어요</small></div><button type="button">급한 불참 알리기</button>`;
+  const btn=el.querySelector('button');if(btn)btn.onclick=()=>open(d);if(hero)hero.after(el);else body.prepend(el)}
+ if(typeof swapView==='function'){const o=swapView;swapView=function(){const r=o.apply(this,arguments);try{card('s')}catch(e){console.warn(e)}return r}}
+ if(typeof absView==='function'){const o=absView;absView=function(){const r=o.apply(this,arguments);try{card('e')}catch(e){console.warn(e)}return r}}
+ function link(){if(staff())return '';const n=myName(),d=weekNow();if(!n||!locked(d))return '';
+  if(reported(d,n))return `<div class="kz-urg-l done">${E(fmtD(d))} 급한 불참을 알렸어요</div>`;
+  return kindsOf(roles(d,n)).length?`<button type="button" class="kz-urg-l" data-kz-urg>갑자기 못 오게 됐나요?<b>급한 불참 알리기 ›</b></button>`:''}
+ function hub(b){const h=link();if(!h)return;b.insertAdjacentHTML('beforeend',`<div class="kzh-urg">${h}</div>`);const x=b.querySelector('[data-kz-urg]');if(x)x.onclick=()=>{try{document.querySelector('.kzh-x,[data-kzh-close]')?.click()}catch(e){}open(weekNow())}}
+ function home(){if(typeof view==='undefined'||view!=='home')return;const p=document.querySelector('#body .kz-ppl');if(!p||p.querySelector('.kz-urg-l,.kz-urg-who'))return;if(typeof date!=='undefined'&&date!==weekNow())return;
+  const wd=weekNow(),n0=myName();let who=[];try{who=ovr.filter(x=>x.date===wd&&x.urgent&&!x.to&&x.from!==n0).map(x=>x.from+(x.k==='session'?'(세션)':'(싱어)'))}catch(e){}
+  if(who.length)p.insertAdjacentHTML('beforeend',`<div class="kz-urg-who">급한 불참 · <b>${who.map(E).join(', ')}</b></div>`);
+  const h=link();if(!h)return;p.insertAdjacentHTML('beforeend',h);const x=p.querySelector('[data-kz-urg]');if(x)x.onclick=()=>open(weekNow())}
+ if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{home()}catch(e){console.warn(e)}return r}}
+ window.kzUrgent={open,need,locked,weekNow,hub,home};
 })();</script>
 </html>
 
