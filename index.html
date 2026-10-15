@@ -6373,7 +6373,7 @@ sub();stat()}catch(e){console.error(e)}})();
     await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(m.authEmail||emailFor(m.id),authPassword(authPwId(m),old)));await u.updatePassword(authPassword(authPwId(m),np));lastPin=np;
     try{await ADM({action:'pinChanged'})}catch(e){console.warn('[꿈자리] PIN 변경 기록',e)}write(read().map(x=>x.id===a.id?{...x,mustChangePin:false}:x));w.remove();toast('PIN을 바꿨어요 ✓ 다음부터 새 PIN으로 로그인해요')}
    catch(e){console.error(e);b.disabled=false;b.textContent='PIN 바꾸기';const c=String(e&&e.code||'');err(c.includes('wrong-password')||c.includes('invalid-credential')?(optional?'지금':'임시')+' PIN이 맞지 않아요.':c.includes('too-many')?'시도가 너무 많아요. 잠시 후 다시 해 주세요.':'PIN을 바꾸지 못했어요. 로그아웃 후 다시 로그인해서 해 주세요.')}}}
- window.kzChangePin=()=>{const a=session();if(a&&a.id!=='management')forcePin(a,true)};
+ window.kzChangePin=()=>{const a=session();if(a)forcePin(a,true)};
  /* ----- 계정 관리 화면 ----- */
  const H={list:[],signup:{open:true,code:''},q:'',f:'all',open:'',msg:'',busy:false,err:'',loaded:false,res:null};
  const ago=t=>{if(!t)return '기록 없음';const d=Date.now()-t,m=Math.round(d/6e4);if(m<2)return '방금';if(m<60)return m+'분 전';const h=Math.round(m/60);if(h<24)return h+'시간 전';const dd=Math.round(h/24);if(dd<31)return dd+'일 전';const x=new Date(t);return `${x.getFullYear()}.${x.getMonth()+1}.${x.getDate()}`};
@@ -9062,6 +9062,15 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   if(!off)t=setTimeout(()=>{el&&el.remove();el=null},2500)}
  addEventListener('offline',()=>show(true));addEventListener('online',()=>{if(el)show(false)});
  if(navigator.onLine===false)(document.body?show(true):addEventListener('DOMContentLoaded',()=>show(true)))})();</script>
+<style id="kz-mgpin-css">.kz-mgpin{position:fixed;inset:0;z-index:9100;display:grid;place-items:center;padding:16px;background:rgba(30,20,10,.45)}.kz-mgpin>div{width:min(380px,100%);background:#fffaf3;border-radius:20px;padding:22px;box-shadow:0 24px 60px -20px rgba(40,25,10,.5)}
+.kz-mgpin b{display:block;font-size:17px;margin-bottom:6px;color:#2a1f17}.kz-mgpin p{margin:0 0 16px;color:#6b5a4a;font-size:13.5px;line-height:1.55}.kz-mgpin .a{display:flex;gap:8px}.kz-mgpin .a button{flex:1;min-height:42px}</style>
+<script id="kz-mgpin">/* 관리계정이 PIN을 앱에서 한 번도 바꾸지 않았으면, 접속할 때마다 바꾸라고 안내 */
+(function(){let done=false;const t=setInterval(async()=>{if(done)return;let a=null;try{a=authAccount()}catch(e){}if(!a||document.getElementById('kzLoginLock'))return;done=true;clearInterval(t);
+  if(a.id!=='management')return;try{if(sessionStorage.getItem('kzMgPinLater'))return}catch(e){}
+  let changed=false;try{const fs=window.firebase&&firebase.firestore&&firebase.firestore();if(fs){const d=await fs.doc('accounts/management').get();changed=!!(d.exists&&d.data()&&d.data().pinChangedAt)}else return}catch(e){return}
+  if(changed)return;const o=document.createElement('div');o.className='kz-mgpin';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
+  o.innerHTML='<div><b>관리계정 PIN을 바꿔 주세요</b><p>관리계정은 팀 전체를 관리할 수 있는 계정이라, 처음 정한 PIN 그대로 두면 위험해요. 다른 사람이 추측하기 어려운 숫자로 바꿔 주세요.</p><div class="a"><button type="button" class="sm" data-l>나중에</button><button type="button" class="btn" data-n>지금 바꾸기</button></div></div>';
+  o.querySelector('[data-l]').onclick=()=>{try{sessionStorage.setItem('kzMgPinLater','1')}catch(e){}o.remove()};o.querySelector('[data-n]').onclick=()=>{o.remove();window.kzChangePin&&kzChangePin()};document.body.append(o)},3000);setTimeout(()=>clearInterval(t),120000)})();</script>
 </html>
 
 <script id="kz-score-pages-script">
