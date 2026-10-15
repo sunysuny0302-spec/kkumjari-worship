@@ -101,13 +101,14 @@ t('list returns accounts with devices and auth metadata', async () => {
 t('resetPin sets password, revokes and flags', async () => {
   const db = fakeDb(seed()), auth = fakeAuth(), s = createAdminService({db, auth, now: () => 5});
   await s.publicRun({action: 'loginFail', id: 'u1'});
-  await s.run(ADMIN, {action: 'resetPin', id: 'u1', pin: '4821'});
-  assert.deepStrictEqual(auth.calls[0], ['update', 'u1', {password: 'Kz!4821#uabc123'}]);
+  await s.run(ADMIN, {action: 'resetPin', id: 'u1', pin: '482193'});
+  assert.deepStrictEqual(auth.calls[0], ['update', 'u1', {password: 'Kz!482193#uabc123'}]);
   assert.ok(auth.calls.some(c => c[0] === 'revoke'));
   assert.strictEqual(db.store.get('accounts/u1').mustChangePin, true);
   assert.ok(!('u1' in (db.store.get('_kzAdmin/loginFails') || {})));
   await assert.rejects(s.run(ADMIN, {action: 'resetPin', id: 'u1', pin: '12'}), e => e.status === 400);
-  await assert.rejects(s.run(ADMIN, {action: 'resetPin', id: 'management', pin: '1234'}), e => e.status === 400);
+  await assert.rejects(s.run(ADMIN, {action: 'resetPin', id: 'management', pin: '123456'}), e => e.status === 400);
+  await assert.rejects(s.run(ADMIN, {action: 'resetPin', id: 'u1', pin: '4821'}), e => e.status === 400);
 });
 t('self pinChanged clears the flag', async () => {
   const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth()});
