@@ -213,7 +213,8 @@ test('attend rank: any approved member gets per-person totals sorted by rate, no
  data.set('attendance/w2',{date:'2026-10-11',list:[{n:'가'},{n:'나'}],recs:{'가':{s:'출석'},'나':{s:'출석'}}});
  const r=await run(people[1],{action:'attendRank',range:'month'});
  assert.deepEqual(r.items.map(x=>x.name),['가','나','다']);assert.equal(r.items[0].rate,100);assert.equal(r.items[1].rate,50);assert.equal(r.items[2].rate,0);assert.equal(r.items[2].late,1);assert.equal(r.days,2);
- assert.equal(JSON.stringify(r).includes('recs'),false);});
+ assert.equal(JSON.stringify(r).includes('recs'),false);
+ data.set('settings/attendRank',{mode:'rate'});const r2=await run(people[1],{action:'attendRank',range:'month'});assert.equal(r2.mode,'rate');assert.equal(r2.items[0].p,undefined);assert.equal(r2.items[0].rate,100);});
 test('event rsvp: answer/get, deadline, staff-only notify, reminder once before deadline',async()=>{
  const {createService}=require('../lib/community-service.cjs');
  const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'m1',name:'선임',rank:'선임싱어',status:'approved'}];
