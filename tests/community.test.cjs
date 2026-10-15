@@ -421,3 +421,9 @@ test('chat unread count: messages from others since I last looked',async()=>{
  assert.equal((await f.run(f.user,{action:'chatUnread',room:'all'})).unread,0);
  assert.equal((await f.run(f.outsider,{action:'chatUnread',room:'all'})).unread,0);
 });
+test('public thanks cards are visible to everyone; private stay hidden',async()=>{
+ const f=fixture();await f.run(f.user,{action:'feedPost',id:'feedreq_pub001',kind:'thanks',to:f.outsider.id,text:'모두 보세요',priv:false});f.advance(6000);
+ await f.run(f.user,{action:'feedPost',id:'feedreq_prv001',kind:'thanks',to:f.outsider.id,text:'비밀'});
+ const l=(await f.run(f.admin,{action:'feedList'})).items.filter(x=>x.kind==='thanks');assert.deepEqual(l.map(x=>x.text),['모두 보세요']);assert.equal(l[0].priv,false);
+ assert.equal((await f.run(f.outsider,{action:'feedList'})).items.filter(x=>x.kind==='thanks').length,2);
+});

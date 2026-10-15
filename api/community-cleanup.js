@@ -8,8 +8,11 @@ module.exports=async function handler(req,res){
  try{init();const db=admin.firestore();let deleted=0;
   // Two fixed room paths avoid collection-group index setup.
   for(const room of ['all','admin'])for(let i=0;i<5;i++){
-   const s=await db.collection('_kzCommunity').doc('room_'+room).collection('kzChatMessages').where('expiresAt','<=',admin.firestore.Timestamp.now()).limit(400).get();if(s.empty)break;
-   const batch=db.batch();s.docs.forEach(d=>batch.delete(d.ref));await batch.commit();deleted+=s.size;
+   /* 보관 기간(RETENTION, 30일)이 지난 것은 지우고, 예전 기준(5일)으로 만료가 잡힌 메시지는 30일로 늘려 줌 */
+   const RET=require('../lib/community-service.cjs').RETENTION,nowMs=Date.now();
+   const s=await db.collection('_kzCommunity').doc('room_'+room).collection('kzChatMessages').where('expiresAt','<=',admin.firestore.Timestamp.fromMillis(nowMs+6*86400000)).orderBy('expiresAt').limit(400).get();if(s.empty)break;
+   const batch=db.batch();let touched=0;s.docs.forEach(d=>{const x=d.data()||{},c=Number(x.createdAt)||0,end=c+RET;if(!c||end<=nowMs){batch.delete(d.ref);deleted++;touched++;}else{const cur=x.expiresAt&&x.expiresAt.toMillis?x.expiresAt.toMillis():0;if(Math.abs(cur-end)>60000){batch.update(d.ref,{expiresAt:admin.firestore.Timestamp.fromMillis(end)});touched++;}}});
+   if(!touched)break;await batch.commit();
   }
   /* 같은 크론에서 토요 연습 미응답자 알림 (월~금 저녁 7시) */
   let remind=null;try{remind=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpRemind'});}catch(e){console.error('[rsvp-remind]',e.code||e.name||e.message);remind={error:true};}
