@@ -9300,6 +9300,20 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  document.addEventListener('mousedown',e=>{if(btnOf(e)&&typing())e.preventDefault()},true);
  document.addEventListener('click',e=>{if(btnOf(e)&&Date.now()-fired<700){e.preventDefault();e.stopPropagation()}},true);
 })();</script>
+<script id="kz-chat-kbd">/* 휴대폰: 자판이 열려 채팅 칸이 줄어들면 마지막 메시지가 가려지던 문제.
+ 맨 아래를 보고 있었다면 칸 크기가 바뀌어도 맨 아래(최신 메시지)를 계속 보여 줌 */
+(function(){
+ const st=new WeakMap();let cur=null;
+ const near=l=>l.scrollHeight-l.scrollTop-l.clientHeight<90;
+ const pin=l=>{l.scrollTop=l.scrollHeight};
+ const ro=typeof ResizeObserver==='function'?new ResizeObserver(es=>es.forEach(e=>{const l=e.target,s=st.get(l);if(!s)return;const h=l.clientHeight;if(h!==s.h){if(s.bottom)pin(l);s.h=h}})):null;
+ function attach(){const l=document.getElementById('kcChatLog');if(!l||l===cur)return;cur=l;st.set(l,{h:l.clientHeight,bottom:true});
+  l.addEventListener('scroll',()=>{const s=st.get(l);if(s&&l.clientHeight===s.h)s.bottom=near(l)},{passive:true});if(ro)ro.observe(l)}
+ new MutationObserver(attach).observe(document.documentElement,{childList:true,subtree:true});attach();
+ /* 입력칸을 누른 순간 맨 아래 근처였다면, 자판이 다 올라온 뒤에도 맨 아래로 */
+ document.addEventListener('focusin',e=>{if(!e.target||e.target.id!=='kcChatText')return;const l=document.getElementById('kcChatLog');if(!l)return;const s=st.get(l),was=s?s.bottom:near(l);if(!was)return;[60,250,500,800].forEach(t=>setTimeout(()=>{if(document.activeElement===e.target)pin(l)},t))});
+ const vv=window.visualViewport;if(vv)vv.addEventListener('resize',()=>{const l=document.getElementById('kcChatLog'),s=l&&st.get(l);if(l&&s&&s.bottom)requestAnimationFrame(()=>pin(l))});
+})();</script>
 </html>
 
 <script id="kz-score-pages-script">
