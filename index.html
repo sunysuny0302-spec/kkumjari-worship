@@ -9386,7 +9386,11 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf-st-ring{position:relative;display:grid;place-items:center;width:62px;height:62px;border-radius:50%;padding:2.5px;box-sizing:border-box;background:#e3d9ce}
 .kf-st-ring.new{background:conic-gradient(from 210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)}
 .kf-st-ring .kf-av{width:100%;height:100%;font-size:20px;border:2.5px solid #fff;box-sizing:border-box}
-.kf-st.sel small{font-weight:800}.kf-st.sel .kf-st-ring{box-shadow:0 0 0 2px var(--ac)}
+.kf-st{transition:opacity .2s,transform .2s}.kf-st small{padding:2px 8px;border-radius:999px;transition:background .2s,color .2s}
+.kf-st.kf-on small{background:#2b211a;color:#fff;font-weight:700}.kf-st.kf-on .kf-st-ring{transform:scale(1.04)}
+.kf-stories.filtering .kf-st:not(.kf-on):not(.kf-st-me){opacity:.42}
+.kf button:focus,.kf-sheet button:focus{outline:none!important;box-shadow:none}.kf .kf-st:focus-visible .kf-st-ring,.kf .kf-act>button:focus-visible,.kf .kf-new:focus-visible{outline:2px solid rgba(123,86,56,.55)!important;outline-offset:3px}
+.kf .kf-st,.kf .kf-act>button,.kf .kf-new{-webkit-tap-highlight-color:transparent}.kf-stories.filtering .kf-st:not(.kf-on):hover{opacity:.8}
 .kf-st-ring.add{background:none;padding:0}.kf-st-ring.add .kf-av{border:0}
 .kf-st-ring.add i{position:absolute;right:-1px;bottom:-1px;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#0095f6;color:#fff;border:2.5px solid #fff}
 .kf-st-ring.add i svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
@@ -9562,7 +9566,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const list=[...all.filter(x=>x.n).sort((a,b)=>b.at-a.at),...all.filter(x=>!x.n).sort((a,b)=>b.at-a.at)].slice(0,24);
   const mineAt=by.get(m.id);
   if(!list.length&&!mineAt)return '';
-  return `<div class="kf-stories" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${mineAt?`<button type="button" class="kf-st ${only===m.id?'sel':''}" data-kf-only="${E(m.id)}" role="listitem"><span class="kf-st-ring">${av(m.id,m.name)}</span><small>내 게시물</small></button>`:''}${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'sel':''}" data-kf-only="${E(x.id)}" role="listitem" aria-label="${E(x.name)}${x.n?' · 새 게시물':''}"><span class="kf-st-ring ${x.n?'new':''}">${av(x.id,x.name)}</span><small>${E(x.name)}</small></button>`).join('')}</div>`}
+  return `<div class="kf-stories ${only?'filtering':''}" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${mineAt?`<button type="button" class="kf-st ${only===m.id?'kf-on':''}" data-kf-only="${E(m.id)}" role="listitem"><span class="kf-st-ring">${av(m.id,m.name)}</span><small>내 게시물</small></button>`:''}${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'kf-on':''}" data-kf-only="${E(x.id)}" role="listitem" aria-label="${E(x.name)}${x.n?' · 새 게시물':''}"><span class="kf-st-ring ${x.n?'new':''}">${av(x.id,x.name)}</span><small>${E(x.name)}</small></button>`).join('')}</div>`}
  function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const items=only?S.items.filter(p=>p.owner===only):S.items,who=only&&S.items.find(p=>p.owner===only);
   const list=items.length?items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   b.innerHTML=`<div class="kf"><div class="kf-head"><h1>피드</h1><div class="kf-hbtns"><button type="button" class="kf-new kf-bell ${S.notify===false?'off':''}" data-kf-bell aria-pressed="${S.notify!==false}" aria-label="피드 알림 ${S.notify===false?'꺼짐':'켜짐'}" title="내 게시물 좋아요 · 댓글 알림 ${S.notify===false?'꺼짐':'켜짐'}">${S.notify===false?IC.belloff:IC.bell}</button><button type="button" class="kf-new" data-kf-new aria-label="새 게시물">${IC.newpost}</button></div></div>
@@ -9570,7 +9574,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
    ${S.err?`<div class="kf-err">${E(S.err)} <button type="button" class="sm" data-kf-retry>다시 시도</button></div>`:''}
    <div class="kf-list">${list}</div>${S.cursor&&!only?'<button type="button" class="kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>`;
   b.querySelector('[data-kf-bell]')?.addEventListener('click',async e=>{const btn=e.currentTarget,on=S.notify===false;btn.disabled=true;try{const r=await api({action:'feedPref',enabled:on});S.notify=r.enabled;paint();toast(r.enabled?'피드 알림을 켰어요 · 내 게시물에 좋아요·댓글이 오면 알려 드려요':'피드 알림을 껐어요')}catch(err){btn.disabled=false;toast(err.message||'바꾸지 못했어요')}});
-  bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{const o=x.dataset.kfOnly;only=only===o?'':o;if(o&&only)markSeen(o,latestOf(o));paint();window.scrollTo({top:0})});
+  bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{const o=x.dataset.kfOnly;only=only===o?'':o;if(o&&only)markSeen(o,latestOf(o));paint();window.scrollTo({top:0});const sel=document.querySelector('.kf-st.kf-on'),bar=document.querySelector('.kf-stories');if(sel&&bar)bar.scrollTo({left:Math.max(0,sel.offsetLeft-bar.clientWidth/2+sel.clientWidth/2),behavior:'smooth'})});
   profiles([me().id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
  function find(id){return S.items.find(p=>p.id===id)}
  function repaintCard(id){const p=find(id),el=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"]`);if(!p||!el)return paint();const imgs=S.imgs.get(id);const t=document.createElement('div');t.innerHTML=card(p);const n=t.firstElementChild;
