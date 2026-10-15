@@ -325,3 +325,13 @@ test('chat read receipts: two readers keep both marks (merged write)',async()=>{
  await f.run(f.outsider,{action:'chat',room:'all'});await f.run(f.user,{action:'chat',room:'all'});
  const r=await f.run(f.outsider,{action:'chat',room:'all'});assert.ok(r.seen[f.user.id]>0&&r.seen[f.outsider.id]>0);
 });
+
+test('feed tags: tagged members get notified on post, new tags on edit, and in comments',async()=>{
+ const f=fixture();const tagName=f.outsider.name;
+ const p=await f.run(f.user,{action:'feedPost',id:'feedreq_tag001',text:'@'+tagName+' 같이 찍은 사진',images:[]});
+ let last=f.pushed.at(-1);assert.equal(last.recipients[0].id,f.outsider.id);assert.match(last.note.title,/태그/);
+ const n=f.pushed.length;await f.run(f.user,{action:'feedEdit',id:p.item.id,text:'@'+tagName+' 고침'});assert.equal(f.pushed.length,n);
+ await f.run(f.user,{action:'feedEdit',id:p.item.id,text:'@'+tagName+' @관리계정 고침'});assert.equal(f.pushed.length,n);
+ await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_tag001',text:'@'+f.user.name+' 좋아요'});
+ const notes=f.pushed.slice(n).map(x=>[x.recipients[0].id,x.note.title]);assert.equal(notes.filter(x=>x[0]===f.user.id).length,1);
+});

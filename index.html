@@ -9587,6 +9587,15 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf-sheet .kf-c div p{margin:0}.kf-sheet .kf-ch{display:flex;align-items:baseline;gap:7px;line-height:1.3}.kf-sheet .kf-ch b{font-size:12.5px;margin:0}.kf-sheet .kf-ch small{display:inline;margin:0;font-size:11.5px}
 .kf-sheet .kf-ch .kf-cdel{margin-left:auto;padding:0 2px}.kf-sheet .kf-ct{margin-top:2px!important;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .kf-cnone{display:flex;flex-direction:column;gap:4px;padding:34px 0!important}.kf-cnone b{font-size:15px;color:#1f1a16}
+.kf-tag{font-weight:700;color:#00376b}
+.kf-art .kf-tag{color:inherit;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.kf-mirror{position:absolute;pointer-events:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;color:#1f1a16;border-style:solid;border-color:transparent;background:transparent!important;z-index:3}
+.kf-mirror.one{white-space:pre;overflow-wrap:normal;word-break:normal;display:flex;align-items:center}
+.kf-mirror .kf-ttok{color:#00376b;-webkit-text-stroke:.45px currentColor;background:rgba(0,149,246,.1);border-radius:4px}
+textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color:transparent!important;caret-color:#1f1a16;position:relative;z-index:1}
+.kf-tagpop{position:fixed;z-index:9400;min-width:150px;max-width:220px;padding:4px;border-radius:12px;background:rgba(255,253,250,.98);border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 28px -10px rgba(40,25,10,.35)}
+.kf-tagpop button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:7px 8px;border-radius:9px;font:inherit;font-size:13.5px;color:#1f1a16;text-align:left;cursor:pointer}
+.kf-tagpop button.on,.kf-tagpop button:hover{background:#f2ebe2}.kf-tagpop span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#efe3d3;color:#8a5a2b;font-size:11px;font-weight:700}
 </style>
 <script id="kz-feed">/* ===== 피드: 사진·글을 올리고 좋아요·댓글 (인스타처럼) · 홈 배열은 그대로 두고 메뉴에만 추가 ===== */
 (function(){
@@ -9606,6 +9615,37 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const PROF=new Map();
  const ago=t=>{const s=(Date.now()-t)/1000;if(s<60)return'방금';if(s<3600)return Math.floor(s/60)+'분 전';if(s<86400)return Math.floor(s/3600)+'시간 전';if(s<7*86400)return Math.floor(s/86400)+'일 전';const d=new Date(t),n=new Date();return (d.getFullYear()!==n.getFullYear()?d.getFullYear()+'년 ':'')+(d.getMonth()+1)+'월 '+d.getDate()+'일'};
  const rid=p=>p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+ /* ===== 태그(@이름): 입력할 때는 이름만 진하게, 보낼 때 @이름으로 ===== */
+ const TM='⁣',wire=v=>String(v||'').replace(/⁣([^⁣]*)⁣/g,'@$1').replace(/⁣/g,'');
+ let NAMES=null;async function names(){if(NAMES)return NAMES;try{const r=await api({action:'members'});NAMES=[...new Set((r.items||[]).map(x=>x.name).filter(n=>n&&n!=='관리계정'))]}catch(e){NAMES=[]}return NAMES}
+ const known=n=>!!NAMES&&NAMES.includes(n);
+ function tagHTML(text){let h=E(text);if(!NAMES||!NAMES.length||h.indexOf('@')<0)return h;const re=new RegExp('(^|\\s)@('+NAMES.map(n=>E(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).sort((a,b)=>b.length-a.length).join('|')+')(?![가-힣A-Za-z0-9])','g');return h.replace(re,(all,sp,n)=>`${sp}<b class="kf-tag">${n}</b>`)}
+ function tagify(el){if(!el||el._tag)return;el._tag=1;names();let pop=null,list=[],idx=0,q=null;const single=el.tagName==='INPUT';
+  const close=()=>{if(pop){pop.remove();pop=null}q=null};
+  const mirror=()=>{let m=el._mir;if(!el.value.includes(TM)){if(m){m.remove();el._mir=null}el.classList.remove('kf-ttx');return}
+   if(!m){m=document.createElement('div');m.className='kf-mirror'+(single?' one':'');m.setAttribute('aria-hidden','true');el.parentElement.style.position='relative';el.parentElement.insertBefore(m,el);el._mir=m}
+   const cs=getComputedStyle(el);['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth','boxSizing','textIndent'].forEach(k=>m.style[k]=cs[k]);
+   m.style.left=el.offsetLeft+'px';m.style.top=el.offsetTop+'px';m.style.width=el.offsetWidth+'px';m.style.height=el.offsetHeight+'px';
+   m.innerHTML=E(el.value).replace(/⁣([^⁣]*)⁣/g,(a2,n)=>`<b class="kf-ttok">${n}</b>`).replace(/⁣/g,'')+(single?'':'\n');m.scrollTop=el.scrollTop;m.scrollLeft=el.scrollLeft;el.classList.add('kf-ttx')};
+  const pick=name=>{if(q==null)return;const v=el.value,end=el.selectionStart,start=end-q.length-1,tok=TM+name+TM;el.value=v.slice(0,start)+tok+' '+v.slice(end);const c=start+tok.length+1;el.setSelectionRange(c,c);close();el.dispatchEvent(new Event('input',{bubbles:true}));el.focus()};
+  const paint=()=>{if(!list.length)return close();if(!pop){pop=document.createElement('div');pop.className='kf-tagpop';document.body.append(pop)}
+   pop.innerHTML=list.map((n,i)=>`<button type="button" class="${i===idx?'on':''}" data-n="${E(n)}"><span>${E(n.slice(0,1))}</span>${E(n)}</button>`).join('');
+   pop.querySelectorAll('button').forEach(b=>b.onpointerdown=e=>{e.preventDefault();pick(b.dataset.n)});
+   const r=el.getBoundingClientRect(),h=pop.offsetHeight;pop.style.left=Math.max(8,Math.min(innerWidth-pop.offsetWidth-8,r.left))+'px';pop.style.top=(r.top-h-6>8?r.top-h-6:r.bottom+6)+'px'};
+  const check=async()=>{const v=el.value.slice(0,el.selectionStart),m=v.match(/(^|\s)@([^\s@⁣]{0,12})$/);if(!m)return close();q=m[2];const all=(await names()).filter(n=>n!==me().name),ql=q.toLowerCase();
+   list=all.filter(n=>!ql||n.toLowerCase().includes(ql)).sort((a,b)=>(b.toLowerCase().startsWith(ql))-(a.toLowerCase().startsWith(ql))).slice(0,6);idx=0;paint()};
+  const tidy=()=>{if(el._composing)return;const v=el.value;let caret=el.selectionStart,w=v;const before=v.slice(0,caret),m=before.match(/(^|\s)@([^\s@⁣]{1,20})(\s)$/);
+   if(m&&known(m[2])){const st=before.length-m[2].length-2,tok=TM+m[2]+TM;w=v.slice(0,st)+tok+m[3]+v.slice(caret);caret=st+tok.length+1}
+   const keep=new Set(),re=/⁣([^⁣]*)⁣/g;let mm;while((mm=re.exec(w))){if(known(mm[1])){keep.add(mm.index);keep.add(mm.index+mm[0].length-1)}}
+   let res='',c2=caret;for(let k=0;k<w.length;k++){if(w[k]===TM&&!keep.has(k)){if(k<caret)c2--;continue}res+=w[k]}
+   if(res!==v){el.value=res;const c=Math.max(0,Math.min(res.length,c2));el.setSelectionRange(c,c)}mirror()};
+  el.addEventListener('compositionstart',()=>{el._composing=true});el.addEventListener('compositionend',()=>{el._composing=false;setTimeout(()=>{tidy();check()},0)});
+  el.addEventListener('input',()=>{tidy();check()});el.addEventListener('click',check);el.addEventListener('blur',()=>setTimeout(close,150));
+  el.addEventListener('scroll',()=>{if(el._mir){el._mir.scrollTop=el.scrollTop;el._mir.scrollLeft=el.scrollLeft}});el.addEventListener('keyup',()=>{if(el._mir)el._mir.scrollLeft=el.scrollLeft});
+  el.addEventListener('keydown',e=>{if(pop&&!e.isComposing){if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();idx=(idx+(e.key==='ArrowDown'?1:list.length-1))%list.length;return paint()}if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();return pick(list[idx])}if(e.key==='Escape'){e.preventDefault();return close()}}
+   if(e.key==='Backspace'&&!e.isComposing&&el.selectionStart===el.selectionEnd){const c=el.selectionStart,v=el.value;if(v[c-1]===TM){const st=v.lastIndexOf(TM,c-2);if(st>=0){e.preventDefault();el.value=v.slice(0,st)+v.slice(c);el.setSelectionRange(st,st);el.dispatchEvent(new Event('input',{bubbles:true}))}}}},true);
+  if(typeof ResizeObserver==='function')new ResizeObserver(mirror).observe(el);el._tagMirror=mirror;setTimeout(mirror,0)}
+ const toTokens=v=>{if(!NAMES)return v;const re=new RegExp('(^|\\s)@('+NAMES.map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?![가-힣A-Za-z0-9])','g');return String(v||'').replace(re,(a,sp,n)=>sp+TM+n+TM)};
  const av=(id,name)=>{const i=String(name||'?').trim().slice(0,1)||'?',p=PROF.get(id);return `<span class="kf-av" data-kf-pid="${E(id)}" data-initial="${E(i)}">${p&&p.photo?`<img alt="" src="${E(p.photo)}">`:E(i)}</span>`};
  async function profiles(ids){ids=[...new Set(ids.filter(Boolean))].filter(id=>!PROF.has(id)).slice(0,30);if(!ids.length)return;ids.forEach(id=>PROF.set(id,{photo:''}));
   try{const r=await api({action:'profiles',ids});for(const p of r.profiles||[])PROF.set(p.id,{photo:p.photo||''});document.querySelectorAll('[data-kf-pid]').forEach(el=>{const p=PROF.get(el.dataset.kfPid);if(p&&p.photo&&!el.querySelector('img'))el.innerHTML=`<img alt="" src="${E(p.photo)}">`})}catch(e){}}
@@ -9617,9 +9657,9 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  function card(p){const n=p.imageCount,art=textArt(p),long=!art&&((p.text||'').length>110||(p.text||'').split('\n').length>3);
   const h=[...String(p.id)].reduce((a,c)=>a+c.charCodeAt(0),0),pal=PAL[h%PAL.length];
   const media=n?`<div class="kf-media"><div class="kf-track">${Array.from({length:n},(_,i)=>`<div class="kf-slide wait" data-i="${i}"></div>`).join('')}</div>${n>1?`<span class="kf-count">1/${n}</span>`:''}<div class="kf-burst">${IC.heart}</div></div>`
-   :art?`<div class="kf-media kf-art" style="--a:${pal[0]};--b:${pal[1]}"><p>${E(p.text)}</p><div class="kf-burst">${IC.heart}</div></div>`:'';
+   :art?`<div class="kf-media kf-art" style="--a:${pal[0]};--b:${pal[1]}"><p>${tagHTML(p.text)}</p><div class="kf-burst">${IC.heart}</div></div>`:'';
   const pips=n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'';
-  const cap=p.text&&!art?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${E(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}`:'';
+  const cap=p.text&&!art?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${tagHTML(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}`:'';
   const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b> ${E(c.text)}</div>`).join('');
   return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring ${fresh(p.owner)?'':'seen'}">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
    ${media}<div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글 ${p.commentCount}개">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button>${pips}</div>
@@ -9674,25 +9714,25 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const sb=o.querySelector('.kf-sb'),f=o.querySelector('.kf-sf'),ta=f.querySelector('textarea'),bt=f.querySelector('button');let items=[];
   const can=c=>c.mine||p.mine||p.canDelete&&!p.mine;
   const draw=()=>{
-   sb.innerHTML=items.length?items.map(c=>`<div class="kf-c" data-cid="${E(c.id)}">${av(c.owner,c.name)}<div><p class="kf-ch"><b>${E(c.name)}</b><small>${ago(c.createdAt)}</small>${can(c)&&!String(c.id).startsWith('tmp_')?`<button type="button" class="kf-cdel" data-cdel="${E(c.id)}">삭제</button>`:''}</p><p class="kf-ct">${E(c.text)}</p></div></div>`).join(''):'<div class="kf-none kf-cnone"><b>아직 댓글이 없어요</b>첫 댓글을 남겨 보세요</div>';
+   sb.innerHTML=items.length?items.map(c=>`<div class="kf-c" data-cid="${E(c.id)}">${av(c.owner,c.name)}<div><p class="kf-ch"><b>${E(c.name)}</b><small>${ago(c.createdAt)}</small>${can(c)&&!String(c.id).startsWith('tmp_')?`<button type="button" class="kf-cdel" data-cdel="${E(c.id)}">삭제</button>`:''}</p><p class="kf-ct">${tagHTML(c.text)}</p></div></div>`).join(''):'<div class="kf-none kf-cnone"><b>아직 댓글이 없어요</b>첫 댓글을 남겨 보세요</div>';
    sb.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(!confirm('이 댓글을 지울까요?'))return;b.disabled=true;try{const r=await api({action:'feedCommentDelete',id,cid:b.dataset.cdel});items=items.filter(c=>c.id!==b.dataset.cdel);p.commentCount=r.commentCount;if(r.recent)p.recent=r.recent;draw();repaintCard(id)}catch(e){b.disabled=false;toast(e.message||'지우지 못했어요')}});
    profiles([p.owner,...items.map(c=>c.owner)]);sb.scrollTop=sb.scrollHeight};
-  ta.oninput=()=>{bt.disabled=!ta.value.trim();ta.style.height='auto';ta.style.height=Math.min(120,ta.scrollHeight)+'px'};
+  tagify(ta);ta.addEventListener('input',()=>{bt.disabled=!ta.value.trim();ta.style.height='auto';ta.style.height=Math.min(120,ta.scrollHeight)+'px'});
   ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229&&matchMedia('(min-width:821px)').matches){e.preventDefault();f.requestSubmit()}};
   bt.addEventListener('mousedown',e=>e.preventDefault());
-  f.onsubmit=async e=>{e.preventDefault();const t=ta.value.trim();if(!t)return;ta.value='';bt.disabled=true;ta.style.height='auto';const tmp={id:'tmp_'+Date.now(),owner:me().id,name:me().name,text:t,createdAt:Date.now(),mine:true};items.push(tmp);draw();
+  f.onsubmit=async e=>{e.preventDefault();const t=wire(ta.value).trim();if(!t)return;ta.value='';ta._tagMirror&&ta._tagMirror();bt.disabled=true;ta.style.height='auto';const tmp={id:'tmp_'+Date.now(),owner:me().id,name:me().name,text:t,createdAt:Date.now(),mine:true};items.push(tmp);draw();
    try{const c=await addComment(id,t,null);items=items.map(x=>x===tmp?c:x);draw()}catch(err){items=items.filter(x=>x!==tmp);draw();ta.value=t;bt.disabled=false}};
   try{const r=await api({action:'feedComments',id});items=r.items||[];draw()}catch(e){sb.innerHTML=`<div class="kf-none">${E(e.message||'불러오지 못했어요')}</div>`}
   setTimeout(()=>ta.focus(),60)}
  function likers(id){const p=find(id);if(!p)return;sheet('좋아요',`<div class="kf-likers">${(p.likers||[]).map(n=>`<div>${E(n)}</div>`).join('')||'<div class="kf-none">아직 없어요</div>'}</div>`)}
  function menu(id){const p=find(id);if(!p)return;const o=sheet('게시물',`<div class="kf-menu">${p.mine?'<button type="button" data-m="edit">글 고치기</button>':''}${p.canDelete?'<button type="button" class="bad" data-m="del">삭제</button>':''}<button type="button" data-m="x">취소</button></div>`);
   o.querySelectorAll('[data-m]').forEach(b=>b.onclick=async()=>{const m=b.dataset.m;if(m==='x')return close();if(m==='edit'){close();return write(p)}if(m==='del'){if(!confirm(p.mine?'이 게시물을 지울까요? 댓글도 함께 지워져요.':'다른 사람의 게시물이에요. 관리자 권한으로 지울까요?'))return;b.disabled=true;try{await api({action:'feedDelete',id});S.items=S.items.filter(x=>x.id!==id);S.imgs.delete(id);close();paint();toast('게시물을 지웠어요')}catch(e){b.disabled=false;toast(e.message||'지우지 못했어요')}}})}
- function write(edit){const o=sheet(edit?'글 고치기':'새 게시물',`<div class="kf-w"><textarea maxlength="2000" placeholder="${edit?'':'어떤 순간이었나요? (사진만 올려도 돼요)'}" aria-label="내용">${edit?E(edit.text):''}</textarea><div class="kf-wn"><span>${edit?'사진은 바꿀 수 없어요':'사진은 최대 3장 · 자동으로 줄여서 올려요'}</span><span data-n>0/2000</span></div>${edit?'':'<div class="kf-wa"></div>'}</div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>${edit?'저장':'공유하기'}</button></div>`);
-  const ta=o.querySelector('textarea'),n=o.querySelector('[data-n]'),go=o.querySelector('[data-go]'),wa=o.querySelector('.kf-wa');let imgs=[];
+ function write(edit){const o=sheet(edit?'글 고치기':'새 게시물',`<div class="kf-w"><textarea maxlength="2000" placeholder="${edit?'':'어떤 순간이었나요? @이름으로 함께한 사람을 태그할 수 있어요'}" aria-label="내용">${edit?E(edit.text):''}</textarea><div class="kf-wn"><span>${edit?'사진은 바꿀 수 없어요':'사진은 최대 3장 · 자동으로 줄여서 올려요'}</span><span data-n>0/2000</span></div>${edit?'':'<div class="kf-wa"></div>'}</div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>${edit?'저장':'공유하기'}</button></div>`);
+  const ta=o.querySelector('textarea'),n=o.querySelector('[data-n]'),go=o.querySelector('[data-go]'),wa=o.querySelector('.kf-wa');let imgs=[];tagify(ta);if(edit){names().then(()=>{ta.value=toTokens(edit.text||'');ta._tagMirror&&ta._tagMirror()})}
   if(wa&&window.KZImages){KZImages.mount(wa,[],a=>{imgs=a;upd()});}
-  const upd=()=>{n.textContent=ta.value.length+'/2000';go.disabled=!(ta.value.trim()||imgs.length||(edit&&(edit.imageCount)))};ta.oninput=upd;upd();setTimeout(()=>ta.focus(),60);
+  const upd=()=>{n.textContent=wire(ta.value).length+'/2000';go.disabled=!(ta.value.trim()||imgs.length||(edit&&(edit.imageCount)))};ta.oninput=upd;upd();setTimeout(()=>ta.focus(),60);
   const reqId=rid('p');
-  go.onclick=async()=>{if(wa&&KZImages.busy(wa))return toast('사진을 준비하고 있어요');const text=ta.value.trim();go.disabled=true;go.textContent=edit?'저장 중…':'올리는 중…';
+  go.onclick=async()=>{if(wa&&KZImages.busy(wa))return toast('사진을 준비하고 있어요');const text=wire(ta.value).trim();go.disabled=true;go.textContent=edit?'저장 중…':'올리는 중…';
    try{if(edit){const r=await api({action:'feedEdit',id:edit.id,text});Object.assign(edit,r.item);close();repaintCard(edit.id);toast('고쳤어요')}
     else{const images=wa?KZImages.get(wa):[];const r=await api({action:'feedPost',id:reqId,text,images});if(images.length)S.imgs.set(r.item.id,images);S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];close();paint();window.scrollTo({top:0,behavior:'smooth'});toast('올렸어요')}}
    catch(e){go.disabled=false;go.textContent=edit?'저장':'공유하기';toast(e.message||'올리지 못했어요')}}}
@@ -9702,7 +9742,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   c.querySelector('[data-kf-likers]')?.addEventListener('click',()=>likers(id));
   c.querySelector('[data-kf-menu]')?.addEventListener('click',()=>menu(id));
   c.querySelector('[data-kf-moretxt]')?.addEventListener('click',e=>{c.querySelector('.kf-cap')?.classList.remove('clamp');e.currentTarget.remove()});
-  const f=c.querySelector('[data-kf-add]');if(f){const i=f.querySelector('input'),b=f.querySelector('button');i.oninput=()=>{b.disabled=!i.value.trim()};b.addEventListener('mousedown',e=>e.preventDefault());f.onsubmit=e=>{e.preventDefault();addComment(id,i.value.trim(),i).catch(()=>{})}}
+  const f=c.querySelector('[data-kf-add]');if(f){const i=f.querySelector('input'),b=f.querySelector('button');tagify(i);i.oninput=()=>{b.disabled=!i.value.trim()};b.addEventListener('mousedown',e=>e.preventDefault());f.onsubmit=e=>{e.preventDefault();addComment(id,wire(i.value).trim(),i).catch(()=>{});setTimeout(()=>i._tagMirror&&i._tagMirror(),0)}}
   const art=c.querySelector('.kf-art');if(art){let last=0;art.addEventListener('click',()=>{const now=Date.now();if(now-last<320){last=0;like(id,true,true)}else last=now})}
   const m=c.querySelector('.kf-media:not(.kf-art)');if(m){const tr=m.querySelector('.kf-track'),cnt=m.querySelector('.kf-count'),pips=c.querySelectorAll('.kf-pips i');
    tr.addEventListener('scroll',()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(cnt)cnt.textContent=(k+1)+'/'+tr.children.length;pips.forEach((x,j)=>x.classList.toggle('on',j===k))},{passive:true});
@@ -9712,6 +9752,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   b.querySelector('[data-kf-older]')?.addEventListener('click',async e=>{e.currentTarget.disabled=true;try{const r=await api({action:'feedList',cursor:S.cursor});S.items=[...S.items,...r.items.filter(x=>!find(x.id))];S.cursor=r.cursor;paint()}catch(err){toast(err.message||'불러오지 못했어요');e.currentTarget.disabled=false}});
   b.querySelectorAll('.kf-card').forEach(bindCard)}
  async function load(force){if(S.loading)return;if(!force&&Date.now()-S.at<8000&&S.loaded)return paint();S.loading=true;S.err='';
+  names().then(()=>{if(view==='feed'&&!S.painted){S.painted=1;const y=window.scrollY;paint();window.scrollTo(0,y)}});
   try{const r=await api({action:'feedList'});if(typeof r.notify==='boolean')S.notify=r.notify;const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
   S.loading=false;if(view==='feed'){const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.kf-card');if(typing&&!force)return;const y=window.scrollY;paint();window.scrollTo(0,y)}}
  /* 화면 연결: 홈은 건드리지 않고 메뉴에만 '피드' */
@@ -9728,9 +9769,9 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 })();</script>
 <style id="kz-chat-read-css">
 #kcPanel .kc-compose{position:relative}
-#kcPanel .kc-mirror{position:absolute;pointer-events:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;color:var(--tx,#2a1f17);border-style:solid;border-color:transparent;background:transparent;z-index:0}
+#kcPanel .kc-mirror{position:absolute;pointer-events:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;color:var(--tx,#2a1f17);border-style:solid;border-color:transparent;background:transparent!important;z-index:3}
 #kcPanel .kc-mirror .kc-mtok{font-weight:inherit;color:#8a4b14;-webkit-text-stroke:.45px currentColor;background:rgba(214,162,0,.14);border-radius:4px;box-shadow:0 0 0 1px rgba(214,162,0,.14)}
-#kcPanel textarea.kc-mtx{color:transparent!important;-webkit-text-fill-color:transparent!important;caret-color:var(--tx,#2a1f17);position:relative;z-index:1;background:transparent!important}
+#kcPanel textarea.kc-mtx{color:transparent!important;-webkit-text-fill-color:transparent!important;caret-color:var(--tx,#2a1f17);position:relative;z-index:1}
 
 #kcPanel .kc-bubble b.kc-mention{font-weight:800;background:none!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;color:inherit}
 #kcPanel .kc-message.other .kc-bubble b.kc-mention{color:#8a4b14}
