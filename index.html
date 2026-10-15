@@ -8947,7 +8947,14 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const md=d=>{const x=new Date(d+'T12:00:00');return (x.getMonth()+1)+'월 '+x.getDate()+'일'};
  const QUICK=['새생명초청주일','성탄예배','연합예배','수련회','부활절 연합예배'];
- async function save(days,msg){try{const a=me();await db.doc('settings/noService').set({days,up:Date.now(),by:a?a.name||'':''});toast(msg)}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
+ /* 순서가 밀리면 그 뒤 날짜의 교환·대신 기록이 '원래 설 사람' 기준이라 어긋남 → 새로 배정된 사람으로 옮겨서, 그날 실제로 서는 사람은 그대로 */
+ function affected(next){const prev=noSvc,out=[],ns=nextSun();const sg=d=>{const[f,p]=singParts(d);return new Set([...(f||[]),...(p?[p]:[])])};
+  try{for(const o of (ovr||[])){if(!o||!o.date||o.date<ns||next[o.date])continue;
+   if(o.k==='L'){noSvc=prev;const b0=ldrBase(o.date);noSvc=next;const b1=ldrBase(o.date);if(o.from===b0&&b1&&b1!==b0)out.push({o,from:b1})}
+   else if(!o.k){noSvc=prev;const a0=sg(o.date);noSvc=next;const a1=sg(o.date);if(a0.has(o.from)&&!a1.has(o.from)){const nw=[...a1].filter(n=>!a0.has(n));if(nw.length===1)out.push({o,from:nw[0]})}}}}finally{noSvc=prev}return out}
+ async function save(days,msg){try{const fix=affected(days),a=me();await db.doc('settings/noService').set({days,up:Date.now(),by:a?a.name||'':''});
+   for(const x of fix){try{await db.doc('overrides/'+x.o._id).set({from:x.from},{merge:true})}catch(e){console.warn(e)}}
+   toast(msg+(fix.length?` · 교환·대신 ${fix.length}건도 같이 맞췄어요`:''))}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
  function panel(){const ns=nextSun(),up=Object.keys(noSvc||{}).filter(d=>d>=ns).sort(),ed=canNs();
   if(!ed&&!up.length)return '';
   const opts=Array.from({length:60},(_,i)=>shiftDate(ns,i*7)).filter(d=>!isNoSvc(d));
@@ -8956,7 +8963,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   ${ed?`<div class="nsv-f"><select id="nsvD">${opts.map(d=>`<option value="${d}">${md(d)}${d===ns?' (이번 주)':''}</option>`).join('')}</select><input id="nsvW" maxlength="30" placeholder="사유 (예: 새생명초청주일)" autocomplete="off"><button type="button" class="btn" id="nsvAdd">예배 없음 등록</button></div><div class="nsv-q">${QUICK.map(q=>`<button type="button" data-nsv-q="${E(q)}">${E(q)}</button>`).join('')}</div>`:''}</section>`}
  function bind(root){if(!root)return;root.querySelectorAll('[data-nsv-q]').forEach(b=>b.onclick=()=>{const i=root.querySelector('#nsvW');if(i){i.value=b.dataset.nsvQ;i.focus()}});
   const add=root.querySelector('#nsvAdd');if(add)add.onclick=async()=>{const d=root.querySelector('#nsvD').value,w=root.querySelector('#nsvW').value.trim();if(!d)return;
-   if(!confirm(`${md(d)}을 '예배 없음'으로 등록할까요?\n\n그 주는 아무도 배정되지 않고, 인도자·싱어·PPT 담당 순서가 그 뒤로 한 주씩 밀려요.`))return;add.disabled=true;await save({...noSvc,[d]:w||'청년부 예배 없음'},`${md(d)} 예배 없음으로 등록했어요 · 순서를 한 주씩 미뤘어요`)};
+   const fx=affected({...noSvc,[d]:w||'x'});if(!confirm(`${md(d)}을 '예배 없음'으로 등록할까요?\n\n그 주는 아무도 배정되지 않고, 인도자·싱어·PPT 담당 순서가 그 뒤로 한 주씩 밀려요.${fx.length?`\n\n그 뒤에 잡힌 교환·대신 서기 ${fx.length}건은 그날 서는 사람이 그대로 유지되도록 같이 맞춰요.`:''}`))return;add.disabled=true;await save({...noSvc,[d]:w||'청년부 예배 없음'},`${md(d)} 예배 없음으로 등록했어요 · 순서를 한 주씩 미뤘어요`)};
   root.querySelectorAll('[data-nsv-x]').forEach(b=>b.onclick=async()=>{const d=b.dataset.nsvX;if(!confirm(`${md(d)} '예배 없음'을 취소할까요? 순서가 다시 원래대로 돌아가요.`))return;const n={...noSvc};delete n[d];await save(n,`${md(d)} 예배 없음을 취소했어요`)})}
  window.kzNoSvcPanel=panel;
  /* 공지·일정 > 일정 탭 */
