@@ -37,6 +37,19 @@ const seed = () => ({
 });
 const tests = [];
 const t = (n, f) => tests.push([n, f]);
+t('단장 can list pending, approve (with 겸직), and delete only pending requests', async () => {
+  const db = fakeDb({...seed(), 'accounts/c1': {id: 'c1', name: '단장님', rank: '단장', status: 'approved'}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  const CH = {id: 'c1', rank: '단장', name: '단장님', status: 'approved'};
+  const p = await s.run(CH, {action: 'pending'});assert.deepEqual(p.accounts.filter(x => x.status === 'pending').map(x => x.id), ['u2']);
+  await assert.rejects(s.run(CH, {action: 'list'}), {status: 403});
+  await assert.rejects(s.run(CH, {action: 'remove', id: 'u1'}), {status: 403});
+  await assert.rejects(s.run({...CH, rank: '인도자'}, {action: 'approve', id: 'u2'}), {status: 403});
+  await assert.rejects(s.run(CH, {action: 'approve', id: 'u2', rank: '단장'}), {status: 409});
+  const r2 = await s.run(CH, {action: 'approve', id: 'u2', rank: '팀원', parts: ['인도자', '싱어']});assert.deepEqual(r2.account.parts, ['싱어']);
+  const db2 = fakeDb(seed()), s2 = createAdminService({db: db2, auth: fakeAuth(), now: () => 9});
+  const r = await s2.run(ADMIN, {action: 'approve', id: 'u2', rank: '단장', parts: ['인도자', '선임싱어']});
+  assert.equal(r.account.rank, '단장');assert.deepEqual(r.account.parts.sort(), ['선임싱어', '싱어', '인도자'].sort());
+});
 t('signup birthday: pending or approved own account only, valid dates, keeps month-day for 꿈마당', async () => {
   const db = fakeDb({...seed(), 'accounts/p1': {name: '새친구', status: 'pending'}, 'accounts/x1': {name: '정지', status: 'suspended'}}), s = createAdminService({db, auth: fakeAuth(), now: () => Date.UTC(2026, 9, 15)});
   assert.deepEqual(await s.birthRun('p1', {birth: '1999-03-07'}), {ok: true});
