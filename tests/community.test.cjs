@@ -401,3 +401,8 @@ test('birthday post: auto-created once, cheers notify even when muted, locked fr
  const own=await f.run(f.outsider,{action:'feedList'});assert.equal(own.items.filter(x=>x.kind==='bday').length,0);assert.equal(own.bdayCards.length,1);assert.equal(own.bdayCards[0].commentCount,1);assert.equal(own.bdayCards[0].cheers.n,0);
  const cs=await f.run(f.outsider,{action:'feedComments',id:own.bdayCards[0].id});assert.equal(cs.items.length,1);
 });
+test('anonymous poll hides who voted',async()=>{
+ const f=fixture();const p=await f.run(f.user,{action:'feedPost',id:'feedreq_anon01',kind:'poll',q:'회식?',options:['고기','회'],anon:true});
+ assert.equal(p.item.poll.anon,true);const v=await f.run(f.outsider,{action:'feedVote',id:p.item.id,o:[0]});assert.equal(v.poll.options[0].n,1);assert.deepEqual(v.poll.options[0].who,[]);
+ const l=await f.run(f.user,{action:'feedList'});assert.deepEqual(l.items.find(x=>x.id===p.item.id).poll.options[0].who,[]);
+});

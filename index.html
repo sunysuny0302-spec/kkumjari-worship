@@ -4814,7 +4814,7 @@ const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);v===null?lo
 let role=LS('role'),view=LS('view')||'edit';if(!ROLES.some(r=>r[0]===role))role=null;view='home';
 let nv={};try{nv=JSON.parse(LS('nv')||'{}')}catch(e){}
 let openRole=null,openLead=null,closeT={};
-const LEADERS=['김태양','이찬양'];let lsMode='a',ldr=(['이찬양','김태양'].includes(LS('ldr'))?LS('ldr'):'이찬양'),ws={},sessAbs=[],mbSlots=[],members=[],mbF='전체',mbRoles=[],ovr=[],swMode='a',wm=null,wmDirty=false,okUntil=0,date=nextSun(),data={scores:[],ment:null},db=null,canEdit=false,unsub=null,unsubA=null,archive=[],lastKey=null,saveT=null,autoT=null;
+let LEADERS=['김태양','이찬양'];let lsMode='a',ldr=(LS('ldr')||'이찬양'),ws={},sessAbs=[],mbSlots=[],members=[],mbF='전체',mbRoles=[],ovr=[],swMode='a',wm=null,wmDirty=false,okUntil=0,date=nextSun(),data={scores:[],ment:null},db=null,canEdit=false,unsub=null,unsubA=null,archive=[],lastKey=null,saveT=null,autoT=null;
 let focusFree=false,pages=[],cur=0,mode='seq',armed=null,sel=null,zoom=1,color='#ef3038',size=Math.max(12,Math.min(70,+LS('mksz')||26)),saving=false,auto=LS('auto')!=='0',od=false,rmArm=false,presets=null,pedit=false,bord=true;
 const preKey=()=>'presetsL_'+ldr;
 function loadPresets(){let p=null;try{p=JSON.parse(LS(preKey()))}catch(e){}
@@ -5718,9 +5718,15 @@ $$('[data-lt]').forEach(b=>b.onclick=()=>go(b.dataset.lt))}
 
 /* ---------- 인도자 일정 (격주 교대) ---------- */
 const lsch={order:['김태양','이찬양'],every:1,anchor:'2026-10-04'};
-function ldrBase(d){if(isNoSvc(d))return '';const w=Math.round((new Date(d+'T12:00:00')-new Date(lsch.anchor+'T12:00:00'))/6048e5)-svcShift(lsch.anchor,d),n=lsch.order.length;return lsch.order[((Math.floor(w/lsch.every)%n)+n)%n]}
+/* 인도자 로테이션: settings/leaderRotation {periods:[{from:주일, order:[이름], every:주, anchor?}]} — from 주일부터 order 첫 사람이 인도(anchor가 있으면 그 날 기준). 그 전 날짜는 이전 설정 그대로 */
+let lrot=null;
+function ldrPeriod(d){const ps=lrot&&Array.isArray(lrot.periods)?lrot.periods.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.from)&&Array.isArray(x.order)&&x.order.length).sort((a,b)=>a.from<b.from?-1:1):[];let p=null;for(const x of ps)if(x.from<=d)p=x;return p?{order:p.order,every:Math.max(1,Math.min(8,p.every|0||1)),anchor:/^\d{4}-\d{2}-\d{2}$/.test(p.anchor||'')?p.anchor:p.from}:{order:lsch.order,every:lsch.every,anchor:lsch.anchor}}
+function ldrMembers(){return (typeof members!=='undefined'&&Array.isArray(members)?members:[]).filter(m=>m.rank==='인도자'||(m.rank==='단장'&&(m.parts||[]).includes('인도자'))).map(m=>m.name)}
+function kzLeaders(){const fm=ldrMembers(),cur=ldrPeriod(todayStr()).order;/* 지금 로테이션에 있는 사람은 그대로 두고, 멤버 명단의 새 인도자를 뒤에 추가 */return [...cur,...fm.filter(n=>!cur.includes(n))]}
+function kzLeadersRefresh(){const nl=kzLeaders();if(nl.join('|')!==LEADERS.join('|')){LEADERS=nl;if(!LEADERS.includes(ldr)&&LEADERS.length){ldr=LEADERS[0]}try{renderNav()}catch(e){}}}
+function ldrBase(d){if(isNoSvc(d))return '';const p=ldrPeriod(d),w=Math.round((new Date(d+'T12:00:00')-new Date(p.anchor+'T12:00:00'))/6048e5)-svcShift(p.anchor,d),n=p.order.length;if(!n)return '';return p.order[((Math.floor(w/p.every)%n)+n)%n]}
 function ldrOf(d){const b=ldrBase(d),c=ovr.find(x=>x.k==='L'&&x.date===d&&x.from===b);return c&&c.to?c.to:b}
-const ldrCls=n=>n==='김태양'?'lm':n==='이찬양'?'lf':'';
+const ldrCls=n=>{const i=LEADERS.indexOf(n);return i<0?'':['lm','lf','l3','l4'][i%4]};
 let lsM=null,lsSel=[],lsKind='swap',lsSub='';
 /* 대신 서기: 한 주일만 다른 사람이 인도 (다른 주는 그대로) */
 function lsSubBox(d,cur){const base=d?ldrBase(d):'',ms=(typeof members!=='undefined'?members:[]);
@@ -5743,7 +5749,7 @@ const[y0,m0]=lsM.split('-').map(Number),mm=[0,1,2,3,4,5].map(k=>{const t=new Dat
 const[d1,d2]=lsSel,ok=lsSel.length===2&&eff(d1)!==eff(d2);
 const pick=d=>d?`<div class="ls4-pk"><span>${fmtD(d)}</span><b><i class="ldot ${ldrCls(eff(d))}"></i>${esc(eff(d))}</b></div>`:`<div class="ls4-pk empty"><span>주일을 선택하세요</span></div>`;
 const sum=lsSel.length===2&&eff(d1)===eff(d2)?'<div class="ls4-warn">두 날짜의 인도자가 같아서 바꿀 필요가 없어요</div>':ok?`<div class="ls4-res">교환하면 <b>${fmtD(d1)}</b>은 ${esc(eff(d2))}, <b>${fmtD(d2)}</b>은 ${esc(eff(d1))}가 인도해요</div>`:'';
-$('#body').innerHTML=`<div class="wk ls4"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 일정</h1><div class="mu">주일별 인도자를 한눈에 보고, 두 주를 맞바꾸거나 한 주만 다른 사람이 대신 설 수 있어요</div></div><span class="sp"></span><span class="ls4-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span></div>
+$('#body').innerHTML=`<div class="wk ls4"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 일정</h1><div class="mu">주일별 인도자를 한눈에 보고, 두 주를 맞바꾸거나 한 주만 다른 사람이 대신 설 수 있어요</div></div><span class="sp"></span><span class="ls4-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span>${kzChgStaff()?'<button type="button" class="btn" id="lrot" style="margin-left:10px">로테이션 설정</button>':''}</div>
 <div class="ls4-main"><section class="ls4-cal"><div class="ls4-nav"><button type="button" class="hc-nav" id="lp" aria-label="이전">‹</button><b>${y0}년 ${m0}월 – ${last[0]!==y0?last[0]+'년 ':''}${last[1]}월</b><button type="button" class="hc-nav" id="ln" aria-label="다음">›</button><span class="sp"></span><button type="button" class="sm" id="ltd">이번 주로</button></div><div class="ls4-months">${mm.map(([y,m])=>month(y,m)).join('')}</div></section>
 <aside class="ls4-side"><div class="ls4-tabs" role="tablist" aria-label="인도 변경 방법"><button type="button" role="tab" aria-selected="${lsKind==='swap'}" class="${lsKind==='swap'?'on':''}" data-lsmode="swap">${V13I('swap')}<span><b>인도 교환</b><small>두 주를 맞바꿔요</small></span></button><button type="button" role="tab" aria-selected="${lsKind==='sub'}" class="${lsKind==='sub'?'on':''}" data-lsmode="sub">${V13I('leader')}<span><b>대신 서기</b><small>한 주만 다른 사람</small></span></button></div><section class="ls4-box">${lsKind==='sub'?lsSubBox(d1,d1?eff(d1):''):`<p class="mu">바꿀 두 주일을 달력에서 누르면 두 사람의 인도 주간이 한 번에 맞바뀌어요.</p><div class="ls4-pair">${pick(d1)}<span class="ls4-arr">⇅</span>${pick(d2)}</div>${sum}<div class="ls4-act"><button class="btn" id="lsb" ${ok?'':'disabled'}>교환 등록</button>${lsSel.length?'<button class="sm" id="lc">선택 해제</button>':''}</div>`}</section>
 <section class="ls4-box"><div class="ls4-bh">${V13I('list')}<b>변경 내역</b><span class="mu" style="margin-left:auto;font-size:12px">${groups.length?groups.length+'건':''}</span></div>${groups.length?groups.map(g=>`<div class="ls4-row"><i class="ls4-kind ${g[0].pair?'':'sub'}">${g[0].pair?'교환':'대신'}</i><div>${g.map(x=>`<div class="ls4-ch"><span>${fmtD(x.date)}</span><span>${esc(x.from)} → ${x.to?`<b>${esc(x.to)}</b>`:'<s>미정</s>'}</span></div>`).join('')}</div>${canSingerManage()||g.some(x=>x.from===me)?`<button class="sm" data-d="${g[0]._id}">취소</button>`:'<span class="mu">열람</span>'}</div>`).join(''):'<div class="ls4-empty">아직 변경 내역이 없어요</div>'}</section></aside></div></div>`;
@@ -6179,7 +6185,8 @@ unsubA=_canQ?db.collection('weeks').where(_FP.documentId(),'>=',_cut(12)).onSnap
 window.__kzWeeksFull=!_canQ;
 window.kzNeedFull=function(){if(!window.__kzWeeksFull){window.__kzWeeksFull=true;try{unsubA&&unsubA()}catch(e){}unsubA=db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e))}if(window.__kzLibLite)window.__kzLibFull&&window.__kzLibFull();if(window.__kzMinLite)window.__kzMinFull&&window.__kzMinFull()};
 db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;noSvc=d&&typeof d==='object'?{...d}:{};try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e));
-db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
+db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))body()}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
+db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('trash').onSnapshot(x=>{const lim=Date.now()-TRASH_DAYS*864e5;trash=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));purgeTrash();trash=trash.filter(t=>(t.deletedAt||0)>=lim);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if($('#side'))renderNav();if(view==='trash'&&$('#body'))trashView()},e=>console.error(e));
@@ -9710,7 +9717,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  const REACTS=['😂','🔥','👏','🙏','😍'];
  IC.smile='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.2c.9 1.3 2.1 2 3.5 2s2.6-.7 3.5-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/></svg>';
  function pollHTML(p){const q=p.poll,my=q.my||[],tot=q.total||0,mx=Math.max(1,...q.options.map(o=>o.n));
-  return `<div class="kf-media kf-poll"><div class="kf-pq"><span aria-hidden="true">📊</span><b>${E(q.q)}</b></div><div class="kf-popts">${q.options.map((o,k)=>{const pct=tot?Math.round(o.n/tot*100):0;return `<button type="button" class="kf-popt ${my.includes(k)?'on':''} ${o.n===mx&&o.n?'top':''}" data-kf-vote="${k}" aria-pressed="${my.includes(k)}" title="${E((o.who||[]).join(', '))}"><i style="width:${my.length?pct:0}%"></i><span class="kf-pck">${my.includes(k)?'✓':''}</span><span class="kf-pt">${E(o.t)}</span>${my.length?`<span class="kf-pn">${o.n}명 · ${pct}%</span>`:''}</button>`}).join('')}</div><div class="kf-pfoot"><span>${tot}명 참여${q.multi?' · 여러 개 고를 수 있어요':''}</span>${my.length?'<button type="button" data-kf-voters>누가 골랐는지 보기</button>':'<span>골라야 결과가 보여요</span>'}</div></div>`}
+  return `<div class="kf-media kf-poll"><div class="kf-pq"><span aria-hidden="true">📊</span><b>${E(q.q)}</b></div><div class="kf-popts">${q.options.map((o,k)=>{const pct=tot?Math.round(o.n/tot*100):0;return `<button type="button" class="kf-popt ${my.includes(k)?'on':''} ${o.n===mx&&o.n?'top':''}" data-kf-vote="${k}" aria-pressed="${my.includes(k)}" title="${q.anon?'':E((o.who||[]).join(', '))}"><i style="width:${my.length?pct:0}%"></i><span class="kf-pck">${my.includes(k)?'✓':''}</span><span class="kf-pt">${E(o.t)}</span>${my.length?`<span class="kf-pn">${o.n}명 · ${pct}%</span>`:''}</button>`}).join('')}</div><div class="kf-pfoot"><span>${q.anon?'🔒 익명 · ':''}${tot}명 참여${q.multi?' · 여러 개 고를 수 있어요':''}</span>${my.length?(q.anon?'<span>누가 골랐는지는 비공개</span>':'<button type="button" data-kf-voters>누가 골랐는지 보기</button>'):'<span>골라야 결과가 보여요</span>'}</div></div>`}
  const mdText=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||''));return m?(+m[2])+'월 '+(+m[3])+'일':''};
  function cheersHTML(p){const c=p.cheers||{n:0,who:[],ids:[]};if(!c.n)return '<p class="kf-bdc-none">아직 축하가 없어요 · 첫 축하를 보내 보세요</p>';
   const ids=c.ids||[],who=c.who||[];return `<div class="kf-bdc-ch" title="${E(who.join(', '))}"><span class="kf-bdc-av">${ids.slice(0,6).map((u,k)=>av(u,who[k]||'')).join('')}</span><span><b>${c.n}명</b>이 축하했어요${who.length?` · ${E(who.slice(0,3).join(', '))}${c.n>3?' 외':''}`:''}</span></div>`}
@@ -9839,13 +9846,13 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   const draw=()=>{const q=sr.value.trim();pk.innerHTML=ppl.filter(x=>!q||x.name.includes(q)).map(x=>`<button type="button" role="option" aria-selected="${x.id===to}" class="${x.id===to?'on':''}" data-id="${E(x.id)}">${av(x.id,x.name)}<span>${E(x.name)}</span></button>`).join('')||'<span class="kf-none">찾는 사람이 없어요</span>';pk.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{to=b.dataset.id;draw();upd();ta.focus()})};
   const upd=()=>{n.textContent=ta.value.length+'/500';go.disabled=!(to&&ta.value.trim())};sr.oninput=draw;ta.oninput=upd;draw();upd();profiles(ppl.map(x=>x.id));
   const reqId=rid('p');go.onclick=async()=>{go.disabled=true;go.textContent='보내는 중…';try{const r=await api({action:'feedPost',id:reqId,kind:'thanks',to,text:ta.value.trim()});S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];S.thanks[to]=(S.thanks[to]||0)+1;close();paint();window.scrollTo({top:0,behavior:'smooth'});toast('감사 카드를 보냈어요 💌')}catch(e){go.disabled=false;go.textContent='카드 보내기';toast(e.message||'보내지 못했어요')}}}
- function writePoll(){const o=sheet('새 게시물',`${modeTabs('poll')}<div class="kf-w kf-wp"><label class="kf-lab">질문</label><input type="text" class="kf-pqin" maxlength="120" placeholder="예) 이번 회식 메뉴는?" aria-label="투표 질문"><label class="kf-lab">선택지</label><div class="kf-pins"></div><button type="button" class="kf-padd">+ 선택지 추가</button><label class="kf-pmulti"><input type="checkbox"> 여러 개 고를 수 있게</label></div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>투표 올리기</button></div>`);
-  bindModes(o);const q=o.querySelector('.kf-pqin'),box=o.querySelector('.kf-pins'),add=o.querySelector('.kf-padd'),mu=o.querySelector('.kf-pmulti input'),go=o.querySelector('[data-go]');
+ function writePoll(){const o=sheet('새 게시물',`${modeTabs('poll')}<div class="kf-w kf-wp"><label class="kf-lab">질문</label><input type="text" class="kf-pqin" maxlength="120" placeholder="예) 이번 회식 메뉴는?" aria-label="투표 질문"><label class="kf-lab">선택지</label><div class="kf-pins"></div><button type="button" class="kf-padd">+ 선택지 추가</button><div class="kf-popts2"><label class="kf-pmulti"><input type="checkbox" data-multi> 여러 개 고를 수 있게</label><label class="kf-pmulti"><input type="checkbox" data-anon> 익명 투표</label></div><p class="kf-panon-note" hidden>누가 무엇을 골랐는지 아무도 볼 수 없어요 (올린 사람도요)</p></div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>투표 올리기</button></div>`);
+  bindModes(o);const q=o.querySelector('.kf-pqin'),box=o.querySelector('.kf-pins'),add=o.querySelector('.kf-padd'),mu=o.querySelector('[data-multi]'),an=o.querySelector('[data-anon]'),go=o.querySelector('[data-go]');
   const vals=()=>[...box.querySelectorAll('input')].map(x=>x.value.trim()).filter(Boolean);
   const upd=()=>{go.disabled=!(q.value.trim()&&vals().length>=2);add.hidden=box.children.length>=6};
   const row=v=>{const d=document.createElement('div');d.className='kf-pin';d.innerHTML=`<input type="text" maxlength="40" placeholder="선택지 ${box.children.length+1}" aria-label="선택지"><button type="button" aria-label="선택지 빼기">✕</button>`;d.querySelector('input').value=v||'';d.querySelector('input').oninput=upd;d.querySelector('button').onclick=()=>{if(box.children.length>2){d.remove();upd()}};box.append(d)};
-  row();row();add.onclick=()=>{row();upd();box.lastElementChild.querySelector('input').focus()};q.oninput=upd;upd();setTimeout(()=>q.focus(),60);
-  const reqId=rid('p');go.onclick=async()=>{go.disabled=true;go.textContent='올리는 중…';try{const r=await api({action:'feedPost',id:reqId,kind:'poll',q:q.value.trim(),options:vals(),multi:mu.checked});S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];close();S.tab='all';paint();window.scrollTo({top:0,behavior:'smooth'});toast('투표를 올렸어요')}catch(e){go.disabled=false;go.textContent='투표 올리기';toast(e.message||'올리지 못했어요')}}}
+  row();row();add.onclick=()=>{row();upd();box.lastElementChild.querySelector('input').focus()};q.oninput=upd;an.onchange=()=>{o.querySelector('.kf-panon-note').hidden=!an.checked};upd();setTimeout(()=>q.focus(),60);
+  const reqId=rid('p');go.onclick=async()=>{go.disabled=true;go.textContent='올리는 중…';try{const r=await api({action:'feedPost',id:reqId,kind:'poll',q:q.value.trim(),options:vals(),multi:mu.checked,anon:an.checked});S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];close();S.tab='all';paint();window.scrollTo({top:0,behavior:'smooth'});toast('투표를 올렸어요')}catch(e){go.disabled=false;go.textContent='투표 올리기';toast(e.message||'올리지 못했어요')}}}
  /* 지난 생일에 받은 축하 (생일 당사자에게만) */
  const KS=id=>'kzBdayKeep:'+me().id+':'+id;
  function keepAuto(){if(view!=='feed'||document.querySelector('.kf-ov'))return;const c=(S.bdayCards||[]).find(x=>{try{return !localStorage.getItem(KS(x.id))}catch(e){return false}});if(c)keepsake(c)}
@@ -10236,6 +10243,88 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 #kzAdminPanel .kz-approve-foot{display:flex!important;gap:8px;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(160,120,80,.25)}
 #kzAdminPanel .kz-approve-foot [data-reject]{flex:none;background:none!important;border:0!important;color:#a0503a!important;font-size:13px!important;padding:10px 6px!important;box-shadow:none!important}
 #kzAdminPanel .kz-approve-foot [data-approve]{flex:1;border-radius:12px!important;padding:12px!important;font-size:14px!important}
+</style>
+<style id="kz-tpick2-css">
+/* 감사 카드 받는 사람: 잘리지 않게 이름 칩으로 줄바꿈 */
+.kf-sheet .kf-tpick{display:flex!important;flex-wrap:wrap!important;gap:6px!important;max-height:196px!important;overflow-y:auto!important;overflow-x:hidden!important;padding:10px 2px 12px!important}
+.kf-sheet .kf-tpick button{flex:none!important;flex-direction:row!important;align-items:center!important;gap:6px!important;width:auto!important;padding:4px 12px 4px 4px!important;border-radius:999px!important;border:1px solid rgba(160,120,90,.25)!important;background:#fff!important;opacity:1!important}
+.kf-sheet .kf-tpick button>*:first-child{width:24px!important;height:24px!important;font-size:10.5px!important;flex:none}
+.kf-sheet .kf-tpick button span{font-size:13px!important;max-width:none!important;overflow:visible!important}
+.kf-sheet .kf-tpick button.on{background:#ff8fab!important;border-color:#ff8fab!important;color:#fff!important}
+.kf-sheet .kf-tpick button.on span{font-weight:800}
+</style>
+<style id="kz-panon-css">.kf-popts2{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}.kf-popts2 .kf-pmulti{margin-top:0}.kf-panon-note{margin:6px 0 0;font-size:12px;opacity:.7}</style>
+<script id="kz-lrot">
+/* 인도자 로테이션 설정: 누가 · 어떤 순서로 · 몇 주씩 · 언제부터 */
+(function(){
+ const sun0=()=>{const t=new Date(todayStr()+'T12:00:00');t.setDate(t.getDate()+((7-t.getDay())%7));return t.toISOString().slice(0,10)};
+ const addW=(d,k)=>{const t=new Date(d+'T12:00:00');t.setDate(t.getDate()+7*k);return t.toISOString().slice(0,10)};
+ const md=d=>(+d.slice(5,7))+'/'+(+d.slice(8,10));
+ function open(){if(!kzChgStaff())return toast('관리자급만 바꿀 수 있어요');document.querySelector('.lrt-ov')?.remove();
+  const now=ldrPeriod(sun0()),fm=ldrMembers();let order=[...now.order];const pool=[...new Set([...now.order,...fm])];let every=now.every,from=sun0();
+  const o=document.createElement('div');o.className='lrt-ov';o.innerHTML='<div class="lrt" role="dialog" aria-modal="true" aria-label="인도자 로테이션 설정"></div>';document.body.append(o);const box=o.querySelector('.lrt');
+  const close=()=>{o.remove();document.removeEventListener('keydown',onKey)},onKey=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',onKey);o.onclick=e=>{if(e.target===o)close()};
+  const preview=()=>{if(!order.length)return '<p class="lrt-empty">인도자를 한 명 이상 골라 주세요</p>';const out=[];let w=0,d=from;for(let i=0;out.length<8&&i<20;i++,d=addW(d,1)){if(isNoSvc(d)){out.push(`<span class="nos"><small>${md(d)}</small><b>예배 없음</b></span>`);continue}const nm=order[Math.floor(w/every)%order.length];out.push(`<span><small>${md(d)}</small><b><i class="ldot ${ldrCls(nm)}"></i>${esc(nm)}</b></span>`);w++}return out.join('')};
+  const paint=()=>{const newbies=fm.filter(n=>!now.order.includes(n));
+   box.innerHTML=`<div class="lrt-h"><b>인도자 로테이션</b><button type="button" class="lrt-x" aria-label="닫기">✕</button></div>
+   <div class="lrt-b">${newbies.length?`<p class="lrt-new"><b>새 인도자</b> · 멤버 명단에 새 인도자 <b>${newbies.map(esc).join(', ')}</b>님이 있어요. 순서에 넣어 주세요.</p>`:''}
+    <p class="lrt-l">순서 <small>위에서부터 차례로 인도해요 · 체크한 사람만</small></p>
+    <div class="lrt-list">${pool.map(n=>{const on=order.includes(n),i=order.indexOf(n);return `<div class="lrt-row ${on?'on':''}"><label><input type="checkbox" data-n="${esc(n)}" ${on?'checked':''}><i class="ldot ${ldrCls(n)}"></i><b>${esc(n)}</b>${on?`<em>${i+1}번째</em>`:''}${fm.length&&!fm.includes(n)?'<small>멤버 명단에서 인도자가 아니에요</small>':''}</label>${on?`<span><button type="button" data-up="${esc(n)}" ${i===0?'disabled':''} aria-label="위로">↑</button><button type="button" data-dn="${esc(n)}" ${i===order.length-1?'disabled':''} aria-label="아래로">↓</button></span>`:''}</div>`}).join('')||'<p class="lrt-empty">멤버 명단에 인도자가 없어요. 멤버 · 직책에서 인도자를 정해 주세요.</p>'}</div>
+    <p class="lrt-l">한 사람이 연달아 <small>몇 주씩 맡을까요?</small></p>
+    <div class="lrt-seg">${[1,2,3,4].map(k=>`<button type="button" data-ev="${k}" class="${every===k?'on':''}">${k}주씩</button>`).join('')}</div>
+    <p class="lrt-l">언제부터 <small>이 날 1번째 사람이 인도해요 · 그 전 일정은 그대로</small></p>
+    <div class="lrt-seg">${Array.from({length:6},(_,k)=>addW(sun0(),k)).map(d=>`<button type="button" data-fr="${d}" class="${from===d?'on':''}">${md(d)}${d===sun0()?' 이번 주':''}</button>`).join('')}</div>
+    <p class="lrt-l">미리 보기</p><div class="lrt-pv">${preview()}</div>
+    <p class="lrt-note">한 주만 바꾸는 건 이 화면의 <b>인도 교환 · 대신 서기</b>로 해 주세요. 예배 없는 주일은 건너뛰어요.</p></div>
+   <div class="lrt-f"><button type="button" class="sm" data-cancel>취소</button><button type="button" class="btn" data-save ${order.length?'':'disabled'}>저장</button></div>`;
+   box.querySelector('.lrt-x').onclick=close;box.querySelector('[data-cancel]').onclick=close;
+   box.querySelectorAll('[data-n]').forEach(c=>c.onchange=()=>{const n=c.dataset.n;order=c.checked?[...order,n]:order.filter(x=>x!==n);paint()});
+   box.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=order.indexOf(b.dataset.up);if(i>0){[order[i-1],order[i]]=[order[i],order[i-1]];paint()}});
+   box.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>{const i=order.indexOf(b.dataset.dn);if(i>=0&&i<order.length-1){[order[i+1],order[i]]=[order[i],order[i+1]];paint()}});
+   box.querySelectorAll('[data-ev]').forEach(b=>b.onclick=()=>{every=+b.dataset.ev;paint()});
+   box.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{from=b.dataset.fr;paint()});
+   box.querySelector('[data-save]').onclick=async e=>{const b=e.currentTarget;if(!order.length)return;b.disabled=true;b.textContent='저장 중…';
+    const prev=lrot&&Array.isArray(lrot.periods)?lrot.periods.filter(x=>x&&x.from<from):[];
+    /* 처음 바꾸면 지금까지의 기본 순서를 기록으로 남겨 지난 일정이 바뀌지 않게 */
+    const base=prev.length?prev:[{from:'2000-01-02',order:lsch.order.slice(),every:lsch.every,anchor:lsch.anchor}];
+    const a=(()=>{try{return authAccount()||{}}catch(e){return{}}})();
+    try{await db.doc('settings/leaderRotation').set({periods:[...base,{from,order:order.slice(),every}],updatedAt:Date.now(),by:a.name||''});close();toast(`${md(from)}부터 ${order.join(' → ')} 순서로 ${every}주씩 인도해요`)}
+    catch(err){b.disabled=false;b.textContent='저장';toast(String(err&&err.code||'').includes('permission')?'저장 권한이 없어요':'저장하지 못했어요')}}};
+  paint()}
+ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#lrot');if(b)open()});
+ window.kzLeaderRotation=open;
+})();
+</script>
+<style id="kz-lrot-css">
+.lrt-ov{position:fixed;inset:0;z-index:9000;background:rgba(30,22,16,.4);display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:760px){.lrt-ov{align-items:center}}
+.lrt{width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;background:#fffaf4;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.2);padding-bottom:env(safe-area-inset-bottom);color:#2b231e}
+@media(min-width:760px){.lrt{border-radius:22px}}
+.lrt-h{display:flex;align-items:center;padding:16px 18px 8px}.lrt-h b{flex:1;font-size:17px}
+.lrt-x{border:0;background:rgba(120,90,60,.1);width:32px;height:32px;border-radius:50%;cursor:pointer}
+.lrt-b{overflow:auto;padding:4px 18px 10px}
+.lrt-l{margin:16px 0 8px;font-size:13px;font-weight:800}.lrt-l small{font-weight:500;color:#8a7a6c;margin-left:4px}
+.lrt-new{margin:6px 0 0;padding:10px 12px;border-radius:12px;background:#fff1dc;font-size:13px}
+.lrt-list{display:grid;gap:6px}
+.lrt-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid rgba(120,90,60,.15);background:#fff}
+.lrt-row.on{border-color:#d9a865;background:#fffaf0}
+.lrt-row label{flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+.lrt-row label input{width:18px;height:18px;accent-color:#c0703a}
+.lrt-row b{font-size:14.5px}.lrt-row em{font-style:normal;font-size:11.5px;color:#a0673a;font-weight:700}
+.lrt-row small{font-size:11px;color:#b0503a}
+.lrt-row span{display:flex;gap:4px}.lrt-row span button{width:32px;height:32px;border-radius:9px;border:1px solid rgba(120,90,60,.2);background:#fff;cursor:pointer;font-size:15px}
+.lrt-row span button:disabled{opacity:.3}
+.lrt-seg{display:flex;flex-wrap:wrap;gap:6px}
+.lrt-seg button{border:1px solid rgba(120,90,60,.2);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;color:#5a4a3c}
+.lrt-seg button.on{background:#2b231e;color:#fff;border-color:#2b231e}
+.lrt-pv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lrt-pv span{display:flex;flex-direction:column;gap:2px;padding:8px;border-radius:10px;background:#fff;border:1px solid rgba(120,90,60,.12);font-size:13px}
+.lrt-pv small{font-size:11px;color:#8a7a6c}.lrt-pv .nos b{color:#a08f80;font-weight:600}
+.lrt-note{margin:14px 0 4px;font-size:12px;color:#8a7a6c;line-height:1.5}
+.lrt-empty{font-size:13px;color:#8a7a6c}
+.ldot.l3,.l3 .ldot{background:#2f9e6e!important}.ldot.l4,.l4 .ldot{background:#e08a1e!important}
+.lrt-pv .ldot{margin-right:4px}
+.lrt-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px 16px;border-top:1px solid rgba(120,90,60,.12)}
 </style>
 </html>
 
