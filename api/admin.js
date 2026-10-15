@@ -15,6 +15,12 @@ module.exports = async function handler(req, res) {
   let input;
   try { input = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; } catch { return res.status(400).json({error: '요청 내용을 확인해 주세요.'}); }
   const a = input && input.action;
+  if (a === 'signupBirth' && input && typeof input === 'object' && JSON.stringify(input).length < 400) {
+    try {
+      let tok;try { tok = await admin.auth().verifyIdToken(String(req.headers.authorization || '').replace(/^Bearer\s+/i, '')); } catch { return res.status(401).json({error: '로그인이 만료됐어요.'}); }
+      return res.status(200).json(await getService().birthRun(tok.uid, input));
+    } catch (e) { const status = Number(e && e.status) || 500; if (status >= 500) console.error('[admin-birth]', e && (e.code || e.message)); return res.status(status).json({error: status >= 500 ? '서버 처리 중 오류가 났어요.' : e.message}); }
+  }
   if (!input || typeof input !== 'object' || !(PUBLIC.has(a) || ADMIN.has(a) || SELF.has(a)) || JSON.stringify(input).length > 4000) return res.status(400).json({error: '요청 내용을 확인해 주세요.'});
   try {
     const svc = getService();

@@ -14,7 +14,7 @@ function fakeDb(seed = {}) {
     const all = (pred = () => true) => ({async get() { const docs = [...store.entries()].filter(([k, v]) => k.startsWith(name + '/') && k.split('/').length === 2 && pred(v)).map(([k, v]) => ({id: k.split('/')[1], data: () => JSON.parse(JSON.stringify(v)), ref: docRef(k)})); return {docs, empty: !docs.length}; }});
     return {...all(), doc: id => docRef(name + '/' + id), where: (f, op, val) => all(v => v[f] === val)};
   };
-  return {store, doc: docRef, collection: col};
+  return {store, doc: docRef, collection: col, runTransaction: async fn => fn({get: r => r.get(), set: (r, v) => r.set(v)})};
 }
 function fakeAuth() {
   const calls = [];
@@ -37,6 +37,15 @@ const seed = () => ({
 });
 const tests = [];
 const t = (n, f) => tests.push([n, f]);
+t('signup birthday: pending or approved own account only, valid dates, keeps month-day for 꿈마당', async () => {
+  const db = fakeDb({...seed(), 'accounts/p1': {name: '새친구', status: 'pending'}, 'accounts/x1': {name: '정지', status: 'suspended'}}), s = createAdminService({db, auth: fakeAuth(), now: () => Date.UTC(2026, 9, 15)});
+  assert.deepEqual(await s.birthRun('p1', {birth: '1999-03-07'}), {ok: true});
+  assert.deepEqual(db.store.get('_kzCommunity/birthdays').m.p1, {md: '03-07', y: 1999, name: '새친구'});
+  for (const b of ['1999-02-30', '2030-01-01', '1900-01-01', '99-3-7', '']) await assert.rejects(s.birthRun('p1', {birth: b}), {status: 400});
+  await assert.rejects(s.birthRun('x1', {birth: '1999-03-07'}), {status: 403});
+  await assert.rejects(s.birthRun('nobody', {birth: '1999-03-07'}), {status: 403});
+  await assert.rejects(s.birthRun('management', {birth: '1999-03-07'}), {status: 400});
+});
 
 t('password rule matches the app', () => {
   assert.strictEqual(authPassword('uabc123', '1234'), 'Kz!1234#uabc123');
