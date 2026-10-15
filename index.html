@@ -4784,7 +4784,12 @@ function singEff(d,o){const use=!o,[f,p]=singParts(d,o),ch=use?ovr.filter(x=>x.d
 function singersFor(d,o){return singEff(d,o).filter(x=>!x.abs).map(x=>x.n).sort((a,b)=>String(a).localeCompare(String(b),'ko')).join(', ')}
 function singerMemberNames(){return new Set(members.filter(m=>m.roles.includes('싱어')&&!m.roles.includes('인도자')).map(m=>m.name))}
 function cleanSing(o){o=o||sing;const ok=singerMemberNames();return{fixed:(o.fixed||[]).filter(n=>ok.has(n)),rot:(o.rot||[]).filter(n=>ok.has(n)),every:Math.max(1,+o.every||2),anchor:o.anchor||nextSun()}}
-function singParts(d,o){o=cleanSing(o||sing);const w=Math.round((new Date(d+'T12:00:00')-new Date(o.anchor+'T12:00:00'))/6048e5),n=o.rot.length;return[o.fixed,n?o.rot[((Math.floor(w/o.every)%n)+n)%n]:null]}
+/* 예배 없는 주일: settings/noService {days:{날짜:사유}}. 그 주는 아무도 배정하지 않고, 로테이션은 그 주를 건너뛰어 한 주씩 밀림 */
+let noSvc={};
+function isNoSvc(d){return !!(d&&noSvc&&Object.prototype.hasOwnProperty.call(noSvc,d))}
+function noSvcWhy(d){const v=noSvc&&noSvc[d];return String(v||'').trim()||'청년부 예배 없음'}
+function svcShift(a,d){let c=0;if(!a||!d||a===d)return 0;for(const x of Object.keys(noSvc||{})){if(d>a){if(x>=a&&x<d)c++}else if(x>=d&&x<a)c--}return c}
+function singParts(d,o){o=cleanSing(o||sing);if(isNoSvc(d))return[[],null];const w=Math.round((new Date(d+'T12:00:00')-new Date(o.anchor+'T12:00:00'))/6048e5)-svcShift(o.anchor,d),n=o.rot.length;return[o.fixed,n?o.rot[((Math.floor(w/o.every)%n)+n)%n]:null]}
 const fillSingers=t=>{const l='싱어: '+singersFor(date);return /^싱어\s*:.*$/m.test(t)?t.replace(/^싱어\s*:.*$/m,l):t.replace(/\s*$/,'')+'\n\n'+l};
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return null}};
 let role=LS('role'),view=LS('view')||'edit';if(!ROLES.some(r=>r[0]===role))role=null;view='home';
@@ -5571,7 +5576,7 @@ function setLine(t,l,v){const re=new RegExp('^'+esc2(l)+'\\s*:.*$','m'),line=l==
 const i=LINES.indexOf(l);for(let k=i-1;k>=0;k--){const m=t.match(new RegExp('^'+esc2(LINES[k])+'\\s*:.*$','m'));if(m){const p=m.index+m[0].length;return t.slice(0,p)+'\n'+line+t.slice(p)}}
 const m=t.match(/^싱어\s*:.*$/m);if(m)return t.slice(0,m.index)+line+'\n\n'+t.slice(m.index);return t.replace(/\s*$/,'')+'\n'+line}
 function slotNames(l){const L=m=>{const sl=m.slots||[];return sl.includes(l)||((l==='메인'||l==='세컨')&&sl.includes('건반'))};if(l==='인도')return members.filter(m=>m.roles.includes('인도자')).map(m=>m.name).sort((a,b)=>String(a).localeCompare(String(b),'ko'));const hit=members.filter(L);if(hit.length)return hit.map(m=>m.name).sort((a,b)=>String(a).localeCompare(String(b),'ko'));const ses=members.filter(m=>m.roles.includes('세션')&&!m.roles.includes('인도자'));return(ses.length?ses:members).map(m=>m.name).sort((a,b)=>String(a).localeCompare(String(b),'ko'))}
-function sessFill(d){const out={};members.filter(m=>m.roles.includes('세션')||m.roles.includes('인도자')).forEach(m=>(m.slots||[]).forEach(sl=>{if(!LINES.includes(sl)||sl==='인도')return;if(sessAbs.some(a=>a.date===d&&a.name===m.name)){if(!(sl in out))out[sl]=''}else out[sl]=m.name}));const ch=ovr.filter(x=>x.date===d&&x.k==='session');for(const x of ch){for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||''}return out}
+function sessFill(d){const out={};if(isNoSvc(d))return out;members.filter(m=>m.roles.includes('세션')||m.roles.includes('인도자')).forEach(m=>(m.slots||[]).forEach(sl=>{if(!LINES.includes(sl)||sl==='인도')return;if(sessAbs.some(a=>a.date===d&&a.name===m.name)){if(!(sl in out))out[sl]=''}else out[sl]=m.name}));const ch=ovr.filter(x=>x.date===d&&x.k==='session');for(const x of ch){for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||''}return out}
 function ensureFixed(t){let x=t;const f=autoFill?sessFill(date):{};
 for(const l of LINES){if(!new RegExp('^'+esc2(l)+'\\s*:','m').test(x))x=setLine(x,l,f[l]||'')}
 for(const k of Object.keys(f)){if(f[k]&&!getLine(x,k))x=setLine(x,k,f[k])}
@@ -5669,7 +5674,7 @@ $$('[data-lt]').forEach(b=>b.onclick=()=>go(b.dataset.lt))}
 
 /* ---------- 인도자 일정 (격주 교대) ---------- */
 const lsch={order:['김태양','이찬양'],every:1,anchor:'2026-10-04'};
-function ldrBase(d){const w=Math.round((new Date(d+'T12:00:00')-new Date(lsch.anchor+'T12:00:00'))/6048e5),n=lsch.order.length;return lsch.order[((Math.floor(w/lsch.every)%n)+n)%n]}
+function ldrBase(d){if(isNoSvc(d))return '';const w=Math.round((new Date(d+'T12:00:00')-new Date(lsch.anchor+'T12:00:00'))/6048e5)-svcShift(lsch.anchor,d),n=lsch.order.length;return lsch.order[((Math.floor(w/lsch.every)%n)+n)%n]}
 function ldrOf(d){const b=ldrBase(d),c=ovr.find(x=>x.k==='L'&&x.date===d&&x.from===b);return c&&c.to?c.to:b}
 const ldrCls=n=>n==='김태양'?'lm':n==='이찬양'?'lf':'';
 let lsM=null,lsSel=[],lsKind='swap',lsSub='';
@@ -5688,7 +5693,7 @@ const groups=[],seen=new Set();list.forEach(x=>{if(x.pair){if(seen.has(x.pair))r
 const ns=nextSun();
 const month=(y,m)=>{const dim=new Date(y,m,0).getDate();let rows='';
 for(let d=1;d<=dim;d++){if(new Date(y,m-1,d).getDay()!==0)continue;const id=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,L=eff(id),past=id<ns;
-rows+=`<button type="button" class="ls4-d ${lsSel.includes(id)?'on':''} ${chg(id)?'chg':''} ${past?'past':''} ${id===ns?'now':''}" data-c="${id}"><span class="ls4-n">${d}<small>일</small></span><span class="ls4-who"><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>${id===ns?'<em class="ls4-tag now">이번 주</em>':chg(id)?(ovr.some(x=>x.k==='L'&&x.date===id&&!x.pair)?'<em class="ls4-tag sub">대신</em>':'<em class="ls4-tag">교환</em>'):''}</button>`}
+rows+=`<button type="button" ${isNoSvc(id)?'disabled':''} class="ls4-d ${isNoSvc(id)?'nosvc':''} ${lsSel.includes(id)?'on':''} ${chg(id)?'chg':''} ${past?'past':''} ${id===ns?'now':''}" data-c="${id}"><span class="ls4-n">${d}<small>일</small></span><span class="ls4-who">${isNoSvc(id)?`<span class="nosvc-t" title="${esc(noSvcWhy(id))}">예배 없음</span>`:`<i class="ldot ${ldrCls(L)}"></i>${esc(L)}`}</span>${id===ns?'<em class="ls4-tag now">이번 주</em>':chg(id)?(ovr.some(x=>x.k==='L'&&x.date===id&&!x.pair)?'<em class="ls4-tag sub">대신</em>':'<em class="ls4-tag">교환</em>'):''}</button>`}
 return `<section class="ls4-mo"><div class="ls4-mt"><b>${m}월</b><small>${y}</small></div><div class="ls4-ds">${rows}</div></section>`};
 const[y0,m0]=lsM.split('-').map(Number),mm=[0,1,2,3,4,5].map(k=>{const t=new Date(Date.UTC(y0,m0-1+k,1));return[t.getUTCFullYear(),t.getUTCMonth()+1]}),last=mm[5];
 const[d1,d2]=lsSel,ok=lsSel.length===2&&eff(d1)!==eff(d2);
@@ -5952,7 +5957,7 @@ function evCalendarMove(delta){evCalendarInit();const [y,m]=evCalendarMonth.spli
 function eventCalendar(editing=!!evEdit){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),first=new Date(y,m-1,1,12).getDay(),days=new Date(y,m,0,12).getDate();const disabled=editing?'disabled':'';
  const byDay=new Map();for(const e of events){if(!byDay.has(e.date))byDay.set(e.date,[]);byDay.get(e.date).push(e);}
  let cells='';for(let i=0;i<Math.ceil((first+days)/7)*7;i++){const n=i-first+1;if(n<1||n>days){cells+='<span class="kec-blank" aria-hidden="true"></span>';continue;}const key=evCalendarMonth+'-'+String(n).padStart(2,'0'),items=byDay.get(key)||[];
- cells+=`<button type="button" class="kec-day ${key===evCalendarDay?'selected':''} ${key===todayStr()?'today':''} ${i%7===0?'sun':''}" data-ec-day="${key}" aria-pressed="${key===evCalendarDay}" aria-label="${y}년 ${m}월 ${n}일, 일정 ${items.length}개" ${disabled}><span class="kec-number">${n}</span><span class="kec-labels">${items.slice(0,2).map(e=>`<span>${esc(e.title)}</span>`).join('')}${items.length>2?`<small>+${items.length-2}개</small>`:''}</span></button>`;}
+ cells+=`<button type="button" class="kec-day ${key===evCalendarDay?'selected':''} ${key===todayStr()?'today':''} ${i%7===0?'sun':''}" data-ec-day="${key}" aria-pressed="${key===evCalendarDay}" aria-label="${y}년 ${m}월 ${n}일, 일정 ${items.length}개" ${disabled}><span class="kec-number">${n}</span><span class="kec-labels">${isNoSvc(key)?'<span class="kec-nosvc">예배 없음</span>':''}${items.slice(0,isNoSvc(key)?1:2).map(e=>`<span>${esc(e.title)}</span>`).join('')}${items.length>2?`<small>+${items.length-2}개</small>`:''}</span></button>`;}
  return `<section class="card kec"><header class="kec-head"><h2>${y}년 ${m}월</h2><button type="button" class="sm" data-ec-today ${disabled}>오늘</button><button type="button" class="sm" data-ec-move="-1" aria-label="이전 달" ${disabled}>‹</button><button type="button" class="sm" data-ec-move="1" aria-label="다음 달" ${disabled}>›</button></header><div class="kec-grid"><div class="kec-week sun">일</div>${['월','화','수','목','금','토'].map(d=>`<div class="kec-week">${d}</div>`).join('')}${cells}</div></section>`;
 }
 function eventBody(){if(ntFocus){const focus=events.find(e=>e._id===ntFocus);if(focus){evCalendarDay=focus.date;evCalendarMonth=focus.date.slice(0,7);}}evCalendarInit();const E=canEdit,ed=evEdit,cur=ed&&ed!=='new'?events.find(n=>n._id===ed):null;pk.ev1={v:cur?cur.date:evCalendarDay,any:true};
@@ -6118,6 +6123,7 @@ renderApp();
 skin(document.body);iconObs.observe(document.body,{childList:true,subtree:true,characterData:true});
 (async()=>{try{if(!window.claude)return;const u=await claude.use('user');canEdit=false;db=await claude.use('db');if(!db)return;
 unsubA=db.collection('weeks').onSnapshot(s=>{archive=s.docs.map(d=>{const x=d.data()||{};return{id:d.id,scores:Array.isArray(x.scores)?x.scores:[],ment:x.ment||null,up:!!x.up,upAt:typeof x.up==='number'?x.up:0,by:x.by||''}}).sort((a,b)=>a.id<b.id?1:-1);if(view==='archive'&&$('#body'))archiveView();if(calOpen)drawCal()},e=>console.error(e));
+db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;noSvc=d&&typeof d==='object'?{...d}:{};try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e));
 db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
@@ -6544,26 +6550,26 @@ window.KZPasskey=(()=>{
 function v6Weeks(){return sundays().slice(0,5)}
 function v6SingerState(n,d){const b=baseNames(d).includes(n), c=ovr.find(x=>x.date===d&&!x.k&&x.from===n), incoming=ovr.find(x=>x.date===d&&!x.k&&x.to===n);if(c)return c.to?{t:'out',to:c.to}:{t:'abs'};if(incoming)return{t:'rep',from:incoming.from};return b?{t:'on'}:{t:'off'}}
 function schLegend(){return `<div class="sx-lg"><span><i class="sx-dot"></i>참여</span><span><i class="sx-pill abs">불참</i></span><span><i class="sx-pill rep">대타</i></span><span><i class="sx-blank">·</i>쉬는 주</span></div>`}
-function schWeekCards(ws,render){const ns=nextSun();return `<div class="sx-weeks">${ws.slice(0,2).map((d,i)=>`<section class="sx-wk ${d===ns?'now':''}"><div class="sx-wk-h"><b>${fmtD(d)}</b><span class="lr-tag ${d===ns?'now':''}">${wkTag(d)||(i?'다음 주':'')}</span></div>${render(d)}</section>`).join('')}</div>`}
+function schWeekCards(ws,render){const ns=nextSun();return `<div class="sx-weeks">${ws.slice(0,2).map((d,i)=>`<section class="sx-wk ${d===ns?'now':''}"><div class="sx-wk-h"><b>${fmtD(d)}</b><span class="lr-tag ${d===ns?'now':''}">${wkTag(d)||(i?'다음 주':'')}</span></div>${isNoSvc(d)?`<div class="nosvc-box"><b>예배 없음</b><span>${esc(noSvcWhy(d))}</span></div>`:render(d)}</section>`).join('')}</div>`}
 function schedSView(){const ws=v6Weeks(),names=singRoster().map(x=>x.n),tagOf=n=>sing.fixed.includes(n)?'매주 고정':sing.rot.includes(n)?'로테이션':'멤버',ns=nextSun();
-const cell=(n,d)=>{const x=v6SingerState(n,d);return x.t==='on'?'<i class="sx-dot" title="참여"></i>':x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
+const cell=(n,d)=>{if(isNoSvc(d))return '<i class="sx-pill nosvc" title="'+esc(noSvcWhy(d))+'">예배 없음</i>';const x=v6SingerState(n,d);return x.t==='on'?'<i class="sx-dot" title="참여"></i>':x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
 const cnt=d=>names.filter(n=>{const t=v6SingerState(n,d).t;return t==='on'||t==='rep'}).length;
 const head=`<div class="sx-c sx-hd sx-nm">싱어</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=names.map(n=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(n).slice(-2))}</span><span><b>${esc(n)}</b><small>${tagOf(n)}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(n,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const l=String(singersFor(d)||'').split(',').map(v=>v.trim()).filter(Boolean);return `<div class="sx-names">${l.length?l.map(n=>`<span class="sx-chip">${V13I('mic')}${esc(n)}</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
+const card=d=>{const l=String(singersFor(d)||'').split(',').map(v=>v.trim()).filter(Boolean);return `<div class="sx-names">${l.length?l.map(n=>`<span class="sx-chip">${esc(n)}</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">싱어 일정표</h1><div class="mu">앞으로 5주 동안 누가 서는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goSwap">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend()}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goSwap'))$('#goSwap').onclick=()=>go('swap')}
 function v6SessState(m,d){const c=ovr.find(x=>x.date===d&&x.k==='session'&&x.from===m.n),incoming=ovr.find(x=>x.date===d&&x.k==='session'&&x.to===m.n),oldAbs=sessAbs.some(a=>a.date===d&&a.name===m.n);if(c)return c.to?{t:'out',to:c.to}:{t:'abs'};if(oldAbs)return{t:'abs'};if(incoming)return{t:'rep',from:incoming.from};const fill=sessFill(d),on=Object.values(fill).includes(m.n);return on?{t:'on'}:{t:'off'}}
 function schedEView(){const ns=nextSun(),ws=v6Weeks(),ms=sessRoster().map(m=>({...m,slots:((members.find(x=>x.name===m.n)||{}).slots)||String(m.tag||'').split('/').filter(Boolean)}));
 const slotOf=(m,d)=>{const f=sessFill(d);return Object.keys(f).find(k=>f[k]===m.n)||''};
 const mem=n=>members.find(x=>x.name===n)||{};
-const cell=(m,d)=>{const x=v6SessState(m,d);if(x.t==='on'){const sl=slotOf(m,d);return `<i class="sx-slot">${esc(sl?slotLbl(sl):'참여')}</i>`}return x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
+const cell=(m,d)=>{if(isNoSvc(d))return '<i class="sx-pill nosvc" title="'+esc(noSvcWhy(d))+'">예배 없음</i>';const x=v6SessState(m,d);if(x.t==='on'){const sl=slotOf(m,d);return `<i class="sx-slot">${esc(sl?slotLbl(sl):'참여')}</i>`}return x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
 const cnt=d=>ms.filter(m=>{const t=v6SessState(m,d).t;return t==='on'||t==='rep'}).length;
 const head=`<div class="sx-c sx-hd sx-nm">세션</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=ms.map(m=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(m.n).slice(-2))}</span><span><b>${esc(m.n)}</b><small>${esc(m.tag||'세션')}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(m,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);return `<div class="sx-names">${l.length?l.map(k=>f[k]?`<span class="sx-chip">${V13I('guitar')}<em class="sx-chip-k">${esc(slotLbl(k))}</em>${esc(f[k])}</span>`:`<span class="sx-chip empty">${V13I('guitar')}<em class="sx-chip-k">${esc(slotLbl(k))}</em>비어 있음</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
+const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);return `<div class="sx-names">${l.length?l.map(k=>f[k]?`<span class="sx-chip"><em class="sx-chip-k">${esc(slotLbl(k))}</em>${esc(f[k])}</span>`:`<span class="sx-chip empty"><em class="sx-chip-k">${esc(slotLbl(k))}</em>비어 있음</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">세션 일정표</h1><div class="mu">악기별로 앞으로 5주 동안 누가 연주하는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goAbs">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend().replace('<i class="sx-dot"></i>참여','<i class="sx-slot">악기</i>참여')}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goAbs'))$('#goAbs').onclick=()=>go('abs')}
 /* 세션 변경 시트도 불참 / 대타 / 서로 교대 지원 */
@@ -6579,13 +6585,13 @@ function arMonthWeek(d){const x=new Date(d+'T12:00:00');return Math.ceil(x.getDa
 function arInRange(r,d){return (!r.start||d>=r.start)&&(!r.end||d<=r.end)&&!(r.skip||'').split(',').map(x=>x.trim()).filter(Boolean).includes(d)}
 function arBasic(r,d){if(!r||!arInRange(r,d))return false;const w=arWeek(d,r.anchor||nextSun());if(r.mode==='fixed')return true;if(r.mode==='off'||r.mode==='manual'||r.mode==='rotation')return false;if(r.mode==='interval')return ((w-(+r.offset||0))%(Math.max(1,+r.every||2))+Math.max(1,+r.every||2))%Math.max(1,+r.every||2)===0;if(r.mode==='odd')return ((w-(+r.offset||0))%2+2)%2===0;if(r.mode==='monthly')return (r.monthWeeks||[1,3]).includes(arMonthWeek(d));return false}
 function arRules(kind){return assignCfg[kind]||{}}
-function arActiveMap(kind,d,names){const raw=arRules(kind),out={},ro=(()=>{try{return kind==='singer'?singRoster():sessRoster()}catch(e){return []}})(),rules={};names.forEach(n=>{const m=ro.find(x=>x.n===n);rules[n]={...arDefault(kind,n,m&&m.tag),...(raw[n]||{})}});names.forEach(n=>out[n]=arBasic(rules[n],d));const groups={};names.forEach(n=>{const r=rules[n];if(r&&r.mode==='rotation'){const g=r.group||'기본 로테이션';(groups[g]||(groups[g]=[])).push(n)}});Object.entries(groups).forEach(([g,arr])=>{arr.sort((a,b)=>(+(rules[a].order||0))-(+(rules[b].order||0)));if(!arr.length)return;const r=rules[arr[0]], every=Math.max(1,+r.every||1),w=Math.floor((arWeek(d,r.anchor||nextSun())-(+r.offset||0))/every),idx=((w%arr.length)+arr.length)%arr.length;arr.forEach((n,i)=>out[n]=i===idx&&arInRange(rules[n],d))});return out}
+function arActiveMap(kind,d,names){if(isNoSvc(d)){const o={};(names||[]).forEach(n=>o[n]=false);return o}const raw=arRules(kind),out={},ro=(()=>{try{return kind==='singer'?singRoster():sessRoster()}catch(e){return []}})(),rules={};names.forEach(n=>{const m=ro.find(x=>x.n===n);rules[n]={...arDefault(kind,n,m&&m.tag),...(raw[n]||{})}});names.forEach(n=>out[n]=arBasic(rules[n],d));const groups={};names.forEach(n=>{const r=rules[n];if(r&&r.mode==='rotation'){const g=r.group||'기본 로테이션';(groups[g]||(groups[g]=[])).push(n)}});Object.entries(groups).forEach(([g,arr])=>{arr.sort((a,b)=>(+(rules[a].order||0))-(+(rules[b].order||0)));if(!arr.length)return;const r=rules[arr[0]], every=Math.max(1,+r.every||1),w=Math.floor((arWeek(d,r.anchor||nextSun())-svcShift(r.anchor||nextSun(),d)-(+r.offset||0))/every),idx=((w%arr.length)+arr.length)%arr.length;arr.forEach((n,i)=>out[n]=i===idx&&arInRange(rules[n],d))});return out}
 function arHas(kind){return Object.keys(arRules(kind)).length>0}
 /* Make the existing singer engine consume advanced rules without changing the rest of the app. */
 const _v7OldSingParts=singParts;
-singParts=function(d,o){if(!arHas('singer'))return _v7OldSingParts(d,o);const names=singRoster().map(x=>x.n),on=arActiveMap('singer',d,names);return [names.filter(n=>on[n]),null]}
+singParts=function(d,o){if(isNoSvc(d))return[[],null];if(!arHas('singer'))return _v7OldSingParts(d,o);const names=singRoster().map(x=>x.n),on=arActiveMap('singer',d,names);return [names.filter(n=>on[n]),null]}
 const _v7OldSessFill=sessFill;
-sessFill=function(d){/* 규칙이 없을 때도 같은 엔진 사용 (기본값=매주) · '건반' 멤버는 메인→세컨 칸에 자동 배정 */const ex=sl=>sl==='건반'?['메인','세컨']:[sl],ok=sl=>LINES.includes(sl)&&sl!=='인도';/* 규칙 화면 명단(sessRoster)에는 악기 칸(slots)이 없어서 멤버 명단에서 직접 가져옴 · 세션 치는 인도자도 포함 */const out={}, roster=members.filter(m=>(m.roles||[]).includes('세션')||(m.roles||[]).includes('인도자')).map(m=>({n:m.name,tag:(m.slots||[]).join('/'),slots:m.slots||[],lead:(m.roles||[]).includes('인도자')})),names=roster.map(x=>x.n),on=arActiveMap('session',d,names);const absent=n=>sessAbs.some(a=>a.date===d&&a.name===n);for(const m of roster){if(!on[m.n]||absent(m.n))continue;for(const sl of (m.slots||[])){const k=(m.lead?[sl]:ex(sl)).filter(ok).find(x=>!out[x]);if(k)out[k]=m.n}}for(const m of roster)for(const sl of (m.slots||[])){const k=(m.lead?[sl]:ex(sl)).filter(ok)[0];if(k&&!(k in out))out[k]=''}for(const a of sessAbs.filter(x=>x.date===d))for(const sl of Object.keys(out))if(out[sl]===a.name)out[sl]='';for(const x of ovr.filter(x=>x.date===d&&x.k==='session'))for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||'';return out}
+sessFill=function(d){if(isNoSvc(d))return {};/* 규칙이 없을 때도 같은 엔진 사용 (기본값=매주) · '건반' 멤버는 메인→세컨 칸에 자동 배정 */const ex=sl=>sl==='건반'?['메인','세컨']:[sl],ok=sl=>LINES.includes(sl)&&sl!=='인도';/* 규칙 화면 명단(sessRoster)에는 악기 칸(slots)이 없어서 멤버 명단에서 직접 가져옴 · 세션 치는 인도자도 포함 */const out={}, roster=members.filter(m=>(m.roles||[]).includes('세션')||(m.roles||[]).includes('인도자')).map(m=>({n:m.name,tag:(m.slots||[]).join('/'),slots:m.slots||[],lead:(m.roles||[]).includes('인도자')})),names=roster.map(x=>x.n),on=arActiveMap('session',d,names);const absent=n=>sessAbs.some(a=>a.date===d&&a.name===n);for(const m of roster){if(!on[m.n]||absent(m.n))continue;for(const sl of (m.slots||[])){const k=(m.lead?[sl]:ex(sl)).filter(ok).find(x=>!out[x]);if(k)out[k]=m.n}}for(const m of roster)for(const sl of (m.slots||[])){const k=(m.lead?[sl]:ex(sl)).filter(ok)[0];if(k&&!(k in out))out[k]=''}for(const a of sessAbs.filter(x=>x.date===d))for(const sl of Object.keys(out))if(out[sl]===a.name)out[sl]='';for(const x of ovr.filter(x=>x.date===d&&x.k==='session'))for(const sl of Object.keys(out))if(out[sl]===x.from)out[sl]=x.to||'';return out}
 function arDefault(kind,n,tag){if(kind==='singer'){if(sing.fixed.includes(n))return{mode:'fixed',anchor:sing.anchor};if(sing.rot.includes(n))return{mode:'rotation',group:'싱어 로테이션',every:sing.every,anchor:sing.anchor,order:sing.rot.indexOf(n)}}return{mode:kind==='session'?'fixed':'off',anchor:nextSun(),group:tag||'기본',every:1,offset:0,monthWeeks:[1,3]}}
 function arGet(kind,n,tag){return {...arDefault(kind,n,tag),...(arRules(kind)[n]||{})}}
 function arDesc(r){if(r.mode==='fixed')return '매주 자동 배정';if(r.mode==='rotation')return `${r.group||'기본'} · ${r.every||1}주 단위`;if(r.mode==='interval')return `${r.every||2}주마다`;if(r.mode==='monthly')return `매월 ${(r.monthWeeks||[]).join('·')}주`;if(r.mode==='odd')return '격주 배정';if(r.mode==='manual')return '자동 배정 없이 일정 변경에서 직접';return '자동 배정 안 함'}
@@ -7447,7 +7453,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  return `<section class="km-page km-more2">
  ${sec('나',[rt?T('mobile_my','myturn','내 순서'):'',T('account','idcard','내 계정'),T('tour','help','사용법')])}
  ${sec('예배 준비',[T('archive','archive','콘티 보관함'),T('library','music','악보'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')])}
- ${sec('팀',[T('prac','metro','토요 연습'),T('events','calendar','팀 일정'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','attend','출결'):''])}
+ ${sec('팀',[T('prac','metro','토요 연습'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','attend','출결'):''])}
  <section class="km-tsec"><div class="km-th"><p>역할별</p>${seg}</div>
   ${P('s',[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙')])}${P('e',[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙')])}${P('l',[T('lsw','roster','인도자 일정'),T('leader','leader','인도자 목록')])}</section>
  ${sec('관리',[k==='adm'?T('kzhub','shield','계정 관리'):'',T('storage','cloud','저장 공간'),T('trash','trash','휴지통'),T('all','grid','전체 메뉴')])}</section>`}
@@ -8463,7 +8469,7 @@ window.kzPrac=(function(){
   bind()}
  /* 관리자급 화면: 콘티가 올라온 주의 대상자를 서버에 저장 → 미응답자에게 월~금 저녁 알림 */
  const STAFF=['관리계정','단장','인도자','선임싱어','선임세션'],synced={};
- async function syncTargets(d){try{if(!STAFF.includes(rank()))return;if(!d||d!==date||!data||!data.up||!R().api)return;const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도')).map(o=>({n:o.n,r:o.r}));if(!list.length)return;const key=JSON.stringify(list);if(synced[d]===key)return;synced[d]=key;await R().api({action:'rsvpTargets',date:d,targets:list})}catch(e){}}
+ async function syncTargets(d){try{if(!STAFF.includes(rank()))return;if(typeof isNoSvc==='function'&&isNoSvc(d))return;if(!d||d!==date||!data||!data.up||!R().api)return;const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도')).map(o=>({n:o.n,r:o.r}));if(!list.length)return;const key=JSON.stringify(list);if(synced[d]===key)return;synced[d]=key;await R().api({action:'rsvpTargets',date:d,targets:list})}catch(e){}}
  function home(){setTimeout(()=>{paintTile();check();try{syncTargets(date)}catch(e){}},700)}
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,800)});
  return{home,check,openList,fill,syncTargets};
@@ -8820,7 +8826,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const wk=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/(7*864e5));
  const md=d=>{const x=new Date(d+'T12:00:00');return (x.getMonth()+1)+'월 '+x.getDate()+'일'};
- function who(d,r){r=r||rot;if(!r)return '';if(r.overrides&&r.overrides[d])return r.overrides[d];const m=r.members||[];if(!m.length||!r.start)return '';const k=Math.max(1,Math.min(8,(r.weeks|0)||1));const w=Math.floor(wk(r.start,d)/k);return m[((w%m.length)+m.length)%m.length]}
+ function who(d,r){r=r||rot;if(!r)return '';if(typeof isNoSvc==='function'&&isNoSvc(d))return '';if(r.overrides&&r.overrides[d])return r.overrides[d];const m=r.members||[];if(!m.length||!r.start)return '';const k=Math.max(1,Math.min(8,(r.weeks|0)||1));const w=Math.floor((wk(r.start,d)-(typeof svcShift==='function'?svcShift(r.start,d):0))/k);return m[((w%m.length)+m.length)%m.length]}
  window.kzPptDuty=d=>who(d);
  const roster=()=>{try{return (members||[]).map(m=>m.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'))}catch(e){return []}};
  const busy=()=>{const a=document.activeElement;return !!(a&&a.closest&&a.closest('.lyr')&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))};
@@ -8889,6 +8895,51 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 :root[data-season] .side-devotion>p{font-size:clamp(11px,.86vw,12.5px)!important;line-height:1.45!important;bottom:26%!important}
 :root[data-season] .side-devotion>small{font-size:clamp(9.5px,.72vw,10.5px)!important}</style>
 <style id="kz-sx-chip-k">.sx-chip .ico,.sx-chip .ico svg,.sx-chip svg{width:14px!important;height:14px!important;flex:none}.sx-chip .sx-chip-k{font-style:normal;font-size:11.5px;font-weight:700;color:var(--goldt,#9a5525);margin-right:1px}.sx-chip.empty{color:var(--mu);font-weight:500;border-style:dashed}</style>
+<style id="kz-nosvc-css">
+.sx-pill.nosvc{background:#efe7dc;color:#8a7764;font-style:normal;white-space:nowrap}
+.nosvc-box{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-radius:12px;background:#f3ece2;color:#6b5a4a;font-size:13px}.nosvc-box b{color:#8a5a2b}
+.ls4-d.nosvc{opacity:.75;cursor:default;background:repeating-linear-gradient(135deg,#faf5ee 0 6px,#f3ece2 6px 12px)!important}.ls4-d .nosvc-t{color:#8a7764;font-weight:600;font-size:12px}
+.kec-labels .kec-nosvc{background:#efe7dc!important;color:#8a5a2b!important;font-weight:700}
+.nsv{border:1px solid var(--bd);border-radius:16px;background:var(--card);padding:14px 16px;margin:0 0 14px}
+.nsv-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}.nsv-h b{font-size:15px}.nsv-h small{color:var(--mu);font-size:12px}
+.nsv-p{margin:0 0 10px;color:var(--mu);font-size:12.5px;line-height:1.5}
+.nsv-l{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.nsv-i{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:999px;background:#f3ece2;font-size:13px}.nsv-i b{font-weight:700}.nsv-i span{color:#6b5a4a}
+.nsv-i button{border:0;background:rgba(0,0,0,.06);border-radius:50%;width:22px;height:22px;cursor:pointer;color:#6b5a4a;font-size:11px}
+.nsv-f{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.nsv-f select,.nsv-f input{min-height:36px;border:1px solid var(--bd2);border-radius:10px;background:#fff;padding:0 10px;font:inherit;font-size:13.5px;color:var(--tx)}.nsv-f input{flex:1;min-width:140px}
+.nsv-q{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.nsv-q button{border:1px dashed var(--bd2);background:none;border-radius:999px;padding:3px 10px;font-size:12px;color:var(--mu);cursor:pointer}
+.nsv-empty{color:var(--mu);font-size:13px}
+.hm-nosvc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:12px 16px;border-radius:16px;background:#f6ede1;border:1px solid #ead8c1;color:#5b4532;font-size:14px}.hm-nosvc b{color:#8a4f1d}.hm-nosvc small{color:#8a7764;font-size:12.5px}
+</style>
+<script id="kz-nosvc">(function(){
+ const STAFFR=['단장','인도자','선임싱어','선임세션'];const me=()=>{try{return authAccount()}catch(e){return null}};
+ const canNs=()=>{const a=me();return !!a&&(a.id==='management'||STAFFR.includes(a.rank))};
+ const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const md=d=>{const x=new Date(d+'T12:00:00');return (x.getMonth()+1)+'월 '+x.getDate()+'일'};
+ const QUICK=['새생명초청주일','성탄예배','연합예배','수련회','부활절 연합예배'];
+ async function save(days,msg){try{const a=me();await db.doc('settings/noService').set({days,up:Date.now(),by:a?a.name||'':''});toast(msg)}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
+ function panel(){const ns=nextSun(),up=Object.keys(noSvc||{}).filter(d=>d>=ns).sort(),ed=canNs();
+  if(!ed&&!up.length)return '';
+  const opts=Array.from({length:60},(_,i)=>shiftDate(ns,i*7)).filter(d=>!isNoSvc(d));
+  return `<section class="nsv"><div class="nsv-h"><b>청년부 예배 없는 주일</b><small>${up.length?up.length+'번':''}</small></div><p class="nsv-p">등록하면 그 주는 인도자·싱어·세션·PPT 담당이 비고, 로테이션은 그 주를 건너뛰어 한 주씩 밀려요. 토요 연습 알림도 가지 않아요.</p>
+  <div class="nsv-l">${up.length?up.map(d=>`<span class="nsv-i"><b>${md(d)}</b><span>${E(noSvcWhy(d))}</span>${ed?`<button type="button" data-nsv-x="${d}" aria-label="${md(d)} 취소" title="취소">✕</button>`:''}</span>`).join(''):'<span class="nsv-empty">등록된 날이 없어요</span>'}</div>
+  ${ed?`<div class="nsv-f"><select id="nsvD">${opts.map(d=>`<option value="${d}">${md(d)}${d===ns?' (이번 주)':''}</option>`).join('')}</select><input id="nsvW" maxlength="30" placeholder="사유 (예: 새생명초청주일)" autocomplete="off"><button type="button" class="btn" id="nsvAdd">예배 없음 등록</button></div><div class="nsv-q">${QUICK.map(q=>`<button type="button" data-nsv-q="${E(q)}">${E(q)}</button>`).join('')}</div>`:''}</section>`}
+ function bind(root){if(!root)return;root.querySelectorAll('[data-nsv-q]').forEach(b=>b.onclick=()=>{const i=root.querySelector('#nsvW');if(i){i.value=b.dataset.nsvQ;i.focus()}});
+  const add=root.querySelector('#nsvAdd');if(add)add.onclick=async()=>{const d=root.querySelector('#nsvD').value,w=root.querySelector('#nsvW').value.trim();if(!d)return;
+   if(!confirm(`${md(d)}을 '예배 없음'으로 등록할까요?\n\n그 주는 아무도 배정되지 않고, 인도자·싱어·PPT 담당 순서가 그 뒤로 한 주씩 밀려요.`))return;add.disabled=true;await save({...noSvc,[d]:w||'청년부 예배 없음'},`${md(d)} 예배 없음으로 등록했어요 · 순서를 한 주씩 미뤘어요`)};
+  root.querySelectorAll('[data-nsv-x]').forEach(b=>b.onclick=async()=>{const d=b.dataset.nsvX;if(!confirm(`${md(d)} '예배 없음'을 취소할까요? 순서가 다시 원래대로 돌아가요.`))return;const n={...noSvc};delete n[d];await save(n,`${md(d)} 예배 없음을 취소했어요`)})}
+ window.kzNoSvcPanel=panel;
+ /* 공지·일정 > 일정 탭 */
+ if(typeof eventBody==='function'){const o=eventBody;eventBody=function(){const h=o.apply(this,arguments);return panel()+h};}
+ if(typeof noticeView==='function'){const o=noticeView;noticeView=function(){const r=o.apply(this,arguments);try{bind(document.querySelector('#body'))}catch(e){}return r}}
+ /* 인도자 일정 */
+ if(typeof lsView==='function'){const o=lsView;lsView=function(){const r=o.apply(this,arguments);try{const h=document.querySelector('#body .ls4>.ro-h');if(h){h.insertAdjacentHTML('afterend',panel());bind(document.querySelector('#body'))}}catch(e){}return r}}
+ /* 홈 안내 */
+ if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const hm=document.querySelector('#body .hm');if(!hm)return r;const d=date,n=shiftDate(nextSun(),7),msg=isNoSvc(d)?[d,'이 주']:(d===nextSun()&&isNoSvc(n))?[n,'다음 주']:null;
+   if(msg){hm.insertAdjacentHTML('afterbegin',`<div class="hm-nosvc"><b>${msg[1]} ${md(msg[0])}은 청년부 예배가 없어요</b><small>${E(noSvcWhy(msg[0]))} · 인도자·싱어·세션 배정과 토요 연습이 쉬어요</small></div>`)}}catch(e){}return r}}
+ /* 출결 체크: 예배 없는 주는 안내 */
+ if(typeof atCheckHTML==='function'){const o=atCheckHTML;atCheckHTML=function(){const h=o.apply(this,arguments);try{if(typeof atWeek!=='undefined'&&isNoSvc(atWeek))return `<div class="nosvc-box" style="margin-bottom:10px"><b>예배 없음</b><span>${E(noSvcWhy(atWeek))} · 이 주는 출결을 받지 않아요</span></div>`+h}catch(e){}return h}}
+})();</script>
 </html>
 
 <script id="kz-score-pages-script">

@@ -169,3 +169,18 @@ test('ppt duty reminder: upcoming Sunday duty, once per person, override respect
  r=await run({system:true},{action:'pptRemind'});assert.equal(r.date,'2026-10-25');assert.equal(r.name,'나');
  clock=Date.UTC(2026,9,18,3,0);/* 일요일 */assert.equal((await run({system:true},{action:'pptRemind'})).skipped,'sunday');
  await assert.rejects(run(people[0],{action:'pptRemind'}),{status:400});});
+test('no-service Sunday: no ppt/rsvp reminder that week, ppt rotation shifts one week',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'a3',name:'다',rank:'팀원',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,12,10,0);
+ const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),collection:n=>({doc:k=>ref(path+'/'+n+'/'+k)})});
+ const db={collection:n=>({doc:k=>ref(n+'/'+k)}),runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v)),update:(x,v)=>w.push(()=>data.set(x.path,{...data.get(x.path),...v})),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ data.set('settings/pptRotation',{members:['가','나','다'],weeks:1,start:'2026-10-11',overrides:{}});
+ data.set('settings/noService',{days:{'2026-10-18':'새생명초청주일'}});
+ let r=await run({system:true},{action:'pptRemind'});assert.equal(r.skipped,'no-service');
+ r=await run({system:true},{action:'rsvpRemind'});assert.equal(r.skipped,'no-service');
+ clock=Date.UTC(2026,9,19,10,0);/* 주일 10-25: 10-11 가, 10-18 없음, 10-25 나 (한 주 밀림) */
+ r=await run({system:true},{action:'pptRemind'});assert.equal(r.date,'2026-10-25');assert.equal(r.name,'나');assert.equal(pushed.length,1);});
+
