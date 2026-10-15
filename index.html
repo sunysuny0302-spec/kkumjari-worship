@@ -9701,18 +9701,30 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  IC.smile='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.2c.9 1.3 2.1 2 3.5 2s2.6-.7 3.5-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/></svg>';
  function pollHTML(p){const q=p.poll,my=q.my||[],tot=q.total||0,mx=Math.max(1,...q.options.map(o=>o.n));
   return `<div class="kf-media kf-poll"><div class="kf-pq"><span aria-hidden="true">📊</span><b>${E(q.q)}</b></div><div class="kf-popts">${q.options.map((o,k)=>{const pct=tot?Math.round(o.n/tot*100):0;return `<button type="button" class="kf-popt ${my.includes(k)?'on':''} ${o.n===mx&&o.n?'top':''}" data-kf-vote="${k}" aria-pressed="${my.includes(k)}" title="${E((o.who||[]).join(', '))}"><i style="width:${my.length?pct:0}%"></i><span class="kf-pck">${my.includes(k)?'✓':''}</span><span class="kf-pt">${E(o.t)}</span>${my.length?`<span class="kf-pn">${o.n}명 · ${pct}%</span>`:''}</button>`}).join('')}</div><div class="kf-pfoot"><span>${tot}명 참여${q.multi?' · 여러 개 고를 수 있어요':''}</span>${my.length?'<button type="button" data-kf-voters>누가 골랐는지 보기</button>':'<span>골라야 결과가 보여요</span>'}</div></div>`}
+ const mdText=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||''));return m?(+m[2])+'월 '+(+m[3])+'일':''};
+ function cheersHTML(p){const c=p.cheers||{n:0,who:[],ids:[]};if(!c.n)return '<p class="kf-bdc-none">아직 축하가 없어요 · 첫 축하를 보내 보세요</p>';
+  const ids=c.ids||[],who=c.who||[];return `<div class="kf-bdc-ch" title="${E(who.join(', '))}"><span class="kf-bdc-av">${ids.slice(0,6).map((u,k)=>av(u,who[k]||'')).join('')}</span><span><b>${c.n}명</b>이 축하했어요${who.length?` · ${E(who.slice(0,3).join(', '))}${c.n>3?' 외':''}`:''}</span></div>`}
+ function bdayHTML(p){const isMe=p.owner===me().id,c=p.cheers||{};
+  return `<div class="kf-media kf-bdc"><div class="kf-bdc-fx" aria-hidden="true">${'🎉🎈✨🎊🎈✨'.match(/./gu).map((e,k)=>`<i style="--k:${k}">${e}</i>`).join('')}</div><div class="kf-bdc-cake" aria-hidden="true">🎂</div>
+   <p class="kf-bdc-t">${isMe?`생일 축하해요,<br><b>${E(p.name)}</b>님!`:`오늘은 <b>${E(p.name)}</b>님<br>생일이에요`}</p><small class="kf-bdc-d">${mdText(p.bday&&p.bday.date)}</small>
+   ${cheersHTML(p)}${isMe?'<p class="kf-bdc-me">오늘 하루 꿈마당 식구들의 축하가 여기 모여요</p>':`<button type="button" class="kf-bdc-btn ${c.mine?'on':''}" data-kf-cheerp aria-pressed="${!!c.mine}">${c.mine?'🎉 축하했어요':'🎉 축하하기'}</button>`}<div class="kf-burst">${IC.heart}</div></div>`}
+ async function cheerPost(id){const p=find(id);if(!p||S.cheering)return;const c=p.cheers||{n:0,who:[],ids:[],mine:false},on=!c.mine,prev={...c};S.cheering=1;
+  p.cheers=on?{n:c.n+1,who:[me().name,...(c.who||[])],ids:[me().id,...(c.ids||[])],mine:true}:{n:Math.max(0,c.n-1),who:(c.who||[]).filter((_,k)=>(c.ids||[])[k]!==me().id),ids:(c.ids||[]).filter(u=>u!==me().id),mine:false};repaintCard(id);
+  if(on){const el=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"] .kf-bdc`);if(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}}
+  try{const r=await api({action:'feedCheer',id,on});if(r.item&&r.item.cheers)p.cheers=r.item.cheers;repaintCard(id);if(on)toast('축하를 보냈어요 🎉')}catch(e){p.cheers=prev;repaintCard(id);toast(e.message||'축하를 보내지 못했어요')}S.cheering=0}
  function card(p){const kind=p.kind||'post',n=p.imageCount,yt=ytId(p.text),ig=igUrl(p.text),art=kind==='post'&&!yt&&textArt(p),long=!art&&((p.text||'').length>110||(p.text||'').split('\n').length>3);
   const h=[...String(p.id)].reduce((a,c)=>a+c.charCodeAt(0),0),pal=PAL[h%PAL.length];
   const media=n?`<div class="kf-media"><div class="kf-track">${Array.from({length:n},(_,i)=>`<div class="kf-slide wait" data-i="${i}"></div>`).join('')}</div>${n>1?`<span class="kf-count">1/${n}</span>`:''}<div class="kf-burst">${IC.heart}</div></div>`
    :kind==='thanks'&&p.to?`<div class="kf-media kf-thx"><span class="kf-thx-ic" aria-hidden="true">💌</span><div class="kf-thx-to">To. <b>${E(p.to.name)}</b></div><p>${richHTML(p.text)}</p><div class="kf-thx-from">From. ${E(p.name)}</div><div class="kf-burst">${IC.heart}</div></div>`
+   :kind==='bday'?bdayHTML(p)
    :kind==='poll'&&p.poll?pollHTML(p)
    :yt?`<div class="kf-media kf-ytm">${ytBlock(yt)}</div>`
    :art?`<div class="kf-media kf-art" style="--a:${pal[0]};--b:${pal[1]}"><p>${richHTML(p.text)}</p><div class="kf-burst">${IC.heart}</div></div>`:'';
   const pips=n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'';
-  const cap=p.text&&!art&&kind!=='thanks'?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${richHTML(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}${n&&yt?ytBlock(yt):''}${ig?igBlock(ig):''}`:'';
+  const cap=p.text&&!art&&kind!=='thanks'&&kind!=='bday'?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${richHTML(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}${n&&yt?ytBlock(yt):''}${ig?igBlock(ig):''}`:'';
   const reacts=(p.reacts||[]).length?`<div class="kf-reacts">${p.reacts.map(r=>`<button type="button" class="${p.myReact===r.e?'on':''}" data-kf-react="${r.e}" title="${E((r.who||[]).join(', '))}">${r.e} <b>${r.n}</b></button>`).join('')}</div>`:'';
   const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b> ${E(c.text)}</div>`).join('');
-  return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring ${fresh(p.owner)?'':'seen'}">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
+  return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring ${fresh(p.owner)?'':'seen'}">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${kind==='bday'?'🎂 오늘 생일':ago(p.createdAt)+(p.editedAt?' · 수정됨':'')}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
    ${media}<div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글 ${p.commentCount}개">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button><button type="button" class="kf-emo-btn ${p.myReact?'on':''}" data-kf-emo aria-label="이모지 반응">${p.myReact?`<em>${p.myReact}</em>`:IC.smile}</button>${pips}</div>
    <div class="kf-body">${reacts}${likesLine(p)}${cap}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개 보기</button>`:''}
     <form class="kf-add" data-kf-add>${av(me().id,me().name)}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
@@ -9734,12 +9746,13 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  function thanksTop(){const ids=Object.entries(S.thanks||{}).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,6);const nm=id=>(MEMBERS.find(x=>x.id===id)||S.items.find(p=>p.to&&p.to.id===id)?.to||{}).name||'';const mine=(S.thanks||{})[me().id]||0;
   return `<div class="kf-ttop"><div class="kf-ttop-h"><b>💌 감사 카드</b><span>내가 받은 카드 <b>${mine}</b>장</span></div>${ids.length?`<div class="kf-ttop-l">${ids.filter(([id])=>nm(id)).map(([id,n])=>`<span>${av(id,nm(id))}<b>${E(nm(id))}</b><small>${n}</small></span>`).join('')}</div>`:''}<button type="button" class="kf-ttop-go" data-kf-thx>고마운 사람에게 카드 보내기</button></div>`}
  function bdayBar(){const m=me(),out=[];const today=S.birthdays.filter(x=>x.id!==m.id),mine=S.birthdays.some(x=>x.id===m.id);
-  if(mine)out.push(`<div class="kf-bday me"><span aria-hidden="true">🎂</span><div><b>생일 축하해요, ${E(m.name)}님!</b><small>오늘 하루 꿈마당 식구들의 축하를 받아 보세요</small></div></div>`);
-  today.forEach(x=>out.push(`<div class="kf-bday"><span aria-hidden="true">🎉</span><div><b>오늘은 ${E(x.name)}님 생일이에요</b><small>축하 메시지를 남겨 주세요</small></div><button type="button" data-kf-cheer="${E(x.id)}">축하하기</button></div>`));
+  /* 오늘 생일인 사람은 자동으로 올라오는 생일 게시물로 보여줌. 게시물이 아직 없을 때만 안내 */
+  const has=id=>S.items.some(p=>p.kind==='bday'&&p.owner===id);
+  today.filter(x=>!has(x.id)).forEach(x=>out.push(`<div class="kf-bday"><span aria-hidden="true">🎉</span><div><b>오늘은 ${E(x.name)}님 생일이에요</b><small>생일 게시물을 준비하고 있어요</small></div></div>`));
   let hide=false;try{hide=!!localStorage.getItem('kzBdayHint:'+m.id)}catch(e){}
   if(!S.myBday&&S.loaded&&m.id!=='management'&&!hide)out.push(`<div class="kf-bday hint"><span aria-hidden="true">🎈</span><div><b>생일을 알려 주세요</b><small>그날 꿈마당에서 함께 축하해요</small></div><button type="button" data-kf-bday>등록</button><button type="button" class="kf-bx" data-kf-bdx aria-label="닫기">✕</button></div>`);
   return out.join('')}
- function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;if(tab==='thanks')items=items.filter(p=>p.kind==='thanks');const who=only&&S.items.find(p=>p.owner===only);
+ function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;items=[...items.filter(p=>p.kind==='bday'),...items.filter(p=>p.kind!=='bday')];if(tab==='thanks')items=items.filter(p=>p.kind==='thanks');const who=only&&S.items.find(p=>p.owner===only);
   const tabs=`<div class="kf-tabs" role="tablist">${[['all','전체'],['album','사진첩'],['thanks','감사 카드']].map(([k,t])=>`<button type="button" role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-kf-tab="${k}">${t}</button>`).join('')}${me().id!=='management'?`<button type="button" class="kf-tab-bd" data-kf-bday aria-label="내 생일 ${S.myBday?'바꾸기':'등록'}">🎂<span>${S.myBday?(+S.myBday.slice(0,2))+'.'+(+S.myBday.slice(3)):'생일'}</span></button>`:''}</div>`;
   const list=tab==='album'?album(items):items.length?(tab==='thanks'?'':'')+items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   const side=(()=>{const by=new Map();S.items.forEach(p=>{const x=by.get(p.owner);if(!x)by.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt});else if(p.createdAt>x.at)x.at=p.createdAt});const m=me();
@@ -9757,7 +9770,6 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   b.querySelectorAll('[data-kf-tab]').forEach(x=>x.onclick=()=>{S.tab=x.dataset.kfTab;paint()});
   b.querySelectorAll('[data-kf-bday]').forEach(x=>x.onclick=bdaySheet);
   b.querySelector('[data-kf-bdx]')?.addEventListener('click',()=>{try{localStorage.setItem('kzBdayHint:'+me().id,'1')}catch(e){}paint()});
-  b.querySelectorAll('[data-kf-cheer]').forEach(x=>x.onclick=()=>cheer(S.birthdays.find(y=>y.id===x.dataset.kfCheer)));
   b.querySelector('[data-kf-thx]')?.addEventListener('click',()=>writeThanks());
   b.querySelectorAll('[data-kf-at]').forEach(x=>{const id=x.dataset.kfAt;x.onclick=async()=>{if(!S.imgs.has(id)){try{const r=await api({action:'feedImages',id});S.imgs.set(id,r.images||[])}catch(e){return toast('사진을 불러오지 못했어요')}}openViewer(id,0)};
    if(!S.imgs.has(id)){const go=async()=>{try{const r=await api({action:'feedImages',id});S.imgs.set(id,r.images||[]);if(r.images&&r.images[0])x.innerHTML=`<img src="${r.images[0]}" alt="">`+(r.images.length>1?'<i aria-hidden="true">❐</i>':'')}catch(e){}};if(typeof IntersectionObserver==='function'){const ob=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){ob.disconnect();go()}},{rootMargin:'400px 0px'});ob.observe(x)}else go()}});
@@ -9819,8 +9831,22 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   const row=v=>{const d=document.createElement('div');d.className='kf-pin';d.innerHTML=`<input type="text" maxlength="40" placeholder="선택지 ${box.children.length+1}" aria-label="선택지"><button type="button" aria-label="선택지 빼기">✕</button>`;d.querySelector('input').value=v||'';d.querySelector('input').oninput=upd;d.querySelector('button').onclick=()=>{if(box.children.length>2){d.remove();upd()}};box.append(d)};
   row();row();add.onclick=()=>{row();upd();box.lastElementChild.querySelector('input').focus()};q.oninput=upd;upd();setTimeout(()=>q.focus(),60);
   const reqId=rid('p');go.onclick=async()=>{go.disabled=true;go.textContent='올리는 중…';try{const r=await api({action:'feedPost',id:reqId,kind:'poll',q:q.value.trim(),options:vals(),multi:mu.checked});S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];close();S.tab='all';paint();window.scrollTo({top:0,behavior:'smooth'});toast('투표를 올렸어요')}catch(e){go.disabled=false;go.textContent='투표 올리기';toast(e.message||'올리지 못했어요')}}}
+ /* 지난 생일에 받은 축하 (생일 당사자에게만) */
+ const KS=id=>'kzBdayKeep:'+me().id+':'+id;
+ function keepAuto(){if(view!=='feed'||document.querySelector('.kf-ov'))return;const c=(S.bdayCards||[]).find(x=>{try{return !localStorage.getItem(KS(x.id))}catch(e){return false}});if(c)keepsake(c)}
+ async function keepsake(p){try{localStorage.setItem(KS(p.id),'1')}catch(e){}const c=p.cheers||{n:0,who:[]};
+  if(!document.getElementById('kzRollFont')){const l=document.createElement('link');l.id='kzRollFont';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap';document.head.append(l)}
+  const o=sheet('생일 롤링페이퍼',`<div class="kf-roll"><div class="kf-roll-top"><span class="kf-roll-cake" aria-hidden="true">🎂</span><b>${E(p.name)}님의 생일 롤링페이퍼</b><small>${mdText(p.bday&&p.bday.date)} · 축하 ${c.n} · 좋아요 ${p.likeCount} · 댓글 ${p.commentCount}</small></div>
+   <div class="kf-roll-paper"><div class="kf-roll-notes"><div class="kf-none">펼치는 중…</div></div>
+   ${c.n?`<div class="kf-roll-stamps">${(c.who||[]).map((n,k)=>`<span style="--r:${((k*37)%11)-5}deg">🎉 ${E(n)}</span>`).join('')}</div>`:''}
+   ${(p.reacts||[]).length?`<div class="kf-roll-reacts">${p.reacts.map(r=>`<span>${r.e} ${r.n}</span>`).join('')}</div>`:''}</div></div>`);
+  const box=o.querySelector('.kf-roll-notes');const COL=['#fff3a8','#ffd6e0','#d6f0ff','#dff5d2','#ffe2c4','#eadcff'];
+  try{const r=await api({action:'feedComments',id:p.id});const it=r.items||[];
+   box.innerHTML=it.length?it.map((x,k)=>`<div class="kf-note" style="--bg:${COL[k%COL.length]};--r:${((k*53)%9)-4}deg"><p>${richHTML(x.text)}</p><span>- ${E(x.name)}</span></div>`).join(''):`<p class="kf-roll-empty">${c.n?'댓글 대신 축하 도장이 가득해요 🎉':'이번엔 조용히 지나갔어요. 내년엔 더 많이 축하받아요 🎈'}</p>`}
+  catch(e){box.innerHTML='<p class="kf-roll-empty">불러오지 못했어요</p>'}}
  function bdaySheet(){const cur=S.myBday||'',[cm,cd]=cur?cur.split('-').map(Number):[0,0];
   const o=sheet('내 생일',`<div class="kf-w kf-bd"><p class="kf-bdp">생일 당일에 꿈마당 맨 위에 축하 카드가 떠요 🎂<br><small>연도는 받지 않아요</small></p><div class="kf-bdsel"><select aria-label="월"><option value="">월</option>${Array.from({length:12},(_,k)=>`<option value="${k+1}" ${cm===k+1?'selected':''}>${k+1}월</option>`).join('')}</select><select aria-label="일"><option value="">일</option>${Array.from({length:31},(_,k)=>`<option value="${k+1}" ${cd===k+1?'selected':''}>${k+1}일</option>`).join('')}</select></div></div>`,`<div class="kf-sf kf-sf-main" style="justify-content:space-between">${cur?'<button type="button" class="kf-ghost" data-del>지우기</button>':'<span></span>'}<button type="button" data-go>저장</button></div>`);
+  if((S.bdayCards||[]).length){const w=o.querySelector('.kf-bd');w.insertAdjacentHTML('beforeend',`<div class="kf-keep-list"><p class="kf-keep-h">지난 생일에 받은 축하</p>${S.bdayCards.map(c=>`<button type="button" data-keep="${E(c.id)}">🎂 ${mdText(c.bday&&c.bday.date)} · 축하 ${(c.cheers||{}).n||0} · 댓글 ${c.commentCount}<span>›</span></button>`).join('')}</div>`);w.querySelectorAll('[data-keep]').forEach(b=>b.onclick=()=>keepsake(S.bdayCards.find(x=>x.id===b.dataset.keep)))}
   const [ms,ds]=o.querySelectorAll('select'),go=o.querySelector('[data-go]');const upd=()=>{go.disabled=!(ms.value&&ds.value)};ms.onchange=ds.onchange=upd;upd();
   const save=async md=>{go.disabled=true;try{await api({action:'feedBday',md});S.myBday=md;close();paint();toast(md?'생일을 저장했어요 🎂':'생일을 지웠어요')}catch(e){go.disabled=false;toast(e.message||'저장하지 못했어요')}};
   go.onclick=()=>save(String(ms.value).padStart(2,'0')+'-'+String(ds.value).padStart(2,'0'));o.querySelector('[data-del]')?.addEventListener('click',()=>save(''))}
@@ -9856,12 +9882,13 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   c.querySelector('[data-kf-moretxt]')?.addEventListener('click',e=>{c.querySelector('.kf-cap')?.classList.remove('clamp');e.currentTarget.remove()});
   const f=c.querySelector('[data-kf-add]');if(f){const i=f.querySelector('input'),b=f.querySelector('button');tagify(i);i.oninput=()=>{b.disabled=!i.value.trim()};b.addEventListener('mousedown',e=>e.preventDefault());f.onsubmit=e=>{e.preventDefault();addComment(id,wire(i.value).trim(),i).catch(()=>{});setTimeout(()=>i._tagMirror&&i._tagMirror(),0)}}
   c.querySelector('[data-kf-emo]')?.addEventListener('click',e=>emoPick(id,e.currentTarget));
+  c.querySelector('[data-kf-cheerp]')?.addEventListener('click',e=>{e.stopPropagation();cheerPost(id)});
   const lk=c.querySelector('[data-kf-like]');if(lk){let t=0;const st=()=>{t=setTimeout(()=>{t=-1;emoPick(id,lk)},480)},en=e=>{if(t===-1){e.preventDefault();e.stopImmediatePropagation();t=0}else{clearTimeout(t);t=0}};lk.addEventListener('touchstart',st,{passive:true});lk.addEventListener('touchend',en);lk.addEventListener('touchmove',()=>{clearTimeout(t);t=0},{passive:true});lk.addEventListener('contextmenu',e=>e.preventDefault())}
   c.querySelectorAll('[data-kf-react]').forEach(b=>b.onclick=()=>react(id,b.dataset.kfReact));
   c.querySelectorAll('[data-kf-vote]').forEach(b=>b.onclick=()=>vote(id,+b.dataset.kfVote));
   c.querySelector('[data-kf-voters]')?.addEventListener('click',()=>voters(id));
   c.querySelectorAll('.kf-yt').forEach(y=>y.onclick=e=>{e.stopPropagation();const v=y.dataset.yt;y.outerHTML=`<div class="kf-yt on"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(v)}?autoplay=1&playsinline=1&rel=0" title="YouTube 영상" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`});
-  const art=c.querySelector('.kf-art,.kf-thx');if(art){let last=0;art.addEventListener('click',()=>{const now=Date.now();if(now-last<320){last=0;like(id,true,true)}else last=now})}
+  const art=c.querySelector('.kf-art,.kf-thx,.kf-bdc');if(art){let last=0;art.addEventListener('click',()=>{const now=Date.now();if(now-last<320){last=0;like(id,true,true)}else last=now})}
   const m=c.querySelector('.kf-track')?.closest('.kf-media');if(m){const tr=m.querySelector('.kf-track'),cnt=m.querySelector('.kf-count'),pips=c.querySelectorAll('.kf-pips i');
    tr.addEventListener('scroll',()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(cnt)cnt.textContent=(k+1)+'/'+tr.children.length;pips.forEach((x,j)=>x.classList.toggle('on',j===k))},{passive:true});
    let last=0,timer=0;m.addEventListener('click',e=>{const now=Date.now();if(now-last<320){clearTimeout(timer);last=0;like(id,true,true);return}last=now;const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));timer=setTimeout(()=>openViewer(id,k),330)});
@@ -9871,7 +9898,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   b.querySelectorAll('.kf-card').forEach(bindCard)}
  async function load(force){if(S.loading)return;if(!force&&Date.now()-S.at<8000&&S.loaded)return paint();S.loading=true;S.err='';
   names().then(()=>{if(view==='feed'&&!S.painted){S.painted=1;const y=window.scrollY;paint();window.scrollTo(0,y)}});
-  try{const r=await api({action:'feedList'});if(typeof r.notify==='boolean')S.notify=r.notify;if(Array.isArray(r.birthdays))S.birthdays=r.birthdays;if(typeof r.myBday==='string')S.myBday=r.myBday;if(r.thanks&&typeof r.thanks==='object')S.thanks=r.thanks;const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
+  try{const r=await api({action:'feedList'});if(typeof r.notify==='boolean')S.notify=r.notify;if(Array.isArray(r.birthdays))S.birthdays=r.birthdays;if(Array.isArray(r.bdayCards)){S.bdayCards=r.bdayCards;setTimeout(keepAuto,400)}if(typeof r.myBday==='string')S.myBday=r.myBday;if(r.thanks&&typeof r.thanks==='object')S.thanks=r.thanks;const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
   S.loading=false;if(view==='feed'){const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.kf-card');if(typing&&!force)return;const y=window.scrollY;paint();window.scrollTo(0,y)}}
  /* 화면 연결: 홈은 건드리지 않고 메뉴에만 '피드' */
  if(typeof body==='function'){const o=body;body=function(){if(view==='feed'){const b=document.getElementById('body');if(b){paint();load()}return}return o.apply(this,arguments)}}
@@ -10086,6 +10113,60 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .kz-vseg button svg{width:17px;height:17px}
 .kz-vseg button.on{background:#fff;color:#2b231e;box-shadow:0 1px 4px rgba(60,40,20,.14)}
 @media(max-width:760px){.kz-vseg{max-width:none}}
+</style>
+<style id="kz-bdc-css">
+.kf-card .kf-media.kf-bdc{position:relative;overflow:hidden;padding:30px 20px 22px;text-align:center;background:radial-gradient(120% 80% at 50% 0%,#fff3c4 0%,#ffd6e0 55%,#e9d8ff 100%);color:#4a2a35;display:flex;flex-direction:column;align-items:center;gap:6px}
+.kf-bdc-cake{font-size:54px;line-height:1;filter:drop-shadow(0 6px 10px rgba(180,90,90,.25));animation:kfCake 2.6s ease-in-out infinite}
+@keyframes kfCake{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+.kf-bdc-t{margin:6px 0 0;font-size:18px;line-height:1.45}
+.kf-bdc-t b{font-size:21px}
+.kf-bdc-d{font-size:12px;opacity:.7}
+.kf-bdc-ch{display:flex;align-items:center;gap:8px;margin-top:10px;padding:6px 12px 6px 6px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12.5px}
+.kf-bdc-av{display:flex}
+.kf-bdc-av>*{width:24px!important;height:24px!important;font-size:10px!important;border:2px solid #fff;border-radius:50%;margin-left:-7px}
+.kf-bdc-av>*:first-child{margin-left:0}
+.kf-bdc-none{margin:10px 0 0;font-size:12px;opacity:.7}
+.kf-bdc-me{margin:8px 0 0;font-size:12.5px;opacity:.8}
+.kf-bdc-btn{margin-top:12px;border:0;border-radius:999px;padding:11px 26px;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ff7aa2,#ffb36b);box-shadow:0 8px 20px -8px rgba(230,90,120,.7);cursor:pointer;transition:transform .15s}
+.kf-bdc-btn:active{transform:scale(.95)}
+.kf-bdc-btn.on{background:#fff;color:#c2416b;box-shadow:inset 0 0 0 2px #ffb3c7}
+.kf-bdc-fx{position:absolute;inset:0;pointer-events:none}
+.kf-bdc-fx i{position:absolute;font-style:normal;font-size:18px;opacity:.55;left:calc(8% + var(--k)*16%);top:calc(10% + (var(--k) * 37 % 60) * 1%);animation:kfFloat 5s ease-in-out calc(var(--k)*-.8s) infinite}
+@keyframes kfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.kf-bdc.pop .kf-bdc-fx i{animation:kfBoom .9s ease-out 1;opacity:1}
+@keyframes kfBoom{0%{transform:scale(.4) translateY(30px);opacity:0}40%{opacity:1}100%{transform:scale(1.3) translateY(-30px);opacity:0}}
+.kf-keep .kf-media.kf-bdc{border-radius:20px;margin:0}
+.kf-keep-n{display:flex;gap:8px;margin-top:12px}
+.kf-keep-n span{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:8px 6px;border-radius:14px;background:rgba(255,255,255,.7);font-size:11.5px}
+.kf-keep-n b{font-size:19px}
+.kf-keep-h{margin:16px 0 8px;font-size:13px;font-weight:700}
+.kf-keep-who{display:flex;flex-wrap:wrap;gap:10px}
+.kf-keep-who>span{display:flex;flex-direction:column;align-items:center;gap:3px;width:52px}
+.kf-keep-who small{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+.kf-keep-r{display:inline-flex;gap:3px;padding:3px 9px;border-radius:999px;background:rgba(127,127,127,.12);font-size:12.5px}
+.kf-keep-c .kf-c{display:flex;gap:9px;padding:8px 0;border-top:1px solid rgba(127,127,127,.15)}
+.kf-keep-c .kf-ch{margin:0;display:flex;gap:6px;align-items:baseline;font-size:13px}
+.kf-keep-c .kf-ch small{font-size:11px;opacity:.6}
+.kf-keep-c .kf-ct{margin:2px 0 0;font-size:13.5px;line-height:1.5;word-break:break-word}
+.kf-keep-list{margin-top:18px}
+.kf-keep-list button{display:flex;justify-content:space-between;width:100%;border:1px solid rgba(127,127,127,.25);background:rgba(255,255,255,.6);border-radius:12px;padding:11px 12px;margin-top:6px;font-size:13.5px;color:inherit;cursor:pointer;text-align:left}
+</style>
+<style id="kz-roll-css">
+.kf-roll{font-family:'Gaegu','Nanum Pen Script',cursive,var(--sans,system-ui)}
+.kf-roll-top{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;margin-bottom:12px}
+.kf-roll-cake{font-size:44px;line-height:1}
+.kf-roll-top b{font-size:22px;color:#5a2e3c}
+.kf-roll-top small{font-family:var(--sans,system-ui);font-size:12px;color:#8a6a72}
+.kf-roll-paper{position:relative;padding:18px 14px 16px;border-radius:18px;background:#fffdf6 repeating-linear-gradient(0deg,transparent 0 27px,rgba(200,170,140,.18) 27px 28px);box-shadow:inset 0 0 0 1px rgba(200,170,140,.35),0 6px 18px -10px rgba(120,80,40,.35)}
+.kf-roll-notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px 12px}
+.kf-note{background:var(--bg);transform:rotate(var(--r));padding:14px 12px 10px;border-radius:4px 4px 14px 4px;box-shadow:0 6px 12px -6px rgba(80,50,20,.35);position:relative;color:#3a2a22}
+.kf-note:before{content:"";position:absolute;top:-7px;left:50%;width:44px;height:14px;margin-left:-22px;background:rgba(255,255,255,.65);transform:rotate(-3deg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.kf-note p{margin:0;font-size:19px;line-height:1.3;word-break:break-word}
+.kf-note span{display:block;text-align:right;margin-top:8px;font-size:16px;font-weight:700;opacity:.75}
+.kf-roll-stamps{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:center}
+.kf-roll-stamps span{transform:rotate(var(--r));border:2px solid #e2577f;color:#d03a66;border-radius:8px;padding:2px 10px;font-size:17px;font-weight:700;background:rgba(255,255,255,.6)}
+.kf-roll-reacts{display:flex;gap:10px;justify-content:center;margin-top:12px;font-size:18px}
+.kf-roll-empty{grid-column:1/-1;text-align:center;font-size:20px;color:#8a6a72;margin:16px 0}
 </style>
 </html>
 

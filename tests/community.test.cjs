@@ -22,7 +22,7 @@ function fixture(){
  const user={id:'u'.repeat(128),name:'팀원',rank:'싱어',status:'approved'},admin={id:'management',name:'관리계정',rank:'관리계정',status:'approved'};
  const outsider={id:"other_user",name:"다른 팀원",rank:"싱어",status:"approved"};
  const run=createService({db,accounts:async()=>[user,admin,outsider],push:async(recipients,note)=>{pushed.push({recipients,note});return{sent:recipients.length};},now:()=>clock});
- return{run,user,admin,outsider,pushed,data,clock:()=>clock,advance:()=>clock+=11000};
+ return{run,user,admin,outsider,pushed,data,clock:()=>clock,advance:(ms=11000)=>clock+=ms};
 }
 test('long owner ID: send retry stays one message; images lookup accepts stored ID',async()=>{
  const f=fixture(),input={action:'send',room:'all',id:'request_12345678',text:'안녕',images:[]};
@@ -381,4 +381,23 @@ test('thanks card and birthday notes ignore the 꿈마당 mute',async()=>{
  const f=fixture();await f.run(f.outsider,{action:'feedPref',enabled:false});
  await f.run(f.user,{action:'feedPost',id:'feedreq_thx777',kind:'thanks',to:f.outsider.id,text:'늘 고마워요'});
  const last=f.pushed.at(-1);assert.equal(last.recipients[0].id,f.outsider.id);assert.equal(last.note.type,'celebrate');
+});
+test('birthday post: auto-created once, cheers notify even when muted, locked from edit',async()=>{
+ const f=fixture();const k=new Date(f.clock()+9*3600000),md=k.toISOString().slice(5,10);
+ await f.run(f.outsider,{action:'feedBday',md});await f.run(f.outsider,{action:'feedPref',enabled:false});
+ let l=await f.run(f.user,{action:'feedList'});const bp=l.items.filter(x=>x.kind==='bday');assert.equal(bp.length,1);assert.equal(bp[0].owner,f.outsider.id);assert.equal(bp[0].bday.date,k.toISOString().slice(0,10));
+ l=await f.run(f.user,{action:'feedList'});assert.equal(l.items.filter(x=>x.kind==='bday').length,1);
+ const mine=(await f.run(f.outsider,{action:'feedList'})).items.find(x=>x.kind==='bday');assert.equal(mine.mine,false);assert.equal(mine.canDelete,false);
+ await assert.rejects(f.run(f.outsider,{action:'feedEdit',id:bp[0].id,text:'x'}),{status:400});
+ await assert.rejects(f.run(f.outsider,{action:'feedDelete',id:bp[0].id}),{status:403});
+ let c=await f.run(f.user,{action:'feedCheer',id:bp[0].id});assert.equal(c.item.cheers.n,1);assert.equal(c.item.cheers.mine,true);assert.deepEqual(c.item.cheers.who,[f.user.name]);
+ const last=f.pushed.at(-1);assert.equal(last.recipients[0].id,f.outsider.id);assert.equal(last.note.type,'celebrate');assert.match(last.note.title,/축하했어요/);
+ const n=f.pushed.length;c=await f.run(f.user,{action:'feedCheer',id:bp[0].id});assert.equal(c.item.cheers.n,1);assert.equal(f.pushed.length,n);
+ c=await f.run(f.user,{action:'feedCheer',id:bp[0].id,on:false});assert.equal(c.item.cheers.n,0);
+ await assert.rejects(f.run(f.outsider,{action:'feedCheer',id:bp[0].id}),{status:400});
+ const cm=await f.run(f.user,{action:'feedComment',id:bp[0].id,cid:'feedc_bd0001',text:'생일 축하해요!'});assert.equal(cm.commentCount,1);
+ f.advance(86400000);l=await f.run(f.user,{action:'feedList'});assert.equal(l.items.filter(x=>x.kind==='bday').length,0);
+ assert.equal((l.bdayCards||[]).length,0);
+ const own=await f.run(f.outsider,{action:'feedList'});assert.equal(own.items.filter(x=>x.kind==='bday').length,0);assert.equal(own.bdayCards.length,1);assert.equal(own.bdayCards[0].commentCount,1);assert.equal(own.bdayCards[0].cheers.n,0);
+ const cs=await f.run(f.outsider,{action:'feedComments',id:own.bdayCards[0].id});assert.equal(cs.items.length,1);
 });
