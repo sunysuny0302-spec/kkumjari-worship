@@ -214,4 +214,23 @@ test('attend rank: any approved member gets per-person totals sorted by rate, no
  const r=await run(people[1],{action:'attendRank',range:'month'});
  assert.deepEqual(r.items.map(x=>x.name),['가','나','다']);assert.equal(r.items[0].rate,100);assert.equal(r.items[1].rate,50);assert.equal(r.items[2].rate,0);assert.equal(r.items[2].late,1);assert.equal(r.days,2);
  assert.equal(JSON.stringify(r).includes('recs'),false);});
+test('event rsvp: answer/get, deadline, staff-only notify, reminder once before deadline',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'m1',name:'선임',rank:'선임싱어',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,15,3,0);
+ const snap=p=>({id:p.split('/').at(-1),exists:data.has(p),data:()=>data.get(p)});
+ const ref=p=>({path:p,id:p.split('/').at(-1),get:async()=>snap(p),collection:c=>col(p+'/'+c)});
+ const col=n=>({doc:k=>ref(n+'/'+k),where:(f,op,v)=>({get:async()=>({docs:[...data.keys()].filter(k=>k.startsWith(n+'/')&&k.split('/').length===n.split('/').length+1&&String(data.get(k)[f]||'')>=v).map(k=>({id:k.split('/').at(-1),data:()=>data.get(k)}))})})});
+ const db={collection:col,runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ data.set('events/e1',{title:'수련회',date:'2026-11-03',rsvp:true,rsvpUntil:'2026-10-25'});data.set('events/e2',{title:'회식',date:'2026-11-01'});
+ await run(people[0],{action:'evRsvpSet',id:'e1',s:'yes'});await run(people[1],{action:'evRsvpSet',id:'e1',s:'no',note:'출장'});
+ let g=await run(people[0],{action:'evRsvpGet',ids:['e1']});assert.equal(g.items.e1['가'].s,'yes');assert.equal(g.items.e1['나'].note,'출장');
+ await assert.rejects(run(people[0],{action:'evRsvpSet',id:'e2',s:'yes'}),{status:404});
+ await assert.rejects(run(people[0],{action:'evRsvpNotify',id:'e1'}),{status:403});
+ const n=await run(people[2],{action:'evRsvpNotify',id:'e1'});assert.equal(n.sent,2);
+ clock=Date.UTC(2026,9,23,10,0);/* 마감 2일 전 */pushed.length=0;
+ let r=await run({system:true},{action:'eventRemind'});assert.equal(r.reminded,1);assert.deepEqual(pushed[0].r.map(a=>a.id),['m1']);
+ r=await run({system:true},{action:'eventRemind'});assert.equal(r.reminded,0);
+ clock=Date.UTC(2026,9,26,3,0);/* 마감 지남 */await assert.rejects(run(people[2],{action:'evRsvpSet',id:'e1',s:'yes'}),{status:400});});
 

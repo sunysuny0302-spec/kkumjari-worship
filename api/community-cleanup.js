@@ -15,6 +15,7 @@ module.exports=async function handler(req,res){
   let remind=null;try{remind=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpRemind'});}catch(e){console.error('[rsvp-remind]',e.code||e.name||e.message);remind={error:true};}
   let ppt=null;try{ppt=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'pptRemind'});}catch(e){console.error('[ppt-remind]',e.code||e.name||e.message);ppt={error:true};}
   let serve=null;try{serve=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'serveRemind'});}catch(e){console.error('[serve-remind]',e.code||e.name||e.message);serve={error:true};}
-  return res.json({deleted,remind,ppt,serve});
+  let ev=null;try{ev=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'eventRemind'});}catch(e){console.error('[event-remind]',e.code||e.name||e.message);ev={error:true};}
+  return res.json({deleted,remind,ppt,serve,ev});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };
