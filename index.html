@@ -9290,6 +9290,16 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  if(typeof minList==='function'){const o=minList;minList=function(){const x=o.apply(this,arguments);try{if(!staff())document.querySelectorAll('#body [data-mt="write"],#body [data-me]').forEach(b=>b.remove())}catch(e){}return x}}
  if(typeof minutesView==='function'){const o=minutesView;minutesView=function(){if(!staff())minTab='list';const x=o.apply(this,arguments);try{if(!staff())document.querySelectorAll('#body [data-mt="write"],#body [data-me]').forEach(b=>b.remove())}catch(e){}return x}}
 })();</script>
+<script id="kz-chat-sendtap">/* 휴대폰: 입력 중에 보내기를 누르면 키보드가 먼저 닫혀 한 번 더 눌러야 보내지던 문제.
+ 보내기 버튼을 누를 때 입력칸 포커스를 빼앗지 않고 바로 보냄 → 키보드도 그대로 열려 있음 */
+(function(){
+ const btnOf=e=>e.target&&e.target.closest&&e.target.closest('.kc-chat-send');
+ const typing=()=>{const t=document.getElementById('kcChatText');return t&&document.activeElement===t};
+ let fired=0;
+ document.addEventListener('touchend',e=>{const b=btnOf(e);if(!b||b.disabled||!typing())return;e.preventDefault();e.stopPropagation();fired=Date.now();const f=document.getElementById('kcCompose');if(f&&!f.hidden)f.requestSubmit()},{capture:true,passive:false});
+ document.addEventListener('mousedown',e=>{if(btnOf(e)&&typing())e.preventDefault()},true);
+ document.addEventListener('click',e=>{if(btnOf(e)&&Date.now()-fired<700){e.preventDefault();e.stopPropagation()}},true);
+})();</script>
 </html>
 
 <script id="kz-score-pages-script">
