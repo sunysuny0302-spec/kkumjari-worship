@@ -7769,8 +7769,8 @@ const initial=String(m.name||'?').trim().slice(0,1)||'?',text=String(m.text||'')
 const photo=m.imageCount?`<div class="kc-message-images" data-images="${escape(m.id)}"><button type="button">${KC_ICON.photo}<span>사진 ${m.imageCount}장 보기</span></button></div>`:'';
 const face=mine?'':first?`<span class="kc-avatar" data-profile-id="${escape(m.owner||'')}" data-initial="${escape(initial)}" aria-hidden="true">${escape(initial)}</span>`:'<span class="kc-avatar-gap" aria-hidden="true"></span>';
 const stamp=m._pending?`<time class="pending" datetime="${new Date(m.createdAt).toISOString()}"><i class="kc-sendwait" aria-label="보내는 중"></i>${escape(clock(m.createdAt))}</time>`:last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
-return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${mentionHTML(text)}${photo}</div>${stamp}</div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
- paintProfiles();refreshProfiles();
+return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}" data-mid="${escape(m.id)}" data-at="${Number(m.createdAt)||0}" data-own="${escape(m.owner||'')}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${mentionHTML(text)}${photo}</div><span class="kc-meta"><button type="button" class="kc-rc" hidden></button>${stamp}</span></div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
+ paintProfiles();refreshProfiles();paintReads();l.querySelectorAll('.kc-rc').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.closest('.kc-message');if(m)showReads(m)});
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
  l.querySelectorAll('[data-images]').forEach(el=>{const key=room+'|'+el.dataset.images;const show=images=>{el.innerHTML=KZImages.gallery(images);el.querySelectorAll('img').forEach(im=>im.addEventListener('load',()=>{if(l.isConnected&&l.scrollHeight-l.scrollTop-l.clientHeight<im.clientHeight+160)l.scrollTop=l.scrollHeight},{once:true}));};if(imageCache.has(key))show(imageCache.get(key));else el.querySelector('button').onclick=async e=>{e.target.disabled=true;try{const r=await api({action:'chatImages',room,id:el.dataset.images});if(el.isConnected){if(imageCache.size>=80)imageCache.delete(imageCache.keys().next().value);imageCache.set(key,r.images);show(r.images);}}catch(err){error(err);e.target.disabled=false;}};});
  const older=$c('#kcOlder');if(older)older.onclick=async()=>{older.disabled=true;const h=l.scrollHeight,y=l.scrollTop;try{await loadChat(true,pageGeneration);if(l.isConnected)l.scrollTop=y+(l.scrollHeight-h);}catch(e){error(e);if(older.isConnected)older.disabled=false;}};
@@ -7806,6 +7806,14 @@ function mountProfile(){
  save.onclick=async()=>{if(processing||who!==uid())return;save.disabled=true;file.disabled=true;section.querySelector('[data-profile-remove]').disabled=true;try{const r=await api({action:'profileSave',photo,...(photoL?{photoL}:{})});if(who!==uid())return;const id=authAccount()?.id;if(id)profileCache.set(id,{photo:r.photo,at:Date.now()});paintProfiles();message.textContent=photo?'프로필 사진을 바꿨어요 ✓':'기본 사진으로 바꿨어요 ✓';}catch(e){message.textContent=e.message;save.disabled=false;}finally{file.disabled=false;section.querySelector('[data-profile-remove]').disabled=false;}};
 }
 new MutationObserver(mountProfile).observe(document.body,{childList:true,subtree:true});
+/* 읽음 표시: 메시지마다 아직 안 읽은 사람 수(카톡처럼), 누르면 읽은 사람 · 안 읽은 사람 */
+let kzSeen={},kzReaders=[];
+function kzUnreadOf(el){const at=+el.dataset.at||0,own=el.dataset.own||'';return kzReaders.filter(r=>r.id!==own&&(kzSeen[r.id]||0)<at)}
+function paintReads(){const l=$c('#kcChatLog');if(!l||!kzReaders.length)return;l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{const b=el.querySelector('.kc-rc');if(!b)return;const n=kzUnreadOf(el).length;if(n){b.textContent=n;b.hidden=false;b.setAttribute('aria-label',`안 읽은 사람 ${n}명 · 누르면 누가 읽었는지 보여요`)}else{b.hidden=true;b.textContent=''}})}
+function showReads(el){const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),read=others.filter(r=>(kzSeen[r.id]||0)>=at),un=others.filter(r=>(kzSeen[r.id]||0)<at);
+ document.querySelectorAll('.kf-ov').forEach(o=>o.remove());const o=document.createElement('div');o.className='kf-ov';const li=a=>a.map(r=>`<div>${escape(r.name)}</div>`).join('')||'<div class="kf-none" style="padding:10px 0">없어요</div>';
+ o.innerHTML=`<div class="kf-sheet" role="dialog" aria-modal="true" aria-label="읽음 확인"><div class="kf-sh"><b>읽음 확인</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb"><p class="kc-rd-h">안 읽음 <b>${un.length}</b></p><div class="kf-likers">${li(un)}</div><p class="kc-rd-h">읽음 <b>${read.length}</b></p><div class="kf-likers">${li(read)}</div></div></div>`;
+ document.body.append(o);o.querySelector('.kf-x').onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()}}
 async function loadChat(older=false,gen=pageGeneration){
  if(!older&&loadingOlder)return;
  const current=room;
@@ -7819,7 +7827,7 @@ async function loadChat(older=false,gen=pageGeneration){
  const map=new Map(chatItems.map(m=>[m.id,m]));
  result.items.filter(m=>m&&m.id).forEach(m=>map.set(m.id,m));
  chatItems=[...map.values()].sort((a,b)=>(a._pending?1:0)-(b._pending?1:0)||a.createdAt-b.createdAt||String(a.id).localeCompare(String(b.id)));
- feedAt=Date.now();paintChat(initial);const el=$c('#kcConnection');if(el)el.textContent='연결됨 · 4초마다 새 대화 확인';
+ if(!older&&result.seen&&Array.isArray(result.readers)){kzSeen=result.seen;kzReaders=result.readers}feedAt=Date.now();paintChat(initial);paintReads();const el=$c('#kcConnection');if(el)el.textContent='연결됨 · 4초마다 새 대화 확인';
 }
 /* 보내기: 누르는 즉시 말풍선을 띄우고 입력칸을 비움(키보드 유지). 서버 응답은 뒤에서 순서대로 처리 */
 let sendQ=Promise.resolve();
@@ -9382,7 +9390,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf-like.on{color:#e5484d}.kf-like.on svg{fill:#e5484d;stroke:#e5484d}
 .kf-like.pop svg{animation:kfPop .35s ease}@keyframes kfPop{40%{transform:scale(1.28)}100%{transform:scale(1)}}
 .kf-body{padding:2px 14px 14px;font-size:14.5px;line-height:1.55;color:var(--tx)}
-.kf-likes{display:block;border:0;background:none;padding:0;margin:2px 0 4px;font:inherit;font-weight:700;font-size:14px;color:var(--tx);cursor:pointer;text-align:left}
+.kf-lw{font-weight:500;color:var(--mu);font-size:13px}.kf-likes{display:block;border:0;background:none;padding:0;margin:2px 0 4px;font:inherit;font-weight:700;font-size:14px;color:var(--tx);cursor:pointer;text-align:left}
 .kf-cap{white-space:pre-wrap;word-break:break-word}.kf-cap b{margin-right:6px}
 .kf-cap.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .kf-text-only .kf-cap{font-size:16.5px;line-height:1.6;padding:2px 0 4px}
@@ -9435,7 +9443,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  async function profiles(ids){ids=[...new Set(ids.filter(Boolean))].filter(id=>!PROF.has(id)).slice(0,30);if(!ids.length)return;ids.forEach(id=>PROF.set(id,{photo:''}));
   try{const r=await api({action:'profiles',ids});for(const p of r.profiles||[])PROF.set(p.id,{photo:p.photo||''});document.querySelectorAll('[data-kf-pid]').forEach(el=>{const p=PROF.get(el.dataset.kfPid);if(p&&p.photo&&!el.querySelector('img'))el.innerHTML=`<img alt="" src="${E(p.photo)}">`})}catch(e){}}
  const likesLine=p=>{if(!p.likeCount)return '';const mine=me().name,others=(p.likers||[]).filter(n=>n!==mine);let t;
-  if(p.liked&&p.likeCount===1)t='내가 좋아해요';else if(others.length)t=`<b>${E(others[0])}</b>님${p.likeCount>1?` 외 ${p.likeCount-1}명`:''}이 좋아해요`;else t=`좋아요 ${p.likeCount}개`;
+  const who=p.liked&&p.likeCount===1?'내가 눌렀어요':others.length?`${E(others[0])}님${p.likeCount>1?` 외 ${p.likeCount-1}명`:''}`:'';t=`좋아요 ${p.likeCount}개${who?`<small class="kf-lw"> · ${who}</small>`:''}`;
   return `<button type="button" class="kf-likes" data-kf-likers>${t}</button>`};
  function card(p){const n=p.imageCount,long=(p.text||'').length>120||(p.text||'').split('\n').length>3;
   const media=n?`<div class="kf-media"><div class="kf-track">${Array.from({length:n},(_,i)=>`<div class="kf-slide wait" data-i="${i}"></div>`).join('')}</div>${n>1?`<span class="kf-count">1/${n}</span>`:''}<div class="kf-burst">${IC.heart}</div></div>${n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}`:'';
@@ -9443,8 +9451,8 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b>${E(c.text)}</div>`).join('');
   return `<article class="kf-card ${n?'':'kf-text-only'}" data-id="${E(p.id)}"><div class="kf-top">${av(p.owner,p.name)}<div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴">⋯</button>':''}</div>
    ${media}${n?'':`<div class="kf-body" style="padding-bottom:4px">${cap}</div>`}
-   <div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요">${IC.heart}</button><button type="button" data-kf-cmt aria-label="댓글">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button></div>
-   <div class="kf-body">${likesLine(p)}${n?cap:''}${p.commentCount>2?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개 모두 보기</button>`:''}${rc}
+   <div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button></div>
+   <div class="kf-body">${likesLine(p)}${n?cap:''}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개${p.commentCount>1?' 모두':''} 보기</button>`:''}${rc}
     <form class="kf-add" data-kf-add>${av(me().id,me().name).replace('kf-av','kf-av" style="width:28px;height:28px;font-size:12px')}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
  function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const m=me();
   const list=S.items.length?S.items.map(card).join(''):S.loaded?`<div class="kf-empty"><b>아직 게시물이 없어요</b>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.<br><button type="button" class="btn" data-kf-new style="margin-top:12px">첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
@@ -9529,6 +9537,14 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  setInterval(()=>{if(typeof view!=='undefined'&&view==='feed'&&!document.hidden&&!document.querySelector('.kf-ov'))load(true)},30000);
  window.kzPosts={open:()=>go("feed"),load,state:S};
 })();</script>
+<style id="kz-chat-read-css">
+#kcPanel .kc-line .kc-meta{display:flex;flex-direction:column;justify-content:flex-end;flex:none;gap:1px;padding-bottom:2px}
+#kcPanel .kc-message.mine .kc-meta{align-items:flex-end}#kcPanel .kc-message.other .kc-meta{align-items:flex-start}
+#kcPanel .kc-line .kc-meta time{padding-bottom:0}
+#kcPanel .kc-rc{border:0;background:none;padding:0 1px;margin:0;font:inherit;font-size:11.5px;font-weight:800;line-height:1.1;color:#d9a400;cursor:pointer}
+#kcPanel .kc-rc[hidden]{display:none}
+.kc-rd-h{margin:4px 0 2px;font-size:13px;color:var(--mu)}.kc-rd-h b{color:var(--tx)}
+</style>
 </html>
 
 <script id="kz-score-pages-script">

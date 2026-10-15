@@ -299,3 +299,13 @@ test('feed: post, list without image bodies, like toggle, comments with preview,
  assert.equal([...f.data.keys()].filter(k=>k.includes('/comments/')).length,0);
  await assert.rejects(f.run(f.user,{action:'feedImages',id:pid}),{status:404});
 });
+
+test('chat read receipts: opening chat marks read only when there is something new; seen map per member',async()=>{
+ const f=fixture();await f.run(f.user,{action:'send',room:'all',id:'request_read0001',text:'hi'});
+ let r=await f.run(f.outsider,{action:'chat',room:'all'});assert.ok(r.readers.some(x=>x.id===f.outsider.id));assert.ok(!r.readers.some(x=>x.id==='management'));
+ assert.ok(r.seen[f.outsider.id]>=r.items[0].createdAt);assert.equal(r.seen[f.user.id],0);
+ const writes=[...f.data.keys()].filter(k=>k.endsWith('seen_all')).length;assert.equal(writes,1);
+ const before=f.data.get([...f.data.keys()].find(k=>k.endsWith('seen_all'))).at[f.outsider.id];f.advance();
+ r=await f.run(f.outsider,{action:'chat',room:'all'});assert.equal(r.seen[f.outsider.id],before);
+ await f.run(f.admin,{action:'chat',room:'all'});assert.ok(!('management' in f.data.get([...f.data.keys()].find(k=>k.endsWith('seen_all'))).at));
+});
