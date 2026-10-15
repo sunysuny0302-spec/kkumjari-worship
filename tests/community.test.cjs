@@ -341,3 +341,23 @@ test('chat read receipts: sending a message marks the sender as having read up t
  await f.run(f.outsider,{action:'send',room:'all',id:'request_read0004',text:'답장'});
  const r=await f.run(f.user,{action:'chat',room:'all'});const q=r.items.find(x=>x.text==='질문');assert.ok(r.seen[f.outsider.id]>=q.createdAt);
 });
+
+test('꿈마당 extras: thanks card, poll vote, emoji reactions, birthdays',async()=>{
+ const f=fixture();
+ await assert.rejects(f.run(f.user,{action:'feedPost',id:'feedreq_thx001',kind:'thanks',to:f.user.id,text:'고마워'}),{status:400});
+ const t=await f.run(f.user,{action:'feedPost',id:'feedreq_thx002',kind:'thanks',to:f.outsider.id,text:'오늘 베이스 최고'});assert.equal(t.item.kind,'thanks');assert.equal(t.item.to.id,f.outsider.id);
+ assert.equal(f.pushed.at(-1).recipients[0].id,f.outsider.id);assert.match(f.pushed.at(-1).note.title,/감사/);
+ let l=await f.run(f.outsider,{action:'feedList'});assert.equal(l.thanks[f.outsider.id],1);
+ f.advance();await assert.rejects(f.run(f.user,{action:'feedPost',id:'feedreq_pol000',kind:'poll',q:'메뉴?',options:['국밥']}),{status:400});
+ const p=await f.run(f.user,{action:'feedPost',id:'feedreq_pol001',kind:'poll',q:'회식 메뉴?',options:['국밥','파스타','치킨']});assert.equal(p.item.poll.options.length,3);
+ let v=await f.run(f.outsider,{action:'feedVote',id:p.item.id,o:1});assert.deepEqual([v.poll.total,v.poll.options[1].n,v.poll.my[0]],[1,1,1]);
+ v=await f.run(f.outsider,{action:'feedVote',id:p.item.id,o:2});assert.deepEqual([v.poll.total,v.poll.options[1].n,v.poll.options[2].n],[1,0,1]);
+ await assert.rejects(f.run(f.admin,{action:'feedVote',id:p.item.id,o:[0,1]}),{status:400});
+ let r=await f.run(f.outsider,{action:'feedReact',id:p.item.id,e:'😂'});assert.equal(r.myReact,'😂');assert.equal(r.reacts[0].n,1);
+ r=await f.run(f.outsider,{action:'feedReact',id:p.item.id,e:'😂'});assert.equal(r.myReact,'');assert.equal(r.reacts.length,0);
+ await assert.rejects(f.run(f.outsider,{action:'feedReact',id:p.item.id,e:'💩'}),{status:400});
+ const k=new Date(f.clock()+9*3600000),md=String(k.getUTCMonth()+1).padStart(2,'0')+'-'+String(k.getUTCDate()).padStart(2,'0');
+ await f.run(f.outsider,{action:'feedBday',md});l=await f.run(f.user,{action:'feedList'});assert.deepEqual(l.birthdays.map(b=>b.id),[f.outsider.id]);
+ assert.equal((await f.run(f.outsider,{action:'feedList'})).myBday,md);await assert.rejects(f.run(f.user,{action:'feedBday',md:'13-40'}),{status:400});
+ await f.run(f.user,{action:'feedDelete',id:t.item.id});l=await f.run(f.outsider,{action:'feedList'});assert.equal(l.thanks[f.outsider.id],0);
+});
