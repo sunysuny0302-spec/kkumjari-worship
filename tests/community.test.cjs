@@ -196,4 +196,9 @@ test('serve reminder: once per assigned person per week, roles shown, skipped on
  assert.ok(data.has('_kzCommunity/inbox_a1/items/serve_2026-10-18'));
  r=await run({system:true},{action:'serveRemind'});assert.equal(r.reminded,0);assert.equal(pushed.length,2);
  data.set('settings/noService',{days:{'2026-10-18':'x'}});r=await run({system:true},{action:'serveRemind'});assert.equal(r.skipped,'no-service');});
+test('sub request: notifies target member, validates name/date, rate limited',async()=>{const f=fixture();
+ const d=new Date(2000000000000+3*86400000).toISOString().slice(0,10);
+ const r=await f.run(f.user,{action:'subRequest',to:f.admin.name,date:d,role:'싱어'});assert.equal(r.ok,true);
+ await assert.rejects(f.run(f.user,{action:'subRequest',to:'없는사람',date:d}),{status:404});
+ await assert.rejects(f.run(f.user,{action:'subRequest',to:f.admin.name,date:'2020-01-01'}),{status:400});});
 

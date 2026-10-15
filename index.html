@@ -8997,6 +8997,29 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K'))try{window.kzNeedFull&&kzNeedFull()}catch(x){}},true);
  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-qk],.nv-s'))try{window.kzNeedFull&&kzNeedFull()}catch(x){}},true);
  const t=setInterval(()=>{try{if(typeof view!=='undefined'&&NEED.includes(view)&&window.kzNeedFull){kzNeedFull();clearInterval(t)}}catch(e){}},1500);setTimeout(()=>clearInterval(t),20000);})();</script>
+<style id="kz-subrec-css">
+.sub-rec{margin:12px 0 0;padding:12px 14px;border:1px solid #ead8c1;border-radius:14px;background:#fbf4ea}
+.sub-rec-h{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.sub-rec-h b{font-size:14px}.sub-rec-h small{color:var(--mu);font-size:12px}
+.sub-rec-l{display:grid;gap:6px}.sub-rec-i{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:11px;background:#fff;border:1px solid var(--bd)}
+.sub-rec-i b{font-size:14px}.sub-rec-i small{color:var(--mu);font-size:12px;flex:1}
+.sub-rec-i button{min-height:30px;padding:0 10px;border-radius:9px;border:1px solid var(--bd2);background:var(--card);font-size:12.5px;font-weight:600;cursor:pointer;color:var(--tx);white-space:nowrap}
+.sub-rec-i button.pri{background:#7b5638;border-color:#7b5638;color:#fff}.sub-rec-i button:disabled{opacity:.55}
+</style>
+<script id="kz-subrec">/* 불참·대타: 그 주에 비어 있고 최근에 덜 선 사람 추천 + 대타 요청 알림 보내기 */
+(function(){
+ const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const serves=(n,kind)=>{let c=0;const ns=nextSun();for(let i=-8;i<=4;i++){const d=shiftDate(ns,i*7);if(typeof isNoSvc==='function'&&isNoSvc(d))continue;try{if(kind==='s'?baseNames(d).includes(n):Object.values(sessFill(d)).includes(n))c++}catch(e){}}return c};
+ function html(kind,S,cands,role){if(!S||!S.n||!S.ds||!S.ds.length||!(S.mode==='abs'||S.mode==='rep'))return '';
+  const rec=cands.filter(n=>n&&n!==S.n).map(n=>({n,c:serves(n,kind)})).sort((a,b)=>a.c-b.c||a.n.localeCompare(b.n,'ko')).slice(0,3);
+  const head=`<div class="sub-rec-h"><b>대타 추천</b><small>${S.ds.map(d=>wkLbl(d)).join(', ')} 에 비어 있고 최근 3달 동안 덜 선 순서예요</small></div>`;
+  if(!rec.length)return `<div class="sub-rec">${head}<span class="mu" style="font-size:13px">그 주에 비어 있는 ${kind==='s'?'싱어가':'같은 악기 세션이'} 없어요</span></div>`;
+  return `<div class="sub-rec">${head}<div class="sub-rec-l">${rec.map(x=>`<div class="sub-rec-i"><b>${E(x.n)}</b><small>최근 ${x.c}번 섬김</small><button type="button" data-sr-pick="${E(x.n)}">대신 서기로</button><button type="button" class="pri" data-sr-ask="${E(x.n)}" data-sr-role="${E(role||'')}">요청 보내기</button></div>`).join('')}</div></div>`}
+ function bind(S,rerender){document.querySelectorAll('[data-sr-pick]').forEach(b=>b.onclick=()=>{S.mode='rep';S.sub=b.dataset.srPick;rerender()});
+  document.querySelectorAll('[data-sr-ask]').forEach(b=>b.onclick=async()=>{const to=b.dataset.srAsk;const R=window.kzRsvp;if(!R||!R.api)return toast('지금은 보낼 수 없어요');b.disabled=true;b.textContent='보내는 중…';
+   try{for(const d of S.ds)await R.api({action:'subRequest',to,date:d,role:b.dataset.srRole||'',for:S.n});b.textContent='보냈어요 ✓';toast(`${to}님에게 대타 요청을 보냈어요 · 수락하면 '대신 서기로'를 눌러 등록하세요`)}catch(e){b.disabled=false;b.textContent='요청 보내기';toast('보내지 못했어요: '+(e.message||e))}})}
+ if(typeof swapView==='function'){const o=swapView;swapView=function(){const r=o.apply(this,arguments);try{const S=swS,names=singRoster().map(x=>x.n),cand=names.filter(x=>x!==S.n&&(S.ds||[]).every(d=>!baseNames(d).includes(x)));const at=document.querySelector('#body .wz-sum');if(at){at.insertAdjacentHTML('beforebegin',html('s',S,cand,'싱어'));bind(S,swapView)}}catch(e){console.warn(e)}return r}}
+ if(typeof absView==='function'){const o=absView;absView=function(){const r=o.apply(this,arguments);try{const S=swE,ms=sessRoster(),me=ms.find(m=>m.n===S.n),slot=me&&me.tag||'',cand=ms.filter(m=>m.n!==S.n&&(!slot||m.tag===slot)).map(m=>m.n).filter(n=>(S.ds||[]).every(d=>!Object.values(sessFill(d)).includes(n)));const at=document.querySelector('#body .cv6-summary');if(at){at.insertAdjacentHTML('beforebegin',html('e',S,cand,slot?String(slot).split('/').map(x=>(x==='메인'||x==='세컨')?'건반':x)[0]:'세션'));bind(S,absView)}}catch(e){console.warn(e)}return r}}
+})();</script>
 </html>
 
 <script id="kz-score-pages-script">
