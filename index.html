@@ -9481,16 +9481,18 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf .kf-add input{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:6px 0!important;min-height:0!important}
 .kf-sheet .kf-sf textarea{background:#fff!important;box-shadow:none!important}
 .kf-sheet .kf-w textarea{background:#fff!important;border:0!important;box-shadow:none!important}
-@media(max-width:820px){.kf{background:#fff;min-height:calc(100dvh - 120px)}}
+@media(max-width:820px){.kf{min-height:calc(100dvh - 120px)}}
 .km-more2 .km-mine .km-tile i{background:var(--acs);color:var(--ac)}
 </style>
 <style id="kz-feed-glass-css">
 /* ===== 피드: 글래스 디자인 ===== */
 .kf{--g-bg:rgba(255,255,255,.52);--g-bd:rgba(255,255,255,.75);--g-sh:0 12px 34px -16px rgba(110,70,35,.32),0 2px 6px -2px rgba(110,70,35,.08);
- background:radial-gradient(60% 40% at 8% 6%,rgba(255,196,150,.7),transparent 70%),radial-gradient(55% 38% at 96% 22%,rgba(205,184,255,.62),transparent 70%),radial-gradient(60% 45% at 18% 62%,rgba(176,228,206,.58),transparent 70%),radial-gradient(55% 40% at 90% 88%,rgba(255,200,218,.62),transparent 70%),linear-gradient(180deg,#fbf6f0,#f6efe7);
- background-attachment:fixed;min-height:calc(100dvh - 120px);padding-top:4px}
-@media(max-width:820px){.kf{background-attachment:scroll}}
-@media(min-width:821px){.kf{max-width:520px;border-radius:28px;padding:10px 10px 28px;margin-top:4px}}
+ position:relative;isolation:isolate;min-height:calc(100dvh - 120px);padding-top:4px}
+/* 배경: 위아래 가장자리를 페이지 색으로 자연스럽게 녹임 */
+.kf::before{content:'';position:absolute;z-index:-1;left:0;right:0;top:-24px;bottom:-40px;pointer-events:none;background:radial-gradient(60% 40% at 8% 6%,rgba(255,196,150,.7),transparent 70%),radial-gradient(55% 38% at 96% 22%,rgba(205,184,255,.62),transparent 70%),radial-gradient(60% 45% at 18% 62%,rgba(176,228,206,.58),transparent 70%),radial-gradient(55% 40% at 90% 88%,rgba(255,200,218,.62),transparent 70%),linear-gradient(180deg,#fbf6f0,#f6efe7);
+ -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 110px,#000 calc(100% - 160px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 110px,#000 calc(100% - 160px),transparent 100%)}
+@media(min-width:821px){.kf::before{left:-40px;right:-40px;-webkit-mask-image:radial-gradient(120% 90% at 50% 40%,#000 55%,transparent 100%);mask-image:radial-gradient(120% 90% at 50% 40%,#000 55%,transparent 100%)}}
+@media(min-width:821px){.kf{max-width:520px;padding:10px 10px 28px;margin-top:4px}}
 .kf .kf-head{padding:8px 16px 10px}
 .kf .kf-new{background:var(--g-bg);border:1px solid var(--g-bd);border-radius:14px;box-shadow:var(--g-sh);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
 .kf .kf-stories{margin:2px 12px 12px;padding:12px 12px 10px;border:1px solid var(--g-bd);border-radius:24px;background:var(--g-bg);box-shadow:var(--g-sh);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%)}
@@ -9516,6 +9518,39 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf-sheet .kf-sf textarea,.kf-sheet .kf-w textarea{background:rgba(255,255,255,.7)!important}
 .kf-sheet .kf-w textarea{border-radius:16px!important;padding:12px 14px!important}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.kf .kf-card,.kf .kf-stories{background:rgba(255,253,250,.94)}.kf-sheet{background:#fffdfa!important}}
+</style>
+<style id="kz-feed-size-css">
+/* 피드 글자 크기 다듬기 (조금 작고 단정하게) */
+.kf .kf-head h1{font-size:21px}
+.kf .kf-new{width:36px;height:36px;border-radius:12px}.kf .kf-new svg{width:22px;height:22px}
+.kf .kf-st{width:60px}.kf .kf-st small{font-size:10.5px;max-width:64px}
+.kf .kf-st-ring{width:54px;height:54px}.kf .kf-st-ring .kf-av{font-size:17px}
+.kf .kf-st-ring.add i{width:19px;height:19px}.kf .kf-st-ring.add i svg{width:11px;height:11px}
+.kf .kf-top{padding:10px 6px 8px 12px;gap:9px}
+.kf .kf-ring{width:32px;height:32px}.kf .kf-ring .kf-av{font-size:11.5px}
+.kf .kf-who b{font-size:13px}.kf .kf-who small{font-size:11.5px}
+.kf .kf-dots-btn{width:32px;height:32px}.kf .kf-dots-btn svg{width:18px;height:18px}
+.kf .kf-act{padding:6px 8px 0}.kf .kf-act>button{padding:5px 6px;font-size:12.5px;gap:4px}
+.kf .kf-act svg{width:23px;height:23px}
+.kf .kf-body{font-size:13px;line-height:1.5;padding:2px 14px 0}
+.kf .kf-likes,.kf .kf-likes>b{font-size:13px}.kf .kf-lw{font-size:12px}
+.kf .kf-moretxt,.kf .kf-allc{font-size:12.5px}
+.kf .kf-count{font-size:11px;padding:3px 8px}
+.kf .kf-art p{font-size:clamp(17px,4.8vw,23px)}
+.kf .kf-add{margin-top:8px;padding:3px 4px 3px 5px;gap:8px}
+.kf .kf-add .kf-av{width:24px;height:24px;font-size:10px}
+.kf .kf-add input,.kf .kf-add input[type=text]{-webkit-appearance:none;appearance:none;background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;outline:none!important;font-size:13px!important;height:auto!important;padding:5px 0!important}
+.kf .kf-add button{font-size:13px;padding:5px 9px}
+.kf .kf-filter{font-size:13px}
+.kf-sheet .kf-sh b{font-size:15px}
+.kf-sheet .kf-c div{font-size:13.5px}.kf-sheet .kf-c small{font-size:11.5px}.kf-sheet .kf-c .kf-av{width:30px;height:30px;font-size:12px}
+.kf-sheet .kf-likers div{font-size:13.5px}
+.kf-sheet .kf-sf textarea{font-size:16px}
+.kf-sheet .kf-w textarea{font-size:16px}
+.kf-sheet .kf-menu button{font-size:14.5px;padding:14px 18px}
+.kf-sheet .kf-c div p{margin:0}.kf-sheet .kf-ch{display:flex;align-items:baseline;gap:7px;line-height:1.3}.kf-sheet .kf-ch b{font-size:12.5px;margin:0}.kf-sheet .kf-ch small{display:inline;margin:0;font-size:11.5px}
+.kf-sheet .kf-ch .kf-cdel{margin-left:auto;padding:0 2px}.kf-sheet .kf-ct{margin-top:2px!important;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.kf-cnone{display:flex;flex-direction:column;gap:4px;padding:34px 0!important}.kf-cnone b{font-size:15px;color:#1f1a16}
 </style>
 <script id="kz-feed">/* ===== 피드: 사진·글을 올리고 좋아요·댓글 (인스타처럼) · 홈 배열은 그대로 두고 메뉴에만 추가 ===== */
 (function(){
@@ -9602,8 +9637,8 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  async function comments(id){const p=find(id);if(!p)return;const o=sheet('댓글','<div class="kf-none">불러오는 중…</div>',`<form class="kf-sf"><textarea rows="1" maxlength="500" placeholder="댓글 달기…" aria-label="댓글"></textarea><button type="submit" disabled>게시</button></form>`);
   const sb=o.querySelector('.kf-sb'),f=o.querySelector('.kf-sf'),ta=f.querySelector('textarea'),bt=f.querySelector('button');let items=[];
   const can=c=>c.mine||p.mine||p.canDelete&&!p.mine;
-  const draw=()=>{const cap=p.text?`<div class="kf-c" style="border-bottom:1px solid var(--st);padding-bottom:12px;margin-bottom:4px">${av(p.owner,p.name)}<div><b>${E(p.name)}</b>${E(p.text)}<small>${ago(p.createdAt)}</small></div></div>`:'';
-   sb.innerHTML=cap+(items.length?items.map(c=>`<div class="kf-c" data-cid="${E(c.id)}">${av(c.owner,c.name)}<div><b>${E(c.name)}</b>${E(c.text)}<small>${ago(c.createdAt)}${can(c)&&!String(c.id).startsWith('tmp_')?`<button type="button" class="kf-cdel" data-cdel="${E(c.id)}">삭제</button>`:''}</small></div></div>`).join(''):'<div class="kf-none">첫 댓글을 남겨 보세요</div>');
+  const draw=()=>{
+   sb.innerHTML=items.length?items.map(c=>`<div class="kf-c" data-cid="${E(c.id)}">${av(c.owner,c.name)}<div><p class="kf-ch"><b>${E(c.name)}</b><small>${ago(c.createdAt)}</small>${can(c)&&!String(c.id).startsWith('tmp_')?`<button type="button" class="kf-cdel" data-cdel="${E(c.id)}">삭제</button>`:''}</p><p class="kf-ct">${E(c.text)}</p></div></div>`).join(''):'<div class="kf-none kf-cnone"><b>아직 댓글이 없어요</b>첫 댓글을 남겨 보세요</div>';
    sb.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(!confirm('이 댓글을 지울까요?'))return;b.disabled=true;try{const r=await api({action:'feedCommentDelete',id,cid:b.dataset.cdel});items=items.filter(c=>c.id!==b.dataset.cdel);p.commentCount=r.commentCount;if(r.recent)p.recent=r.recent;draw();repaintCard(id)}catch(e){b.disabled=false;toast(e.message||'지우지 못했어요')}});
    profiles([p.owner,...items.map(c=>c.owner)]);sb.scrollTop=sb.scrollHeight};
   ta.oninput=()=>{bt.disabled=!ta.value.trim();ta.style.height='auto';ta.style.height=Math.min(120,ta.scrollHeight)+'px'};
