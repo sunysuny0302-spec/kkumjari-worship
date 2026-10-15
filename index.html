@@ -4911,7 +4911,7 @@ async function goDate(d){if(d===date)return;const old=date;date=d;lastKey=null;t
 /* ---------- 날짜 바 · 달력 ---------- */
 let calOpen=false,calM=null;
 const lbl=d=>{const n=nextSun();return d===n?'이번 주':d===shiftDate(n,7)?'다음 주':d===shiftDate(n,-7)?'지난 주':''};
-function renderDbar(){const b=$('#dbar');if(!b)return;const hide=view==='archive'||view==='members'||view==='lpick'||view==='minutes'||view==='notice'||view==='trash'||view==='library'||view==='attend'||view==='lyrics';b.hidden=hide;if(hide){calOpen=false;setBH();return}
+function renderDbar(){const b=$('#dbar');if(!b)return;const hide=view==='archive'||view==='members'||view==='lpick'||view==='minutes'||view==='notice'||view==='trash'||view==='library'||view==='attend'||view==='lyrics'||view==='song_requests'||view==='storage';b.hidden=hide;if(hide){calOpen=false;setBH();return}
 b.innerHTML=`${role==='leader'&&['edit','ment'].includes(view)?'<span class="dbl">업로드할 날짜</span>':''}<div class="dnav"><button class="dn-b" id="dp" title="이전 주 (←)">‹</button><button class="dn-c" id="dc"><span class="dic">📅</span><b>${fmtD(date)}</b><i class="ldot ${ldrCls(ldrOf(date))}" title="인도 ${ldrOf(date)}"></i>${lbl(date)?`<em>${lbl(date)}</em>`:''}</button><button class="dn-b" id="dn" title="다음 주 (→)">›</button></div><button class="dn-t" id="dt0" ${date===nextSun()?'style="visibility:hidden" tabindex="-1"':''}>이번 주로</button><div class="cal" id="cal" ${calOpen?'':'hidden'}></div>`;
 $('#dp').onclick=()=>goDate(shiftDate(date,-7));$('#dn').onclick=()=>goDate(shiftDate(date,7));
 $('#dc').onclick=()=>{calOpen=!calOpen;calM=date.slice(0,7);$('#cal').hidden=!calOpen;if(calOpen)drawCal()};
@@ -9276,7 +9276,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   if(who.length)p.insertAdjacentHTML('beforeend',`<div class="kz-urg-who">급한 불참 · <b>${who.map(E).join(', ')}</b></div>`);
   const h=link();if(!h)return;p.insertAdjacentHTML('beforeend',h);const x=p.querySelector('[data-kz-urg]');if(x)x.onclick=()=>open(weekNow())}
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{home()}catch(e){console.warn(e)}return r}}
- window.kzUrgent={open,need,locked,weekNow,hub,home};
+ window.kzUrgent={open,need,locked,weekNow,hub,home,link};
 })();</script>
 <style id="kz-readonly-css">.kz-ro-note{margin:0 0 12px;padding:10px 14px;border-radius:12px;background:#f4efe9;color:#6b5a4b;font-size:13.5px}.kz-ro-note b{color:#4a3a2c}
 #body .r2.kz-ro .r2-quick{display:none}#body .r2.kz-ro button:disabled{cursor:default}</style>
@@ -9323,6 +9323,25 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  document.addEventListener('focusin',e=>{if(!e.target||e.target.id!=='kcChatText')return;const l=document.getElementById('kcChatLog');if(!l)return;const s=st.get(l),was=s?s.bottom:near(l);if(!was)return;[60,250,500,800].forEach(t=>setTimeout(()=>{if(document.activeElement===e.target)pin(l)},t))});
  const vv=window.visualViewport;if(vv)vv.addEventListener('resize',()=>{const l=document.getElementById('kcChatLog'),s=l&&st.get(l);if(l&&s&&s.bottom)requestAnimationFrame(()=>pin(l))});
 })();</script>
+<style id="kz-ux-polish-css">
+/* 보기 전용 배정 규칙: 저장 줄 숨김 */
+#body .r2.kz-ro .r2-bar{display:none}
+/* 가사 PPT 탭 글자가 두 줄로 깨지지 않게 */
+.ly-tabs button{white-space:nowrap}
+/* 휴대폰 출결 탭: 잘리지 않고 두 줄로 */
+@media(max-width:820px){#body .at-tabs{display:grid!important;grid-template-columns:repeat(3,1fr);gap:4px;overflow:visible;width:100%;box-sizing:border-box}#body .at-tabs button{width:100%;min-width:0;padding-left:4px;padding-right:4px;white-space:nowrap;justify-content:center;text-align:center}}
+/* 내 순서: 급한 불참 줄 */
+.km-my-compact .kz-urg-l{margin:8px 0 4px}
+</style>
+<script id="kz-ux-polish">
+(function(){
+ /* 알림함: 알림이 적으면(6개 이하) 처음 열 때 묶음을 펼쳐서 바로 보이게 */
+ new MutationObserver(()=>{const g=document.querySelectorAll('.kc-notice-group');if(!g.length)return;const c=g[0].parentElement;if(!c||c.dataset.kzAuto)return;c.dataset.kzAuto='1';
+  let n=0;g.forEach(d=>{n+=d.querySelectorAll('.kc-group-item').length});if(n<=6)g.forEach(d=>{d.open=true})}).observe(document.documentElement,{childList:true,subtree:true});
+ /* 내 순서(휴대폰): 마감 지난 이번 주에 서면 '급한 불참 알리기' */
+ if(typeof body==='function'){const o=body;body=function(){const r=o.apply(this,arguments);try{if(view==='mobile_my'&&window.kzUrgent&&kzUrgent.link){const nd=document.querySelector('#body .km-next-duty');const h=kzUrgent.link();if(nd&&h&&!document.querySelector('#body .kz-urg-l')){nd.insertAdjacentHTML('afterend',h);const x=document.querySelector('#body [data-kz-urg]');if(x)x.onclick=()=>kzUrgent.open(kzUrgent.weekNow())}}}catch(e){console.warn(e)}return r}}
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
