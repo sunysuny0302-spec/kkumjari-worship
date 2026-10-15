@@ -1,4 +1,7 @@
 {
+  "regions": [
+    "icn1"
+  ],
   "crons": [
     {
       "path": "/api/community-cleanup",
