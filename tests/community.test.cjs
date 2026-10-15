@@ -309,3 +309,12 @@ test('chat read receipts: opening chat marks read only when there is something n
  r=await f.run(f.outsider,{action:'chat',room:'all'});assert.equal(r.seen[f.outsider.id],before);
  await f.run(f.admin,{action:'chat',room:'all'});assert.ok(!('management' in f.data.get([...f.data.keys()].find(k=>k.endsWith('seen_all'))).at));
 });
+
+test('feed notification preference: owner can turn off like/comment alerts',async()=>{
+ const f=fixture();const p=await f.run(f.user,{action:'feedPost',id:'feedreq_pref01',text:'글',images:[]});
+ assert.equal((await f.run(f.user,{action:'feedList'})).notify,true);
+ await f.run(f.user,{action:'feedPref',enabled:false});assert.equal((await f.run(f.user,{action:'feedList'})).notify,false);
+ const n=f.pushed.length;await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_pref01',text:'댓글'});assert.equal(f.pushed.length,n);
+ await f.run(f.outsider,{action:'feedLike',id:p.item.id,on:true});assert.equal([...f.data.keys()].filter(k=>k.includes('inbox_'+f.user.id)&&k.includes('feed')).length,0);
+ await f.run(f.user,{action:'feedPref',enabled:true});f.advance();await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_pref02',text:'댓글2'});assert.equal(f.pushed.length,n+1);
+});

@@ -7405,7 +7405,7 @@ function eventPush(e){let w='';try{w=wd(e.date)}catch(x){}return notify({type:'e
 /* ---------- 계정 창 안 "휴대폰 알림" 칸 ---------- */
 function secHTML(){const s=state(),T=st().types||{conti:true,notice:true,event:true,sched:true},on=s==='on',can=on||s==='off'||s==='denied';
  const sub={on:'이 기기로 알림이 와요',off:'꺼져 있어요',denied:'휴대폰 설정에서 막혀 있어요','ios-home':'홈 화면에 추가한 앱에서 켤 수 있어요',unsupported:'이 브라우저는 알림을 받을 수 없어요',local:'팀 공유 모드에서만 쓸 수 있어요'}[s]||'';
- const TY=[['conti','콘티 업로드','이번 주 콘티가 올라오면'],['notice','새 공지','공지가 새로 올라오면'],['event','새 일정','팀 일정이 등록되면'],['sched','일정 변경','내 순서·대타·불참이 바뀌면'],['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','피드 댓글','내 게시물에 댓글이 달리면']];
+ const TY=[['conti','콘티 업로드','이번 주 콘티가 올라오면'],['notice','새 공지','공지가 새로 올라오면'],['event','새 일정','팀 일정이 등록되면'],['sched','일정 변경','내 순서·대타·불참이 바뀌면'],['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','피드','내 게시물에 댓글이 달리면 (피드 화면의 종 모양으로도 끌 수 있어요)']];
  let body='';
  if(s==='ios-home')body=`<div class="kzp-note">아이폰은 <b>홈 화면에 추가한 앱</b>에서만 알림을 받을 수 있어요.<br>① Safari 아래 <b>공유(□↑)</b> → ② <b>홈 화면에 추가</b> → ③ 홈 화면의 <b>꿈자리</b> 앱에서 로그인 → ④ 여기서 알림 켜기</div>`;
  else if(s==='denied')body=`<div class="kzp-note">휴대폰 <b>설정 → 알림</b>(또는 브라우저 사이트 설정)에서 꿈자리 알림을 허용한 뒤 스위치를 다시 켜 주세요.</div>`;
@@ -7495,7 +7495,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
   if(rank==='선임세션'||parts.includes('세션'))return ['sess','guitar','세션',['sched_e','abs','rule_e'],()=>goRole('session','sched_e')];
   return null};
  renderTabbar=function(){if(!mq.matches)return oldTabs();const t=document.getElementById('tabbar');if(!t)return;
- const rt=kzRoleTab(),items=[['home','home','홈'],['community','chat','채팅'],['notice','calendar','공지·일정'],rt?['role:'+rt[0],rt[1],rt[2],rt[3]]:['mobile_my','users','내 순서'],['mobile_more','list','더보기']];
+ const items=[['home','home','홈'],['community','chat','채팅'],['feed','feed','피드'],['notice','calendar','공지·일정'],['mobile_more','list','더보기']];
  t.innerHTML=items.map(([v,i,l,act])=>{const on=act?act.includes(view):view===v;return `<button type="button" data-mobile-view="${v}" class="${on?'on':''}" ${on?'aria-current="page"':''}><span class="tb-i">${i==='chat'?'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.7-4 8-9 8-1.3 0-2.5-.2-3.6-.6L4 21l.9-4.3A7.3 7.3 0 0 1 3 11.5c0-4.7 4-8 9-8s9 3.3 9 8Z"/><circle cx="8" cy="11.5" r=".7" fill="currentColor"/><circle cx="12" cy="11.5" r=".7" fill="currentColor"/><circle cx="16" cy="11.5" r=".7" fill="currentColor"/></svg>':i==='song_request'?'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v4a3 3 0 0 0 0 6v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a3 3 0 0 0 0-6V5a1 1 0 0 1 1-1Z"/><path d="M12 15.5 8.8 12.3a2 2 0 0 1 2.8-2.8l.4.4.4-.4a2 2 0 0 1 2.8 2.8Z"/></svg>':V13I(i)}</span><span class="tb-l">${l}${v==='notice'&&(homeInfoHasNew('notice')||homeInfoHasNew('calendar'))?'<i class="kh-tab-dot" aria-label="새 소식 있음"></i>':''}</span></button>`}).join('');
  t.querySelectorAll('[data-mobile-view]').forEach(b=>b.onclick=()=>{if(b.dataset.mobileView.startsWith('role:')){const r=kzRoleTab();if(r)r[4]();window.scrollTo({top:0,behavior:'instant'});return}if(b.dataset.mobileView==='notice'){ntTab=LS('kzHomeInfoTab')==='calendar'?'e':'n';ntEdit=null;evEdit=null;ntFocus=null;}go(b.dataset.mobileView);window.scrollTo({top:0,behavior:'instant'})});document.getElementById('shell')?.classList.toggle('no-tab',view==='edit');
  };
@@ -7508,19 +7508,34 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  <p class="km-section">일정 변경</p><div class="km-menu">${menuRow('swap','swap','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','swap','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
  }
 
- function morePage(){const rt=kzRoleTab(),k=rt?rt[0]:'',T=(id,ic,t)=>`<button type="button" class="km-tile" data-mobile-action="${id}"><i>${V13I(ic)}</i><span>${t}</span></button>`;
- const sec=(t,rows,extra='')=>{const h=rows.filter(Boolean).join('');return h?`<section class="km-tsec"><div class="km-th"><p>${t}</p>${extra}</div><div class="km-tiles">${h}</div></section>`:''};
- const lead=(()=>{try{return ['관리계정','단장','인도자'].includes((authAccount()||{}).rank)}catch(e){return false}})();
- const def=(()=>{try{const v=localStorage.getItem('kzMoreRoleV1');if(['s','e','l'].includes(v))return v}catch(e){}return k==='sess'?'e':k==='lead'?'l':'s'})();
- const P=(id,items)=>`<div class="km-rp" data-rp="${id}" ${def===id?'':'hidden'}><div class="km-tiles">${items.join('')}</div></div>`;
- const seg=`<div class="km-rseg" role="tablist">${[['l','인도자'],['s','싱어'],['e','세션']].map(([id,t])=>`<button type="button" role="tab" data-rs="${id}" aria-selected="${def===id}" class="${def===id?'on':''}" onclick="kzMoreRole('${id}')">${t}</button>`).join('')}</div>`;
+ function morePage(){
+ /* 더보기: 직책·파트별로 자주 쓰는 것부터 (하단 탭이 홈·채팅·피드·공지·더보기로 바뀌어 '내 자리'를 맨 위에) */
+ const a=(()=>{try{return authAccount()||{}}catch(e){return{}}})(),cm=(()=>{try{return currentMember()||{}}catch(e){return{}}})();
+ const rank=a.rank||cm.rank||'',parts=[...(a.parts||[]),...(cm.parts||[]),...(cm.roles||[])];
+ const isAdm=rank==='관리계정'||a.id==='management',isChief=rank==='단장',isLead=rank==='인도자',isSS=rank==='선임싱어',isSE=rank==='선임세션';
+ const sing=isSS||parts.includes('싱어'),sess=isSE||parts.includes('세션'),staff=isAdm||isChief||isLead||isSS||isSE;
+ const used=new Set(),T=(id,ic,t)=>{if(used.has(id))return '';used.add(id);return `<button type="button" class="km-tile" data-mobile-action="${id}"><i>${V13I(ic)}</i><span>${t}</span></button>`};
+ const sec=(t,rows,cls='')=>{const h=rows.filter(Boolean).join('');return h?`<section class="km-tsec ${cls}"><div class="km-th"><p>${t}</p></div><div class="km-tiles">${h}</div></section>`:''};
+ const att=staff?'출결 관리':'출결 순위';
+ let title='내 자리',mine=[];
+ if(isAdm){title='관리';mine=[T('kzhub','shield','계정 관리'),T('members','users','멤버'),T('storage','cloud','저장 공간'),T('trash','trash','휴지통')]}
+ else if(isChief){title='단장';mine=[T('attend','attend','출결 관리'),T('members','users','멤버 · 직책'),T('minutes','note','회의록'),T('prac','metro','참석 확인')]}
+ else if(isLead){title='인도자';mine=[T('leader','leader','콘티 · 송폼'),T('lsw','roster','인도자 일정'),T('archive','archive','콘티 보관함'),T('library','music','악보')]}
+ else if(isSS){title='선임싱어';mine=[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙'),T('attend','attend',att)]}
+ else if(isSE){title='선임세션';mine=[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙'),T('attend','attend',att)]}
+ else{title='내 자리';mine=[T('mobile_my','myturn','내 순서'),sing?T('swap','swap','싱어 불참·대타'):'',sess?T('abs','swap','세션 불참·대타'):'',T('prac','metro','참석 확인')]}
+ const prep=[T('archive','archive','콘티 보관함'),T('library','music','악보'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')];
+ const team=[T('prac','metro','참석 확인'),T('attend','attend',att),T('members','users','멤버'),T('minutes','note','회의록')];
+ const sched=[sing||staff?T('sched_s','roster','싱어 일정'):'',sess||staff?T('sched_e','roster','세션 일정'):'',T('lsw','roster','인도자 일정'),(isChief||isAdm)?T('rule_s','rule','싱어 배정 규칙'):'',(isChief||isAdm)?T('rule_e','rule','세션 배정 규칙'):'',!sing&&!staff?T('sched_s','roster','싱어 일정'):'',!sess&&!staff?T('sched_e','roster','세션 일정'):''];
+ const admin=staff?[(isChief||isAdm)?T('storage','cloud','저장 공간'):'',T('trash','trash','휴지통')]:[];
+ const me=[!staff||isAdm?'':T('mobile_my','myturn','내 순서'),T('account','idcard','내 계정'),T('tour','help','사용법'),T('all','grid','전체 메뉴')];
  return `<section class="km-page km-more2">
- ${sec('나',[rt?T('mobile_my','myturn','내 순서'):'',T('account','idcard','내 계정'),T('tour','help','사용법')])}
- ${sec('예배 준비',[T('archive','archive','콘티 보관함'),T('library','music','악보'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')])}
- ${sec('팀',[T('prac','metro','참석 확인'),T('minutes','note','회의록'),T('members','users','멤버'),k!=='att'?T('attend','attend','출결'):''])}
- <section class="km-tsec"><div class="km-th"><p>역할별</p>${seg}</div>
-  ${P('s',[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙')])}${P('e',[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙')])}${P('l',[T('lsw','roster','인도자 일정'),T('leader','leader','인도자 목록')])}</section>
- ${sec('관리',[k==='adm'?T('kzhub','shield','계정 관리'):'',T('storage','cloud','저장 공간'),T('trash','trash','휴지통'),T('all','grid','전체 메뉴')])}</section>`}
+ ${sec(title,mine,'km-mine')}
+ ${sec('예배 준비',prep)}
+ ${sec('팀',team)}
+ ${sec('일정 보기',sched)}
+ ${sec('관리',admin)}
+ ${sec('나',me)}</section>`}
  /* 더보기: 큰 줄 목록 대신 작은 아이콘 타일 */
  (function(){if(document.getElementById('kz-more2'))return;const st=document.createElement('style');st.id='kz-more2';st.textContent=`.km-page.km-more2{padding-top:10px}.km-more2>h1{display:none}
  .km-tsec{margin:0 0 10px}.km-th{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 5px 4px;min-height:24px}
@@ -8368,7 +8383,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  function who(){let a={},m={};try{a=authAccount()||{}}catch(e){}try{m=currentMember()||{}}catch(e){}const rank=a.rank||m.rank||'팀원',parts=[...(a.parts||[]),...(m.parts||[])];return {rank,parts,name:a.name||m.name||''}}
  function steps(){const {rank,parts,name:n}=who(),M=mob(),fid=(()=>{try{return window.KZPasskey?KZPasskey.label():'Face ID'}catch(e){return 'Face ID'}})();
   const part=rank==='선임싱어'||(rank!=='선임세션'&&parts.includes('싱어'))?'싱어':rank==='선임세션'||parts.includes('세션')?'세션':'';
-  const at=(tab,side)=>M?`아래 <b>${tab}</b> 탭`:`왼쪽 <b>${side}</b> 메뉴`,more=x=>M?`<b>더보기</b>의 <b>${x}</b>`:`왼쪽 <b>${x}</b> 메뉴`;
+  const at=(tab,side)=>M?(tab==='공지·일정'?`아래 <b>${tab}</b> 탭`:`<b>더보기</b> 맨 위의 <b>${tab}</b>`):`왼쪽 <b>${side}</b> 메뉴`,more=x=>M?`<b>더보기</b>의 <b>${x}</b>`:`왼쪽 <b>${x}</b> 메뉴`;
   const roleName=rank==='관리계정'?'관리계정':rank==='팀원'?(part?part+' 팀원':'팀원'):rank;
   const hello={ic:I.heart,t:`환영해요${n&&rank!=='관리계정'?', '+n+'님':''}!`,d:`<b>${roleName}</b>에게 필요한 것만 30초 만에 알려 드릴게요. 언제든 건너뛸 수 있어요.`};
   const home={ic:I.home,t:'홈 맨 위 = 이번 주 나',d:'내 순서와 연습할 곡이 가장 먼저 보여요. 콘티가 올라오면 그 주에 서는 사람에게 <b>토요 연습 참석 확인</b> 창이 떠요. 알림함 옆 <b>참석 확인</b> 아이콘에서 연습·수련회 같은 행사 참석 여부와 대타 요청에 답할 수 있고, 답한 것은 목록에서 사라져요.'};
@@ -9356,73 +9371,114 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 @keyframes kzSendShow{to{opacity:.7}}@keyframes kzSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){#kcChatLog .kc-sendwait{animation:kzSendShow 0s linear 1.5s forwards}}</style>
 <style id="kz-feed-css">
-.kf{max-width:600px;margin:0 auto;padding-bottom:28px}
-.kf-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 14px}
-.kf-head h1{margin:0}.kf-head p{margin:4px 0 0;font-size:13.5px}
-.kf-new{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.kf-new svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.kf-compose-bar{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 14px;padding:10px 12px;border:1px solid var(--bd);border-radius:16px;background:var(--card);color:var(--mu);font:inherit;font-size:14.5px;text-align:left;cursor:pointer}
-.kf-compose-bar .kf-av{width:34px;height:34px;font-size:14px}
-.kf-compose-bar>span:not(.kf-av){flex:1}.kf-compose-bar i{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--acs);color:var(--ac)}
-.kf-compose-bar i svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.kf-card{margin:0 0 14px;border:1px solid var(--bd);border-radius:18px;background:#fffdfa;overflow:hidden;box-shadow:0 1px 0 rgba(60,40,20,.03)}
-.kf-top{display:flex;align-items:center;gap:10px;padding:11px 8px 10px 12px}
-.kf-av{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--golds);color:var(--goldt);font-weight:700;font-size:15px}
+/* ===== 피드 (인스타그램 느낌) ===== */
+.kf{--kf-ink:#1f1a16;--kf-sub:#8a7f75;--kf-line:#efe7dd;--kf-red:#ff3040;max-width:470px;margin:0 auto;padding:0 0 32px;color:var(--kf-ink)}
+@media(max-width:820px){#body:has(.kf){padding-left:0!important;padding-right:0!important}.kf{max-width:none}}
+.kf-head{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 8px}
+.kf-head h1{margin:0;font-family:var(--serif);font-size:25px;font-weight:700;letter-spacing:-.3px}
+.kf-new{display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:12px;background:none;color:var(--kf-ink);cursor:pointer}
+.kf-new:hover{background:rgba(0,0,0,.05)}.kf-hbtns{display:flex;gap:2px}.kf-bell.off{color:#a39a90}.kf-new svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+/* 스토리처럼: 최근 올린 사람 */
+.kf-stories{display:flex;gap:14px;overflow-x:auto;padding:6px 16px 14px;border-bottom:1px solid var(--kf-line);scrollbar-width:none}
+.kf-stories::-webkit-scrollbar{display:none}
+.kf-st{display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;width:66px;border:0;background:none;padding:0;cursor:pointer;color:var(--kf-ink)}
+.kf-st small{max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+.kf-st-ring{position:relative;display:grid;place-items:center;width:62px;height:62px;border-radius:50%;padding:2.5px;box-sizing:border-box;background:#e3d9ce}
+.kf-st-ring.new{background:conic-gradient(from 210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)}
+.kf-st-ring .kf-av{width:100%;height:100%;font-size:20px;border:2.5px solid #fff;box-sizing:border-box}
+.kf-st.sel small{font-weight:800}.kf-st.sel .kf-st-ring{box-shadow:0 0 0 2px var(--ac)}
+.kf-st-ring.add{background:none;padding:0}.kf-st-ring.add .kf-av{border:0}
+.kf-st-ring.add i{position:absolute;right:-1px;bottom:-1px;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#0095f6;color:#fff;border:2.5px solid #fff}
+.kf-st-ring.add i svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
+.kf-filter{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--kf-line);font-size:14px}
+.kf-filter button{border:0;background:none;color:#0095f6;font:inherit;font-weight:700;cursor:pointer}
+.kf-err{margin:12px 16px;padding:12px 14px;border-radius:12px;background:#fff1ef;color:#a33;font-size:14px}
+/* 게시물 */
+.kf-card{border-bottom:1px solid var(--kf-line);padding-bottom:12px;margin:0 0 6px;background:transparent}
+@media(min-width:821px){.kf-card{margin-bottom:14px}}
+.kf-top{display:flex;align-items:center;gap:10px;padding:12px 6px 10px 14px}
+.kf-ring{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;padding:2px;box-sizing:border-box;background:conic-gradient(from 210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)}
+.kf-ring .kf-av{width:100%;height:100%;border:2px solid #fff;box-sizing:border-box;font-size:13px}
+.kf-av{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:#efe3d3;color:#8a5a2b;font-weight:700;font-size:14px}
 .kf-av img{width:100%;height:100%;object-fit:cover;display:block}
-.kf-who{flex:1;min-width:0;line-height:1.25}.kf-who b{display:block;font-size:14.5px;color:var(--tx)}.kf-who small{font-size:12px;color:var(--mu)}
-.kf-dots-btn{border:0;background:none;color:var(--mu);width:36px;height:36px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer}
-.kf-dots-btn:hover{background:var(--acs)}
-.kf-media{position:relative;background:#efe8df;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.kf-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.kf-who{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;line-height:1.2}
+.kf-who b{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-who small{font-size:13px;color:var(--kf-sub);white-space:nowrap}.kf-who small::before{content:'· '}
+.kf-dots-btn{display:grid;place-items:center;border:0;background:none;width:38px;height:38px;border-radius:50%;color:var(--kf-ink);cursor:pointer}
+.kf-dots-btn svg{width:22px;height:22px;fill:currentColor}
+.kf-media{position:relative;background:#f2ede7;touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:hidden}
+@media(min-width:821px){.kf-media{border-radius:6px;border:1px solid var(--kf-line)}}
+.kf-track{--r:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .kf-track::-webkit-scrollbar{display:none}
-.kf-slide{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center;aspect-ratio:1/1;max-height:min(78vh,640px);background:#efe8df}
+.kf-slide{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:grid;place-items:center;aspect-ratio:var(--r);background:#f2ede7}
 .kf-slide img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none}
-.kf-slide.wait::after{content:'';width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(123,86,56,.35);border-right-color:transparent;animation:kzSpin .9s linear infinite}
-.kf-count{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:rgba(30,22,15,.55);color:#fff;font-size:12px;font-weight:600}
-.kf-pips{display:flex;justify-content:center;gap:5px;padding:9px 0 0}.kf-pips i{width:6px;height:6px;border-radius:50%;background:var(--bd2)}.kf-pips i.on{background:var(--ac)}
-.kf-burst{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-48px 0 0 -48px;pointer-events:none;opacity:0;transform:scale(.4)}
-.kf-burst svg{width:100%;height:100%;fill:#fff;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
-.kf-burst.go{animation:kfBurst .85s ease-out}
-@keyframes kfBurst{15%{opacity:1;transform:scale(1.15)}30%{transform:scale(.95)}45%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1)}}
-.kf-act{display:flex;align-items:center;gap:2px;padding:6px 6px 0}
-.kf-act button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:7px 8px;border-radius:10px;color:var(--tx);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
-.kf-act svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
-.kf-like.on{color:#e5484d}.kf-like.on svg{fill:#e5484d;stroke:#e5484d}
-.kf-like.pop svg{animation:kfPop .35s ease}@keyframes kfPop{40%{transform:scale(1.28)}100%{transform:scale(1)}}
-.kf-body{padding:2px 14px 14px;font-size:14.5px;line-height:1.55;color:var(--tx)}
-.kf-lw{font-weight:500;color:var(--mu);font-size:13px}.kf-likes{display:block;border:0;background:none;padding:0;margin:2px 0 4px;font:inherit;font-weight:700;font-size:14px;color:var(--tx);cursor:pointer;text-align:left}
-.kf-cap{white-space:pre-wrap;word-break:break-word}.kf-cap b{margin-right:6px}
-.kf-cap.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.kf-text-only .kf-cap{font-size:16.5px;line-height:1.6;padding:2px 0 4px}
-.kf-moretxt{border:0;background:none;padding:0;color:var(--mu);font:inherit;font-size:13.5px;cursor:pointer}
-.kf-allc{display:block;border:0;background:none;padding:0;margin:6px 0 2px;color:var(--mu);font:inherit;font-size:13.5px;cursor:pointer}
-.kf-rc{margin:3px 0 0;word-break:break-word;white-space:pre-wrap}.kf-rc b{margin-right:6px}
-.kf-time{display:block;margin-top:6px;font-size:11.5px;color:var(--mu)}
-.kf-add{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--st)}
-.kf-add input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--tx);outline:none;padding:6px 0}
-.kf-add button{border:0;background:none;color:var(--ac);font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:6px 4px}.kf-add button:disabled{opacity:.35;cursor:default}
-.kf-empty{padding:42px 18px;border:1px dashed var(--bd2);border-radius:18px;text-align:center;color:var(--mu);font-size:14.5px;line-height:1.6}
-.kf-empty b{display:block;color:var(--tx);font-size:16px;margin-bottom:4px}
-.kf-more-btn{display:block;margin:6px auto 0}
-.kf-ov{position:fixed;inset:0;z-index:9200;background:rgba(30,20,12,.45);display:flex;align-items:flex-end;justify-content:center}
+.kf-slide.wait::after{content:'';width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(0,0,0,.15);border-right-color:transparent;animation:kzSpin .9s linear infinite}
+.kf-count{position:absolute;top:12px;right:12px;padding:4px 9px;border-radius:999px;background:rgba(18,12,8,.62);color:#fff;font-size:12px;font-weight:600;letter-spacing:.3px}
+.kf-art{display:grid;place-items:center;aspect-ratio:4/5;padding:28px;box-sizing:border-box;background:linear-gradient(135deg,var(--a),var(--b))}
+.kf-art p{margin:0;max-width:100%;text-align:center;font-family:var(--serif);font-size:clamp(20px,5.6vw,27px);font-weight:700;line-height:1.5;color:#2a1f17;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.kf-burst{position:absolute;left:50%;top:50%;width:104px;height:104px;margin:-52px 0 0 -52px;pointer-events:none;opacity:0;transform:scale(.3)}
+.kf-burst svg{width:100%;height:100%;fill:#fff;stroke:none;filter:drop-shadow(0 6px 18px rgba(0,0,0,.28))}
+.kf-burst.go{animation:kfBurst .9s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes kfBurst{15%{opacity:.95;transform:scale(1.18)}30%{transform:scale(.94)}45%{transform:scale(1)}78%{opacity:.95}100%{opacity:0;transform:scale(1.05)}}
+.kf-act{position:relative;display:flex;align-items:center;gap:6px;padding:6px 8px 2px}
+.kf-act>button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:6px;border-radius:10px;color:var(--kf-ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.kf-act>button:active{transform:scale(.9)}
+.kf-act svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
+.kf-like.on{color:var(--kf-red)}.kf-like.on svg{fill:var(--kf-red);stroke:var(--kf-red)}
+.kf-like.on span{color:var(--kf-ink)}
+.kf-like.pop svg{animation:kfPop .38s ease}@keyframes kfPop{35%{transform:scale(1.32)}70%{transform:scale(.92)}100%{transform:scale(1)}}
+.kf-pips{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:4px}
+.kf-pips i{width:6px;height:6px;border-radius:50%;background:#d8d0c6;transition:background .2s}.kf-pips i.on{background:#0095f6}
+.kf-body{padding:2px 14px 0;font-size:14px;line-height:1.5}
+.kf-likes{display:block;border:0;background:none;padding:0;margin:0 0 4px;font:inherit;color:var(--kf-ink);text-align:left;cursor:pointer}
+.kf-likes>b{font-weight:700}.kf-lw{margin-left:6px;color:var(--kf-sub);font-size:13px}.kf-lw b{font-weight:600;color:var(--kf-ink)}
+.kf-cap{white-space:pre-wrap;word-break:break-word}.kf-cap b,.kf-rc b{font-weight:700}
+.kf-cap.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kf-moretxt{border:0;background:none;padding:0;color:var(--kf-sub);font:inherit;font-size:14px;cursor:pointer}
+.kf-allc{display:block;border:0;background:none;padding:0;margin:5px 0 2px;color:var(--kf-sub);font:inherit;font-size:14px;cursor:pointer}
+.kf-rc{margin:2px 0 0;word-break:break-word;white-space:pre-wrap}
+.kf-add{display:flex;align-items:center;gap:10px;margin-top:8px}
+.kf-add .kf-av{width:26px;height:26px;font-size:11px}
+.kf-add input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--kf-ink);outline:none;padding:6px 0}
+.kf-add input::placeholder{color:var(--kf-sub)}
+.kf-add button{border:0;background:none;color:#0095f6;font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:6px 2px}.kf-add button:disabled{opacity:.35;cursor:default}
+.kf-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:56px 24px;text-align:center;color:var(--kf-sub);font-size:14.5px;line-height:1.55}
+.kf-empty b{color:var(--kf-ink);font-size:20px;font-weight:800}
+.kf-empty-ic{display:grid;place-items:center;width:84px;height:84px;border-radius:50%;border:2px solid var(--kf-ink);color:var(--kf-ink);margin-bottom:6px}.kf-empty-ic svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.kf-empty .btn{margin-top:10px;background:#0095f6;border-color:#0095f6;color:#fff}
+.kf-none{padding:36px 0;text-align:center;color:var(--kf-sub);font-size:14px}
+.kf-more-btn{display:block;margin:14px auto 0;border:1px solid var(--kf-line);background:#fff;border-radius:999px;padding:9px 18px;font:inherit;font-size:13.5px;font-weight:600;color:var(--kf-ink);cursor:pointer}
+/* 시트 (댓글 · 메뉴 · 새 게시물) */
+.kf-ov{position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;animation:kfFade .18s ease}
+@keyframes kfFade{from{opacity:0}}
 @media(min-width:821px){.kf-ov{align-items:center;padding:24px}}
-.kf-sheet{width:min(560px,100%);max-height:min(88dvh,760px);display:flex;flex-direction:column;background:#fffdfa;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--tx);border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.2);overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(min-width:821px){.kf-sheet{border-radius:20px}}
-.kf-sh{display:flex;align-items:center;gap:8px;padding:12px 10px 10px 16px;border-bottom:1px solid var(--st)}.kf-sh b{flex:1;font-size:16px}
-.kf-sh .kf-x{border:0;background:none;width:36px;height:36px;border-radius:50%;font-size:18px;color:var(--mu);cursor:pointer}
-.kf-sb{flex:1;min-height:0;overflow:auto;padding:12px 16px}
-.kf-sf{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid var(--st)}
-.kf-sf textarea{flex:1;min-height:40px;max-height:120px;resize:none;border:1px solid var(--bd);border-radius:20px;padding:9px 14px;font:inherit;font-size:15px;background:var(--page);color:var(--tx)}
-.kf-sf button{border:0;border-radius:20px;padding:10px 16px;background:var(--ac);color:#fff;font:inherit;font-weight:700;cursor:pointer}.kf-sf button:disabled{opacity:.45}
-.kf-c{display:flex;gap:10px;padding:8px 0}.kf-c .kf-av{width:32px;height:32px;font-size:13px}
-.kf-c div{flex:1;min-width:0;font-size:14.5px;line-height:1.5;word-break:break-word;white-space:pre-wrap}.kf-c b{margin-right:6px}.kf-c small{display:block;font-size:11.5px;color:var(--mu);margin-top:2px}
-.kf-c .kf-cdel{border:0;background:none;color:var(--mu);font:inherit;font-size:12px;cursor:pointer;padding:0 0 0 8px}
-.kf-none{padding:28px 0;text-align:center;color:var(--mu);font-size:14px}
-.kf-w textarea{width:100%;box-sizing:border-box;min-height:120px;border:1px solid var(--bd);border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.55;background:var(--page);color:var(--tx);resize:vertical}
-.kf-w .kf-wn{display:flex;justify-content:space-between;margin:6px 2px 12px;font-size:12px;color:var(--mu)}
-.kf-w .kf-wa{margin-top:4px}
-.kf-menu{padding:6px 0}.kf-menu button{display:block;width:100%;border:0;background:none;padding:14px 18px;text-align:left;font:inherit;font-size:15.5px;color:var(--tx);cursor:pointer}.kf-menu button.bad{color:var(--bad)}.kf-menu button:hover{background:var(--acs)}
-.kf-likers{padding:4px 0}.kf-likers div{padding:9px 0;border-bottom:1px solid var(--st);font-size:15px}
+.kf-sheet{width:min(520px,100%);max-height:min(86dvh,760px);display:flex;flex-direction:column;background:#fff;color:#1f1a16;border-radius:18px 18px 0 0;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);animation:kfUp .24s cubic-bezier(.2,.8,.2,1)}
+@keyframes kfUp{from{transform:translateY(40px);opacity:.6}}
+@media(min-width:821px){.kf-sheet{border-radius:14px}}
+.kf-sheet::before{content:'';display:block;width:38px;height:4px;border-radius:2px;background:#dcd6cf;margin:8px auto 0}
+@media(min-width:821px){.kf-sheet::before{display:none}}
+.kf-sh{position:relative;display:flex;align-items:center;justify-content:center;padding:10px 48px 12px;border-bottom:1px solid #efefef}.kf-sh b{font-size:16px;font-weight:700}
+.kf-sh .kf-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;width:36px;height:36px;border-radius:50%;font-size:18px;color:#555;cursor:pointer}
+.kf-sb{flex:1;min-height:0;overflow:auto;padding:8px 16px 12px}
+.kf-sf{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #efefef}
+.kf-sf textarea{flex:1;min-height:40px;max-height:120px;resize:none;border:1px solid #e3e3e3;border-radius:22px;padding:9px 16px;font:inherit;font-size:15px;background:#fff;color:#1f1a16;outline:none}
+.kf-sf textarea:focus{border-color:#c7c7c7}
+.kf-sf button{border:0;background:none;color:#0095f6;padding:8px 4px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}.kf-sf button:disabled{opacity:.4;cursor:default}
+.kf-sf.kf-sf-main button{background:#0095f6;color:#fff;border-radius:10px;padding:10px 22px}
+.kf-c{display:flex;gap:12px;padding:10px 0}.kf-c .kf-av{width:34px;height:34px;font-size:13px}
+.kf-c div{flex:1;min-width:0;font-size:14px;line-height:1.45;word-break:break-word;white-space:pre-wrap}.kf-c b{font-weight:700;margin-right:4px}
+.kf-c small{display:block;font-size:12px;color:#8e8e8e;margin-top:4px}
+.kf-c .kf-cdel{border:0;background:none;color:#8e8e8e;font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0 0 0 10px}
+.kf-w textarea{width:100%;box-sizing:border-box;min-height:130px;border:0;padding:6px 2px;font:inherit;font-size:16px;line-height:1.6;background:#fff;color:#1f1a16;resize:none;outline:none}
+.kf-w .kf-wn{display:flex;justify-content:space-between;margin:4px 2px 12px;font-size:12px;color:#8e8e8e}
+.kf-w .kf-wa{padding-top:10px;border-top:1px solid #efefef}
+.kf-menu{padding:4px 0}.kf-menu button{display:block;width:100%;border:0;border-bottom:1px solid #f1f1f1;background:none;padding:15px 18px;text-align:center;font:inherit;font-size:15px;color:#1f1a16;cursor:pointer}.kf-menu button:last-child{border-bottom:0}.kf-menu button.bad{color:#ed4956;font-weight:700}
+.kf-likers{padding:2px 0}.kf-likers div{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f4f4f4;font-size:14.5px;font-weight:600}
+.kf .kf-add input{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:6px 0!important;min-height:0!important}
+.kf-sheet .kf-sf textarea{background:#fff!important;box-shadow:none!important}
+.kf-sheet .kf-w textarea{background:#fff!important;border:0!important;box-shadow:none!important}
+@media(max-width:820px){.kf{background:#fff;min-height:calc(100dvh - 120px)}}
+.km-more2 .km-mine .km-tile i{background:var(--acs);color:var(--ac)}
 </style>
 <script id="kz-feed">/* ===== 피드: 사진·글을 올리고 좋아요·댓글 (인스타처럼) · 홈 배열은 그대로 두고 메뉴에만 추가 ===== */
 (function(){
@@ -9430,6 +9486,9 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const IC={heart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.7 7.8 3.9 4.5 7.3 4.5c2 0 3.6 1.1 4.7 2.8 1.1-1.7 2.7-2.8 4.7-2.8 3.4 0 5.6 3.3 4.5 6.6-1.7 4.8-9.2 9.4-9.2 9.4Z"/></svg>',
   cmt:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6c0 4.3-3.8 7.6-8.5 7.6-1.2 0-2.4-.2-3.4-.6L4 20l1-3.9a7.2 7.2 0 0 1-1.5-4.5c0-4.3 3.8-7.6 8.5-7.6s8.5 3.3 8.5 7.6Z"/></svg>',
   plus:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.8h-15Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>',
+  belloff:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 9.4-4.9M18 10.6v5.9l1.5 1.8H7"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0M4 4l16 16"/></svg>',
+  newpost:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>',
   cam:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5Z"/><circle cx="12" cy="12.5" r="3.4"/></svg>'};
  try{if(typeof V13ICONS==='object')V13ICONS.feed='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.6" cy="7.4" r=".9" fill="currentColor"/></svg>'}catch(e){}
  try{if(typeof PAGES==='object')PAGES.feed=['feed','피드']}catch(e){}
@@ -9442,32 +9501,43 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const av=(id,name)=>{const i=String(name||'?').trim().slice(0,1)||'?',p=PROF.get(id);return `<span class="kf-av" data-kf-pid="${E(id)}" data-initial="${E(i)}">${p&&p.photo?`<img alt="" src="${E(p.photo)}">`:E(i)}</span>`};
  async function profiles(ids){ids=[...new Set(ids.filter(Boolean))].filter(id=>!PROF.has(id)).slice(0,30);if(!ids.length)return;ids.forEach(id=>PROF.set(id,{photo:''}));
   try{const r=await api({action:'profiles',ids});for(const p of r.profiles||[])PROF.set(p.id,{photo:p.photo||''});document.querySelectorAll('[data-kf-pid]').forEach(el=>{const p=PROF.get(el.dataset.kfPid);if(p&&p.photo&&!el.querySelector('img'))el.innerHTML=`<img alt="" src="${E(p.photo)}">`})}catch(e){}}
- const likesLine=p=>{if(!p.likeCount)return '';const mine=me().name,others=(p.likers||[]).filter(n=>n!==mine);let t;
-  const who=p.liked&&p.likeCount===1?'내가 눌렀어요':others.length?`${E(others[0])}님${p.likeCount>1?` 외 ${p.likeCount-1}명`:''}`:'';t=`좋아요 ${p.likeCount}개${who?`<small class="kf-lw"> · ${who}</small>`:''}`;
-  return `<button type="button" class="kf-likes" data-kf-likers>${t}</button>`};
- function card(p){const n=p.imageCount,long=(p.text||'').length>120||(p.text||'').split('\n').length>3;
-  const media=n?`<div class="kf-media"><div class="kf-track">${Array.from({length:n},(_,i)=>`<div class="kf-slide wait" data-i="${i}"></div>`).join('')}</div>${n>1?`<span class="kf-count">1/${n}</span>`:''}<div class="kf-burst">${IC.heart}</div></div>${n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}`:'';
-  const cap=p.text?`<div class="kf-cap ${long?'clamp':''}">${n?`<b>${E(p.name)}</b>`:''}${E(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}`:'';
-  const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b>${E(c.text)}</div>`).join('');
-  return `<article class="kf-card ${n?'':'kf-text-only'}" data-id="${E(p.id)}"><div class="kf-top">${av(p.owner,p.name)}<div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴">⋯</button>':''}</div>
-   ${media}${n?'':`<div class="kf-body" style="padding-bottom:4px">${cap}</div>`}
-   <div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button></div>
-   <div class="kf-body">${likesLine(p)}${n?cap:''}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개${p.commentCount>1?' 모두':''} 보기</button>`:''}${rc}
-    <form class="kf-add" data-kf-add>${av(me().id,me().name).replace('kf-av','kf-av" style="width:28px;height:28px;font-size:12px')}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
- function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const m=me();
-  const list=S.items.length?S.items.map(card).join(''):S.loaded?`<div class="kf-empty"><b>아직 게시물이 없어요</b>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.<br><button type="button" class="btn" data-kf-new style="margin-top:12px">첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
-  b.innerHTML=`<div class="wk kf"><div class="kf-head"><div><h1 class="ht2">피드</h1><p class="mu">팀의 순간을 사진과 글로 나눠요</p></div><button type="button" class="btn kf-new" data-kf-new>${IC.plus}새 게시물</button></div>
-   <button type="button" class="kf-compose-bar" data-kf-new>${av(m.id,m.name)}<span>${E(m.name||'')}님, 어떤 순간을 나눌까요?</span><i>${IC.cam}</i></button>
-   ${S.err?`<div class="kf-empty" style="padding:18px">${E(S.err)} <button type="button" class="sm" data-kf-retry>다시 시도</button></div>`:''}
-   <div class="kf-list">${list}</div>${S.cursor?'<button type="button" class="sm kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>`;
-  bind(b);profiles([m.id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
+ const likesLine=p=>{if(!p.likeCount)return '';const mine=me().name,others=(p.likers||[]).filter(n=>n!==mine);
+  const who=p.liked&&p.likeCount===1?'내가 좋아해요':others.length?`<b>${E(others[0])}</b>님${p.likeCount>1?` 외 <b>${p.likeCount-1}명</b>`:''}이 좋아해요`:'';
+  return `<button type="button" class="kf-likes" data-kf-likers><b>좋아요 ${p.likeCount}개</b>${who?`<span class="kf-lw">${who}</span>`:''}</button>`};
+ const PAL=[['#f6d365','#fda085'],['#a1c4fd','#c2e9fb'],['#d4fc79','#96e6a1'],['#fbc2eb','#a6c1ee'],['#ffecd2','#fcb69f'],['#e0c3fc','#8ec5fc'],['#f5d0a9','#d4a373']];
+ const textArt=p=>{const t=p.text||'';return !p.imageCount&&t.length<=140&&t.split('\n').length<=5};
+ function card(p){const n=p.imageCount,art=textArt(p),long=!art&&((p.text||'').length>110||(p.text||'').split('\n').length>3);
+  const h=[...String(p.id)].reduce((a,c)=>a+c.charCodeAt(0),0),pal=PAL[h%PAL.length];
+  const media=n?`<div class="kf-media"><div class="kf-track">${Array.from({length:n},(_,i)=>`<div class="kf-slide wait" data-i="${i}"></div>`).join('')}</div>${n>1?`<span class="kf-count">1/${n}</span>`:''}<div class="kf-burst">${IC.heart}</div></div>`
+   :art?`<div class="kf-media kf-art" style="--a:${pal[0]};--b:${pal[1]}"><p>${E(p.text)}</p><div class="kf-burst">${IC.heart}</div></div>`:'';
+  const pips=n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'';
+  const cap=p.text&&!art?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${E(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}`:'';
+  const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b> ${E(c.text)}</div>`).join('');
+  return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
+   ${media}<div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글 ${p.commentCount}개">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button>${pips}</div>
+   <div class="kf-body">${likesLine(p)}${cap}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개${p.commentCount>1?' 모두':''} 보기</button>`:''}${rc}
+    <form class="kf-add" data-kf-add>${av(me().id,me().name)}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
+ let only='';
+ function stories(){const seen=new Map();S.items.forEach(p=>{if(!seen.has(p.owner))seen.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt})});const m=me();
+  const list=[...seen.values()].sort((a,b)=>b.at-a.at).slice(0,20);if(!list.length)return '';
+  return `<div class="kf-stories" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'sel':''}" data-kf-only="${E(x.id)}" role="listitem"><span class="kf-st-ring ${Date.now()-x.at<864e5?'new':''}">${av(x.id,x.name)}</span><small>${E(x.id===m.id?'내 게시물':x.name)}</small></button>`).join('')}</div>`}
+ function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const items=only?S.items.filter(p=>p.owner===only):S.items,who=only&&S.items.find(p=>p.owner===only);
+  const list=items.length?items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
+  b.innerHTML=`<div class="kf"><div class="kf-head"><h1>피드</h1><div class="kf-hbtns"><button type="button" class="kf-new kf-bell ${S.notify===false?'off':''}" data-kf-bell aria-pressed="${S.notify!==false}" aria-label="피드 알림 ${S.notify===false?'꺼짐':'켜짐'}" title="내 게시물 좋아요 · 댓글 알림 ${S.notify===false?'꺼짐':'켜짐'}">${S.notify===false?IC.belloff:IC.bell}</button><button type="button" class="kf-new" data-kf-new aria-label="새 게시물">${IC.newpost}</button></div></div>
+   ${stories()}${who?`<div class="kf-filter"><span><b>${E(who.name)}</b>님의 게시물</span><button type="button" data-kf-only="">전체 보기</button></div>`:''}
+   ${S.err?`<div class="kf-err">${E(S.err)} <button type="button" class="sm" data-kf-retry>다시 시도</button></div>`:''}
+   <div class="kf-list">${list}</div>${S.cursor&&!only?'<button type="button" class="kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>`;
+  b.querySelector('[data-kf-bell]')?.addEventListener('click',async e=>{const btn=e.currentTarget,on=S.notify===false;btn.disabled=true;try{const r=await api({action:'feedPref',enabled:on});S.notify=r.enabled;paint();toast(r.enabled?'피드 알림을 켰어요 · 내 게시물에 좋아요·댓글이 오면 알려 드려요':'피드 알림을 껐어요')}catch(err){btn.disabled=false;toast(err.message||'바꾸지 못했어요')}});
+  bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{only=only===x.dataset.kfOnly?'':x.dataset.kfOnly;paint();window.scrollTo({top:0})});
+  profiles([me().id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
  function find(id){return S.items.find(p=>p.id===id)}
  function repaintCard(id){const p=find(id),el=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"]`);if(!p||!el)return paint();const imgs=S.imgs.get(id);const t=document.createElement('div');t.innerHTML=card(p);const n=t.firstElementChild;
   /* 사진은 다시 받지 않도록 기존 슬라이드 유지 */
   const om=el.querySelector('.kf-media'),nm=n.querySelector('.kf-media');if(om&&nm)nm.replaceWith(om);
   const oi=el.querySelector('.kf-add input'),ni=n.querySelector('.kf-add input');if(oi&&ni){ni.value=oi.value;n.querySelector('.kf-add button').disabled=!oi.value.trim()}
   const focused=document.activeElement===oi;el.replaceWith(n);bindCard(n);if(focused)ni.focus();if(imgs&&!om)fillImgs(n,imgs)}
- function fillImgs(card,imgs){card.querySelectorAll('.kf-slide').forEach((s,i)=>{if(imgs[i]&&!s.querySelector('img')){s.classList.remove('wait');s.innerHTML=`<img alt="게시물 사진 ${i+1}" src="${imgs[i]}" draggable="false">`}})}
+ function fillImgs(card,imgs){const tr=card.querySelector('.kf-track');card.querySelectorAll('.kf-slide').forEach((s,i)=>{if(imgs[i]&&!s.querySelector('img')){s.classList.remove('wait');s.innerHTML=`<img alt="게시물 사진 ${i+1}" src="${imgs[i]}" draggable="false">`}});
+  if(tr&&imgs[0]&&!tr.dataset.r){const im=new Image();im.onload=()=>{const r=Math.max(.8,Math.min(1.91,im.naturalWidth/Math.max(1,im.naturalHeight)));tr.dataset.r=r;tr.style.setProperty('--r',r)};im.src=imgs[0]}}
  const io=typeof IntersectionObserver==='function'?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);loadImgs(e.target.closest('.kf-card'))}}),{rootMargin:'600px 0px'}):null;
  async function loadImgs(c){if(!c)return;const id=c.dataset.id;if(S.imgs.has(id))return fillImgs(c,S.imgs.get(id));try{const r=await api({action:'feedImages',id});S.imgs.set(id,r.images||[]);const now=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"]`);if(now)fillImgs(now,r.images||[])}catch(e){}}
  function openViewer(id,i){const imgs=S.imgs.get(id);if(!imgs||!imgs.length)return;const g=document.createElement('div');g.className='kz-image-gallery';g.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden';g.innerHTML=imgs.map(s=>`<button type="button" class="kz-image-open"><img src="${s}" alt=""></button>`).join('');document.body.append(g);g.querySelectorAll('.kz-image-open')[i]?.click();setTimeout(()=>g.remove(),50)}
@@ -9500,7 +9570,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  function likers(id){const p=find(id);if(!p)return;sheet('좋아요',`<div class="kf-likers">${(p.likers||[]).map(n=>`<div>${E(n)}</div>`).join('')||'<div class="kf-none">아직 없어요</div>'}</div>`)}
  function menu(id){const p=find(id);if(!p)return;const o=sheet('게시물',`<div class="kf-menu">${p.mine?'<button type="button" data-m="edit">글 고치기</button>':''}${p.canDelete?'<button type="button" class="bad" data-m="del">삭제</button>':''}<button type="button" data-m="x">취소</button></div>`);
   o.querySelectorAll('[data-m]').forEach(b=>b.onclick=async()=>{const m=b.dataset.m;if(m==='x')return close();if(m==='edit'){close();return write(p)}if(m==='del'){if(!confirm(p.mine?'이 게시물을 지울까요? 댓글도 함께 지워져요.':'다른 사람의 게시물이에요. 관리자 권한으로 지울까요?'))return;b.disabled=true;try{await api({action:'feedDelete',id});S.items=S.items.filter(x=>x.id!==id);S.imgs.delete(id);close();paint();toast('게시물을 지웠어요')}catch(e){b.disabled=false;toast(e.message||'지우지 못했어요')}}})}
- function write(edit){const o=sheet(edit?'글 고치기':'새 게시물',`<div class="kf-w"><textarea maxlength="2000" placeholder="${edit?'':'어떤 순간이었나요? (사진만 올려도 돼요)'}" aria-label="내용">${edit?E(edit.text):''}</textarea><div class="kf-wn"><span>${edit?'사진은 바꿀 수 없어요':'사진은 최대 3장 · 자동으로 줄여서 올려요'}</span><span data-n>0/2000</span></div>${edit?'':'<div class="kf-wa"></div>'}</div>`,`<div class="kf-sf" style="justify-content:flex-end"><button type="button" data-go>${edit?'저장':'올리기'}</button></div>`);
+ function write(edit){const o=sheet(edit?'글 고치기':'새 게시물',`<div class="kf-w"><textarea maxlength="2000" placeholder="${edit?'':'어떤 순간이었나요? (사진만 올려도 돼요)'}" aria-label="내용">${edit?E(edit.text):''}</textarea><div class="kf-wn"><span>${edit?'사진은 바꿀 수 없어요':'사진은 최대 3장 · 자동으로 줄여서 올려요'}</span><span data-n>0/2000</span></div>${edit?'':'<div class="kf-wa"></div>'}</div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>${edit?'저장':'공유하기'}</button></div>`);
   const ta=o.querySelector('textarea'),n=o.querySelector('[data-n]'),go=o.querySelector('[data-go]'),wa=o.querySelector('.kf-wa');let imgs=[];
   if(wa&&window.KZImages){KZImages.mount(wa,[],a=>{imgs=a;upd()});}
   const upd=()=>{n.textContent=ta.value.length+'/2000';go.disabled=!(ta.value.trim()||imgs.length||(edit&&(edit.imageCount)))};ta.oninput=upd;upd();setTimeout(()=>ta.focus(),60);
@@ -9508,7 +9578,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   go.onclick=async()=>{if(wa&&KZImages.busy(wa))return toast('사진을 준비하고 있어요');const text=ta.value.trim();go.disabled=true;go.textContent=edit?'저장 중…':'올리는 중…';
    try{if(edit){const r=await api({action:'feedEdit',id:edit.id,text});Object.assign(edit,r.item);close();repaintCard(edit.id);toast('고쳤어요')}
     else{const images=wa?KZImages.get(wa):[];const r=await api({action:'feedPost',id:reqId,text,images});if(images.length)S.imgs.set(r.item.id,images);S.items=[r.item,...S.items.filter(x=>x.id!==r.item.id)];close();paint();window.scrollTo({top:0,behavior:'smooth'});toast('올렸어요')}}
-   catch(e){go.disabled=false;go.textContent=edit?'저장':'올리기';toast(e.message||'올리지 못했어요')}}}
+   catch(e){go.disabled=false;go.textContent=edit?'저장':'공유하기';toast(e.message||'올리지 못했어요')}}}
  function bindCard(c){const id=c.dataset.id;
   c.querySelector('[data-kf-like]')?.addEventListener('click',()=>like(id));
   c.querySelectorAll('[data-kf-cmt]').forEach(b=>b.onclick=()=>comments(id));
@@ -9516,7 +9586,8 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   c.querySelector('[data-kf-menu]')?.addEventListener('click',()=>menu(id));
   c.querySelector('[data-kf-moretxt]')?.addEventListener('click',e=>{c.querySelector('.kf-cap')?.classList.remove('clamp');e.currentTarget.remove()});
   const f=c.querySelector('[data-kf-add]');if(f){const i=f.querySelector('input'),b=f.querySelector('button');i.oninput=()=>{b.disabled=!i.value.trim()};b.addEventListener('mousedown',e=>e.preventDefault());f.onsubmit=e=>{e.preventDefault();addComment(id,i.value.trim(),i).catch(()=>{})}}
-  const m=c.querySelector('.kf-media');if(m){const tr=m.querySelector('.kf-track'),cnt=m.querySelector('.kf-count'),pips=c.querySelectorAll('.kf-pips i');
+  const art=c.querySelector('.kf-art');if(art){let last=0;art.addEventListener('click',()=>{const now=Date.now();if(now-last<320){last=0;like(id,true,true)}else last=now})}
+  const m=c.querySelector('.kf-media:not(.kf-art)');if(m){const tr=m.querySelector('.kf-track'),cnt=m.querySelector('.kf-count'),pips=c.querySelectorAll('.kf-pips i');
    tr.addEventListener('scroll',()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(cnt)cnt.textContent=(k+1)+'/'+tr.children.length;pips.forEach((x,j)=>x.classList.toggle('on',j===k))},{passive:true});
    let last=0,timer=0;m.addEventListener('click',e=>{const now=Date.now();if(now-last<320){clearTimeout(timer);last=0;like(id,true,true);return}last=now;const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));timer=setTimeout(()=>openViewer(id,k),330)});
    if(S.imgs.has(id))fillImgs(c,S.imgs.get(id));else if(io)io.observe(m);else loadImgs(c)}}
@@ -9524,18 +9595,19 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   b.querySelector('[data-kf-older]')?.addEventListener('click',async e=>{e.currentTarget.disabled=true;try{const r=await api({action:'feedList',cursor:S.cursor});S.items=[...S.items,...r.items.filter(x=>!find(x.id))];S.cursor=r.cursor;paint()}catch(err){toast(err.message||'불러오지 못했어요');e.currentTarget.disabled=false}});
   b.querySelectorAll('.kf-card').forEach(bindCard)}
  async function load(force){if(S.loading)return;if(!force&&Date.now()-S.at<8000&&S.loaded)return paint();S.loading=true;S.err='';
-  try{const r=await api({action:'feedList'});const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
+  try{const r=await api({action:'feedList'});if(typeof r.notify==='boolean')S.notify=r.notify;const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
   S.loading=false;if(view==='feed'){const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.kf-card');if(typing&&!force)return;const y=window.scrollY;paint();window.scrollTo(0,y)}}
  /* 화면 연결: 홈은 건드리지 않고 메뉴에만 '피드' */
  if(typeof body==='function'){const o=body;body=function(){if(view==='feed'){const b=document.getElementById('body');if(b){paint();load()}return}return o.apply(this,arguments)}}
  if(typeof renderDbar==='function'){const o=renderDbar;renderDbar=function(){if(view==='feed'){const b=document.getElementById('dbar');if(b)b.hidden=true;try{setBH()}catch(e){}return}return o.apply(this,arguments)}}
  if(typeof renderNav==='function'){const o=renderNav;renderNav=function(){const r=o.apply(this,arguments);try{const g=document.querySelector('#side .nv-group');if(g&&!g.querySelector('[data-kf-nav]')){const b=document.createElement('button');b.type='button';b.className='nv-i'+(view==='feed'?' on':'');b.dataset.kfNav='1';b.innerHTML=V13I('feed')+'<span class="nv-t">피드</span>';b.onclick=()=>go('feed');g.append(b)}}catch(e){}return r}}
  /* 더보기 '팀'에 피드 타일 */
- new MutationObserver(()=>{if(typeof view==='undefined'||view!=='mobile_more')return;const secs=[...document.querySelectorAll('#body .km-tsec')];const t=secs.find(s=>(s.querySelector('.km-th p')||{}).textContent==='팀');if(!t||t.querySelector('[data-kf-tile]'))return;const tiles=t.querySelector('.km-tiles');if(!tiles)return;
+ false&&new MutationObserver(()=>{if(typeof view==='undefined'||view!=='mobile_more')return;const secs=[...document.querySelectorAll('#body .km-tsec')];const t=secs.find(s=>(s.querySelector('.km-th p')||{}).textContent==='팀');if(!t||t.querySelector('[data-kf-tile]'))return;const tiles=t.querySelector('.km-tiles');if(!tiles)return;
   const b=document.createElement('button');b.type='button';b.className='km-tile';b.dataset.kfTile='1';b.innerHTML=`<i>${V13I('feed')}</i><span>피드</span>`;b.onclick=()=>go('feed');tiles.prepend(b)}).observe(document.documentElement,{childList:true,subtree:true});
  /* 피드를 보고 있으면 30초마다 새 글 확인 */
  setInterval(()=>{if(typeof view!=='undefined'&&view==='feed'&&!document.hidden&&!document.querySelector('.kf-ov'))load(true)},30000);
  window.kzPosts={open:()=>go("feed"),load,state:S};
+ try{if(typeof renderTabbar==='function')renderTabbar()}catch(e){}
 })();</script>
 <style id="kz-chat-read-css">
 #kcPanel .kc-line .kc-meta{display:flex;flex-direction:column;justify-content:flex-end;flex:none;gap:1px;padding-bottom:2px}
