@@ -4685,6 +4685,8 @@ if(window.FIREBASE_CONFIG&&window.firebase){
   /* ---------- 팀 공유 모드: Firebase ---------- */
   firebase.initializeApp(FIREBASE_CONFIG);
   const fs=firebase.firestore();try{fs.settings({ignoreUndefinedProperties:true})}catch(e){}
+  /* 이 기기에 Firestore 사본을 보관 → 다시 열 때 바뀐 것만 받아 읽기 횟수·로딩 줄임 */
+  try{fs.enablePersistence({synchronizeTabs:true}).catch(e=>console.info('[꿈자리] 오프라인 캐시 사용 안 함',e&&e.code))}catch(e){}
   const st=firebase.storage(),bucket=FIREBASE_CONFIG.storageBucket;
   const auth=firebase.auth();
   window.KZ_FIREBASE_AUTH=auth;
@@ -5161,8 +5163,9 @@ let stg=null,stgAt=0,stgBusy=false,stgWarned=false,stgMsgT='';
 const fmtB=n=>{const G=1073741824,M=1048576,K=1024,t=(v,d)=>String(+v.toFixed(d));return n>=G?t(n/G,n>=10*G?0:2)+'GB':n>=M?t(n/M,n>=100*M?0:1)+'MB':n>=K?Math.round(n/K)+'KB':Math.round(n)+'B'};
 const stCls=p=>p>=85?'bad':p>=60?'warn':'',stPct=p=>p>0&&p<1?'<1':String(Math.round(p));
 const stgPcts=()=>stg?[stg.maxBytes?stg.bytes/stg.maxBytes*100:0,0]:[0,0];
-async function refreshStorage(force){if(stgBusy||(!force&&Date.now()-stgAt<30000))return;stgBusy=true;
-try{const as=await TO(claude.use('assets'),15000,'저장소 연결');if(!as||!as.list)stg=null;else{const rr=await TO(as.list(),20000,'저장 용량 확인');stg={files:rr.usage.files,bytes:rr.usage.bytes,maxFiles:rr.usage.maxFiles,maxBytes:rr.usage.maxBytes,quotaLabel:rr.usage.quotaLabel||'',assets:rr.assets||[]};stgAt=Date.now();const pc=Math.max(...stgPcts());if(pc>=80&&!stgWarned){stgWarned=true;toast(`저장 공간이 ${Math.floor(pc)}% 찼어요. 저장 공간에서 확인해 주세요`)}}}catch(e){console.error(e)}
+async function refreshStorage(force){if(!force&&!stg){try{const c=JSON.parse(localStorage.getItem('kzStgCache')||'null');if(c&&c.stg&&Date.now()-c.at<6*36e5){stg=c.stg;stgAt=c.at;if($('#side'))renderNav();paintStg();return}}catch(e){}}
+ if(stgBusy||(!force&&Date.now()-stgAt<6*36e5))return;stgBusy=true;
+try{const as=await TO(claude.use('assets'),15000,'저장소 연결');if(!as||!as.list)stg=null;else{const rr=await TO(as.list(),20000,'저장 용량 확인');stg={files:rr.usage.files,bytes:rr.usage.bytes,maxFiles:rr.usage.maxFiles,maxBytes:rr.usage.maxBytes,quotaLabel:rr.usage.quotaLabel||'',assets:rr.assets||[]};stgAt=Date.now();try{localStorage.setItem('kzStgCache',JSON.stringify({at:stgAt,stg}))}catch(e){}const pc=Math.max(...stgPcts());if(pc>=80&&!stgWarned){stgWarned=true;toast(`저장 공간이 ${Math.floor(pc)}% 찼어요. 저장 공간에서 확인해 주세요`)}}}catch(e){console.error(e)}
 stgBusy=false;if($('#side'))renderNav();paintStg()}
 function stgEst(){if(!stg||!stg.assets.length)return null;const W=7*864e5,now=Date.now(),ts=stg.assets.map(a=>Date.parse(a.createdAt)||now),oldest=Math.min(...ts),span=Math.min(12,(now-oldest)/W);if(span<2)return{few:true};
 const rec=stg.assets.filter(a=>(Date.parse(a.createdAt)||0)>=now-12*W),bw=rec.reduce((q,a)=>q+a.sizeBytes,0)/span,fw=rec.length/span;
@@ -6141,15 +6144,23 @@ kzWhenDb(()=>{db.doc('settings/sessionRules').onSnapshot(x=>{if(x.exists&&x.data
 renderApp();
 skin(document.body);iconObs.observe(document.body,{childList:true,subtree:true,characterData:true});
 (async()=>{try{if(!window.claude)return;const u=await claude.use('user');canEdit=false;db=await claude.use('db');if(!db)return;
-unsubA=db.collection('weeks').onSnapshot(s=>{archive=s.docs.map(d=>{const x=d.data()||{};return{id:d.id,scores:Array.isArray(x.scores)?x.scores:[],ment:x.ment||null,up:!!x.up,upAt:typeof x.up==='number'?x.up:0,by:x.by||''}}).sort((a,b)=>a.id<b.id?1:-1);if(view==='archive'&&$('#body'))archiveView();if(calOpen)drawCal()},e=>console.error(e));
+const onWeeks=s=>{archive=s.docs.map(d=>{const x=d.data()||{};return{id:d.id,scores:Array.isArray(x.scores)?x.scores:[],ment:x.ment||null,up:!!x.up,upAt:typeof x.up==='number'?x.up:0,by:x.by||''}}).sort((a,b)=>a.id<b.id?1:-1);if(view==='archive'&&$('#body'))archiveView();if(calOpen)drawCal();if(window.__kzWeeksFull&&['library','lyrics','attend','mobile_my'].includes(view)&&$('#body')){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))try{body()}catch(e){}}};
+/* 읽기 줄이기: 처음엔 최근 12주 콘티만 실시간으로, 지난 콘티가 필요한 화면을 열 때 전체로 바꿈 */
+const _FP=window.firebase&&firebase.firestore&&firebase.firestore.FieldPath,_canQ=!!(_FP&&typeof db.collection('weeks').where==='function');
+const _cut=(w)=>shiftDate(nextSun(),-7*w);
+unsubA=_canQ?db.collection('weeks').where(_FP.documentId(),'>=',_cut(12)).onSnapshot(onWeeks,e=>console.error(e)):db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e));
+window.__kzWeeksFull=!_canQ;
+window.kzNeedFull=function(){if(!window.__kzWeeksFull){window.__kzWeeksFull=true;try{unsubA&&unsubA()}catch(e){}unsubA=db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e))}if(window.__kzLibLite)window.__kzLibFull&&window.__kzLibFull();if(window.__kzMinLite)window.__kzMinFull&&window.__kzMinFull()};
 db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;noSvc=d&&typeof d==='object'?{...d}:{};try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e));
 db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('trash').onSnapshot(x=>{const lim=Date.now()-TRASH_DAYS*864e5;trash=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));purgeTrash();trash=trash.filter(t=>(t.deletedAt||0)>=lim);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if($('#side'))renderNav();if(view==='trash'&&$('#body'))trashView()},e=>console.error(e));
-setTimeout(()=>refreshStorage(true),2500);
-db.collection('library').onSnapshot(x=>{library=x.docs.map(d=>({...d.data(),_id:d.id}));if($('#side'))renderNav();const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='library'&&$('#body'))libraryView()},e=>console.error(e));
-db.collection('minutes').onSnapshot(x=>{minutes=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.at||0)-(a.at||0));const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='minutes'&&minTab==='list'&&$('#body'))minutesView()},e=>console.error(e));
+setTimeout(()=>refreshStorage(false),2500);
+{const onLib=x=>{library=x.docs.map(d=>({...d.data(),_id:d.id}));if($('#side'))renderNav();const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='library'&&$('#body'))libraryView()};
+ let un=null;if(_canQ){window.__kzLibLite=true;un=db.collection('library').where('at','>=',Date.now()-21*864e5).onSnapshot(onLib,e=>console.error(e));window.__kzLibFull=()=>{if(!window.__kzLibLite)return;window.__kzLibLite=false;try{un&&un()}catch(e){}un=db.collection('library').onSnapshot(onLib,e=>console.error(e))}}else db.collection('library').onSnapshot(onLib,e=>console.error(e));}
+{const onMin=x=>{minutes=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.at||0)-(a.at||0));const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='minutes'&&minTab==='list'&&$('#body'))minutesView()};
+ let un=null;if(_canQ){window.__kzMinLite=true;un=db.collection('minutes').where('at','>=',Date.now()-21*864e5).onSnapshot(onMin,e=>console.error(e));window.__kzMinFull=()=>{if(!window.__kzMinLite)return;window.__kzMinLite=false;try{un&&un()}catch(e){}un=db.collection('minutes').onSnapshot(onMin,e=>console.error(e))}}else db.collection('minutes').onSnapshot(onMin,e=>console.error(e));}
 db.collection('sessAbs').onSnapshot(x=>{sessAbs=x.docs.map(d=>({...d.data(),_id:d.id}));const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='abs'&&$('#body'))absView();else if(view==='sched_e'&&$('#body'))schedEView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('overrides').onSnapshot(x=>{ovr=x.docs.map(d=>({...d.data(),_id:d.id}));const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='home'&&$('#body'))homeView();else if(view==='swap'&&$('#body'))swapView();else if(view==='sched_s'&&$('#body'))schedSView();else if(view==='lsw'&&$('#body'))lsView()},e=>console.error(e));
 db.doc('settings/singers').onSnapshot(x=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(x.exists){const d=x.data();if(Array.isArray(d.fixed)&&Array.isArray(d.rot)&&d.anchor){sing={fixed:d.fixed,rot:d.rot,every:d.every||2,anchor:d.anchor};sing=cleanSing(sing);if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&$('#body'))mentView();}}},e=>console.error(e));
@@ -8977,6 +8988,12 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  /* 출결 체크: 예배 없는 주는 안내 */
  if(typeof atCheckHTML==='function'){const o=atCheckHTML;atCheckHTML=function(){const h=o.apply(this,arguments);try{if(typeof atWeek!=='undefined'&&isNoSvc(atWeek))return `<div class="nosvc-box" style="margin-bottom:10px"><b>예배 없음</b><span>${E(noSvcWhy(atWeek))} · 이 주는 출결을 받지 않아요</span></div>`+h}catch(e){}return h}}
 })();</script>
+<script id="kz-lazy-full">/* 지난 자료가 필요한 화면을 열면 그때 전체를 불러옴 */
+(function(){const NEED=['archive','library','lyrics','attend','edit','ment','lpick','storage','trash','minutes','mobile_my','search'];
+ const g=window.go;if(typeof g==='function')window.go=function(v){try{if(NEED.includes(v)&&window.kzNeedFull)kzNeedFull()}catch(e){}return g.apply(this,arguments)};
+ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K'))try{window.kzNeedFull&&kzNeedFull()}catch(x){}},true);
+ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-qk],.nv-s'))try{window.kzNeedFull&&kzNeedFull()}catch(x){}},true);
+ const t=setInterval(()=>{try{if(typeof view!=='undefined'&&NEED.includes(view)&&window.kzNeedFull){kzNeedFull();clearInterval(t)}}catch(e){}},1500);setTimeout(()=>clearInterval(t),20000);})();</script>
 </html>
 
 <script id="kz-score-pages-script">
