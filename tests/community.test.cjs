@@ -406,3 +406,9 @@ test('anonymous poll hides who voted',async()=>{
  assert.equal(p.item.poll.anon,true);const v=await f.run(f.outsider,{action:'feedVote',id:p.item.id,o:[0]});assert.equal(v.poll.options[0].n,1);assert.deepEqual(v.poll.options[0].who,[]);
  const l=await f.run(f.user,{action:'feedList'});assert.deepEqual(l.items.find(x=>x.id===p.item.id).poll.options[0].who,[]);
 });
+test('thanks cards are visible only to sender and recipient, counts stay public',async()=>{
+ const f=fixture();await f.run(f.user,{action:'feedPost',id:'feedreq_thxpv1',kind:'thanks',to:f.outsider.id,text:'고마워요'});
+ const has=async a=>(await f.run(a,{action:'feedList'})).items.some(x=>x.kind==='thanks');
+ assert.equal(await has(f.user),true);assert.equal(await has(f.outsider),true);assert.equal(await has(f.admin),false);
+ assert.equal((await f.run(f.admin,{action:'feedList'})).thanks[f.outsider.id],1);
+});

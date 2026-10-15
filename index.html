@@ -9765,7 +9765,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  function album(items){const ps=items.filter(p=>p.imageCount>0);if(!ps.length)return S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 사진이 없어요</b><span>사진을 올리면 여기 모여요.</span><button type="button" class="btn" data-kf-new>사진 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   return `<div class="kf-album">${ps.map(p=>{const im=S.imgs.get(p.id);return `<button type="button" class="kf-at" data-kf-at="${E(p.id)}" aria-label="${E(p.name)}님의 사진">${im&&im[0]?`<img src="${im[0]}" alt="" loading="lazy">`:'<span class="kf-at-w"></span>'}${p.imageCount>1?'<i aria-hidden="true">❐</i>':''}</button>`}).join('')}</div>`}
  function thanksTop(){const ids=Object.entries(S.thanks||{}).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,6);const nm=id=>(MEMBERS.find(x=>x.id===id)||S.items.find(p=>p.to&&p.to.id===id)?.to||{}).name||'';const mine=(S.thanks||{})[me().id]||0;
-  return `<div class="kf-ttop"><div class="kf-ttop-h"><b>💌 감사 카드</b><span>내가 받은 카드 <b>${mine}</b>장</span></div>${ids.length?`<div class="kf-ttop-l">${ids.filter(([id])=>nm(id)).map(([id,n])=>`<span>${av(id,nm(id))}<b>${E(nm(id))}</b><small>${n}</small></span>`).join('')}</div>`:''}<button type="button" class="kf-ttop-go" data-kf-thx>고마운 사람에게 카드 보내기</button></div>`}
+  return `<div class="kf-ttop"><div class="kf-ttop-h"><b>💌 감사 카드</b><span>내가 받은 카드 <b>${mine}</b>장</span></div>${ids.length?`<div class="kf-ttop-l">${ids.filter(([id])=>nm(id)).map(([id,n])=>`<span>${av(id,nm(id))}<b>${E(nm(id))}</b><small>${n}</small></span>`).join('')}</div>`:''}<p class="kf-ttop-note">🔒 카드 내용은 받은 사람과 보낸 사람만 볼 수 있어요 · 받은 횟수만 모두에게 보여요</p><button type="button" class="kf-ttop-go" data-kf-thx>고마운 사람에게 카드 보내기</button></div>`}
  function bdayBar(){const m=me(),out=[];const today=S.birthdays.filter(x=>x.id!==m.id),mine=S.birthdays.some(x=>x.id===m.id);
   /* 오늘 생일인 사람은 자동으로 올라오는 생일 게시물로 보여줌. 게시물이 아직 없을 때만 안내 */
   const has=id=>S.items.some(p=>p.kind==='bday'&&p.owner===id);
@@ -9841,7 +9841,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  const modeTabs=m=>`<div class="kf-modes" role="tablist">${MODES.map(([k,t])=>`<button type="button" role="tab" aria-selected="${k===m}" class="${k===m?'on':''}" data-kf-mode="${k}">${t}</button>`).join('')}</div>`;
  const bindModes=(o,pre)=>o.querySelectorAll('[data-kf-mode]').forEach(b=>b.onclick=()=>{const k=b.dataset.kfMode;if(k==='thanks')writeThanks();else if(k==='poll')writePoll();else write(null,pre)});
  async function writeThanks(toId){await names();const mid=me().id,ppl=MEMBERS.filter(x=>x.id!==mid);let to=toId||'';
-  const o=sheet('새 게시물',`${modeTabs('thanks')}<div class="kf-w kf-wt"><label class="kf-lab">누구에게 보낼까요?</label><input type="search" class="kf-tsearch" placeholder="이름 검색" aria-label="받는 사람 검색"><div class="kf-tpick" role="listbox"></div><label class="kf-lab">전하고 싶은 말</label><textarea maxlength="500" placeholder="고마웠던 순간, 칭찬하고 싶은 점을 적어 주세요" aria-label="감사 내용"></textarea><div class="kf-wn"><span>받는 사람에게 알림이 가요 💌</span><span data-n>0/500</span></div></div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>카드 보내기</button></div>`);
+  const o=sheet('새 게시물',`${modeTabs('thanks')}<div class="kf-w kf-wt"><label class="kf-lab">누구에게 보낼까요?</label><input type="search" class="kf-tsearch" placeholder="이름 검색" aria-label="받는 사람 검색"><div class="kf-tpick" role="listbox"></div><label class="kf-lab">전하고 싶은 말</label><textarea maxlength="500" placeholder="고마웠던 순간, 칭찬하고 싶은 점을 적어 주세요" aria-label="감사 내용"></textarea><div class="kf-wn"><span>받는 사람만 볼 수 있어요 💌</span><span data-n>0/500</span></div></div>`,`<div class="kf-sf kf-sf-main" style="justify-content:flex-end"><button type="button" data-go>카드 보내기</button></div>`);
   bindModes(o);const sr=o.querySelector('.kf-tsearch'),pk=o.querySelector('.kf-tpick'),ta=o.querySelector('textarea'),n=o.querySelector('[data-n]'),go=o.querySelector('[data-go]');
   const draw=()=>{const q=sr.value.trim();pk.innerHTML=ppl.filter(x=>!q||x.name.includes(q)).map(x=>`<button type="button" role="option" aria-selected="${x.id===to}" class="${x.id===to?'on':''}" data-id="${E(x.id)}">${av(x.id,x.name)}<span>${E(x.name)}</span></button>`).join('')||'<span class="kf-none">찾는 사람이 없어요</span>';pk.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{to=b.dataset.id;draw();upd();ta.focus()})};
   const upd=()=>{n.textContent=ta.value.length+'/500';go.disabled=!(to&&ta.value.trim())};sr.oninput=draw;ta.oninput=upd;draw();upd();profiles(ppl.map(x=>x.id));
@@ -10326,6 +10326,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .lrt-pv .ldot{margin-right:4px}
 .lrt-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px 16px;border-top:1px solid rgba(120,90,60,.12)}
 </style>
+<style id="kz-thx-priv-css">.kf-ttop-note{margin:10px 0 0;font-size:11.5px;color:#8a6a72;line-height:1.5}</style>
 </html>
 
 <script id="kz-score-pages-script">
