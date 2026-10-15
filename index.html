@@ -7674,7 +7674,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
 }
 function paintNotify(btn,on){if(!btn)return;btn.setAttribute('aria-pressed',String(on));const t=on?'알림 켜짐 · 누르면 끄기':'알림 꺼짐 · 누르면 켜기';btn.setAttribute('aria-label',t);btn.title=t;btn.innerHTML=on?KC_ICON.bell:KC_ICON.belloff;}
 /* @언급: 입력 중 '@'를 치면 이름 고르기, 말풍선에서는 언급된 이름 강조 */
-function mentionNames(){try{return roomMemberListData().map(m=>String(m.name)).filter(Boolean)}catch(e){return []}}
+let _mnC=null,_mnAt=0;function mentionNames(){const t=Date.now();if(_mnC&&t-_mnAt<5000)return _mnC.slice();try{_mnC=roomMemberListData().map(m=>String(m.name)).filter(Boolean)}catch(e){_mnC=[]}_mnAt=t;return _mnC.slice()}
 function mentionHTML(text){let h=escape(text);const names=mentionNames().sort((a,b)=>b.length-a.length);if(!names.length||h.indexOf('@')<0)return h;
  const me=String(actor?.name||'');const re=new RegExp('@('+names.map(n=>escape(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+'|모두)(?![가-힣A-Za-z0-9])','g');
  return h.replace(re,(all,n)=>`<b class="kc-mention${n===escape(me)||n==='모두'?' me':''}">@${n}</b>`)}
@@ -7708,7 +7708,7 @@ const stamp=m._pending?'<time class="pending" role="status">전송 중</time>':l
 return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big?' emoji':''}${!text&&photo?' photo':''}">${mentionHTML(text)}${photo}</div>${stamp}</div></div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  paintProfiles();refreshProfiles();
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
- l.querySelectorAll('[data-images]').forEach(el=>{const key=room+'|'+el.dataset.images;const show=images=>{el.innerHTML=KZImages.gallery(images);el.querySelectorAll('img').forEach(im=>im.addEventListener('load',()=>{if(l.isConnected&&l.scrollHeight-l.scrollTop-l.clientHeight<im.clientHeight+160)l.scrollTop=l.scrollHeight},{once:true}));};if(imageCache.has(key))show(imageCache.get(key));else el.querySelector('button').onclick=async e=>{e.target.disabled=true;try{const r=await api({action:'chatImages',room,id:el.dataset.images});if(el.isConnected){if(imageCache.size>=20)imageCache.delete(imageCache.keys().next().value);imageCache.set(key,r.images);show(r.images);}}catch(err){error(err);e.target.disabled=false;}};});
+ l.querySelectorAll('[data-images]').forEach(el=>{const key=room+'|'+el.dataset.images;const show=images=>{el.innerHTML=KZImages.gallery(images);el.querySelectorAll('img').forEach(im=>im.addEventListener('load',()=>{if(l.isConnected&&l.scrollHeight-l.scrollTop-l.clientHeight<im.clientHeight+160)l.scrollTop=l.scrollHeight},{once:true}));};if(imageCache.has(key))show(imageCache.get(key));else el.querySelector('button').onclick=async e=>{e.target.disabled=true;try{const r=await api({action:'chatImages',room,id:el.dataset.images});if(el.isConnected){if(imageCache.size>=80)imageCache.delete(imageCache.keys().next().value);imageCache.set(key,r.images);show(r.images);}}catch(err){error(err);e.target.disabled=false;}};});
  const older=$c('#kcOlder');if(older)older.onclick=async()=>{older.disabled=true;const h=l.scrollHeight,y=l.scrollTop;try{await loadChat(true,pageGeneration);if(l.isConnected)l.scrollTop=y+(l.scrollHeight-h);}catch(e){error(e);if(older.isConnected)older.disabled=false;}};
  if(!force&&!near&&l.scrollHeight>previous)$c('#kcNew').hidden=false;
 }
@@ -7754,43 +7754,54 @@ async function loadChat(older=false,gen=pageGeneration){
  if(older||initial)chatCursor=result.cursor||null;
  const map=new Map(chatItems.map(m=>[m.id,m]));
  result.items.filter(m=>m&&m.id).forEach(m=>map.set(m.id,m));
- chatItems=[...map.values()].sort((a,b)=>a.createdAt-b.createdAt||String(a.id).localeCompare(String(b.id)));
+ chatItems=[...map.values()].sort((a,b)=>(a._pending?1:0)-(b._pending?1:0)||a.createdAt-b.createdAt||String(a.id).localeCompare(String(b.id)));
  feedAt=Date.now();paintChat(initial);const el=$c('#kcConnection');if(el)el.textContent='연결됨 · 4초마다 새 대화 확인';
 }
+/* 보내기: 누르는 즉시 말풍선을 띄우고 입력칸을 비움(키보드 유지). 서버 응답은 뒤에서 순서대로 처리 */
+let sendQ=Promise.resolve();
 async function send(e){
- e.preventDefault();if(sending)return;
+ e.preventDefault();
  const input=$c('#kcChatText'),value=input?.value.trim()||'',attachment=$c('#kcChatAttachments');if(KZImages.busy(attachment))return toast('사진을 준비하고 있어요.');const images=[...imageDrafts[room]];if(!value&&!images.length)return;
  const targetRoom=room,gen=pageGeneration,ticket=epoch;
  const key=targetRoom+'|'+JSON.stringify([value,images]);
  const id=attempts.get(key)||uuid();attempts.set(key,id);
- sending=true;
- const buttons=[...document.querySelectorAll('#kcCompose button,.kc-chat-send')];
- buttons.forEach(b=>b.disabled=true);input.readOnly=true;clearError();
+ clearError();
  const pendingId=String(actor?.id||uid())+'_'+id;
  if(!chatItems.some(m=>m.id===pendingId)){
   chatItems.push({id:pendingId,owner:actor?.id||uid(),name:actor?.name||'나',text:value,imageCount:images.length,createdAt:Date.now(),_mine:true,_pending:true});
   if(images.length)imageCache.set(targetRoom+'|'+pendingId,images);
   paintChat(true);
  }
- try{
-  const r=await api({action:'send',room:targetRoom,text:value,images,id});
-  if(!r.item?.id)throw new Error('전송 확인을 받지 못했어요. 같은 메시지로 다시 시도해 주세요.');
-  if(ticket!==epoch)return;
-  const cached=roomCache.get(targetRoom);if(cached)cached.items=[...new Map([...cached.items.filter(m=>m.id!==pendingId),{...r.item,_mine:true}].map(m=>[m.id,m])).values()];
-  attempts.delete(key);if(JSON.stringify(imageDrafts[targetRoom])===JSON.stringify(images))imageDrafts[targetRoom]=[];if(drafts[targetRoom]?.trim()===value)drafts[targetRoom]='';
-  if(room===targetRoom&&activeView()==='community'){
-   const currentInput=$c('#kcChatText');if(currentInput?.value.trim()===value){currentInput.value='';currentInput.style.height='auto';}
-   const mount=$c('#kcChatAttachments');if(mount){KZImages.mount(mount,imageDrafts[targetRoom],a=>imageDrafts[targetRoom]=a);mount.hidden=!imageDrafts[targetRoom].length;$c('#kcChatAttach')?.setAttribute('aria-expanded',String(!mount.hidden));}if(images.length)imageCache.set(targetRoom+'|'+r.item.id,images);
+ /* 입력칸 · 첨부 바로 비우기 (실패하면 되돌림) */
+ if(input){input.value='';input.style.height='auto';try{input.focus({preventScroll:true})}catch(x){}}
+ drafts[targetRoom]='';imageDrafts[targetRoom]=[];
+ {const mount=$c('#kcChatAttachments');if(mount&&images.length){KZImages.mount(mount,[],a=>imageDrafts[targetRoom]=a);mount.hidden=true;$c('#kcChatAttach')?.setAttribute('aria-expanded','false');}}
+ const deliver=async()=>{
+  sending=true;
+  try{
+   const r=await api({action:'send',room:targetRoom,text:value,images,id});
+   if(!r.item?.id)throw new Error('전송 확인을 받지 못했어요. 같은 메시지로 다시 시도해 주세요.');
+   if(ticket!==epoch)return;
+   attempts.delete(key);
    const item={...r.item,_mine:true};
-   chatItems=[...new Map([...chatItems,item].map(m=>[m.id,m])).values()].sort((a,b)=>a.createdAt-b.createdAt);
-   paintChat(true);clearError();
-  }
- }catch(err){if(ticket===epoch){
-  const cached=roomCache.get(targetRoom);if(cached)cached.items=cached.items.filter(m=>m.id!==pendingId||!m._pending);
-  if(room===targetRoom){chatItems=chatItems.filter(m=>m.id!==pendingId||!m._pending);if(activeView()==='community')paintChat();}
-  if(gen===pageGeneration)error(err);
- }}
- finally{if(ticket===epoch)sending=false;buttons.forEach(b=>b.disabled=false);input.readOnly=false;}
+   const cached=roomCache.get(targetRoom);if(cached)cached.items=[...new Map([...cached.items.filter(m=>m.id!==pendingId),item].map(m=>[m.id,m])).values()];
+   if(images.length)imageCache.set(targetRoom+'|'+r.item.id,images);
+   if(room===targetRoom&&activeView()==='community'){
+    chatItems=[...new Map([...chatItems.filter(m=>m.id!==pendingId),item].map(m=>[m.id,m])).values()].sort((a,b)=>(a._pending?1:0)-(b._pending?1:0)||a.createdAt-b.createdAt);
+    /* 말풍선은 이미 떠 있으니 '전송 중' 표시만 바꿈 (전체를 다시 그리지 않음) */
+    const t=$c('#kcChatLog time.pending'),last=chatItems[chatItems.length-1];if(t&&r.item.id===pendingId&&!chatItems.some(m=>m._pending)&&last&&last.id===item.id&&$c('#kcChatLog')?.querySelectorAll('time.pending').length===1){t.classList.remove('pending');t.removeAttribute('role');t.textContent=new Date(item.createdAt).toLocaleTimeString('ko-KR',{hour:'numeric',minute:'2-digit'});t.setAttribute('datetime',new Date(item.createdAt).toISOString());paintSignature=JSON.stringify([room,chatCursor,chatItems]);roomCache.set(room,{items:chatItems,cursor:chatCursor});}
+    else paintChat(true);
+   }
+  }catch(err){if(ticket===epoch){
+   const cached=roomCache.get(targetRoom);if(cached)cached.items=cached.items.filter(m=>m.id!==pendingId||!m._pending);
+   if(room===targetRoom){chatItems=chatItems.filter(m=>m.id!==pendingId||!m._pending);if(activeView()==='community')paintChat(true);
+    const inp=$c('#kcChatText');if(inp&&!inp.value.trim()){inp.value=value;drafts[targetRoom]=value;}
+    if(images.length&&!(imageDrafts[targetRoom]||[]).length){imageDrafts[targetRoom]=images;const mount=$c('#kcChatAttachments');if(mount){KZImages.mount(mount,images,a=>imageDrafts[targetRoom]=a);mount.hidden=false;}}}
+   if(gen===pageGeneration)error(err);
+  }}
+  finally{sending=false;}
+ };
+ sendQ=sendQ.then(deliver,deliver);return sendQ;
 }
 async function songsView(){const gen=++pageGeneration;if(!shell('신청곡','함께 부르고 싶은 찬양과 참고 영상을 남겨 주세요.','<button class="kc-btn primary" id="kcAddSong">＋ 신청하기</button>'))return;$c('#kcAddSong').onclick=()=>songForm();$c('#kcContent').innerHTML='<div class="kc-empty">신청곡을 불러오는 중…</div>';try{await status();const r=await api({action:'songs'});if(activeView()!=='song_requests'||gen!==pageGeneration)return;songItems=r.items;songCursor=r.cursor;paintSongs();}catch(e){if(activeView()==='song_requests'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 불러오기</button>';$c('#kcRetry').onclick=songsView;error(e);}}}
 function paintSongs(){const c=$c('#kcContent');if(!c||activeView()!=='song_requests')return;c.innerHTML=(songItems.length?`<p class="sq-n">신청곡 <b>${songItems.length}${songCursor?'+':''}</b>곡</p><div class="sq-list">`+songItems.map(s=>{const u=/^https?:\/\//i.test(s.url)?s.url:'',yt=(u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)||[])[1],mine=s.owner===actor?.id,lead=['인도자','관리계정'].includes(actor?.rank);
