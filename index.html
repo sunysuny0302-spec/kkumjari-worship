@@ -9539,7 +9539,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kf .kf-art p{font-size:clamp(17px,4.8vw,23px)}
 .kf .kf-add{margin-top:8px;padding:3px 4px 3px 5px;gap:8px}
 .kf .kf-add .kf-av{width:24px;height:24px;font-size:10px}
-.kf .kf-add input,.kf .kf-add input[type=text]{-webkit-appearance:none;appearance:none;background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;outline:none!important;font-size:13px!important;height:auto!important;padding:5px 0!important}
+:root body .kf form.kf-add input,.kf .kf-add input,.kf .kf-add input[type=text]{-webkit-appearance:none;appearance:none;background:transparent!important;background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;outline:none!important;font-size:13px!important;height:auto!important;padding:5px 0!important}
 .kf .kf-add button{font-size:13px;padding:5px 9px}
 .kf .kf-filter{font-size:13px}
 .kf-sheet .kf-sh b{font-size:15px}
@@ -9587,7 +9587,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b> ${E(c.text)}</div>`).join('');
   return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring ${fresh(p.owner)?'':'seen'}">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
    ${media}<div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글 ${p.commentCount}개">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button>${pips}</div>
-   <div class="kf-body">${likesLine(p)}${cap}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개${p.commentCount>1?' 모두':''} 보기</button>`:''}${rc}
+   <div class="kf-body">${likesLine(p)}${cap}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개 보기</button>`:''}
     <form class="kf-add" data-kf-add>${av(me().id,me().name)}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
  let only='';
  /* 스토리 동그라미: 안 본 새 게시물이 있는 사람 = 색 테두리 · 앞쪽(최신순), 눌러서 보면 회색 · 뒤로 */
