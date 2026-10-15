@@ -7845,15 +7845,17 @@ function mountProfile(){
 new MutationObserver(mountProfile).observe(document.body,{childList:true,subtree:true});
 /* 읽음 표시: 메시지마다 아직 안 읽은 사람 수(카톡처럼), 누르면 읽은 사람 · 안 읽은 사람 */
 let kzSeen={},kzReaders=[];
-function kzUnreadOf(el){const at=+el.dataset.at||0,own=el.dataset.own||'';return kzReaders.filter(r=>r.id!==own&&(kzSeen[r.id]||0)<at)}
+/* 각자 마지막으로 보낸 메시지 시간까지는 읽은 것 (답장했다면 읽은 것) */
+function kzSeenOf(id){let t=kzSeen[id]||0;for(const m of chatItems){if(m.owner===id&&!m._pending&&m.createdAt>t)t=m.createdAt}return t}
+function kzUnreadOf(el){const at=+el.dataset.at||0,own=el.dataset.own||'';return kzReaders.filter(r=>r.id!==own&&kzSeenOf(r.id)<at)}
 function paintReads(){const l=$c('#kcChatLog');if(!l||!kzReaders.length)return;
  l.querySelectorAll('.kc-readline').forEach(x=>x.remove());l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{const b=el.querySelector('.kc-rc');if(!b)return;const n=kzUnreadOf(el).length;if(n){b.textContent=n;b.hidden=false;b.setAttribute('aria-label',`안 읽은 사람 ${n}명 · 누르면 누가 읽었는지 보여요`)}else{b.hidden=true;b.textContent=''}})}
-function showReads(el){const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),read=others.filter(r=>(kzSeen[r.id]||0)>=at),un=others.filter(r=>(kzSeen[r.id]||0)<at),never=[];
+function showReads(el){const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),read=others.filter(r=>kzSeenOf(r.id)>=at),un=others.filter(r=>kzSeenOf(r.id)<at),never=[];
  document.querySelectorAll('.kf-ov').forEach(o=>o.remove());const o=document.createElement('div');o.className='kf-ov';const li=a=>a.map(r=>`<div>${escape(r.name)}</div>`).join('')||'<div class="kf-none" style="padding:10px 0">없어요</div>';
  o.innerHTML=`<div class="kf-sheet" role="dialog" aria-modal="true" aria-label="읽음 확인"><div class="kf-sh"><b>읽음 확인</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">${(el.querySelector('.kc-bubble')?.innerText||'').trim()?'<button type="button" class="kc-rd-copy">메시지 복사</button>':''}<p class="kc-rd-h">안 읽음 <b>${un.length}</b></p><div class="kf-likers">${li(un)}</div><p class="kc-rd-h">읽음 <b>${read.length}</b></p><div class="kf-likers">${li(read)}</div>${never.length?`<p class="kc-rd-h">채팅을 아직 안 열어 본 사람 <b>${never.length}</b></p><div class="kf-likers kc-rd-never">${li(never)}</div>`:''}</div></div>`;
  document.body.append(o);o.querySelector('.kf-x').onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()};const cp=o.querySelector('.kc-rd-copy');if(cp)cp.onclick=async()=>{const t=(el.querySelector('.kc-bubble')?.innerText||'').trim();try{await navigator.clipboard.writeText(t);toast('복사했어요')}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.append(ta);ta.select();try{document.execCommand('copy');toast('복사했어요')}catch(_){}ta.remove()}o.remove()}}
 /* 숫자를 누르면 숫자 옆에 작은 창: 안 읽음 · 읽음 이름만 */
-function readsPop(el,btn){document.querySelectorAll('.kc-rpop').forEach(x=>x.remove());const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),un=others.filter(r=>(kzSeen[r.id]||0)<at),rd=others.filter(r=>(kzSeen[r.id]||0)>=at);
+function readsPop(el,btn){document.querySelectorAll('.kc-rpop').forEach(x=>x.remove());const at=+el.dataset.at||0,own=el.dataset.own||'',others=kzReaders.filter(r=>r.id!==own),un=others.filter(r=>kzSeenOf(r.id)<at),rd=others.filter(r=>kzSeenOf(r.id)>=at);
  const chips=a=>a.length?a.map(r=>`<span>${escape(r.name)}</span>`).join(''):'<em>없음</em>';
  const p=document.createElement('div');p.className='kc-rpop';p.setAttribute('role','dialog');p.setAttribute('aria-label','읽음 확인');
  p.innerHTML=`<p><b>안 읽음 ${un.length}</b></p><div>${chips(un)}</div><p class="r"><b>읽음 ${rd.length}</b></p><div>${chips(rd)}</div>`;

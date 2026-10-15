@@ -304,7 +304,7 @@ test('feed: post, list without image bodies, like toggle, comments with preview,
 test('chat read receipts: opening chat marks read only when there is something new; seen map per member',async()=>{
  const f=fixture();await f.run(f.user,{action:'send',room:'all',id:'request_read0001',text:'hi'});
  let r=await f.run(f.outsider,{action:'chat',room:'all'});assert.ok(r.readers.some(x=>x.id===f.outsider.id));assert.ok(!r.readers.some(x=>x.id==='management'));
- assert.ok(r.seen[f.outsider.id]>=r.items[0].createdAt);assert.equal(r.seen[f.user.id],0);
+ assert.ok(r.seen[f.outsider.id]>=r.items[0].createdAt);assert.ok(r.seen[f.user.id]>0);
  const writes=[...f.data.keys()].filter(k=>k.endsWith('seen_all')).length;assert.equal(writes,1);
  const before=f.data.get([...f.data.keys()].find(k=>k.endsWith('seen_all'))).at[f.outsider.id];f.advance();
  r=await f.run(f.outsider,{action:'chat',room:'all'});assert.equal(r.seen[f.outsider.id],before);
@@ -334,4 +334,10 @@ test('feed tags: tagged members get notified on post, new tags on edit, and in c
  await f.run(f.user,{action:'feedEdit',id:p.item.id,text:'@'+tagName+' @관리계정 고침'});assert.equal(f.pushed.length,n);
  await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_tag001',text:'@'+f.user.name+' 좋아요'});
  const notes=f.pushed.slice(n).map(x=>[x.recipients[0].id,x.note.title]);assert.equal(notes.filter(x=>x[0]===f.user.id).length,1);
+});
+
+test('chat read receipts: sending a message marks the sender as having read up to now',async()=>{
+ const f=fixture();await f.run(f.admin,{action:'send',room:'all',id:'request_read0003',text:'질문'});f.advance();
+ await f.run(f.outsider,{action:'send',room:'all',id:'request_read0004',text:'답장'});
+ const r=await f.run(f.user,{action:'chat',room:'all'});const q=r.items.find(x=>x.text==='질문');assert.ok(r.seen[f.outsider.id]>=q.createdAt);
 });
