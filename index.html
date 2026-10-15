@@ -5239,7 +5239,7 @@ const nkL=t=>String(t||'').replace(/\s+/g,'').toLowerCase(),gm=new Map();
 return[...gm.values()].sort((a,b)=>((b.works[0]&&b.works[0].date)||'')<((a.works[0]&&a.works[0].date)||'')?-1:((b.works[0]&&b.works[0].date)||'')>((a.works[0]&&a.works[0].date)||'')?1:(b.at||0)-(a.at||0))}
 /* 곡 사용 횟수: 콘티에 올라간 서로 다른 주일 수 (최근 3개월 / 전체) */
 const libUse=e=>{const ds=[...new Set((e.works||[]).map(w=>w.date).filter(Boolean))],cut=shiftDate(todayStr(),-91);return{t:ds.length,r:ds.filter(d=>d>=cut).length}};
-const libMeta=e=>{const u=libUse(e);return (e.songId?scoreMeta(e).pageNo+'장 · ':'')+(u.t?`${u.r?`3개월 ${u.r}번 · `:''}전체 ${u.t}번 · 마지막 ${fmtD(e.works[0].date)}`:'콘티에 아직 안 썼어요')};
+const libMeta=e=>e.songId?scoreMeta(e).pageNo+'장':'';
 const libMetaH=e=>esc(libMeta(e)).replace(/^((?:\d+장 · )?)(3개월 \d+번)/,'$1<b class="lib-hot">$2</b>');
 function bigView(src,cap){const o=document.createElement('div');o.id='lb';o.innerHTML=`<div class="lb-t"><div class="cap"><span>${esc(cap)}</span></div><span class="sp"></span><button class="lb-b zb2">확대</button><button class="lb-b x" title="닫기 (Esc)">✕</button></div><div class="lbv"><img alt="" src="${src}"></div>`;const kd=e=>{if(e.key==='Escape')close()};function close(){o.remove();document.removeEventListener('keydown',kd)}$('.x',o).onclick=close;$('.zb2',o).onclick=()=>lbZoom(o);$('img',o).ondblclick=()=>lbZoom(o);$('.lbv',o).onclick=e=>{if(e.target===e.currentTarget&&!o.classList.contains('zm'))close()};document.addEventListener('keydown',kd);document.body.append(o)}
 function libraryView(){const q=libQ.trim().toLowerCase(),all=libItems(),l=sortLib(all.filter(e=>!q||e.name.toLowerCase().includes(q)),libSort),E=canEdit;
@@ -6735,6 +6735,10 @@ kzWhenDb(()=>{db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){con
     b.onclick=e=>{e.stopPropagation();const open=p.hidden;document.querySelectorAll('.ssp').forEach(x=>x.hidden=true);if(open){paint();p.hidden=false;const on=p.querySelector('.on');if(on&&on.scrollIntoView)on.scrollIntoView({block:'nearest'})}};
     w.addEventListener('keydown',e=>{if(e.key==='Escape'&&!p.hidden){p.hidden=true;b.focus()}});
     sel.addEventListener('change',()=>{if(w.isConnected)sync()});
+    /* 코드에서 값을 바꿔도(예: 장을 옮기면 키 칸) 보이는 글자가 따라 바뀌게 */
+    try{const P=HTMLSelectElement.prototype,dv=Object.getOwnPropertyDescriptor(P,'value'),di=Object.getOwnPropertyDescriptor(P,'selectedIndex');
+     Object.defineProperty(sel,'value',{configurable:true,get(){return dv.get.call(sel)},set(v){dv.set.call(sel,v);if(w.isConnected)sync()}});
+     Object.defineProperty(sel,'selectedIndex',{configurable:true,get(){return di.get.call(sel)},set(v){di.set.call(sel,v);if(w.isConnected)sync()}});}catch(e){}
     paint();
   }
   const scan=root=>{if(!root)return;if(root.matches&&root.matches('select'))enhance(root);(root.querySelectorAll?root.querySelectorAll('select'):[]).forEach(enhance)};
@@ -7021,7 +7025,7 @@ function attendView(){
  else if(atTab==='status')main=atStatusHTML();
  else main=care?memoHTML(false):kzLockHTML('개인 메모',CARE_WHO,false,true);
  const rc=atErr?0:atReviewList().length;
- $('#body').innerHTML=`<div class="wk mnw at"><div class="ro-h"><div><h1 class="ht2">출결 관리</h1><div class="mu">주일 라인업이 그대로 출결 명단이 되고, 누르는 즉시 저장돼요${care?' · 팀원을 누르면 메모와 상담 기록을 남길 수 있어요':''}</div></div></div><div class="seg at-tabs">${tabs.map(([k,l])=>`<button class="${atTab===k?'on':''}" data-at-tab="${k}">${l}${k==='review'&&rc?`<span class="mu">${rc}</span>`:''}${k==='memo'&&MEMO.length?`<span class="mu">${MEMO.length}</span>`:''}${k==='status'&&atStatusCount()?`<span class="mu">${atStatusCount()}</span>`:''}</button>`).join('')}</div>${main}</div>`;
+ $('#body').innerHTML=`<div class="wk mnw at"><div class="ro-h"><div><h1 class="ht2">출결 관리</h1><div class="mu">주일 라인업이 그대로 출결 명단이 되고, 누르는 즉시 저장돼요${care?' · 팀원을 누르면 메모와 상담 기록을 남길 수 있어요':''}</div></div></div><div class="seg at-tabs">${tabs.map(([k,l])=>`<button class="${atTab===k?'on':''}" data-at-tab="${k}">${l}${k==='review'&&rc?`<span class="mu">${rc}</span>`:''}</button>`).join('')}</div>${main}</div>`;
  atBind($('#body'),attendView);if(atTab==='rank')kzRankInto(document.getElementById('atRank'));if(atTab==='prac')setTimeout(()=>{try{window.kzPrac&&kzPrac.fill(document.getElementById('atPrac'))}catch(e){console.error(e)}},0)}
 
 /* ---------- 모바일 화면 (꿈자리 모바일 탭 '출결') ---------- */
@@ -9604,6 +9608,32 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .kf-tagpop button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:7px 8px;border-radius:9px;font:inherit;font-size:13.5px;color:#1f1a16;text-align:left;cursor:pointer}
 .kf-tagpop button.on,.kf-tagpop button:hover{background:#f2ebe2}.kf-tagpop span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#efe3d3;color:#8a5a2b;font-size:11px;font-weight:700}
 </style>
+<style id="kz-feed-desk-css">
+/* 컴퓨터: 배경은 본문 전체에 은은하게, 가운데 피드 + 오른쪽 패널 */
+@media(min-width:821px){
+ #body:has(> .kf),#body:has(.kf){background:radial-gradient(40% 50% at 12% 10%,rgba(255,196,150,.42),transparent 70%),radial-gradient(38% 45% at 92% 18%,rgba(205,184,255,.38),transparent 70%),radial-gradient(40% 50% at 20% 85%,rgba(176,228,206,.34),transparent 70%),radial-gradient(40% 45% at 85% 88%,rgba(255,200,218,.38),transparent 70%)!important;background-attachment:fixed!important}
+ .kf::before{display:none!important}
+ .kf{max-width:none;margin:0 auto;padding:12px 16px 40px;display:flex;justify-content:center;gap:36px;align-items:flex-start}
+ .kf-col{width:min(560px,100%);flex:none}
+}
+@media(min-width:821px) and (max-width:1099px){.kf-side{display:none}.kf-col{width:min(600px,100%)}}
+@media(max-width:820px){.kf-side{display:none}.kf-col{display:contents}}
+.kf-side{position:sticky;top:76px;width:300px;flex:none;padding:18px;border-radius:24px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.75);box-shadow:0 12px 34px -16px rgba(110,70,35,.3);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%)}
+.kf-me{display:flex;align-items:center;gap:12px;margin-bottom:14px}.kf-me .kf-av{width:48px;height:48px;font-size:18px}
+.kf-me b{display:block;font-size:14.5px}.kf-me small{font-size:12px;color:#8a7f75}
+.kf-side-new{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:0;border-radius:14px;background:#0095f6;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px -10px rgba(0,149,246,.7)}
+.kf-side-new svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.kf-side-new:hover{filter:brightness(1.05)}
+.kf-side-h{margin:18px 2px 8px;font-size:12.5px;font-weight:700;color:#8a7f75}
+.kf-side-list{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow:auto}
+.kf-side-p{display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:0;border-radius:12px;background:none;font:inherit;text-align:left;cursor:pointer;color:#1f1a16}
+.kf-side-p:hover{background:rgba(255,255,255,.6)}.kf-side-p.kf-on{background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.kf-side-p .kf-ring{width:36px;height:36px}.kf-side-p b{display:block;font-size:13.5px}.kf-side-p small{font-size:11.5px;color:#8a7f75}
+.kf-side-bell{display:flex;align-items:center;gap:8px;width:100%;margin-top:14px;padding:9px 10px;border:1px solid rgba(0,0,0,.06);border-radius:12px;background:rgba(255,255,255,.5);font:inherit;font-size:12.5px;color:#5a4f46;cursor:pointer}
+.kf-side-bell svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kf-side-foot{margin:12px 2px 0;font-size:11.5px;color:#a39a90}
+@media(min-width:1100px){.kf .kf-head .kf-hbtns{display:none}}
+</style>
 <script id="kz-feed">/* ===== 피드: 사진·글을 올리고 좋아요·댓글 (인스타처럼) · 홈 배열은 그대로 두고 메뉴에만 추가 ===== */
 (function(){
  const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9687,11 +9717,18 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   return `<div class="kf-stories ${only?'filtering':''}" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${mineAt?`<button type="button" class="kf-st ${only===m.id?'kf-on':''}" data-kf-only="${E(m.id)}" role="listitem"><span class="kf-st-ring">${av(m.id,m.name)}</span><small>내 게시물</small></button>`:''}${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'kf-on':''}" data-kf-only="${E(x.id)}" role="listitem" aria-label="${E(x.name)}${x.n?' · 새 게시물':''}"><span class="kf-st-ring ${x.n?'new':''}">${av(x.id,x.name)}</span><small>${E(x.name)}</small></button>`).join('')}</div>`}
  function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const items=only?S.items.filter(p=>p.owner===only):S.items,who=only&&S.items.find(p=>p.owner===only);
   const list=items.length?items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
-  b.innerHTML=`<div class="kf"><div class="kf-head"><h1>피드</h1><div class="kf-hbtns"><button type="button" class="kf-new kf-bell ${S.notify===false?'off':''}" data-kf-bell aria-pressed="${S.notify!==false}" aria-label="피드 알림 ${S.notify===false?'꺼짐':'켜짐'}" title="내 게시물 좋아요 · 댓글 알림 ${S.notify===false?'꺼짐':'켜짐'}">${S.notify===false?IC.belloff:IC.bell}</button><button type="button" class="kf-new" data-kf-new aria-label="새 게시물">${IC.newpost}</button></div></div>
+  const side=(()=>{const by=new Map();S.items.forEach(p=>{const x=by.get(p.owner);if(!x)by.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt});else if(p.createdAt>x.at)x.at=p.createdAt});const m=me();
+   const all=[...by.values()].filter(x=>x.id!==m.id).map(x=>({...x,n:fresh(x.id)}));const list=[...all.filter(x=>x.n).sort((a,b)=>b.at-a.at),...all.filter(x=>!x.n).sort((a,b)=>b.at-a.at)].slice(0,12);
+   return `<aside class="kf-side"><div class="kf-me">${av(m.id,m.name)}<div><b>${E(m.name||'')}</b><small>${E(m.rank||'')}</small></div></div>
+    <button type="button" class="kf-side-new" data-kf-new>${IC.newpost}<span>새 게시물 올리기</span></button>
+    ${list.length?`<p class="kf-side-h">최근 올린 사람</p><div class="kf-side-list">${list.map(x=>`<button type="button" class="kf-side-p ${only===x.id?'kf-on':''}" data-kf-only="${E(x.id)}"><span class="kf-ring ${x.n?'':'seen'}">${av(x.id,x.name)}</span><span><b>${E(x.name)}</b><small>${x.n?'새 게시물 · ':''}${ago(x.at)}</small></span></button>`).join('')}</div>`:''}
+    <button type="button" class="kf-side-bell" data-kf-bell>${S.notify===false?IC.belloff:IC.bell}<span>내 게시물 알림 ${S.notify===false?'꺼짐':'켜짐'}</span></button>
+    <p class="kf-side-foot">사진 최대 3장 · @이름으로 태그</p></aside>`})();
+  b.innerHTML=`<div class="kf"><div class="kf-col"><div class="kf-head"><h1>피드</h1><div class="kf-hbtns"><button type="button" class="kf-new kf-bell ${S.notify===false?'off':''}" data-kf-bell aria-pressed="${S.notify!==false}" aria-label="피드 알림 ${S.notify===false?'꺼짐':'켜짐'}" title="내 게시물 좋아요 · 댓글 알림 ${S.notify===false?'꺼짐':'켜짐'}">${S.notify===false?IC.belloff:IC.bell}</button><button type="button" class="kf-new" data-kf-new aria-label="새 게시물">${IC.newpost}</button></div></div>
    ${stories()}${who?`<div class="kf-filter"><span><b>${E(who.name)}</b>님의 게시물</span><button type="button" data-kf-only="">전체 보기</button></div>`:''}
    ${S.err?`<div class="kf-err">${E(S.err)} <button type="button" class="sm" data-kf-retry>다시 시도</button></div>`:''}
-   <div class="kf-list">${list}</div>${S.cursor&&!only?'<button type="button" class="kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>`;
-  b.querySelector('[data-kf-bell]')?.addEventListener('click',async e=>{const btn=e.currentTarget,on=S.notify===false;btn.disabled=true;try{const r=await api({action:'feedPref',enabled:on});S.notify=r.enabled;paint();toast(r.enabled?'피드 알림을 켰어요 · 내 게시물에 좋아요·댓글이 오면 알려 드려요':'피드 알림을 껐어요')}catch(err){btn.disabled=false;toast(err.message||'바꾸지 못했어요')}});
+   <div class="kf-list">${list}</div>${S.cursor&&!only?'<button type="button" class="kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>${side}</div>`;
+  b.querySelectorAll('[data-kf-bell]').forEach(x=>x.addEventListener('click',async e=>{const btn=e.currentTarget,on=S.notify===false;btn.disabled=true;try{const r=await api({action:'feedPref',enabled:on});S.notify=r.enabled;paint();toast(r.enabled?'피드 알림을 켰어요 · 내 게시물에 좋아요·댓글이 오면 알려 드려요':'피드 알림을 껐어요')}catch(err){btn.disabled=false;toast(err.message||'바꾸지 못했어요')}}));
   bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{const o=x.dataset.kfOnly;only=only===o?'':o;if(o&&only)markSeen(o,latestOf(o));paint();window.scrollTo({top:0});const sel=document.querySelector('.kf-st.kf-on'),bar=document.querySelector('.kf-stories');if(sel&&bar)bar.scrollTo({left:Math.max(0,sel.offsetLeft-bar.clientWidth/2+sel.clientWidth/2),behavior:'smooth'})});
   profiles([me().id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
  function find(id){return S.items.find(p=>p.id===id)}
@@ -9825,6 +9862,17 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  .kme-markers .rcol .mkall-t{display:none!important}
 }
 </style>
+<script id="kz-page-follow">/* 휴대폰 송폼: 세로로 쌓인 악보를 스크롤하면 화면 가운데 장이 '현재 장'이 되고 키 칸도 그 장의 키로 */
+(function(){let t=0;
+ function follow(){if(typeof view==='undefined'||view!=='edit'||!matchMedia('(max-width:820px)').matches)return;if(typeof pages==='undefined'||pages.length<2)return;
+  const bs=[...document.querySelectorAll('#stage .pgb[data-i]')];if(bs.length<2)return;const mid=innerHeight*0.45;let best=null,bd=1e9;
+  for(const b of bs){const r=b.getBoundingClientRect();if(r.bottom<80||r.top>innerHeight)continue;const d=r.top<=mid&&r.bottom>=mid?0:Math.min(Math.abs(r.top-mid),Math.abs(r.bottom-mid));if(d<bd){bd=d;best=b}}
+  if(!best)return;const i=+best.dataset.i;if(i===cur||!pages[i])return;if(document.querySelector('.mk.dragging,.dragging'))return;
+  cur=i;try{sel=null}catch(e){}bs.forEach(b=>b.classList.toggle('on',+b.dataset.i===i));try{kzTkSync()}catch(e){}try{const tt=document.getElementById('tt');if(tt&&document.activeElement!==tt)tt.value=pages[i].name||''}catch(e){}
+  try{document.querySelectorAll('#plist .pgi').forEach((x,j)=>x.classList.toggle('on',j===i))}catch(e){}try{const pn=document.getElementById('pgn');if(pn)pn.textContent=`${i+1} / ${pages.length}`}catch(e){}}
+ addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(follow,120)},{passive:true,capture:true});
+})();</script>
+
 </html>
 
 <script id="kz-score-pages-script">
