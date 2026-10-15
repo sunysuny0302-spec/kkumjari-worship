@@ -4831,7 +4831,7 @@ const P=()=>pages[cur],dirty=()=>od||wmDirty||pages.some(p=>p.dirty);
 /* ---------- 프레임 ---------- */
 const fmtD=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 (${wd(d)})`};
 const closeSide=()=>{const e=$('#shell');if(e)e.classList.remove('open')};
-function renderApp(){if(!['feed','community','song_requests','inbox','mobile_my','mobile_more','home','notice','archive','members','minutes','trash','library','storage','attend','lyrics','bible'].includes(view)&&(!role||!TABS[role].includes(view)))view='home';
+function renderApp(){if(!['feed','community','song_requests','inbox','mobile_my','mobile_more','home','notice','archive','members','minutes','trash','library','storage','attend','lyrics'].includes(view)&&(!role||!TABS[role].includes(view)))view='home';
 $('#app').innerHTML='<div class="shell" id="shell"><aside class="side" id="side" aria-label="메뉴"></aside><div class="bk" id="bk"></div><div class="col"><header class="top" id="top"><div class="tl" id="tl"></div><div class="dbar" id="dbar"></div><div class="tr" id="tr"></div></header><main id="body"></main></div><nav class="tabbar" id="tabbar" aria-label="빠른 이동"></nav></div>';
 $('#bk').onclick=closeSide;renderNav();renderTop();renderDbar();body()}
 function setRole(k){if(role===k&&TABS[k].includes(view)){closeSide();return}role=k;LS('role',k);go(ROLE_HOME[k])}
@@ -4840,7 +4840,7 @@ function go(v){view=v;LS('view',v);syncPermission();closeSide();renderNav();rend
 const applyTheme=()=>{document.documentElement.setAttribute('data-theme','light');const m=document.querySelector('meta[name=theme-color]');if(m)m.content='#fbfaf7'};
 const V13ICONS={myturn:'<svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.5-3.8 3-6 6.5-6 1.4 0 2.6.3 3.6 1"/><path d="m15 18 2 2 4-4"/></svg>',idcard:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M5.8 16c.5-1.6 1.7-2.4 3.2-2.4s2.7.8 3.2 2.4M14.5 10h3.5M14.5 13.5h3.5"/></svg>',help:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.1"/></svg>',attend:'<svg viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="m8.5 13 2.3 2.3 4.7-4.8"/></svg>',rule:'<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',grid:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',roster:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>',metro:'<svg viewBox="0 0 24 24"><path d="M9.5 3.5h5l4 17h-13z"/><path d="M6.6 15.5h10.8M12 15.5l4.5-9"/><circle cx="14.6" cy="10.3" r="1.2" fill="currentColor" stroke="none"/></svg>',shield:'<svg viewBox="0 0 24 24"><path d="M12 3 5 6v5.5c0 4.3 3 7.9 7 9.5 4-1.6 7-5.2 7-9.5V6Z"/><path d="m9 12 2 2 4-4"/></svg>',request:'<svg viewBox="0 0 24 24"><path d="M5 4h14a1 1 0 0 1 1 1v4a3 3 0 0 0 0 6v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a3 3 0 0 0 0-6V5a1 1 0 0 1 1-1Z"/><path d="M12 15.5 8.8 12.3a2 2 0 0 1 2.8-2.8l.4.4.4-.4a2 2 0 0 1 2.8 2.8Z"/></svg>',crownline:'<svg viewBox="0 0 24 24"><path d="M4 17.5 3 8l5 4 4-6 4 6 5-4-1 9.5Z"/><path d="M4.5 20.5h15"/></svg>',guitarline:'<svg viewBox="0 0 24 24"><path d="m14.5 9.5 5-5M17.5 3l3.5 3.5"/><path d="M11.6 9.9a4 4 0 0 0-5.5.4c-.9 1-1 2.2-1.9 3-1.2 1-3.2.9-3.2 3 0 2.9 4.7 7.2 7.6 4.9 1.5-1.2 1.2-3 2.5-4 .8-.6 2.1-.7 3-1.6a4 4 0 0 0 .4-5.6Z"/><circle cx="9.5" cy="14.5" r="1.6"/></svg>',search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>',home:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>',leader:'<svg class="crown-img-icon" viewBox="0 0 24 24"><image href="assets/crown.39fee076.png" x="1" y="3.35" width="22" height="17.3" preserveAspectRatio="xMidYMid meet"/></svg>',archive:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10.5h14V9M10 13h4"/></svg>',music:'<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',mic:'<svg class="mic-gold" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',guitar:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 5.1 18.8.8l1.5 1.5-1.2 1.2 1.4 1.4-1.7 1.7-1.4-1.4-1.1 1.1-4.5 4.6"/><path d="M13.3 8.8c-1.5-1.4-3.8-1.4-5.2.1-.9.9-1.2 2.2-.9 3.3.2.7 0 1.4-.5 1.9l-1.5 1.5c-1.6 1.6-1.6 4.1 0 5.7 1.6 1.6 4.1 1.6 5.7 0l1.5-1.5c.5-.5 1.2-.7 1.9-.5 1.1.3 2.4 0 3.3-.9 1.5-1.5 1.5-3.8.1-5.2l-4.4-4.4Z"/><circle cx="10.8" cy="15.1" r="1.7"/><path d="m12 13.9 5.9-5.9"/></svg>',calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',list:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>',swap:'<svg viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>',users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2-7 6-7s6 3 6 7"/><circle cx="17" cy="9" r="2"/><path d="M16 14c3 0 5 2 5 5"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',cloud:'<svg viewBox="0 0 24 24"><path d="M7 19h11a4 4 0 0 0 .5-8A7 7 0 0 0 5 9a5 5 0 0 0 2 10z"/></svg>',note:'<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg>',slides:'<svg viewBox="0 0 24 24"><path d="M3 4.5h18v12H3z"/><path d="M12 16.5V20M8 20h8M7 8.5h10M8.5 12h7"/></svg>'};
 const V13I=k=>`<span class="ico">${k==='guitar'?'<img class="session-guitar-icon" src="assets/guitar.6f4b3ee7.png" alt="" />':(V13ICONS[k]||V13ICONS.note)}</span>`;
-const PAGES={home:['home','홈'],song_requests:['request','신청곡'],notice:['bell','공지 · 일정'],archive:['archive','보관함'],library:['archive','보관함'],bible:['book','성경'],members:['users','멤버 명단'],minutes:['note','회의록'],storage:['cloud','저장 공간'],trash:['trash','휴지통'],attend:['list','출결 관리'],lyrics:['slides','가사 PPT 생성']};
+const PAGES={home:['home','홈'],song_requests:['request','신청곡'],notice:['bell','공지 · 일정'],archive:['archive','보관함'],library:['archive','보관함'],members:['users','멤버 명단'],minutes:['note','회의록'],storage:['cloud','저장 공간'],trash:['trash','휴지통'],attend:['list','출결 관리'],lyrics:['slides','가사 PPT 생성']};
 const ROLE_HOME={leader:'lpick',singer:'sched_s',session:'sched_e'};
 const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent||'');
 const ldDirty=L=>L===ldr?dirty():!!(ws[L]&&(ws[L].od||ws[L].wmDirty||ws[L].pages.some(p=>p.dirty)));
@@ -4865,7 +4865,6 @@ sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="h
 <div class="nv-l">예배 준비</div>
 <div class="nv-group">
 <button type="button" class="nv-i ${view==='archive'||view==='library'?'on':''}" data-go="vault">${V13I('archive')}<span class="nv-t">보관함</span></button>
-${it('bible','성경',0,'book')}
 ${it('song_requests','신청곡',0,'request')}
 ${it('lyrics','가사 PPT 생성',0,'slides')}
 </div>
@@ -6085,7 +6084,7 @@ function qkSearch(q){const Q=q.trim().toLowerCase(),out=[],has=s=>String(s||'').
 const dm=/^(?:(\d{4})\s*[.\-\/년]\s*)?(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*일?$/.exec(q.trim());
 if(dm){const y=+(dm[1]||new Date().getFullYear()),d=`${y}-${String(+dm[2]).padStart(2,'0')}-${String(+dm[3]).padStart(2,'0')}`,x=new Date(d+'T12:00:00');if(!isNaN(x)&&x.getMonth()+1===+dm[2]){x.setDate(x.getDate()+(7-x.getDay())%7);const s=shiftDate(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`,0);out.push({g:'날짜',ic:I('calendar'),t:`${fmtD(s)} 주일로 이동`,s:s===d?'그 주 콘티와 송폼':`${fmtD(d)}이 있는 주`,f:()=>openConti(s)})}}
 const lead=v=>()=>{openRole=null;openLead=null;if(role!=='leader'){role='leader';LS('role','leader')}if(typeof lrPick!=='undefined')lrPick=ldr;go(v)};
-const pages=[{ic:I('home'),t:'홈',f:()=>go('home'),chip:1},{ic:I('bell'),t:'공지 · 일정',f:()=>go('notice'),chip:1},{ic:I('archive'),t:'보관함',f:()=>go('vault'),chip:1},{ic:I('archive'),t:'성경',f:()=>go('bible'),chip:1},{ic:I('users'),t:'멤버 명단',f:()=>go('members'),chip:1},{ic:I('note'),t:'회의록',f:()=>go('minutes'),chip:1},{ic:I('leader'),t:'인도자',f:()=>openLeaderRoom(),chip:1},{ic:I('mic'),t:'싱어 일정표',f:()=>goRole('singer','sched_s'),chip:1},{ic:I('guitar'),t:'세션 일정표',f:()=>goRole('session','sched_e'),chip:1},
+const pages=[{ic:I('home'),t:'홈',f:()=>go('home'),chip:1},{ic:I('bell'),t:'공지 · 일정',f:()=>go('notice'),chip:1},{ic:I('archive'),t:'보관함',f:()=>go('vault'),chip:1},{ic:I('users'),t:'멤버 명단',f:()=>go('members'),chip:1},{ic:I('note'),t:'회의록',f:()=>go('minutes'),chip:1},{ic:I('leader'),t:'인도자',f:()=>openLeaderRoom(),chip:1},{ic:I('mic'),t:'싱어 일정표',f:()=>goRole('singer','sched_s'),chip:1},{ic:I('guitar'),t:'세션 일정표',f:()=>goRole('session','sched_e'),chip:1},
 {ic:I('music'),t:'송폼 · 악보 관리',s:`인도자 · ${ldr}`,f:lead('edit')},{ic:I('archive'),t:'주간 콘티 작성',s:`인도자 · ${ldr}`,f:lead('ment')},{ic:I('calendar'),t:'인도자 일정',s:'인도자',f:lead('lsw')},{ic:I('list'),t:'싱어 일정 변경',s:'싱어',f:()=>goRole('singer','swap')},{ic:I('users'),t:'싱어 배정 규칙',s:'싱어',f:()=>goRole('singer','rule_s')},{ic:I('list'),t:'세션 일정 변경',s:'세션',f:()=>goRole('session','abs')},{ic:I('users'),t:'세션 배정 규칙',s:'세션',f:()=>goRole('session','rule_e')},{ic:I('cloud'),t:'저장 공간',f:()=>go('storage')},{ic:I('trash'),t:'휴지통',f:()=>go('trash')}];
 const acts=[{ic:I('calendar'),t:'이번 주 콘티 보기',s:fmtD(nextSun()),f:()=>openConti(nextSun())},...(canEdit?[{ic:I('bell'),t:'새 공지 쓰기',f:()=>{ntTab='n';ntEdit='new';evEdit=null;go('notice')}},{ic:I('calendar'),t:'새 일정 등록',f:()=>{ntTab='e';evEdit='new';ntEdit=null;go('notice')}},{ic:I('note'),t:'회의록 쓰기',f:()=>{minTab='write';go('minutes')}}]:[])];
 if(!Q){pages.filter(p=>p.chip).forEach(p=>out.push({g:'바로 가기',...p}));acts.forEach(a=>out.push({g:'자주 하는 일',...a}));return out}
@@ -7530,7 +7529,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  else{title='내 자리';mine=[T('mobile_my','myturn','내 순서'),sing?T('swap','swap','싱어 불참·대타'):'',sess?T('abs','swap','세션 불참·대타'):'',T('prac','metro','참석 확인')]}
  const admLead=isAdm?[T('leader','leader','콘티 · 송폼'),T('lsw','roster','인도자 일정'),T('vault','archive','보관함')]:[];
  const admSing=isAdm?[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙')]:[],admSess=isAdm?[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙')]:[];
- const prep=[T('vault','archive','보관함'),T('bible','book','성경'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')];
+ const prep=[T('vault','archive','보관함'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')];
  const team=[T('prac','metro','참석 확인'),T('attend','attend',att),T('members','users','멤버'),T('minutes','note','회의록')];
  const sched=[sing||staff?T('sched_s','roster','싱어 일정'):'',sess||staff?T('sched_e','roster','세션 일정'):'',T('lsw','roster','인도자 일정'),(isChief||isAdm)?T('rule_s','rule','싱어 배정 규칙'):'',(isChief||isAdm)?T('rule_e','rule','세션 배정 규칙'):'',!sing&&!staff?T('sched_s','roster','싱어 일정'):'',!sess&&!staff?T('sched_e','roster','세션 일정'):''];
  const admin=staff?[(isChief||isAdm)?T('storage','cloud','저장 공간'):'',T('trash','trash','휴지통')]:[];
@@ -10085,128 +10084,6 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .kz-vseg button svg{width:17px;height:17px}
 .kz-vseg button.on{background:#fff;color:#2b231e;box-shadow:0 1px 4px rgba(60,40,20,.14)}
 @media(max-width:760px){.kz-vseg{max-width:none}}
-</style>
-<script id="kz-bible">
-/* 성경 (개역한글) — 책마다 따로 받아서 가볍게, 마지막 읽은 곳·글자 크기 기억, 예배 중 화면 꺼짐 방지 */
-(function(){
- V13ICONS.book='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M12 7v6M9.5 9.5h5"/></svg>';
- const B=[['창세기','창'],['출애굽기','출'],['레위기','레'],['민수기','민'],['신명기','신'],['여호수아','수'],['사사기','삿'],['룻기','룻'],['사무엘상','삼상'],['사무엘하','삼하'],['열왕기상','왕상'],['열왕기하','왕하'],['역대상','대상'],['역대하','대하'],['에스라','스'],['느헤미야','느'],['에스더','에'],['욥기','욥'],['시편','시'],['잠언','잠'],['전도서','전'],['아가','아'],['이사야','사'],['예레미야','렘'],['예레미야애가','애'],['에스겔','겔'],['다니엘','단'],['호세아','호'],['요엘','욜'],['아모스','암'],['오바댜','옵'],['요나','욘'],['미가','미'],['나훔','나'],['하박국','합'],['스바냐','습'],['학개','학'],['스가랴','슥'],['말라기','말'],
-  ['마태복음','마'],['마가복음','막'],['누가복음','눅'],['요한복음','요'],['사도행전','행'],['로마서','롬'],['고린도전서','고전'],['고린도후서','고후'],['갈라디아서','갈'],['에베소서','엡'],['빌립보서','빌'],['골로새서','골'],['데살로니가전서','살전'],['데살로니가후서','살후'],['디모데전서','딤전'],['디모데후서','딤후'],['디도서','딛'],['빌레몬서','몬'],['히브리서','히'],['야고보서','약'],['베드로전서','벧전'],['베드로후서','벧후'],['요한일서','요일'],['요한이서','요이'],['요한삼서','요삼'],['유다서','유'],['요한계시록','계']];
- const CH=[50,40,27,36,34,24,21,4,31,24,22,25,29,36,10,13,10,42,150,31,12,8,66,52,5,48,12,14,3,9,1,4,7,3,3,3,2,14,4,28,16,24,21,28,16,16,13,6,6,4,4,5,3,6,4,3,1,13,5,5,3,5,1,1,1,22];
- const LK='kzBibleV1',ld=()=>{try{return JSON.parse(localStorage.getItem(LK))||{}}catch(e){return{}}},sv=o=>{try{localStorage.setItem(LK,JSON.stringify({...ld(),...o}))}catch(e){}};
- const st={b:0,c:1,size:18,sel:new Set(),...(()=>{const x=ld();return{b:Number.isInteger(x.b)&&x.b>=0&&x.b<66?x.b:0,c:x.c>=1?x.c:1,size:x.size>=14&&x.size<=30?x.size:18}})()};
- const cache=new Map();
- const book=i=>{if(cache.has(i))return cache.get(i);const pr=fetch('assets/bible/'+(i+1)+'.json').then(r=>{if(!r.ok)throw new Error('load');return r.json()});cache.set(i,pr);pr.catch(()=>cache.delete(i));return pr};
- const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const say=m=>{try{toast(m)}catch(e){}};
- /* "요 3:16", "요한복음3장16절", "시23", "고전 13:4-7" */
- function parse(q){q=String(q||'').replace(/\s+/g,'').replace(/장/g,':').replace(/절/g,'').replace(/편/g,':');const m=/^(\d?[가-힣]+)(\d+)?(?::(\d+)(?:[-~](\d+))?)?:?$/.exec(q);if(!m)return null;
-  let k=B.findIndex(x=>x[0]===m[1]);if(k<0)k=B.findIndex(x=>x[1]===m[1]);if(k<0)k=B.findIndex(x=>x[0].startsWith(m[1]));if(k<0)return null;
-  if(CH[k]===1&&m[2]&&!m[3]&&+m[2]>1)return{b:k,c:1,v:+m[2],v2:0};const c=Math.min(CH[k],Math.max(1,+(m[2]||1)));return{b:k,c,v:m[3]?+m[3]:0,v2:m[4]?+m[4]:0}}
- let wl=null;const wake=async on=>{try{if(on&&!wl&&navigator.wakeLock&&!document.hidden){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}else if(!on&&wl){await wl.release();wl=null}}catch(e){}};
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='bible')wake(true)});
- function shell(){const b=document.getElementById('body');if(!b)return null;
-  b.innerHTML=`<div class="bb"><div class="bb-bar"><button type="button" class="bb-pick" data-bb-pick aria-haspopup="dialog"><b></b><span aria-hidden="true">▾</span></button>
-   <form class="bb-go" data-bb-go role="search"><input type="search" enterkeyhint="go" placeholder="요 3:16" aria-label="성경 구절로 바로 가기" autocomplete="off"></form>
-   <div class="bb-fs" role="group" aria-label="글자 크기"><button type="button" data-bb-fs="-1" aria-label="글자 작게">가<small>−</small></button><button type="button" data-bb-fs="1" aria-label="글자 크게">가<small>+</small></button></div></div>
-   <article class="bb-text" aria-live="polite"></article>
-   <nav class="bb-nav"><button type="button" data-bb-step="-1">‹ 이전 장</button><button type="button" data-bb-step="1">다음 장 ›</button></nav>
-   <p class="bb-src">개역한글판 성경</p>
-   <div class="bb-selbar" hidden><span></span><button type="button" data-bb-copy>복사</button><button type="button" data-bb-clear aria-label="선택 해제">✕</button></div></div>`;
-  b.querySelector('[data-bb-pick]').onclick=()=>picker();
-  b.querySelector('[data-bb-go]').onsubmit=e=>{e.preventDefault();const i=e.currentTarget.querySelector('input');const r=parse(i.value);if(!r)return say('예) 요 3:16, 시 23, 고전 13:4-7');i.value='';i.blur();open(r.b,r.c,r.v,r.v2)};
-  b.querySelectorAll('[data-bb-fs]').forEach(x=>x.onclick=()=>{st.size=Math.max(14,Math.min(30,st.size+2*(+x.dataset.bbFs)));sv({size:st.size});b.querySelector('.bb-text').style.setProperty('--bb',st.size+'px')});
-  b.querySelectorAll('[data-bb-step]').forEach(x=>x.onclick=()=>step(+x.dataset.bbStep));
-  b.querySelector('[data-bb-copy]').onclick=copy;b.querySelector('[data-bb-clear]').onclick=()=>{st.sel.clear();selPaint()};
-  return b}
- function step(d){let b=st.b,c=st.c+d;if(c<1){if(b===0)return;b--;c=CH[b]}else if(c>CH[b]){if(b===65)return;b++;c=1}open(b,c);window.scrollTo({top:0})}
- async function open(b,c,v,v2){st.b=b;st.c=c;st.sel.clear();sv({b,c});const root=document.querySelector('#body .bb')||shell()&&document.querySelector('#body .bb');if(!root)return;
-  try{const tp=document.getElementById('top'),ps=tp&&getComputedStyle(tp).position;root.querySelector('.bb-bar').style.top=(tp&&(ps==='sticky'||ps==='fixed')&&tp.offsetHeight?tp.offsetHeight:0)+'px'}catch(e){}root.querySelector('.bb-pick b').textContent=B[b][0]+' '+c+(b===18?'편':'장');const t=root.querySelector('.bb-text');t.style.setProperty('--bb',st.size+'px');
-  root.querySelector('[data-bb-step="-1"]').disabled=b===0&&c===1;root.querySelector('[data-bb-step="1"]').disabled=b===65&&c===CH[65];
-  if(!cache.has(b))t.innerHTML='<p class="bb-wait">불러오는 중…</p>';
-  let data;try{data=await book(b)}catch(e){t.innerHTML='<p class="bb-wait">성경을 불러오지 못했어요. 인터넷 연결을 확인해 주세요. <button type="button" class="sm" data-bb-retry>다시 시도</button></p>';t.querySelector('[data-bb-retry]').onclick=()=>open(b,c,v,v2);return}
-  if(st.b!==b||st.c!==c)return;const vs=data[c-1]||[];
-  t.innerHTML=`<h2 class="bb-h">${E(B[b][0])} <span>${c}${b===18?'편':'장'}</span></h2>${vs.map((x,i)=>`<p class="bb-v" data-v="${i+1}"><sup>${i+1}</sup>${E(x)}</p>`).join('')}`;
-  t.querySelectorAll('.bb-v').forEach(p=>p.onclick=()=>{if(String(getSelection()||'').length)return;const n=+p.dataset.v;st.sel.has(n)?st.sel.delete(n):st.sel.add(n);selPaint()});
-  selPaint();
-  if(v){const to=v2&&v2>=v?v2:v;for(let k=v;k<=Math.min(to,vs.length);k++)st.sel.add(k);selPaint();const el=t.querySelector(`.bb-v[data-v="${v}"]`);if(el){const y=el.getBoundingClientRect().top+window.scrollY-130;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1600)}}
-  /* 다음 책 미리 받기 */
-  if(c>=CH[b]-1&&b<65)book(b+1).catch(()=>{})}
- const refOf=()=>{const a=[...st.sel].sort((x,y)=>x-y);if(!a.length)return'';const parts=[];let s0=a[0],p=a[0];for(const n of a.slice(1)){if(n===p+1){p=n;continue}parts.push(s0===p?s0:s0+'-'+p);s0=p=n}parts.push(s0===p?s0:s0+'-'+p);return `${B[st.b][1]} ${st.c}:${parts.join(',')}`};
- function selPaint(){const r=document.querySelector('#body .bb');if(!r)return;r.querySelectorAll('.bb-v').forEach(p=>p.classList.toggle('on',st.sel.has(+p.dataset.v)));const bar=r.querySelector('.bb-selbar');bar.hidden=!st.sel.size;bar.querySelector('span').textContent=refOf()}
- async function copy(){const a=[...st.sel].sort((x,y)=>x-y);let data;try{data=await book(st.b)}catch(e){return}const vs=data[st.c-1]||[];
-  const txt=a.map(n=>(a.length>1?n+' ':'')+(vs[n-1]||'')).join('\n')+`\n(${B[st.b][0]} ${refOf().split(' ')[1]}, 개역한글)`;
-  try{await navigator.clipboard.writeText(txt);say('복사했어요')}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);ta.select();try{document.execCommand('copy');say('복사했어요')}catch(_){}ta.remove()}}
- function picker(){document.querySelector('.bb-ov')?.remove();const o=document.createElement('div');o.className='bb-ov';let tab=st.b<39?'o':'n',pick=-1;
-  const paint=()=>{const sheet=o.querySelector('.bb-sheet');if(pick<0){const rng=tab==='o'?[0,39]:[39,66];
-    sheet.querySelector('.bb-sb').innerHTML=`<div class="bb-tabs" role="tablist"><button type="button" role="tab" data-t="o" class="${tab==='o'?'on':''}" aria-selected="${tab==='o'}">구약</button><button type="button" role="tab" data-t="n" class="${tab==='n'?'on':''}" aria-selected="${tab==='n'}">신약</button></div><div class="bb-books">${B.slice(...rng).map((x,k)=>{const i=k+rng[0];return `<button type="button" data-b="${i}" class="${i===st.b?'cur':''}"><b>${x[1]}</b><span>${x[0]}</span></button>`}).join('')}</div>`;
-    sheet.querySelector('.bb-sh b').textContent='성경 고르기';sheet.querySelector('.bb-back').hidden=true;
-    sheet.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{tab=x.dataset.t;paint()});sheet.querySelectorAll('[data-b]').forEach(x=>x.onclick=()=>{pick=+x.dataset.b;if(CH[pick]===1){close();open(pick,1);window.scrollTo({top:0})}else paint()});
-   }else{sheet.querySelector('.bb-sh b').textContent=B[pick][0];sheet.querySelector('.bb-back').hidden=false;
-    sheet.querySelector('.bb-sb').innerHTML=`<div class="bb-chs">${Array.from({length:CH[pick]},(_,k)=>`<button type="button" data-c="${k+1}" class="${pick===st.b&&k+1===st.c?'cur':''}">${k+1}</button>`).join('')}</div>`;
-    sheet.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{close();open(pick,+x.dataset.c);window.scrollTo({top:0})});book(pick).catch(()=>{})}
-   sheet.querySelector('.bb-sb').scrollTop=0};
-  o.innerHTML=`<div class="bb-sheet" role="dialog" aria-modal="true" aria-label="성경 고르기"><div class="bb-sh"><button type="button" class="bb-back" aria-label="책 목록으로" hidden>‹</button><b></b><button type="button" class="bb-x" aria-label="닫기">✕</button></div><div class="bb-sb"></div></div>`;
-  const close=()=>{o.remove();document.removeEventListener('keydown',esc)},esc=e=>{if(e.key==='Escape')close()};
-  document.body.append(o);o.onclick=e=>{if(e.target===o)close()};o.querySelector('.bb-x').onclick=close;o.querySelector('.bb-back').onclick=()=>{pick=-1;paint()};document.addEventListener('keydown',esc);paint();
-  const cur=o.querySelector('.bb-books .cur');cur&&cur.scrollIntoView({block:'center'})}
- document.addEventListener('keydown',e=>{if(view!=='bible'||document.querySelector('.bb-ov')||/input|textarea|select/i.test((e.target||{}).tagName||''))return;if(e.key==='ArrowLeft')step(-1);else if(e.key==='ArrowRight')step(1)});
- if(typeof body==='function'){const o=body;body=function(){if(view==='bible'){if(shell()){open(st.b,st.c);wake(true)}return}wake(false);return o.apply(this,arguments)}}
- if(typeof renderDbar==='function'){const o=renderDbar;renderDbar=function(){if(view==='bible'){const d=document.getElementById('dbar');if(d)d.hidden=true;try{setBH()}catch(e){}return}return o.apply(this,arguments)}}
- window.kzBible={open:(q)=>{const r=typeof q==='string'?parse(q):null;go('bible');if(r)open(r.b,r.c,r.v,r.v2)},parse};
- try{renderNav()}catch(e){}try{if(view==='bible')body()}catch(e){}
-})();
-</script>
-<style id="kz-bible-css">
-.bb{max-width:760px;margin:0 auto;padding:0 0 120px}
-.bb-bar{position:sticky;top:var(--bb-top,0px);z-index:5;display:flex;gap:8px;align-items:center;padding:10px 12px;margin:0 0 6px;background:rgba(255,252,247,.86);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid rgba(120,90,60,.12)}
-.bb-pick{display:flex;align-items:center;gap:6px;flex:none;border:1px solid rgba(120,90,60,.18);background:#fff;border-radius:12px;padding:8px 12px;font-size:15px;color:#2b231e;cursor:pointer;max-width:48%}
-.bb-pick b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bb-pick span{font-size:11px;opacity:.6}
-.bb-go{flex:1;min-width:0}
-.bb-go input{width:100%;box-sizing:border-box;border:1px solid rgba(120,90,60,.18);border-radius:12px;background:rgba(255,255,255,.75);padding:8px 11px;font-size:14px;color:#2b231e}
-.bb-fs{display:flex;flex:none;border:1px solid rgba(120,90,60,.18);border-radius:12px;overflow:hidden;background:#fff}
-.bb-fs button{border:0;background:none;padding:8px 9px;font-size:14px;font-weight:700;color:#5d4a3c;cursor:pointer}
-.bb-fs button small{font-size:10px;margin-left:1px}
-.bb-fs button+button{border-left:1px solid rgba(120,90,60,.14);font-size:16px}
-.bb-text{--bb:18px;padding:6px 18px 4px;font-family:var(--serif,'Noto Serif KR',serif);color:#2b231e}
-.bb-h{font-size:calc(var(--bb) + 6px);margin:14px 0 18px;font-weight:700;letter-spacing:-.01em}
-.bb-h span{color:#a0673a}
-.bb-v{font-size:var(--bb);line-height:1.85;margin:0 -8px 4px;padding:3px 8px;border-radius:8px;cursor:pointer;word-break:keep-all;overflow-wrap:anywhere;transition:background .15s}
-.bb-v sup{font-family:var(--sans,system-ui);font-size:.6em;font-weight:700;color:#a0673a;margin-right:6px;vertical-align:.45em}
-.bb-v.on{background:rgba(255,196,110,.32)}
-.bb-v.flash{animation:bbFlash 1.6s ease}
-@keyframes bbFlash{0%,40%{background:rgba(255,180,80,.55)}100%{background:rgba(255,196,110,.32)}}
-.bb-wait{padding:40px 0;text-align:center;color:#8a7a6c;font-family:var(--sans,system-ui);font-size:14px}
-.bb-nav{display:flex;gap:10px;padding:18px 16px 4px}
-.bb-nav button{flex:1;border:1px solid rgba(120,90,60,.18);background:rgba(255,255,255,.8);border-radius:14px;padding:13px;font-size:14.5px;font-weight:600;color:#3a2a22;cursor:pointer}
-.bb-nav button:disabled{opacity:.35;cursor:default}
-.bb-src{text-align:center;font-size:11.5px;color:#9a8a7c;margin:14px 0 0}
-.bb-selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 16px;border-radius:999px;background:rgba(43,35,30,.94);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;white-space:nowrap}
-.bb-selbar[hidden]{display:none}
-.bb-selbar span{font-weight:700;margin-right:6px}
-.bb-selbar button{border:0;border-radius:999px;background:#fff;color:#2b231e;font-weight:700;font-size:13px;padding:8px 14px;cursor:pointer}
-.bb-selbar [data-bb-clear]{background:transparent;color:#fff;padding:8px 10px}
-@media(min-width:900px){.bb-selbar{bottom:28px}.bb-text{padding:6px 28px}}
-.bb-ov{position:fixed;inset:0;z-index:9000;background:rgba(30,22,16,.38);display:flex;align-items:flex-end;justify-content:center}
-@media(min-width:760px){.bb-ov{align-items:center}}
-.bb-sheet{width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;background:#fffaf4;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.2);padding-bottom:env(safe-area-inset-bottom)}
-@media(min-width:760px){.bb-sheet{border-radius:22px}}
-.bb-sh{display:flex;align-items:center;gap:8px;padding:14px 16px 8px}
-.bb-sh b{flex:1;font-size:16px;color:#2b231e}
-.bb-sh button{border:0;background:rgba(120,90,60,.1);width:32px;height:32px;border-radius:50%;font-size:15px;color:#5d4a3c;cursor:pointer}
-.bb-sh .bb-back{font-size:20px;line-height:1}
-.bb-sb{overflow:auto;padding:4px 14px 18px;-webkit-overflow-scrolling:touch}
-.bb-tabs{display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(120,90,60,.1);margin:0 0 12px;position:sticky;top:0;z-index:1}
-.bb-tabs button{flex:1;border:0;background:none;border-radius:9px;padding:8px;font-size:14px;font-weight:600;color:#7a6c62;cursor:pointer}
-.bb-tabs button.on{background:#fff;color:#2b231e;box-shadow:0 1px 4px rgba(60,40,20,.12)}
-.bb-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:7px}
-.bb-books button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid rgba(120,90,60,.14);background:#fff;border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left}
-.bb-books b{font-size:15px;color:#a0673a}
-.bb-books span{font-size:12px;color:#3a2a22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.bb-books .cur,.bb-chs .cur{border-color:#c98a50;background:#fff1e2}
-.bb-chs{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:7px}
-.bb-chs button{border:1px solid rgba(120,90,60,.14);background:#fff;border-radius:12px;padding:12px 0;font-size:15px;font-weight:600;color:#3a2a22;cursor:pointer}
 </style>
 </html>
 
