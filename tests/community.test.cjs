@@ -201,4 +201,17 @@ test('sub request: notifies target member, validates name/date, rate limited',as
  const r=await f.run(f.user,{action:'subRequest',to:f.admin.name,date:d,role:'싱어'});assert.equal(r.ok,true);
  await assert.rejects(f.run(f.user,{action:'subRequest',to:'없는사람',date:d}),{status:404});
  await assert.rejects(f.run(f.user,{action:'subRequest',to:f.admin.name,date:'2020-01-01'}),{status:400});});
+test('attend rank: any approved member gets per-person totals sorted by rate, no raw records',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'a3',name:'다',rank:'팀원',status:'approved'}];
+ const data=new Map();const clock=Date.UTC(2026,9,15,3,0);
+ const snap=(path)=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const col=n=>({doc:k=>({path:n+'/'+k,get:async()=>snap(n+'/'+k),collection:c=>col(n+'/'+k+'/'+c)}),where:(f,op,v)=>({get:async()=>({docs:[...data.keys()].filter(k=>k.startsWith(n+'/')&&k.split('/').length===2&&(data.get(k)[f]||'')>=v).map(k=>({id:k.split('/')[1],data:()=>data.get(k)}))})})});
+ const db={collection:col,runTransaction:async fn=>fn({get:async x=>snap(x.path),set:()=>{}})};
+ const run=createService({db,accounts:async()=>people,now:()=>clock});
+ data.set('attendance/w1',{date:'2026-10-04',list:[{n:'가'},{n:'나'},{n:'다'}],recs:{'가':{s:'출석'},'나':{s:'무단 결석'},'다':{s:'일반 지각'}}});
+ data.set('attendance/w2',{date:'2026-10-11',list:[{n:'가'},{n:'나'}],recs:{'가':{s:'출석'},'나':{s:'출석'}}});
+ const r=await run(people[1],{action:'attendRank',range:'month'});
+ assert.deepEqual(r.items.map(x=>x.name),['가','나','다']);assert.equal(r.items[0].rate,100);assert.equal(r.items[1].rate,50);assert.equal(r.items[2].rate,0);assert.equal(r.items[2].late,1);assert.equal(r.days,2);
+ assert.equal(JSON.stringify(r).includes('recs'),false);});
 
