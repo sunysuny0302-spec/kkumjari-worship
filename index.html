@@ -7744,7 +7744,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
  const notifyButton=$c('#kcChatNotify');notifyButton.onclick=async()=>{const enabled=notifyButton.getAttribute('aria-pressed')!=='true';notifyButton.disabled=true;try{const r=await api({action:'chatPreference',room:attachedRoom,enabled});if(notifyButton.isConnected)paintNotify(notifyButton,r.enabled);toast(r.enabled?'채팅 알림을 켰어요. 휴대폰 알림은 내 계정에서 허용해 주세요.':'채팅 알림을 껐어요.');}catch(e){error(e);}finally{if(notifyButton.isConnected)notifyButton.disabled=false;}};
 
  $c('#kcChatText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229&&matchMedia('(min-width:821px)').matches){e.preventDefault();$c('#kcCompose').requestSubmit();}};
- mentionSetup($c('#kcChatText'));$c('#kcChatText').value=drafts[room];requestAnimationFrame(()=>{const t=$c('#kcChatText');if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}});$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
+ mentionSetup($c('#kcChatText'));$c('#kcChatText').value=drafts[room];setTimeout(()=>{const tt=$c('#kcChatText');if(tt&&tt._kzMirror)tt._kzMirror()},0);requestAnimationFrame(()=>{const t=$c('#kcChatText');if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}});$c('#kcChatText').oninput=e=>{drafts[room]=e.target.value;e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';};
  if(loadedRoom!==room){const cached=roomCache.get(room);chatItems=cached?.items||[];chatCursor=cached?.cursor||null;loadedRoom=room;}
  if(chatItems.length){paintChat(true);const c=$c('#kcConnection');if(c)c.textContent='최근 대화 표시 중 · 새 대화 확인 중';}
  else $c('#kcChatLog').innerHTML='<div class="kc-empty" role="status">최근 대화를 불러오는 중…</div>';
@@ -7756,15 +7756,37 @@ function paintNotify(btn,on){if(!btn)return;btn.setAttribute('aria-pressed',Stri
 let _mnC=null,_mnAt=0;function mentionNames(){const t=Date.now();if(_mnC&&t-_mnAt<5000)return _mnC.slice();try{_mnC=roomMemberListData().map(m=>String(m.name)).filter(Boolean)}catch(e){_mnC=[]}_mnAt=t;return _mnC.slice()}
 function mentionHTML(text){let h=escape(text);const names=mentionNames().sort((a,b)=>b.length-a.length);if(!names.length||h.indexOf('@')<0)return h;
  const me=String(actor?.name||'');const re=new RegExp('@('+names.map(n=>escape(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+'|모두)(?![가-힣A-Za-z0-9])','g');
- return h.replace(re,(all,n)=>`<b class="kc-mention${n===escape(me)||n==='모두'?' me':''}">@${n}</b>`)}
+ return h.replace(re,(all,n)=>`<b class="kc-mention${n===escape(me)||n==='모두'?' me':''}">${n==='모두'?'모두':n}</b>`)}
+const KZM='\u2063';function kzMentionWire(v){return String(v||'').replace(/\u2063([^\u2063]*)\u2063/g,'@$1').replace(/\u2063/g,'')}
 function mentionSetup(t){if(!t||t._mention)return;t._mention=true;const host=t.closest('.kc-chat-composer')||t.parentElement;let box=null,list=[],idx=0,q=null;
  const close=()=>{if(box){box.remove();box=null}q=null};
- const pick=name=>{if(q==null)return;const v=t.value,end=t.selectionStart,start=end-q.length-1;t.value=v.slice(0,start)+'@'+name+' '+v.slice(end);const c=start+name.length+2;t.setSelectionRange(c,c);close();t.dispatchEvent(new Event('input',{bubbles:true}));t.focus()};
+ const pick=name=>{if(q==null)return;const v=t.value,end=t.selectionStart,start=end-q.length-1,tok=KZM+name+KZM;t.value=v.slice(0,start)+tok+' '+v.slice(end);const c=start+tok.length+1;t.setSelectionRange(c,c);close();t.dispatchEvent(new Event('input',{bubbles:true}));t.focus()};
  const paint=()=>{if(!list.length){close();return}if(!box){box=document.createElement('div');box.className='kc-mention-pop';box.setAttribute('role','listbox');host.append(box)}
   box.innerHTML=list.map((n,i)=>`<button type="button" role="option" class="${i===idx?'on':''}" data-n="${escape(n)}"><span class="kc-mention-av">${escape(n.slice(0,1))}</span>${n==='모두'?'<b>모두</b><small>이 방 모두에게 알림</small>':`<b>${escape(n)}</b>`}</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();pick(b.dataset.n)}})};
  const check=()=>{const v=t.value.slice(0,t.selectionStart),m=v.match(/(^|\s)@([^\s@]{0,12})$/);if(!m){close();return}q=m[2];const me=String(actor?.name||''),all=mentionNames().filter(n=>n!==me);const ql=q.toLowerCase();
   list=['모두',...all].filter(n=>!ql||n.toLowerCase().includes(ql)).sort((a,b)=>(b.toLowerCase().startsWith(ql))-(a.toLowerCase().startsWith(ql))).slice(0,8);idx=0;paint()};
+ const known=n=>n==='모두'||mentionNames().includes(n);
+ const tidy=()=>{const v=t.value;if(t._composing)return;let caret=t.selectionStart,out='',i=0;
+  /* 스페이스로 끝난 '@이름 ' → 언급 */
+  const before=v.slice(0,caret),m=before.match(/(^|[\s])@([^\s@⁣]{1,20})(\s)$/);let w=v;
+  if(m&&known(m[2])){const st=before.length-m[2].length-2,tok=KZM+m[2]+KZM;w=v.slice(0,st)+tok+m[3]+v.slice(caret);caret=st+tok.length+1}
+  /* 짝이 안 맞거나 이름이 바뀐 표식은 지움 (커서 위치 유지) */
+  const keepIdx=new Set(),re=/⁣([^⁣]*)⁣/g;let mm;while((mm=re.exec(w))){if(known(mm[1])){keepIdx.add(mm.index);keepIdx.add(mm.index+mm[0].length-1)}}
+  let res='',c2=caret;for(let k=0;k<w.length;k++){if(w[k]===KZM&&!keepIdx.has(k)){if(k<caret)c2--;continue}res+=w[k]}
+  if(res!==v){t.value=res;const c=Math.max(0,Math.min(res.length,c2));t.setSelectionRange(c,c)}mirror()};
+ /* 입력칸 뒤에 같은 글자를 그려서 언급만 진하게 (입력칸 글자는 투명) */
+ const form=t.parentElement;let mir=null;
+ const mirror=()=>{if(!t.value.includes(KZM)){if(mir){mir.remove();mir=null}t.classList.remove('kc-mtx');return}
+  if(!mir){mir=document.createElement('div');mir.className='kc-mirror';mir.setAttribute('aria-hidden','true');form.style.position='relative';form.insertBefore(mir,t)}
+  const cs=getComputedStyle(t);['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth','boxSizing','textIndent','wordSpacing'].forEach(k=>mir.style[k]=cs[k]);
+  mir.style.left=t.offsetLeft+'px';mir.style.top=t.offsetTop+'px';mir.style.width=t.offsetWidth+'px';mir.style.height=t.offsetHeight+'px';
+  mir.innerHTML=escape(t.value).replace(/⁣([^⁣]*)⁣/g,(a3,n)=>`<b class="kc-mtok">${n}</b>`).replace(/⁣/g,'')+'\n';mir.scrollTop=t.scrollTop;t.classList.add('kc-mtx')};
+ t.addEventListener('compositionstart',()=>{t._composing=true});t.addEventListener('compositionend',()=>{t._composing=false;setTimeout(tidy,0)});
+ t.addEventListener('input',()=>{tidy()});t.addEventListener('scroll',()=>{if(mir)mir.scrollTop=t.scrollTop});
+ /* 언급 바로 뒤에서 지우기 → 이름 통째로 */
+ t.addEventListener('keydown',e=>{if(e.key!=='Backspace'||e.isComposing||t.selectionStart!==t.selectionEnd)return;const c=t.selectionStart,v=t.value;if(v[c-1]!==KZM)return;const st=v.lastIndexOf(KZM,c-2);if(st<0)return;e.preventDefault();t.value=v.slice(0,st)+v.slice(c);t.setSelectionRange(st,st);t.dispatchEvent(new Event('input',{bubbles:true}))});
+ if(typeof ResizeObserver==='function')new ResizeObserver(()=>mirror()).observe(t);t._kzMirror=mirror;setTimeout(mirror,0);
  t.addEventListener('input',check);t.addEventListener('click',check);t.addEventListener('blur',()=>setTimeout(close,150));
  t.addEventListener('keydown',e=>{if(!box)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();e.stopImmediatePropagation();idx=(idx+(e.key==='ArrowDown'?1:list.length-1))%list.length;paint()}else if((e.key==='Enter'||e.key==='Tab')&&!e.isComposing){e.preventDefault();e.stopImmediatePropagation();pick(list[idx])}else if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}},true)}
 function isMyChatMessage(m){
@@ -7858,7 +7880,7 @@ async function loadChat(older=false,gen=pageGeneration){
 let sendQ=Promise.resolve();
 async function send(e){
  e.preventDefault();
- const input=$c('#kcChatText'),value=input?.value.trim()||'',attachment=$c('#kcChatAttachments');if(KZImages.busy(attachment))return toast('사진을 준비하고 있어요.');const images=[...imageDrafts[room]];if(!value&&!images.length)return;
+ const input=$c('#kcChatText'),value=kzMentionWire(input?.value||'').trim(),attachment=$c('#kcChatAttachments');if(KZImages.busy(attachment))return toast('사진을 준비하고 있어요.');const images=[...imageDrafts[room]];if(!value&&!images.length)return;
  const targetRoom=room,gen=pageGeneration,ticket=epoch;
  const key=targetRoom+'|'+JSON.stringify([value,images]);
  const id=attempts.get(key)||uuid();attempts.set(key,id);
@@ -9701,6 +9723,15 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  try{if(typeof renderTabbar==='function')renderTabbar()}catch(e){}
 })();</script>
 <style id="kz-chat-read-css">
+#kcPanel .kc-compose{position:relative}
+#kcPanel .kc-mirror{position:absolute;pointer-events:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;color:var(--tx,#2a1f17);border-style:solid;border-color:transparent;background:transparent;z-index:0}
+#kcPanel .kc-mirror .kc-mtok{font-weight:inherit;color:#8a4b14;-webkit-text-stroke:.45px currentColor;background:rgba(214,162,0,.14);border-radius:4px;box-shadow:0 0 0 1px rgba(214,162,0,.14)}
+#kcPanel textarea.kc-mtx{color:transparent!important;-webkit-text-fill-color:transparent!important;caret-color:var(--tx,#2a1f17);position:relative;z-index:1;background:transparent!important}
+
+#kcPanel .kc-bubble b.kc-mention{font-weight:800;background:none!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;color:inherit}
+#kcPanel .kc-message.other .kc-bubble b.kc-mention{color:#8a4b14}
+#kcPanel .kc-bubble b.kc-mention.me{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:rgba(214,162,0,.7)}
+
 .kc-rpop{position:fixed;z-index:9300;width:max-content;max-width:min(240px,calc(100vw - 16px));padding:8px 10px;border-radius:12px;background:rgba(255,253,250,.97);border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 28px -10px rgba(40,25,10,.35);font-size:11.5px;color:#3b2f25;animation:kcPop .12s ease}
 @keyframes kcPop{from{opacity:0;transform:scale(.96)}}
 .kc-rpop p{margin:0 0 4px;font-size:11px;color:#8a7f75}.kc-rpop p b{font-weight:700;color:#b07d00}.kc-rpop p.r{margin-top:7px}.kc-rpop p.r b{color:#2f8a52}
