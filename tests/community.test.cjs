@@ -412,3 +412,12 @@ test('thanks cards are visible only to sender and recipient, counts stay public'
  assert.equal(await has(f.user),true);assert.equal(await has(f.outsider),true);assert.equal(await has(f.admin),false);
  assert.equal((await f.run(f.admin,{action:'feedList'})).thanks[f.outsider.id],1);
 });
+test('chat unread count: messages from others since I last looked',async()=>{
+ const f=fixture();assert.equal((await f.run(f.user,{action:'chatUnread',room:'all'})).unread,0);
+ await f.run(f.outsider,{action:'send',room:'all',id:'unreadreq_001',text:'안녕'});f.advance();
+ await f.run(f.outsider,{action:'send',room:'all',id:'unreadreq_002',text:'연습 4시'});f.advance();
+ assert.equal((await f.run(f.user,{action:'chatUnread',room:'all'})).unread,2);
+ await f.run(f.user,{action:'chat',room:'all'});f.advance();
+ assert.equal((await f.run(f.user,{action:'chatUnread',room:'all'})).unread,0);
+ assert.equal((await f.run(f.outsider,{action:'chatUnread',room:'all'})).unread,0);
+});

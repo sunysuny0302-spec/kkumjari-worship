@@ -4865,15 +4865,15 @@ sd.innerHTML=`<div class="side-t"><button type="button" class="brand" data-go="h
 <div class="nv-l">예배 준비</div>
 <div class="nv-group">
 <button type="button" class="nv-i ${view==='archive'||view==='library'?'on':''}" data-go="vault">${V13I('archive')}<span class="nv-t">보관함</span></button>
-${it('song_requests','신청곡',0,'request')}
 ${it('lyrics','가사 PPT 생성',0,'slides')}
+${it('song_requests','신청곡',0,'request')}
 </div>
 
 <div class="nv-l">팀 관리</div>
 <div class="nv-group">
-${it('members','멤버 명단',0,'users')}
 ${it('attend','출결',0,'list')}
 ${it('minutes','회의록',0,'note')}
+${it('members','멤버 명단',0,'users')}
 </div>
 
 ${leadBlock}
@@ -9798,7 +9798,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
    if(!S.imgs.has(id)){const go=async()=>{try{const r=await api({action:'feedImages',id});S.imgs.set(id,r.images||[]);if(r.images&&r.images[0])x.innerHTML=`<img src="${r.images[0]}" alt="">`+(r.images.length>1?'<i aria-hidden="true">❐</i>':'')}catch(e){}};if(typeof IntersectionObserver==='function'){const ob=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){ob.disconnect();go()}},{rootMargin:'400px 0px'});ob.observe(x)}else go()}});
   b.querySelectorAll('[data-bd]').forEach(bindBanner);
   bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{const o=x.dataset.kfOnly;only=only===o?'':o;if(o&&only)markSeen(o,latestOf(o));paint();window.scrollTo({top:0});const sel=document.querySelector('.kf-st.kf-on'),bar=document.querySelector('.kf-stories');if(sel&&bar)bar.scrollTo({left:Math.max(0,sel.offsetLeft-bar.clientWidth/2+sel.clientWidth/2),behavior:'smooth'})});
-  profiles([me().id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
+  profiles([me().id,...Object.keys(S.thanks||{}),...S.items.map(p=>p.owner),...S.items.filter(p=>p.to).map(p=>p.to.id),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
  function find(id){return S.items.find(p=>p.id===id)}
  function repaintCard(id){const p=find(id),el=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"]`);if(p&&p.kind==='bday'){const b=document.querySelector(`[data-bd="${CSS.escape(id)}"]`);if(b){const t=document.createElement('div');t.innerHTML=bdayBanner(p);const nb=t.firstElementChild;b.replaceWith(nb);bindBanner(nb);return}}if(!p||!el)return paint();const imgs=S.imgs.get(id);const t=document.createElement('div');t.innerHTML=card(p);const n=t.firstElementChild;
   /* 사진은 다시 받지 않도록 기존 슬라이드 유지 */
@@ -10411,6 +10411,30 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .ab-tile .ab-tl li>*{flex:none}
 /* 월 제목 줄 배경을 페이지와 같게 */
 .kz-arch .ab-mo h3,.kz-arch .ab-mo>h3{position:static!important;background:transparent!important;box-shadow:none!important;border:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+</style>
+<style id="kz-ttop-fix-css">.kf-ttop-l{padding-top:8px!important;padding-right:6px}.kf-ttop-l small{top:4px!important;right:-2px!important}</style>
+<script id="kz-chat-unread">
+/* 채팅 안 읽은 개수: 위쪽 채팅 버튼 · 아래 채팅 탭에 숫자 배지 (카톡처럼) */
+(function(){let n=0,busy=false,last=0;
+ const chatOpen=()=>(typeof view!=='undefined'&&view==='community')||!!document.querySelector('.kc-panel.open,#kcPanel.open,.kc-panel[aria-hidden="false"]');
+ function paint(){const t=n>99?'99+':String(n);
+  const top=document.getElementById('kcChatOpen');if(top){let b=top.querySelector('#kcChatCount');if(!b){b=document.createElement('span');b.id='kcChatCount';b.className='kc-badge';top.append(b)}b.hidden=!n;b.textContent=t;top.setAttribute('aria-label','팀 채팅'+(n?`, 안 읽은 메시지 ${t}개`:''))}
+  document.querySelectorAll('#tabbar button').forEach(btn=>{if(!/채팅/.test(btn.textContent||''))return;let b=btn.querySelector('.kz-tb-badge');if(!b){b=document.createElement('span');b.className='kz-tb-badge';(btn.querySelector('.tb-i')||btn).append(b)}b.hidden=!n;b.textContent=t})}
+ async function check(force){if(busy||document.hidden||!window.kzRsvp||!kzRsvp.api)return paint();let a=null;try{a=authAccount()}catch(e){}if(!a||document.getElementById('kzLoginLock'))return;
+  if(chatOpen()){n=0;paint();return}if(!force&&Date.now()-last<20000)return paint();busy=true;last=Date.now();
+  try{const r=await kzRsvp.api({action:'chatUnread',room:'all'});n=Number(r&&r.unread)||0}catch(e){}busy=false;paint()}
+ setInterval(()=>check(false),30000);setTimeout(()=>check(true),2500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(true)});
+ new MutationObserver(()=>{if(chatOpen()){if(n){n=0;paint()}}else{const tb=document.querySelector('#tabbar button .kz-tb-badge');const top=document.getElementById('kcChatOpen');if((top&&!top.querySelector('#kcChatCount'))||(!tb&&n))paint()}}).observe(document.body,{childList:true,subtree:true});
+ let was=false;setInterval(()=>{const o=chatOpen();if(was&&!o){last=0;check(true)}was=o},1500);
+ window.kzChatUnread={check,get:()=>n};
+})();
+</script>
+<style id="kz-chat-unread-css">
+#tabbar .tb-i{position:relative}
+.kz-tb-badge{position:absolute;top:-7px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#e5483b;color:#fff;font-size:10.5px;font-weight:800;line-height:18px;text-align:center;border:2px solid var(--page,#fbf6ef);font-style:normal}
+.kz-tb-badge[hidden]{display:none}
+#kcChatOpen{position:relative}
+#kcChatOpen #kcChatCount{background:#e5483b}
 </style>
 </html>
 
