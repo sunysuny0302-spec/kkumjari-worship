@@ -377,3 +377,8 @@ test('birthday reminder: once a day, birthday person + everyone else, approved o
  const again=await run({system:true},{action:'bdayRemind'});assert.equal(again.reminded,0);assert.equal(pushed.length,2);
  await assert.rejects(run({id:'a2',name:'나',status:'approved'},{action:'bdayRemind'}),{status:400});
 });
+test('thanks card and birthday notes ignore the 꿈마당 mute',async()=>{
+ const f=fixture();await f.run(f.outsider,{action:'feedPref',enabled:false});
+ await f.run(f.user,{action:'feedPost',id:'feedreq_thx777',kind:'thanks',to:f.outsider.id,text:'늘 고마워요'});
+ const last=f.pushed.at(-1);assert.equal(last.recipients[0].id,f.outsider.id);assert.equal(last.note.type,'celebrate');
+});

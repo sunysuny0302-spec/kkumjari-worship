@@ -7410,7 +7410,7 @@ function eventPush(e){let w='';try{w=wd(e.date)}catch(x){}return notify({type:'e
 /* ---------- 계정 창 안 "휴대폰 알림" 칸 ---------- */
 function secHTML(){const s=state(),T=st().types||{conti:true,notice:true,event:true,sched:true},on=s==='on',can=on||s==='off'||s==='denied';
  const sub={on:'이 기기로 알림이 와요',off:'꺼져 있어요',denied:'휴대폰 설정에서 막혀 있어요','ios-home':'홈 화면에 추가한 앱에서 켤 수 있어요',unsupported:'이 브라우저는 알림을 받을 수 없어요',local:'팀 공유 모드에서만 쓸 수 있어요'}[s]||'';
- const TY=[['conti','콘티 업로드','이번 주 콘티가 올라오면'],['notice','새 공지','공지가 새로 올라오면'],['event','새 일정','팀 일정이 등록되면'],['sched','일정 변경','내 순서·대타·불참이 바뀌면'],['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','꿈마당','내 게시물에 댓글·태그가 오면 (꿈마당 화면의 종 모양으로도 끌 수 있어요)']];
+ const TY=[['conti','콘티 업로드','이번 주 콘티가 올라오면'],['notice','새 공지','공지가 새로 올라오면'],['event','새 일정','팀 일정이 등록되면'],['sched','일정 변경','내 순서·대타·불참이 바뀌면'],['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','꿈마당','내 게시물에 댓글·태그가 오면 (생일·감사 카드 알림은 끌 수 없어요)']];
  let body='';
  if(s==='ios-home')body=`<div class="kzp-note">아이폰은 <b>홈 화면에 추가한 앱</b>에서만 알림을 받을 수 있어요.<br>① Safari 아래 <b>공유(□↑)</b> → ② <b>홈 화면에 추가</b> → ③ 홈 화면의 <b>꿈자리</b> 앱에서 로그인 → ④ 여기서 알림 켜기</div>`;
  else if(s==='denied')body=`<div class="kzp-note">휴대폰 <b>설정 → 알림</b>(또는 브라우저 사이트 설정)에서 꿈자리 알림을 허용한 뒤 스위치를 다시 켜 주세요.</div>`;
