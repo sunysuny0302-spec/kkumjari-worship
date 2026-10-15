@@ -37,17 +37,24 @@ const seed = () => ({
 });
 const tests = [];
 const t = (n, f) => tests.push([n, f]);
-t('단장 넘기기: current chief hands over; previous chief keeps 겸직 role', async () => {
-  const db = fakeDb({...seed(), 'accounts/c1': {id: 'c1', name: '단장님', rank: '단장', status: 'approved', parts: ['인도자', '싱어']}, 'settings/members': {list: [{name: '단장님', accountId: 'c1', rank: '단장', parts: ['인도자', '싱어']}, {name: '김태양', accountId: 'u1', rank: '인도자', parts: []}]}});
+t('단장 위임: chief offers, target accepts in popup; admin can delegate directly', async () => {
+  const db = fakeDb({...seed(), 'accounts/c1': {id: 'c1', name: '단장님', rank: '단장', status: 'approved', parts: ['인도자', '싱어']}, 'accounts/u1': {id: 'u1', name: '김태양', rank: '인도자', status: 'approved'}, 'settings/members': {list: [{name: '단장님', accountId: 'c1', rank: '단장', parts: ['인도자', '싱어']}, {name: '김태양', accountId: 'u1', rank: '인도자', parts: []}]}});
   const s = createAdminService({db, auth: fakeAuth(), now: () => 9});
-  const CH = {id: 'c1', rank: '단장', name: '단장님', status: 'approved'};
-  await assert.rejects(s.run({...ME, status: 'approved'}, {action: 'transferChief', to: 'u2'}), {status: 403});
-  await assert.rejects(s.run(CH, {action: 'transferChief', to: 'u2'}), {status: 400});
-  const r = await s.run(CH, {action: 'transferChief', to: 'u1'});
+  const CH = {id: 'c1', rank: '단장', name: '단장님', status: 'approved'}, TY = {id: 'u1', rank: '인도자', name: '김태양', status: 'approved'};
+  await assert.rejects(s.run(CH, {action: 'transferChief', to: 'u1'}), {status: 403});
+  await assert.rejects(s.run(TY, {action: 'chiefOffer', to: 'u1'}), {status: 403});
+  await s.run(CH, {action: 'chiefOffer', to: 'u1'});
+  assert.equal(db.store.get('accounts/c1').rank, '단장');
+  assert.equal((await s.run(TY, {action: 'chiefOfferGet'})).mine, 'to');
+  await assert.rejects(s.run(CH, {action: 'chiefAccept'}), {status: 403});
+  const r = await s.run(TY, {action: 'chiefAccept'});
   assert.equal(r.to.rank, '단장');assert.deepEqual(r.to.parts, ['인도자']);assert.equal(r.from.rank, '인도자');assert.deepEqual(r.from.parts, ['싱어']);
-  assert.equal(db.store.get('accounts/c1').rank, '인도자');assert.equal(db.store.get('accounts/u1').rank, '단장');
-  const ml = db.store.get('settings/members').list;assert.equal(ml.find(m => m.accountId === 'u1').rank, '단장');assert.equal(ml.find(m => m.accountId === 'c1').rank, '인도자');
-  await assert.rejects(s.run(CH, {action: 'transferChief', to: 'u1'}), {status: 409});
+  assert.equal(db.store.get('accounts/u1').rank, '단장');assert.equal(db.store.get('settings/members').list.find(m => m.accountId === 'c1').rank, '인도자');
+  assert.equal((await s.run(TY, {action: 'chiefOfferGet'})).offer, null);
+  /* 거절 */
+  await s.run({...TY, rank: '단장'}, {action: 'chiefOffer', to: 'c1'});await s.run(CH, {action: 'chiefDecline'});assert.equal((await s.run(CH, {action: 'chiefOfferGet'})).offer, null);
+  /* 관리계정은 바로 */
+  const r2 = await s.run(ADMIN, {action: 'transferChief', to: 'c1'});assert.equal(r2.to.rank, '단장');
 });
 t('단장 can list pending, approve (with 겸직), and delete only pending requests', async () => {
   const db = fakeDb({...seed(), 'accounts/c1': {id: 'c1', name: '단장님', rank: '단장', status: 'approved'}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
