@@ -9105,7 +9105,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const row=(x,i,no)=>`<div class="kzr-r ${x.name===me?'me':''} ${no?'none':''}"><span class="kzr-n">${no?'-':i+1}</span><span class="kzr-nm"><b>${E(x.name)}</b><small>${E([x.rank!=='팀원'?x.rank:'',...(x.parts||[])].filter(Boolean).join(' · ')||'팀원')}</small></span><span class="kzr-bar"><i style="width:${no?0:Math.max(2,x.rate)}%"></i></span><span class="kzr-v">${no?'<small>기록 없음</small>':`<b>${x.rate}%</b>${x.p!=null?`<small>출석 ${x.p} · 지각 ${x.late} · 결석 ${x.absent}</small>`:''}`}</span></div>`;
   const staff=(()=>{try{const a=authAccount();return !!a&&(a.id==='management'||['단장','인도자','선임싱어','선임세션'].includes(a.rank))}catch(e){return false}})();
   const opt=staff?`<label class="kzr-opt"><input type="checkbox" data-kzr-mode ${v.mode==='rate'?'':'checked'}> 팀원에게 출석·지각·결석 횟수도 보이기 <small>(끄면 순위와 참여율만)</small></label>`:'';
-  return `<div class="kzr-top"><b>출결 순위</b><small>${L[v.range]||''} · 예배 ${v.days}번 · 출석·인정 지각·인정 결석을 참여로 계산</small><div class="kzr-seg">${Object.entries(L).map(([k,l])=>`<button type="button" data-kzr="${k}" class="${v.range===k?'on':''}">${l}</button>`).join('')}</div></div>${opt}<div class="kzr-l">${has.map((x,i)=>row(x,i,false)).join('')}${none.map(x=>row(x,0,true)).join('')||''}</div>${!has.length?'<div class="mu" style="margin-top:8px">이 기간에는 아직 입력된 출결이 없어요</div>':''}`}
+  return `<div class="kzr-top"><b>출결 순위</b><small>${L[v.range]||''}${v.days!=null?` · 예배 ${v.days}번`:''} · 출석·인정 지각·인정 결석을 참여로 계산</small><div class="kzr-seg">${Object.entries(L).map(([k,l])=>`<button type="button" data-kzr="${k}" class="${v.range===k?'on':''}">${l}</button>`).join('')}</div></div>${opt}<div class="kzr-l">${has.map((x,i)=>row(x,i,false)).join('')}${none.map(x=>row(x,0,true)).join('')||''}</div>${!has.length?'<div class="mu" style="margin-top:8px">이 기간에는 아직 입력된 출결이 없어요</div>':''}`}
  async function into(el,r){if(!el)return;r=r||range;try{const v=await load(r);if(!el.isConnected)return;el.innerHTML=html(v);const mb=el.querySelector('[data-kzr-mode]');if(mb)mb.onchange=async()=>{mb.disabled=true;try{await db.doc('settings/attendRank').set({mode:mb.checked?'full':'rate',up:Date.now()});for(const k in cache)delete cache[k];toast(mb.checked?'팀원에게도 횟수를 보여 줘요':'팀원에게는 순위와 참여율만 보여 줘요')}catch(e){toast('저장하지 못했어요');mb.checked=!mb.checked}mb.disabled=false};
   el.querySelectorAll('[data-kzr]').forEach(b=>b.onclick=()=>{range=b.dataset.kzr;try{localStorage.setItem('kzRankRange',range)}catch(e){}el.innerHTML='<div class="mu">불러오는 중…</div>';into(el,range)})}catch(e){if(el.isConnected)el.innerHTML=`<div class="mu">출결 순위를 불러오지 못했어요 · ${E(e.message||e)}</div>`}}
  window.kzRankInto=into;})();</script>
@@ -9277,6 +9277,18 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const h=link();if(!h)return;p.insertAdjacentHTML('beforeend',h);const x=p.querySelector('[data-kz-urg]');if(x)x.onclick=()=>open(weekNow())}
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{home()}catch(e){console.warn(e)}return r}}
  window.kzUrgent={open,need,locked,weekNow,hub,home};
+})();</script>
+<style id="kz-readonly-css">.kz-ro-note{margin:0 0 12px;padding:10px 14px;border-radius:12px;background:#f4efe9;color:#6b5a4b;font-size:13.5px}.kz-ro-note b{color:#4a3a2c}
+#body .r2.kz-ro .r2-quick{display:none}#body .r2.kz-ro button:disabled{cursor:default}</style>
+<script id="kz-readonly">/* 고칠 권한이 없는 화면은 보기 전용으로: 배정 규칙(단장·인도자·선임만), 회의록(관리자급만 작성) */
+(function(){
+ const staff=()=>{try{return typeof kzChgStaff==='function'&&kzChgStaff()}catch(e){return false}};
+ function ro(ok,msg){if(ok)return;const r=document.querySelector('#body .r2');if(!r)return;r.classList.add('kz-ro');r.querySelectorAll('button,input,select,textarea').forEach(x=>{x.disabled=true});
+  if(!r.querySelector('.kz-ro-note')){const n=document.createElement('div');n.className='kz-ro-note';n.innerHTML=msg;const hero=r.querySelector('.r2-hero');if(hero)hero.after(n);else r.prepend(n)}}
+ if(typeof singerRuleView==='function'){const o=singerRuleView;singerRuleView=function(){const x=o.apply(this,arguments);try{ro(canSingerManage(),'<b>보기만 할 수 있어요.</b> 싱어 배정 규칙은 단장 · 인도자 · 선임싱어가 정해요. 못 서는 날은 <b>일정 변경</b>에서 신청해 주세요.')}catch(e){}return x}}
+ if(typeof sessionRuleView==='function'){const o=sessionRuleView;sessionRuleView=function(){const x=o.apply(this,arguments);try{ro(canSessionManage(),'<b>보기만 할 수 있어요.</b> 세션 배정 규칙은 단장 · 인도자 · 선임세션이 정해요. 못 서는 날은 <b>일정 변경</b>에서 신청해 주세요.')}catch(e){}return x}}
+ if(typeof minList==='function'){const o=minList;minList=function(){const x=o.apply(this,arguments);try{if(!staff())document.querySelectorAll('#body [data-mt="write"],#body [data-me]').forEach(b=>b.remove())}catch(e){}return x}}
+ if(typeof minutesView==='function'){const o=minutesView;minutesView=function(){if(!staff())minTab='list';const x=o.apply(this,arguments);try{if(!staff())document.querySelectorAll('#body [data-mt="write"],#body [data-me]').forEach(b=>b.remove())}catch(e){}return x}}
 })();</script>
 </html>
 
