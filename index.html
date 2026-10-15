@@ -9398,7 +9398,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 @media(min-width:821px){.kf-card{margin-bottom:14px}}
 .kf-top{display:flex;align-items:center;gap:10px;padding:12px 6px 10px 14px}
 .kf-ring{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;padding:2px;box-sizing:border-box;background:conic-gradient(from 210deg,#f9ce34,#ee2a7b,#6228d7,#f9ce34)}
-.kf-ring .kf-av{width:100%;height:100%;border:2px solid #fff;box-sizing:border-box;font-size:13px}
+.kf-ring .kf-av{width:100%;height:100%;border:2px solid #fff;box-sizing:border-box;font-size:13px}.kf-ring.seen{background:#e3d9ce}
 .kf-av{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:#efe3d3;color:#8a5a2b;font-weight:700;font-size:14px}
 .kf-av img{width:100%;height:100%;object-fit:cover;display:block}
 .kf-who{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;line-height:1.2}
@@ -9480,6 +9480,39 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 @media(max-width:820px){.kf{background:#fff;min-height:calc(100dvh - 120px)}}
 .km-more2 .km-mine .km-tile i{background:var(--acs);color:var(--ac)}
 </style>
+<style id="kz-feed-glass-css">
+/* ===== 피드: 글래스 디자인 ===== */
+.kf{--g-bg:rgba(255,255,255,.52);--g-bd:rgba(255,255,255,.75);--g-sh:0 12px 34px -16px rgba(110,70,35,.32),0 2px 6px -2px rgba(110,70,35,.08);
+ background:radial-gradient(60% 40% at 8% 6%,rgba(255,196,150,.7),transparent 70%),radial-gradient(55% 38% at 96% 22%,rgba(205,184,255,.62),transparent 70%),radial-gradient(60% 45% at 18% 62%,rgba(176,228,206,.58),transparent 70%),radial-gradient(55% 40% at 90% 88%,rgba(255,200,218,.62),transparent 70%),linear-gradient(180deg,#fbf6f0,#f6efe7);
+ background-attachment:fixed;min-height:calc(100dvh - 120px);padding-top:4px}
+@media(max-width:820px){.kf{background-attachment:scroll}}
+@media(min-width:821px){.kf{max-width:520px;border-radius:28px;padding:10px 10px 28px;margin-top:4px}}
+.kf .kf-head{padding:8px 16px 10px}
+.kf .kf-new{background:var(--g-bg);border:1px solid var(--g-bd);border-radius:14px;box-shadow:var(--g-sh);-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
+.kf .kf-stories{margin:2px 12px 12px;padding:12px 12px 10px;border:1px solid var(--g-bd);border-radius:24px;background:var(--g-bg);box-shadow:var(--g-sh);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%)}
+.kf .kf-st-ring .kf-av{border-color:rgba(255,255,255,.95)}
+.kf .kf-filter{margin:0 12px 12px;border:1px solid var(--g-bd);border-radius:16px;background:var(--g-bg);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.kf .kf-card{margin:0 12px 16px;padding:0 0 12px;border:1px solid var(--g-bd);border-bottom:1px solid var(--g-bd);border-radius:26px;background:var(--g-bg);box-shadow:var(--g-sh),inset 0 1px 0 rgba(255,255,255,.85);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);overflow:hidden}
+.kf .kf-top{padding:12px 8px 10px 14px}
+.kf .kf-media{margin:0 10px;border-radius:20px;border:0;box-shadow:0 8px 22px -14px rgba(60,35,15,.45)}
+.kf .kf-slide,.kf .kf-media:not(.kf-art){background:rgba(242,235,226,.7)}
+.kf .kf-art{background:linear-gradient(135deg,var(--a),var(--b))!important}
+.kf .kf-art{border-radius:20px}
+.kf .kf-count{background:rgba(255,255,255,.35);color:#fff;border:1px solid rgba(255,255,255,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.kf .kf-act{padding:8px 10px 2px}
+.kf .kf-act>button{border-radius:14px}
+.kf .kf-act>button:hover{background:rgba(255,255,255,.55)}
+.kf .kf-add{margin-top:10px;padding:5px 6px 5px 6px;border:1px solid var(--g-bd);border-radius:999px;background:rgba(255,255,255,.55)}
+.kf .kf-add button{padding:6px 10px}
+.kf .kf-empty{margin:12px;border:1px solid var(--g-bd);border-radius:26px;background:var(--g-bg);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--g-sh)}
+.kf .kf-more-btn{background:var(--g-bg);border-color:var(--g-bd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.kf-ov{background:rgba(45,28,16,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.kf-sheet{background:rgba(255,252,248,.78)!important;border:1px solid rgba(255,255,255,.8);-webkit-backdrop-filter:blur(28px) saturate(170%)!important;backdrop-filter:blur(28px) saturate(170%)!important;box-shadow:0 -10px 40px -10px rgba(60,35,15,.3)}
+.kf-sheet .kf-sh,.kf-sheet .kf-sf,.kf-sheet .kf-w .kf-wa{border-color:rgba(120,90,60,.12)}
+.kf-sheet .kf-sf textarea,.kf-sheet .kf-w textarea{background:rgba(255,255,255,.7)!important}
+.kf-sheet .kf-w textarea{border-radius:16px!important;padding:12px 14px!important}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.kf .kf-card,.kf .kf-stories{background:rgba(255,253,250,.94)}.kf-sheet{background:#fffdfa!important}}
+</style>
 <script id="kz-feed">/* ===== 피드: 사진·글을 올리고 좋아요·댓글 (인스타처럼) · 홈 배열은 그대로 두고 메뉴에만 추가 ===== */
 (function(){
  const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9513,14 +9546,23 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const pips=n>1?`<div class="kf-pips">${Array.from({length:n},(_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:'';
   const cap=p.text&&!art?`<div class="kf-cap ${long?'clamp':''}"><b>${E(p.name)}</b> ${E(p.text)}</div>${long?'<button type="button" class="kf-moretxt" data-kf-moretxt>더 보기</button>':''}`:'';
   const rc=(p.recent||[]).map(c=>`<div class="kf-rc"><b>${E(c.name)}</b> ${E(c.text)}</div>`).join('');
-  return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
+  return `<article class="kf-card" data-id="${E(p.id)}"><header class="kf-top"><span class="kf-ring ${fresh(p.owner)?'':'seen'}">${av(p.owner,p.name)}</span><div class="kf-who"><b>${E(p.name)}</b><small>${ago(p.createdAt)}${p.editedAt?' · 수정됨':''}</small></div>${p.canDelete||p.mine?'<button type="button" class="kf-dots-btn" data-kf-menu aria-label="게시물 메뉴"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>':''}</header>
    ${media}<div class="kf-act"><button type="button" class="kf-like ${p.liked?'on':''}" data-kf-like aria-pressed="${p.liked}" aria-label="좋아요 ${p.likeCount}개">${IC.heart}${p.likeCount?`<span>${p.likeCount}</span>`:''}</button><button type="button" data-kf-cmt aria-label="댓글 ${p.commentCount}개">${IC.cmt}${p.commentCount?`<span>${p.commentCount}</span>`:''}</button>${pips}</div>
    <div class="kf-body">${likesLine(p)}${cap}${p.commentCount?`<button type="button" class="kf-allc" data-kf-cmt>댓글 ${p.commentCount}개${p.commentCount>1?' 모두':''} 보기</button>`:''}${rc}
     <form class="kf-add" data-kf-add>${av(me().id,me().name)}<input type="text" maxlength="500" placeholder="댓글 달기…" aria-label="댓글 달기" enterkeyhint="send"><button type="submit" disabled>게시</button></form></div></article>`}
  let only='';
- function stories(){const seen=new Map();S.items.forEach(p=>{if(!seen.has(p.owner))seen.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt})});const m=me();
-  const list=[...seen.values()].sort((a,b)=>b.at-a.at).slice(0,20);if(!list.length)return '';
-  return `<div class="kf-stories" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'sel':''}" data-kf-only="${E(x.id)}" role="listitem"><span class="kf-st-ring ${Date.now()-x.at<864e5?'new':''}">${av(x.id,x.name)}</span><small>${E(x.id===m.id?'내 게시물':x.name)}</small></button>`).join('')}</div>`}
+ /* 스토리 동그라미: 안 본 새 게시물이 있는 사람 = 색 테두리 · 앞쪽(최신순), 눌러서 보면 회색 · 뒤로 */
+ const SEENK=()=>'kzFeedSeenV1:'+(me().id||'');
+ const seenMap=()=>{try{return JSON.parse(localStorage.getItem(SEENK())||'{}')||{}}catch(e){return{}}};
+ const markSeen=(owner,at)=>{try{const m=seenMap();if((m[owner]||0)<at){m[owner]=at;localStorage.setItem(SEENK(),JSON.stringify(m))}}catch(e){}};
+ const latestOf=owner=>S.items.reduce((t,p)=>p.owner===owner?Math.max(t,p.createdAt):t,0);
+ const fresh=owner=>{if(owner===me().id)return false;const t=latestOf(owner);return t>Date.now()-7*864e5&&t>(seenMap()[owner]||0)};
+ function stories(){const by=new Map();S.items.forEach(p=>{const x=by.get(p.owner);if(!x)by.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt});else if(p.createdAt>x.at)x.at=p.createdAt});const m=me();
+  const all=[...by.values()].filter(x=>x.id!==m.id).map(x=>({...x,n:fresh(x.id)}));
+  const list=[...all.filter(x=>x.n).sort((a,b)=>b.at-a.at),...all.filter(x=>!x.n).sort((a,b)=>b.at-a.at)].slice(0,24);
+  const mineAt=by.get(m.id);
+  if(!list.length&&!mineAt)return '';
+  return `<div class="kf-stories" role="list"><button type="button" class="kf-st kf-st-me" data-kf-new role="listitem"><span class="kf-st-ring add">${av(m.id,m.name)}<i>${IC.plus}</i></span><small>새 게시물</small></button>${mineAt?`<button type="button" class="kf-st ${only===m.id?'sel':''}" data-kf-only="${E(m.id)}" role="listitem"><span class="kf-st-ring">${av(m.id,m.name)}</span><small>내 게시물</small></button>`:''}${list.map(x=>`<button type="button" class="kf-st ${only===x.id?'sel':''}" data-kf-only="${E(x.id)}" role="listitem" aria-label="${E(x.name)}${x.n?' · 새 게시물':''}"><span class="kf-st-ring ${x.n?'new':''}">${av(x.id,x.name)}</span><small>${E(x.name)}</small></button>`).join('')}</div>`}
  function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const items=only?S.items.filter(p=>p.owner===only):S.items,who=only&&S.items.find(p=>p.owner===only);
   const list=items.length?items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   b.innerHTML=`<div class="kf"><div class="kf-head"><h1>피드</h1><div class="kf-hbtns"><button type="button" class="kf-new kf-bell ${S.notify===false?'off':''}" data-kf-bell aria-pressed="${S.notify!==false}" aria-label="피드 알림 ${S.notify===false?'꺼짐':'켜짐'}" title="내 게시물 좋아요 · 댓글 알림 ${S.notify===false?'꺼짐':'켜짐'}">${S.notify===false?IC.belloff:IC.bell}</button><button type="button" class="kf-new" data-kf-new aria-label="새 게시물">${IC.newpost}</button></div></div>
@@ -9528,7 +9570,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
    ${S.err?`<div class="kf-err">${E(S.err)} <button type="button" class="sm" data-kf-retry>다시 시도</button></div>`:''}
    <div class="kf-list">${list}</div>${S.cursor&&!only?'<button type="button" class="kf-more-btn" data-kf-older>이전 게시물 더 보기</button>':''}</div>`;
   b.querySelector('[data-kf-bell]')?.addEventListener('click',async e=>{const btn=e.currentTarget,on=S.notify===false;btn.disabled=true;try{const r=await api({action:'feedPref',enabled:on});S.notify=r.enabled;paint();toast(r.enabled?'피드 알림을 켰어요 · 내 게시물에 좋아요·댓글이 오면 알려 드려요':'피드 알림을 껐어요')}catch(err){btn.disabled=false;toast(err.message||'바꾸지 못했어요')}});
-  bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{only=only===x.dataset.kfOnly?'':x.dataset.kfOnly;paint();window.scrollTo({top:0})});
+  bind(b);b.querySelectorAll('[data-kf-only]').forEach(x=>x.onclick=()=>{const o=x.dataset.kfOnly;only=only===o?'':o;if(o&&only)markSeen(o,latestOf(o));paint();window.scrollTo({top:0})});
   profiles([me().id,...S.items.map(p=>p.owner),...S.items.flatMap(p=>(p.recent||[]).map(c=>c.owner))])}
  function find(id){return S.items.find(p=>p.id===id)}
  function repaintCard(id){const p=find(id),el=document.querySelector(`.kf-card[data-id="${CSS.escape(id)}"]`);if(!p||!el)return paint();const imgs=S.imgs.get(id);const t=document.createElement('div');t.innerHTML=card(p);const n=t.firstElementChild;
