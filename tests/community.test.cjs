@@ -183,4 +183,17 @@ test('no-service Sunday: no ppt/rsvp reminder that week, ppt rotation shifts one
  r=await run({system:true},{action:'rsvpRemind'});assert.equal(r.skipped,'no-service');
  clock=Date.UTC(2026,9,19,10,0);/* 주일 10-25: 10-11 가, 10-18 없음, 10-25 나 (한 주 밀림) */
  r=await run({system:true},{action:'pptRemind'});assert.equal(r.date,'2026-10-25');assert.equal(r.name,'나');assert.equal(pushed.length,1);});
+test('serve reminder: once per assigned person per week, roles shown, skipped on no-service',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가수',rank:'팀원',status:'approved'},{id:'a2',name:'건반이',rank:'팀원',status:'approved'},{id:'m1',name:'선임',rank:'선임싱어',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,12,10,0);
+ const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),collection:n=>({doc:k=>ref(path+'/'+n+'/'+k)})});
+ const db={collection:n=>({doc:k=>ref(n+'/'+k)}),runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v)),update:(x,v)=>w.push(()=>data.set(x.path,{...data.get(x.path),...v})),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ await run(people[2],{action:'rsvpTargets',date:'2026-10-18',targets:[{n:'가수',r:['싱어']},{n:'건반이',r:['메인']}]});
+ let r=await run({system:true},{action:'serveRemind'});assert.equal(r.reminded,2);assert.equal(pushed.length,2);assert.match(pushed[1].n.body,/건반/);
+ assert.ok(data.has('_kzCommunity/inbox_a1/items/serve_2026-10-18'));
+ r=await run({system:true},{action:'serveRemind'});assert.equal(r.reminded,0);assert.equal(pushed.length,2);
+ data.set('settings/noService',{days:{'2026-10-18':'x'}});r=await run({system:true},{action:'serveRemind'});assert.equal(r.skipped,'no-service');});
 

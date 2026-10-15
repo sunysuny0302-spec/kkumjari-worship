@@ -14,6 +14,7 @@ module.exports=async function handler(req,res){
   /* 같은 크론에서 토요 연습 미응답자 알림 (월~금 저녁 7시) */
   let remind=null;try{remind=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpRemind'});}catch(e){console.error('[rsvp-remind]',e.code||e.name||e.message);remind={error:true};}
   let ppt=null;try{ppt=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'pptRemind'});}catch(e){console.error('[ppt-remind]',e.code||e.name||e.message);ppt={error:true};}
-  return res.json({deleted,remind,ppt});
+  let serve=null;try{serve=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'serveRemind'});}catch(e){console.error('[serve-remind]',e.code||e.name||e.message);serve={error:true};}
+  return res.json({deleted,remind,ppt,serve});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };
