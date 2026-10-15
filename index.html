@@ -5749,7 +5749,7 @@ const[y0,m0]=lsM.split('-').map(Number),mm=[0,1,2,3,4,5].map(k=>{const t=new Dat
 const[d1,d2]=lsSel,ok=lsSel.length===2&&eff(d1)!==eff(d2);
 const pick=d=>d?`<div class="ls4-pk"><span>${fmtD(d)}</span><b><i class="ldot ${ldrCls(eff(d))}"></i>${esc(eff(d))}</b></div>`:`<div class="ls4-pk empty"><span>주일을 선택하세요</span></div>`;
 const sum=lsSel.length===2&&eff(d1)===eff(d2)?'<div class="ls4-warn">두 날짜의 인도자가 같아서 바꿀 필요가 없어요</div>':ok?`<div class="ls4-res">교환하면 <b>${fmtD(d1)}</b>은 ${esc(eff(d2))}, <b>${fmtD(d2)}</b>은 ${esc(eff(d1))}가 인도해요</div>`:'';
-$('#body').innerHTML=`<div class="wk ls4"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 일정</h1><div class="mu">주일별 인도자를 한눈에 보고, 두 주를 맞바꾸거나 한 주만 다른 사람이 대신 설 수 있어요</div></div><span class="sp"></span><span class="ls4-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span>${kzChgStaff()?'<button type="button" class="btn" id="lrot" style="margin-left:10px">로테이션 설정</button>':''}</div>
+$('#body').innerHTML=`<div class="wk ls4"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 일정</h1><div class="mu">주일별 인도자를 한눈에 보고, 두 주를 맞바꾸거나 한 주만 다른 사람이 대신 설 수 있어요</div></div><span class="sp"></span><span class="ls4-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span>${typeof hasRole==='function'&&hasRole('인도자')?'<button type="button" class="sm" id="lcolbtn" style="margin-left:10px">내 색</button>':''}${kzChgStaff()?'<button type="button" class="btn" id="lrot" style="margin-left:10px">로테이션 설정</button>':''}</div>
 <div class="ls4-main"><section class="ls4-cal"><div class="ls4-nav"><button type="button" class="hc-nav" id="lp" aria-label="이전">‹</button><b>${y0}년 ${m0}월 – ${last[0]!==y0?last[0]+'년 ':''}${last[1]}월</b><button type="button" class="hc-nav" id="ln" aria-label="다음">›</button><span class="sp"></span><button type="button" class="sm" id="ltd">이번 주로</button></div><div class="ls4-months">${mm.map(([y,m])=>month(y,m)).join('')}</div></section>
 <aside class="ls4-side"><div class="ls4-tabs" role="tablist" aria-label="인도 변경 방법"><button type="button" role="tab" aria-selected="${lsKind==='swap'}" class="${lsKind==='swap'?'on':''}" data-lsmode="swap">${V13I('swap')}<span><b>인도 교환</b><small>두 주를 맞바꿔요</small></span></button><button type="button" role="tab" aria-selected="${lsKind==='sub'}" class="${lsKind==='sub'?'on':''}" data-lsmode="sub">${V13I('leader')}<span><b>대신 서기</b><small>한 주만 다른 사람</small></span></button></div><section class="ls4-box">${lsKind==='sub'?lsSubBox(d1,d1?eff(d1):''):`<p class="mu">바꿀 두 주일을 달력에서 누르면 두 사람의 인도 주간이 한 번에 맞바뀌어요.</p><div class="ls4-pair">${pick(d1)}<span class="ls4-arr">⇅</span>${pick(d2)}</div>${sum}<div class="ls4-act"><button class="btn" id="lsb" ${ok?'':'disabled'}>교환 등록</button>${lsSel.length?'<button class="sm" id="lc">선택 해제</button>':''}</div>`}</section>
 <section class="ls4-box"><div class="ls4-bh">${V13I('list')}<b>변경 내역</b><span class="mu" style="margin-left:auto;font-size:12px">${groups.length?groups.length+'건':''}</span></div>${groups.length?groups.map(g=>`<div class="ls4-row"><i class="ls4-kind ${g[0].pair?'':'sub'}">${g[0].pair?'교환':'대신'}</i><div>${g.map(x=>`<div class="ls4-ch"><span>${fmtD(x.date)}</span><span>${esc(x.from)} → ${x.to?`<b>${esc(x.to)}</b>`:'<s>미정</s>'}</span></div>`).join('')}</div>${canSingerManage()||g.some(x=>x.from===me)?`<button class="sm" data-d="${g[0]._id}">취소</button>`:'<span class="mu">열람</span>'}</div>`).join(''):'<div class="ls4-empty">아직 변경 내역이 없어요</div>'}</section></aside></div></div>`;
@@ -10329,6 +10329,50 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 </style>
 <style id="kz-thx-priv-css">.kf-ttop-note{margin:10px 0 0;font-size:11.5px;color:#8a6a72;line-height:1.5}</style>
 <style id="kz-xfer-css">.kzr-xrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kzr-xrow label{display:grid;gap:5px}.kzr-xrow span{font-size:12px;font-weight:800;color:#8a7a6c}</style>
+<script id="kz-ldr-color">
+/* 인도자 색: settings/leaderColors {map:{이름:#색}} — 인도자가 직접 고름. 처음 인도자가 되면 한 번 물어봄 */
+(function(){
+ const PAL=['#2d68dc','#cf3f75','#2f9e6e','#e08a1e','#7b4fd6','#0f9bb5','#d64545','#8a6a3a','#d4a017','#5b6b7f'];
+ const DEF={lm:'#2d68dc',lf:'#cf3f75',l3:'#2f9e6e',l4:'#e08a1e'};let MAP={},loaded=false,asked=false;
+ const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`};
+ const colorOf=n=>MAP[n]||DEF[ldrCls(n)]||'#8a7a6c';
+ function apply(){let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
+   css+=`.${c}{color:${k}}.ldot.${c}{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}`});
+  let st=document.getElementById('kzLdrColorCss');if(!st){st=document.createElement('style');st.id='kzLdrColorCss';document.head.append(st)}st.textContent=css}
+ function myName(){try{return (authAccount()||{}).name||''}catch(e){return ''}}
+ function isLeaderMe(){try{return typeof hasRole==='function'&&hasRole('인도자')&&!isManagementAccount()}catch(e){return false}}
+ function pick(first){const me=myName();if(!me)return;document.querySelector('.lrt-ov')?.remove();const taken=new Map();(LEADERS||[]).filter(n=>n!==me).forEach(n=>taken.set(colorOf(n),n));let cur=MAP[me]||'';
+  const o=document.createElement('div');o.className='lrt-ov';o.innerHTML='<div class="lrt lcol" role="dialog" aria-modal="true" aria-label="인도자 색 고르기"></div>';document.body.append(o);const box=o.querySelector('.lrt');
+  const close=()=>{o.remove();document.removeEventListener('keydown',onKey)},onKey=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',onKey);o.onclick=e=>{if(e.target===o)close()};
+  const paint=()=>{const show=cur||colorOf(me);box.innerHTML=`<div class="lrt-h"><b>${first?'인도자가 되신 걸 환영해요!':'내 인도자 색'}</b><button type="button" class="lrt-x" aria-label="닫기">✕</button></div>
+   <div class="lrt-b"><p class="lcol-d">달력 · 인도자 일정 · 콘티에서 <b>${esc(me)}</b>님을 이 색으로 보여 줘요.</p>
+    <div class="lcol-prev" style="--c:${show}"><i></i><b>${esc(me)}</b><span>${new Date().getMonth()+1}월 인도</span></div>
+    <div class="lcol-pal">${PAL.map(c=>{const t=taken.get(c);return `<button type="button" data-c="${c}" style="--c:${c}" class="${show===c?'on':''}" ${t?'disabled':''} aria-label="${t?esc(t)+'님이 쓰는 색':'색 '+c}">${t?`<small>${esc(t)}</small>`:''}</button>`}).join('')}</div>
+    <p class="lcol-n">다른 인도자가 쓰는 색은 고를 수 없어요 · 나중에 인도자 일정에서 바꿀 수 있어요</p></div>
+   <div class="lrt-f">${first?'<button type="button" class="sm" data-later>나중에</button>':'<button type="button" class="sm" data-later>취소</button>'}<button type="button" class="btn" data-save>이 색으로 할게요</button></div>`;
+   box.querySelector('.lrt-x').onclick=close;box.querySelector('[data-later]').onclick=()=>{try{sessionStorage.setItem('kzLdrColAsk','1')}catch(e){}close()};
+   box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cur=b.dataset.c;paint()});
+   box.querySelector('[data-save]').onclick=async e=>{const b=e.currentTarget,c=cur||colorOf(me);b.disabled=true;try{await db.doc('settings/leaderColors').set({map:{[me]:c}},{merge:true});MAP={...MAP,[me]:c};apply();close();toast('내 색을 정했어요')}catch(err){b.disabled=false;toast('저장하지 못했어요')}}};
+  paint()}
+ function maybeAsk(){if(asked||!loaded)return;if(!isLeaderMe())return;const me=myName();if(!me||MAP[me])return;try{if(sessionStorage.getItem('kzLdrColAsk'))return}catch(e){}if(document.querySelector('.lrt-ov,.kf-ov,#kzTour,#kzLoginLock'))return;asked=true;setTimeout(()=>pick(true),600)}
+ function start(){if(typeof db==='undefined'||!db||!db.doc)return setTimeout(start,800);try{db.doc('settings/leaderColors').onSnapshot(x=>{MAP=x.exists&&x.data()&&typeof x.data().map==='object'?{...x.data().map}:{};loaded=true;apply();maybeAsk()},()=>{})}catch(e){setTimeout(start,1500)}}
+ start();setInterval(()=>{apply();maybeAsk()},4000);
+ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#lcolbtn'))pick(false)});
+ window.kzLeaderColor={pick,apply,colorOf};
+})();
+</script>
+<style id="kz-ldr-color-css">
+.lcol-d{margin:4px 0 12px;font-size:13.5px;line-height:1.5}
+.lcol-prev{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid rgba(120,90,60,.15)}
+.lcol-prev i{width:12px;height:12px;border-radius:50%;background:var(--c)}.lcol-prev b{color:var(--c);font-size:16px}.lcol-prev span{margin-left:auto;font-size:12px;padding:4px 10px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff)}
+.lcol-pal{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+.lcol-pal button{position:relative;aspect-ratio:1;border-radius:50%;border:3px solid #fff;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.08);cursor:pointer}
+.lcol-pal button.on{box-shadow:0 0 0 3px var(--c)}
+.lcol-pal button.on:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px}
+.lcol-pal button:disabled{opacity:.35;cursor:not-allowed}
+.lcol-pal button small{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font-size:10px;color:#8a7a6c;white-space:nowrap}
+.lcol-n{margin:24px 0 4px;font-size:12px;color:#8a7a6c}
+</style>
 </html>
 
 <script id="kz-score-pages-script">
