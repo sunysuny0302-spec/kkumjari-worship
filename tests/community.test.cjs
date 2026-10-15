@@ -361,3 +361,19 @@ test('꿈마당 extras: thanks card, poll vote, emoji reactions, birthdays',asyn
  assert.equal((await f.run(f.outsider,{action:'feedList'})).myBday,md);await assert.rejects(f.run(f.user,{action:'feedBday',md:'13-40'}),{status:400});
  await f.run(f.user,{action:'feedDelete',id:t.item.id});l=await f.run(f.outsider,{action:'feedList'});assert.equal(l.thanks[f.outsider.id],0);
 });
+test('birthday reminder: once a day, birthday person + everyone else, approved only',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'a3',name:'다',rank:'팀원',status:'approved'}];
+ const data=new Map(),pushed=[];const clock=Date.UTC(2026,2,7,0,5);/* 2026-03-07 09:05 KST */
+ data.set('_kzCommunity/birthdays',{m:{a1:{md:'03-07',name:'가',y:1999},a2:{md:'05-01',name:'나'},gone:{md:'03-07',name:'탈퇴'}}});
+ const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),collection:n=>({doc:k=>ref(path+'/'+n+'/'+k)})});
+ const db={collection:n=>({doc:k=>ref(n+'/'+k)}),runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v)),update:(x,v)=>w.push(()=>data.set(x.path,{...data.get(x.path),...v})),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ const r=await run({system:true},{action:'bdayRemind'});assert.equal(r.date,'2026-03-07');assert.equal(r.reminded,1);
+ assert.equal(pushed.length,2);assert.deepEqual(pushed[0].r.map(a=>a.id),['a1']);assert.match(pushed[0].n.title,/생일 축하/);
+ assert.deepEqual(pushed[1].r.map(a=>a.id),['a2','a3']);assert.match(pushed[1].n.title,/가님 생일/);assert.equal(pushed[1].n.target,'feed');
+ assert.ok([...data.keys()].some(k=>k.includes('bdayo_2026-03-07_a1')));
+ const again=await run({system:true},{action:'bdayRemind'});assert.equal(again.reminded,0);assert.equal(pushed.length,2);
+ await assert.rejects(run({id:'a2',name:'나',status:'approved'},{action:'bdayRemind'}),{status:400});
+});

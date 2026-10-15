@@ -6,6 +6,10 @@
     {
       "path": "/api/community-cleanup",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/birthday-remind",
+      "schedule": "0 0 * * *"
     }
   ],
   "headers": [
