@@ -7091,7 +7091,16 @@ document.addEventListener('keydown',function(e){
    ===================================================================== */
 let LYR={},LYD={},lySubOn=false,lyUnsub=null,lyUid=null,lyWeek=null,lyLocalOnly=false,lySize=LS('lySize')||'l',lyBlank=LS('lyBlank')==='1',lySaveT={},lyState={},lySel=0,lyFocus=null,lyOpenInst={},lyMax=Math.min(4,Math.max(2,+(LS('lyMax')||2))),lyAlign=LS('lyAlign')||'center';
 const LY_INST=/^(intro|inter|interlude|outro|ending|간주|전주|후주|반주)/i;
-const lyNorm=t=>String(t||'').replace(/\s*[\(\[]\s*[A-Ga-g][#b♭♯]?m?(\s*[-→>~/,]\s*[A-Ga-g][#b♭♯]?m?)*\s*[\)\]]\s*$/,'').trim();
+const lyNorm=t=>{let x=String(t||'').trim();for(let i=0;i<3;i++){const y=x
+  .replace(/\s*[\(\[]\s*(?:key\s*:?\s*)?[A-Ga-g][#b♭♯]?m?\s*(?:키|key)?(\s*[-→>~/,]+\s*[A-Ga-g][#b♭♯]?m?\s*(?:키|key)?)*\s*[\)\]]\s*$/i,'')
+  .replace(/\s+(?:[Kk]ey\s*:?\s*[A-G][#b♭♯]?m?|[A-G][#b♭♯]?(?:m?\s*(?:키|[Kk]ey))?)(?:\s*(?:→|->|>|~)\s*[A-G][#b♭♯]?(?:m?\s*(?:키|[Kk]ey))?)*\s*$/,'')
+  .replace(/\s*(?:키업|key\s*up)\s*$/i,'').trim();if(y===x)break;x=y}return x};
+/* 제목이 조금 달라도(부제·괄호·'- 가수' 등) 지난 가사를 찾아 줌 */
+const lyLoose=t=>lyNorm(t).replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/\s+[-–—]\s+.*$/,'').toLowerCase().replace(/[^0-9a-z가-힣]/g,'');
+function lyFuzzy(raw,k){try{const want=lyLoose(raw);if(want.length<2)return null;const pool={...(typeof LYR==='object'&&LYR||{})};let best=null;
+  for(const [key,doc] of Object.entries(pool)){if(key===k||!doc||!doc.parts||!Object.values(doc.parts).some(v=>String(v||'').trim()))continue;const l=lyLoose(doc.title||key.replace(/^s_/,''));if(!l)continue;
+   const score=l===want?3:(want.length>=3&&l.length>=3&&(l.startsWith(want)||want.startsWith(l)))?2:0;if(score&&(!best||score>best.s||(score===best.s&&(doc.up||0)>(best.d.up||0))))best={s:score,d:doc,key}}
+  return best?{...best.d,_from:best.d.title||best.key}:null}catch(e){return null}}
 const lyKey=t=>'s_'+(lyNorm(t).toLowerCase().replace(/[\s\/\\.#$\[\]'"`~!?,·\-_()]+/g,'')||'untitled').slice(0,120);
 const lyMe=()=>{try{const a=authAccount();return (a&&a.name)||me||''}catch(e){return ''}};
 function G2(f){try{return f()}catch(e){return null}}
@@ -7109,7 +7118,7 @@ function lyRaw(w){const all=(w&&w.scores)||[],sc=scoreSongs(all).map(x=>{const p
 const lySeq=x=>((x&&Array.isArray(x._pages)&&x._pages.length>1)?x._pages.flatMap(p=>p.seq||[]):((x&&x.seq)||[])).map(z=>({t:String(z&&z.t||'').trim(),c:(z&&z.c)||'#111',bc:(z&&z.bc)||(z&&z.c)||'#111',b:!(z&&z.b===false)})).filter(z=>z.t);
 function lyPastForms(key,exclude){const out=[];lyWeeks().forEach(([d,w])=>{if(d===exclude)return;lyRaw(w).forEach(r=>{if(lyKey(r.raw)!==key)return;const s=lySeq(r.x);if(s.length&&!out.some(o=>o.sig===s.map(z=>z.t).join('>')))out.push({d,seq:s,sig:s.map(z=>z.t).join('>')})})});return out.slice(0,6)}
 function lySongs(d){const w=lyWeekObj(d);if(!w||!w.up)return{up:false,songs:[]};
- return{up:true,songs:lyRaw(w).map(r=>{const k=lyKey(r.raw),doc=LYD[k]||LYR[k]||lyLocal(k)||{};let seq=lySeq(r.x),src='leader';
+ return{up:true,songs:lyRaw(w).map(r=>{const k=lyKey(r.raw),doc=LYD[k]||LYR[k]||lyLocal(k)||lyFuzzy(r.raw,k)||{};let seq=lySeq(r.x),src='leader';
   if(!seq.length&&Array.isArray(doc.form)&&doc.form.length){seq=doc.form.map(z=>({t:String(z.t||'').trim(),c:z.c||'#111',bc:z.bc||z.c||'#111',b:z.b!==false})).filter(z=>z.t);src='past'}
   const labels=seq.length?seq.map(z=>z.t):['가사'],uniq=[...new Set(labels)];
   return{...r,key:k,title:doc.title||lyNorm(r.raw)||r.raw,seq,labels,uniq,parts:{...(doc.parts||{})},hasForm:seq.length>0,src,formDate:doc.formDate||''}})}}
