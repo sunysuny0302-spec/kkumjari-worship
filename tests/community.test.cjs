@@ -6,7 +6,8 @@ function fixture(){
  const pushed=[];
  const data=new Map();let clock=2000000000000,queue=Promise.resolve();
  const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
- const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),collection:n=>col(path+'/'+n)});
+ const deep=(a,b)=>{const o={...(a||{})};for(const[k,v]of Object.entries(b))o[k]=v&&typeof v==='object'&&!Array.isArray(v)?deep(o[k],v):v;return o};
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),set:async(v,o)=>{data.set(path,o&&o.merge?deep(data.get(path),v):v)},collection:n=>col(path+'/'+n)});
  function col(path,state={}){return{
   doc:key=>ref(path+'/'+key),
   orderBy:()=>col(path,state),where:(field,op,value)=>col(path,{...state,cutoff:value}),
@@ -317,4 +318,10 @@ test('feed notification preference: owner can turn off like/comment alerts',asyn
  const n=f.pushed.length;await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_pref01',text:'댓글'});assert.equal(f.pushed.length,n);
  await f.run(f.outsider,{action:'feedLike',id:p.item.id,on:true});assert.equal([...f.data.keys()].filter(k=>k.includes('inbox_'+f.user.id)&&k.includes('feed')).length,0);
  await f.run(f.user,{action:'feedPref',enabled:true});f.advance();await f.run(f.outsider,{action:'feedComment',id:p.item.id,cid:'cmtreq_pref02',text:'댓글2'});assert.equal(f.pushed.length,n+1);
+});
+
+test('chat read receipts: two readers keep both marks (merged write)',async()=>{
+ const f=fixture();await f.run(f.admin,{action:'send',room:'all',id:'request_read0002',text:'공지'});
+ await f.run(f.outsider,{action:'chat',room:'all'});await f.run(f.user,{action:'chat',room:'all'});
+ const r=await f.run(f.outsider,{action:'chat',room:'all'});assert.ok(r.seen[f.user.id]>0&&r.seen[f.outsider.id]>0);
 });
