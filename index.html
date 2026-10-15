@@ -9052,6 +9052,16 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 <style id="kz-iv2-css">.kz-iv2{width:min(960px,96vw);padding:10px 10px 12px}.kz-iv2 .kz-iv-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}.kz-iv2 .kz-iv-n{flex:1;color:#ddd;font-size:13px;font-weight:600}.kz-iv2 .kz-iv-x{background:transparent;color:#fff;border:0;font-size:14px;padding:4px 6px;cursor:pointer}
 .kz-iv2 .kz-iv-stage{position:relative;display:grid;place-items:center}.kz-iv2 img{display:block;max-width:100%;max-height:80dvh;object-fit:contain;border-radius:10px;touch-action:pan-y}
 .kz-iv2 .kz-iv-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:grid;place-items:center}.kz-iv2 .kz-iv-nav.prev{left:6px}.kz-iv2 .kz-iv-nav.next{right:6px}.kz-iv2 .kz-iv-nav:disabled{opacity:.25;cursor:default}.kz-iv2 .kz-iv-nav[hidden]{display:none}</style>
+<style id="kz-offline-css">.kz-offline{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9500;display:flex;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 24px);padding:9px 14px;border-radius:14px;line-height:1.35;background:#3b2f25;color:#fff;font-size:13px;font-weight:600;box-shadow:0 10px 24px -10px rgba(0,0,0,.5)}
+.kz-offline i{width:8px;height:8px;border-radius:50%;background:#f0a04b;flex:none;animation:kzOffPulse 1.4s infinite}.kz-offline.ok{background:#2f6b3f}.kz-offline.ok i{background:#9be0a8;animation:none}
+@keyframes kzOffPulse{50%{opacity:.35}}</style>
+<script id="kz-offline">/* 인터넷이 끊기면 위쪽에 안내 · 그동안 바꾼 내용은 이 기기에 두었다가 다시 연결되면 자동으로 올림 */
+(function(){let el=null,t=null;
+ function show(off){clearTimeout(t);if(!el){el=document.createElement('div');el.className='kz-offline';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.append(el)}
+  el.classList.toggle('ok',!off);el.innerHTML=off?'<i></i>인터넷 연결 끊김 · 연결되면 자동 저장돼요':'<i></i>다시 연결됐어요';
+  if(!off)t=setTimeout(()=>{el&&el.remove();el=null},2500)}
+ addEventListener('offline',()=>show(true));addEventListener('online',()=>{if(el)show(false)});
+ if(navigator.onLine===false)(document.body?show(true):addEventListener('DOMContentLoaded',()=>show(true)))})();</script>
 </html>
 
 <script id="kz-score-pages-script">
