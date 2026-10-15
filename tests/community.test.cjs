@@ -272,3 +272,30 @@ test('urgent absence after deadline notifies leader of that week, chief and part
  assert.equal(r.ok,true);const ids=pushed.at(-1).r.map(a=>a.id).sort();assert.deepEqual(ids,['c1','l2','ss']);assert.match(pushed.at(-1).n.body,/가님 · 10월 18일 주일 싱어 · 갑자기 야근/);
  clock+=11000;await run(people[0],{action:'urgentAbs',date:'2026-10-18',kinds:['session','singer'],reason:'몸살'});
  assert.deepEqual(pushed.at(-1).r.map(a=>a.id).sort(),['c1','l1','l2','se','ss']);});
+
+test('feed: post, list without image bodies, like toggle, comments with preview, permissions, delete',async()=>{
+ const f=fixture();
+ await assert.rejects(f.run(f.user,{action:'feedPost',id:'feedreq_0001',text:'  ',images:[]}),{status:400});
+ const p=await f.run(f.user,{action:'feedPost',id:'feedreq_0001',text:'첫 게시물',images:[]});assert.equal(p.item.text,'첫 게시물');assert.equal(p.item.mine,true);
+ const again=await f.run(f.user,{action:'feedPost',id:'feedreq_0001',text:'첫 게시물',images:[]});assert.equal(again.item.id,p.item.id);
+ f.advance();await f.run(f.outsider,{action:'feedPost',id:'feedreq_0002',text:'두번째',images:[]});
+ let l=await f.run(f.outsider,{action:'feedList'});assert.equal(l.items.length,2);assert.equal(l.items[0].text,'두번째');assert.ok(!('images' in l.items[0]));assert.ok(!('likes' in l.items[0]));
+ const pid=p.item.id;
+ let r=await f.run(f.outsider,{action:'feedLike',id:pid,on:true});assert.deepEqual([r.liked,r.likeCount],[true,1]);assert.deepEqual(r.likers,['다른 팀원']);
+ r=await f.run(f.outsider,{action:'feedLike',id:pid,on:true});assert.equal(r.likeCount,1);
+ r=await f.run(f.admin,{action:'feedLike',id:pid,on:true});assert.equal(r.likeCount,2);
+ r=await f.run(f.outsider,{action:'feedLike',id:pid,on:false});assert.equal(r.likeCount,1);
+ const c1=await f.run(f.outsider,{action:'feedComment',id:pid,cid:'cmtreq_0001',text:'좋아요!'});assert.equal(c1.commentCount,1);
+ assert.equal(f.pushed.at(-1).recipients[0].id,f.user.id);assert.match(f.pushed.at(-1).note.title,/댓글/);
+ f.advance();await f.run(f.admin,{action:'feedComment',id:pid,cid:'cmtreq_0002',text:'멋져요'});f.advance();
+ const c3=await f.run(f.user,{action:'feedComment',id:pid,cid:'cmtreq_0003',text:'감사해요'});assert.equal(c3.commentCount,3);assert.deepEqual(c3.recent.map(x=>x.text),['멋져요','감사해요']);
+ const all=await f.run(f.user,{action:'feedComments',id:pid});assert.deepEqual(all.items.map(x=>x.text),['좋아요!','멋져요','감사해요']);
+ await assert.rejects(f.run(f.outsider,{action:'feedCommentDelete',id:pid,cid:all.items[2].id}),{status:403});
+ const d=await f.run(f.user,{action:'feedCommentDelete',id:pid,cid:all.items[0].id});assert.equal(d.commentCount,2);
+ await assert.rejects(f.run(f.outsider,{action:'feedEdit',id:pid,text:'남의 글'}),{status:403});
+ const e=await f.run(f.user,{action:'feedEdit',id:pid,text:'고친 글'});assert.equal(e.item.text,'고친 글');assert.ok(e.item.editedAt);
+ await assert.rejects(f.run(f.outsider,{action:'feedDelete',id:pid}),{status:403});
+ await f.run(f.admin,{action:'feedDelete',id:pid});l=await f.run(f.user,{action:'feedList'});assert.equal(l.items.length,1);
+ assert.equal([...f.data.keys()].filter(k=>k.includes('/comments/')).length,0);
+ await assert.rejects(f.run(f.user,{action:'feedImages',id:pid}),{status:404});
+});
