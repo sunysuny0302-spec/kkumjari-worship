@@ -3967,7 +3967,9 @@ function kzKeyMatch(name){const s=String(name||'').replace(/\.[a-z0-9]{2,5}$/i,'
 function kzDetectKey(name){const m=kzKeyMatch(name);return m?kzKey(m[1]):''}
 function kzStripKey(t){const m=kzKeyMatch(t);if(!m||!kzKey(m[1]))return String(t||'').trim();return (String(t).slice(0,m.index)+String(t).slice(m.index+m[0].length)).replace(/[\s_\-]+$/,'').replace(/\(\s*\)|\[\s*\]/g,'').replace(/\s{2,}/g,' ').trim()}
 function kzScoreKey(x){const k=kzKey(x&&x.key);if(k||!x)return k;try{const L=typeof library!=='undefined'&&Array.isArray(library)?library:[];const ids=[x.oaid,...((x.adds||[]).map(a=>a.oaid))].filter(Boolean);const l=L.find(y=>y.oaid&&ids[0]===y.oaid&&kzKey(y.key));return l?kzKey(l.key):''}catch(e){return ''}}
-const kzKeyBadge=k=>{k=kzKey(k);return k?`<em class="kz-key" title="${k}키">${k}</em>`:''};
+const kzKeyBadge=k=>{const ks=String(k||'').split('→').map(kzKey).filter(Boolean);const t=ks.join('→');return t?`<em class="kz-key" title="${t}키">${t}</em>`:''};
+/* 한 곡 안에서 키업하면 'G→A' 처럼 */
+function kzSongKeyStr(x,list){try{if(!x||!x.songId||!Array.isArray(list))return kzScoreKey(x);const ks=[];orderedScores(list.filter(y=>y.songId===x.songId)).forEach(p=>{const k=kzKey(p.key);if(k&&ks[ks.length-1]!==k)ks.push(k)});return ks.length?ks.join('→'):kzScoreKey(x)}catch(e){return kzScoreKey(x)}}
 /* 키 고르기 창 → Promise<키 | '' | null(취소)> */
 function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=document.createElement('dialog');d.className='kz-score-dialog kz-key-dialog';
  const chip=k=>`<button type="button" class="kz-kc ${cur===k?'on':''}" data-k="${k}">${k||'없음'}</button>`;
@@ -5198,10 +5200,20 @@ else if(mode==='used')a.sort((x,y)=>y.works.length-x.works.length||lastTs(y)-las
 else a.sort((x,y)=>lastTs(y)-lastTs(x)||nc(x,y));
 return orderedScores(a)}
 const libSortSel=id=>`<label class="sortl"><span class="mu">정렬</span><select id="${id}" class="sortsel">${LSORTS.map(([k,t])=>`<option value="${k}" ${libSort===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
+/* 모음집에서 같은 곡의 다른 키 버전을 가져오면, 이미 송폼에 있는 그 곡 뒤에 이어 붙여 한 곡으로 (키업) */
+function kzJoinKeyVersion(e,n0){try{const sid=String(e&&e.songId||'');if(!sid)return;const base=sid.split('@')[0],added=pages.slice(n0);if(!added.length)return;
+ const host=pages.slice(0,n0).find(p=>p.songId&&String(p.songId).split('@')[0]===base);if(!host)return;
+ const hs=host.songId,max=Math.max(0,...pages.filter(p=>p.songId===hs).map(p=>scoreMeta(p).pageNo));
+ added.forEach((p,i)=>{p.songId=hs;p.pageNo=max+i+1;p.pageMetaDirty=true;p.dirty=true});
+ pages=orderedScores(pages);cur=pages.indexOf(added[0]);sel=null;od=true;drawList();drawStage();stat();sched();
+ const ks=[...new Set(pages.filter(p=>p.songId===hs).map(p=>kzKey(p.key)).filter(Boolean))];toast(`"${host.name||e.name}"에 이어 붙였어요${ks.length>1?' · '+ks.join('→')+' 키업':''}`)}catch(x){console.warn(x)}}
 function libItems(){const m=new Map();
 library.forEach(x=>{if(x.oaid)m.set(x.oaid,{...scoreMeta(x),oaid:x.oaid,name:x.name||'',nw:x.nw,nh:x.nh,at:x.at||0,hidden:!!x.hidden,doc:true,works:[]})});
 archive.filter(a=>a.up).sort((a,b)=>a.id<b.id?1:-1).forEach(a=>(a.scores||[]).forEach(x=>{if(!x.oaid)return;let e=m.get(x.oaid);if(!e){e={...scoreMeta(x),oaid:x.oaid,name:'',nw:x.nw,nh:x.nh,at:0,hidden:false,doc:false,works:[]};m.set(x.oaid,e)}
 e.works.push({...scoreMeta(x),date:a.id,aid:x.aid,seq:x.seq||[],marks:x.marks||[],lay:x.lay||null,adds:x.adds||[],nw:x.nw,nh:x.nh,name:x.name,by:a.by});if(!e.name)e.name=x.name||'';if(!e.key&&x.key)e.key=kzKey(x.key)}));
+/* 한 곡에 키가 여러 개(키업)면 키별로 따로: 곡 번호@키, 장 번호는 키마다 1부터 */
+{const by=new Map();[...m.values()].forEach(e=>{if(!e.songId||e.hidden)return;if(!by.has(e.songId))by.set(e.songId,[]);by.get(e.songId).push(e)});
+ by.forEach((arr,sid)=>{const keys=[...new Set(arr.map(e=>kzKey(e.key)))];if(keys.length<2)return;const base=String(sid).split('@')[0];keys.forEach(k=>arr.filter(e=>kzKey(e.key)===k).sort((a,b)=>scoreMeta(a).pageNo-scoreMeta(b).pageNo).forEach((e,i)=>{e.songId=base+'@'+(k||'0');e.pageNo=i+1}))})}
 /* 같은 제목(띄어쓰기·대소문자 무시)은 하나로 묶음: 모음집에 직접 저장된 것 중 가장 먼저 올린 원본을 대표로 */
 const nkL=t=>String(t||'').replace(/\s+/g,'').toLowerCase(),gm=new Map();
 [...m.values()].filter(e=>!e.hidden).map(e=>({...e,name:e.name||'제목 없음'})).forEach(e=>{const k=e.songId?'page:'+e.oaid:e.name==='제목 없음'?'#'+e.oaid:nkL(e.name)+'|'+(e.key||''),r=gm.get(k);if(!r){gm.set(k,{...e,works:[...e.works],dups:[e.oaid]});return}r.dups.push(e.oaid);r.works=r.works.concat(e.works).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);if((e.doc&&!r.doc)||(e.doc===r.doc&&(e.at||0)>0&&(e.at||0)<(r.at||Infinity))){r.oaid=e.oaid;r.name=e.name;r.nw=e.nw;r.nh=e.nh;r.at=e.at;r.doc=e.doc}});
@@ -5235,8 +5247,8 @@ const impKey=e=>{if(e.key==='Escape')closeImport()};
 function openImport(pre){if(!canEdit)return;closeImport();const o=document.createElement('div');o.id='imp';document.body.append(o);document.addEventListener('keydown',impKey);let items=[],sel=null;
 const cp=v=>JSON.parse(JSON.stringify(v||[]));
 const done=()=>{closeImport();if(view==='edit'){drawList();drawStage();setTimeout(()=>goPage(cur),60)}stat()};
-const addOrig=e=>{const list=e.songId?orderedScores(libItems().filter(x=>x.songId===e.songId)):[e],first=pages.length;list.forEach(x=>{const p=mkPage({...scoreMeta(x),name:x.name,oaid:x.oaid,nw:x.nw,nh:x.nh,dirty:true});p.legacy=false;pages.push(p)});cur=first;sel=null;done();toast(`"${e.name}" 원본 ${list.length}장을 가져왔어요`)};
-const addWork=(e,w)=>{const list=e.songId?orderedScores(libItems().filter(x=>x.songId===e.songId)):[e],first=pages.length;list.forEach(x=>{const work=x.works.find(v=>v.date===w.date);pages.push(mkPage({...scoreMeta(x),name:x.name,aid:work?.aid,oaid:x.oaid,seq:cp(work?.seq),marks:cp(work?.marks),adds:cp(work?.adds),lay:work?.lay?{...work.lay}:null,nw:x.nw,nh:x.nh,dirty:true}))});cur=first;sel=null;done();toast(`"${e.name}" ${list.length}장을 가져왔어요. 해당 날짜 작업이 없는 장은 원본으로 가져와요.`)};
+const addOrig=e=>{const _n0=pages.length;setTimeout(()=>kzJoinKeyVersion(e,_n0),0);const list=e.songId?orderedScores(libItems().filter(x=>x.songId===e.songId)):[e],first=pages.length;list.forEach(x=>{const p=mkPage({...scoreMeta(x),name:x.name,oaid:x.oaid,nw:x.nw,nh:x.nh,dirty:true});p.legacy=false;pages.push(p)});cur=first;sel=null;done();toast(`"${e.name}" 원본 ${list.length}장을 가져왔어요`)};
+const addWork=(e,w)=>{const _n0=pages.length;setTimeout(()=>kzJoinKeyVersion(e,_n0),0);const list=e.songId?orderedScores(libItems().filter(x=>x.songId===e.songId)):[e],first=pages.length;list.forEach(x=>{const work=x.works.find(v=>v.date===w.date);pages.push(mkPage({...scoreMeta(x),name:x.name,aid:work?.aid,oaid:x.oaid,seq:cp(work?.seq),marks:cp(work?.marks),adds:cp(work?.adds),lay:work?.lay?{...work.lay}:null,nw:x.nw,nh:x.nh,dirty:true}))});cur=first;sel=null;done();toast(`"${e.name}" ${list.length}장을 가져왔어요. 해당 날짜 작업이 없는 장은 원본으로 가져와요.`)};
 const step2=e=>{sel=e;const w=e.works[0];
 o.innerHTML=`<div class="imp-b"></div><div class="imp-c"><div class="imp-h"><div style="display:flex;align-items:center;gap:8px;min-width:0"><button type="button" class="ib kz-back" id="impb" title="목록으로" aria-label="목록으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><b class="imp-nm">${esc(e.name)}${kzKeyBadge(e.key)}</b></div><button type="button" class="ib" id="impx">✕</button></div><div class="mu" style="margin:-4px 0 0">어느 것을 가져올까요?</div>
 <div class="imp-opts"><button type="button" class="imp-opt" id="o1"><div class="th"><img src="${BLOB(e.oaid)}" alt=""></div><b>원본${e.songId?" · "+libItems().filter(x=>x.songId===e.songId).length+"장 전체":""}</b><span class="mu">올린 그대로 가져와요. 자르기·위치·마커는 새로 시작해요.</span></button>
@@ -5275,7 +5287,11 @@ const bd=(id,f)=>{$('#'+id).onclick=f};
 bd('add',()=>$('#ff').click());$('#ff').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)editorAddSong(fs)};
 
 bd('un',()=>hist(-1));bd('re',()=>hist(1));bd('zo',()=>setZoom(zoom-.15));bd('zi',()=>setZoom(zoom+.15));bd('zf',()=>{fitMode='h';LS('fitm','h');setZoom(1)});bd('zw',()=>{fitMode='w';LS('fitm','w');setZoom(1)});bd('lw',openImport);bindExport();$$('[data-im]').forEach(b=>b.onclick=()=>{imgMode=b.dataset.im;syncInsp();drawStage()});bd('imfit',()=>layOp('fit'));bd('imw',()=>layOp('w'));bd('imc',()=>layOp('c'));bd('imr',()=>layOp('r'));bd('imdel',()=>{if(selAdd())rmAdd();else rmPageKey()});bd('imadd',pickAdds);bd('imstk',()=>{const p=P();if(!p||!canEdit)return;if(!(p.adds||[]).length)return toast('이 장에 붙인 악보가 없어요. 옆 버튼으로 먼저 붙여 주세요');stackAdds(p);commit();toast('위아래로 정렬했어요')});bd('snp',()=>{snapOn=!snapOn;LS('snap',snapOn?'1':'0');syncInsp();toast(snapOn?'스냅 켜짐 — 마커가 정렬선에 붙어요':'스냅 꺼짐')});bd('nm',openNm);$$('#mkall [data-ma],#mkall [data-mp]').forEach(btn=>btn.onclick=()=>mkAll(btn.dataset.mp?{to:+btn.dataset.mp}:{by:+btn.dataset.ma}));paintMkAll();$$('#szr [data-szd],#szr [data-szp]').forEach(btn=>btn.onclick=()=>{const t=$('#sz');if(!t)return;const v=btn.dataset.szp?+btn.dataset.szp:+t.value+ +btn.dataset.szd;t.value=Math.max(+t.min||12,Math.min(+t.max||70,v));t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}))});{const cn=$('#cnote');if(cn){cn.oninput=()=>{const t=target();if(!t||!canEdit)return;const v=cn.value.trim();if(v)t.n=v;else delete t.n;drawStage()};cn.onchange=()=>{if(target()&&canEdit)commit()};cn.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();cn.blur()}}}}bd('insx',()=>{insNew=false;sel=null;drawStage()});
-if($('#tk'))$('#tk').onchange=async e=>{const p=P();if(!p||!canEdit)return;let k=e.target.value;if(k==='__'){const r=await kzKeyPick('이 곡의 키',p.key);if(r===null){e.target.value=kzKey(p.key);return}k=r}k=kzKey(k);(p.songId?pages.filter(x=>x.songId===p.songId):[p]).forEach(x=>{x.key=k;x.pageMetaDirty=true;x.dirty=true});kzTkSync();drawList();stat();sched();toast(k?`${k}키로 정했어요`:'키를 지웠어요')};
+if($('#tk'))$('#tk').onchange=async e=>{const p=P();if(!p||!canEdit)return;let k=e.target.value;if(k==='__'){const r=await kzKeyPick('이 곡의 키',p.key);if(r===null){e.target.value=kzKey(p.key);return}k=r}k=kzKey(k);const old=kzKey(p.key),song=p.songId?orderedScores(pages.filter(x=>x.songId===p.songId)):[p],at=song.indexOf(p),tgt=[];
+ /* 이 장부터 같은 키였던 뒷장까지만 바꿈 → 앞장은 원래 키 그대로 (키업 버전) */
+ for(let j=Math.max(0,at);j<song.length;j++){if(j>at&&kzKey(song[j].key)!==old)break;tgt.push(song[j])}
+ tgt.forEach(x=>{x.key=k;x.pageMetaDirty=true;x.dirty=true});kzTkSync();drawList();stat();sched();
+ const multi=song.length>1&&tgt.length<song.length;toast(!k?'키를 지웠어요':multi?`${at+1}${tgt.length>1?'~'+(at+tgt.length):''}장을 ${k}키로 정했어요 · 키별로 따로 저장돼요`:`${k}키로 정했어요`)};
 $('#tt').oninput=e=>{const p=P();if(!p||!canEdit)return;p.name=e.target.value;p.titleRenamed=true;p.dirty=true;if(p.songId)pages.filter(x=>x.songId===p.songId).forEach(x=>{x.name=p.name;x.titleRenamed=true;x.dirty=true});drawList();stat();sched()};
 $('#stage').onwheel=e=>{if(e.ctrlKey){e.preventDefault();setZoom(zoom+(e.deltaY<0?.1:-.1))}};
 const ap=(fn,fin)=>{const t=St();fn(t);if(target()){fin?commit():drawStage()}syncInsp()};
@@ -5548,8 +5564,11 @@ const nd={ment,by:ldr,up:Date.now(),scores:orderedScores(ok).map(p=>({...scoreMe
 step='악보 원본 보관';await retainScoreOriginals([...(data.scores||[]),...ok]);
 clearTimeout(saveT);await TO(db.doc('weeks/'+date).set(nd),45000,step);
 data=nd;wm=ment;lastKey=JSON.stringify([nd.scores,nd.ment]);setTimeout(()=>refreshStorage(true),1500);
-try{const groupDups=new Map();for(const e of libItems())for(const id of e.dups||[e.oaid])groupDups.set(id,e.dups||[e.oaid]);for(const p of ok){const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty)continue;
-const patch={...scoreMeta(p),name:(p.titleRenamed?p.name:ex?.name||p.name)||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:ex?.at||Date.now(),by:ldr||''};
+try{const groupDups=new Map();for(const e of libItems())for(const id of e.dups||[e.oaid])groupDups.set(id,e.dups||[e.oaid]);
+ /* 키업으로 한 곡에 키가 여러 개면 모음집에는 키별 버전으로 따로 저장 */
+ const libSid=new Map();{const g=new Map();ok.forEach(p=>{if(!p.songId)return;if(!g.has(p.songId))g.set(p.songId,[]);g.get(p.songId).push(p)});g.forEach((arr,sid)=>{const keys=[...new Set(arr.map(p=>kzKey(p.key)))];if(keys.length<2)return;const base=String(sid).split('@')[0];keys.forEach(k=>arr.filter(p=>kzKey(p.key)===k).sort((a,b)=>scoreMeta(a).pageNo-scoreMeta(b).pageNo).forEach((p,i)=>libSid.set(p,{songId:base+'@'+(k||'0'),pageNo:i+1})))})}
+ for(const p of ok){const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid),ls=libSid.get(p);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty&&!(ls&&(ex.songId!==ls.songId||scoreMeta(ex).pageNo!==ls.pageNo||kzKey(ex.key)!==kzKey(p.key))))continue;
+const patch={...scoreMeta(p),...(ls||{}),name:(p.titleRenamed?p.name:ex?.name||p.name)||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:ex?.at||Date.now(),by:ldr||''};
 await db.doc('library/'+p.oaid).set(patch,{merge:true});if(ex)Object.assign(ex,patch);else library.push({...patch,_id:p.oaid});if(p.titleRenamed&&groupDups){for(const id of groupDups.get(p.oaid)||[]){if(id===p.oaid)continue;await db.doc('library/'+id).set({name:patch.name},{merge:true});const l2=library.find(l=>l._id===id||l.oaid===id);if(l2)l2.name=patch.name}}p.titleRenamed=false;p.pageMetaDirty=false;
 }}catch(e){console.error(e);toast('콘티는 저장했지만 모음집 제목 반영에 실패했어요. 모음집에서 이름을 다시 저장해 주세요.')}
 
@@ -7067,9 +7086,9 @@ function lyLocal(k){try{return JSON.parse(localStorage.getItem('kzLyr:'+k)||'nul
 /* ---------- 콘티 날짜 목록 · 곡 목록 ---------- */
 function lyWeeks(){const m=new Map();(archive||[]).forEach(a=>{if(a&&a.up&&a.id)m.set(a.id,a)});if(data&&data.up)m.set(date,data);return[...m.entries()].sort((a,b)=>a[0]<b[0]?1:-1)}
 function lyWeekObj(d){return d===date?data:((archive||[]).find(a=>a.id===d)||null)}
-function lyRaw(w){const sc=scoreSongs((w&&w.scores)||[]),ment=String((w&&w.ment)||''),cs=ment.trim()?(G2(()=>kzSongs(ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean)))||[]):[],n=Math.max(sc.length,cs.length),out=[];
+function lyRaw(w){const all=(w&&w.scores)||[],sc=scoreSongs(all).map(x=>{const pg=x.songId?orderedScores(all.filter(y=>y.songId===x.songId)):[x];return{...x,_pages:pg,_idx:pg.map(p=>all.indexOf(p))}}),ment=String((w&&w.ment)||''),cs=ment.trim()?(G2(()=>kzSongs(ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean)))||[]):[],n=Math.max(sc.length,cs.length),out=[];
  for(let i=0;i<n;i++){const x=sc[i]||null,c=cs[i]||null;out.push({i,x,raw:(c&&c.t?c.t.replace(/^\d+\s*[.)]\s*/,''):'')||(x&&x.name)||`${i+1}번 곡`})}return out}
-const lySeq=x=>((x&&x.seq)||[]).map(z=>({t:String(z&&z.t||'').trim(),c:(z&&z.c)||'#111',bc:(z&&z.bc)||(z&&z.c)||'#111',b:!(z&&z.b===false)})).filter(z=>z.t);
+const lySeq=x=>((x&&Array.isArray(x._pages)&&x._pages.length>1)?x._pages.flatMap(p=>p.seq||[]):((x&&x.seq)||[])).map(z=>({t:String(z&&z.t||'').trim(),c:(z&&z.c)||'#111',bc:(z&&z.bc)||(z&&z.c)||'#111',b:!(z&&z.b===false)})).filter(z=>z.t);
 function lyPastForms(key,exclude){const out=[];lyWeeks().forEach(([d,w])=>{if(d===exclude)return;lyRaw(w).forEach(r=>{if(lyKey(r.raw)!==key)return;const s=lySeq(r.x);if(s.length&&!out.some(o=>o.sig===s.map(z=>z.t).join('>')))out.push({d,seq:s,sig:s.map(z=>z.t).join('>')})})});return out.slice(0,6)}
 function lySongs(d){const w=lyWeekObj(d);if(!w||!w.up)return{up:false,songs:[]};
  return{up:true,songs:lyRaw(w).map(r=>{const k=lyKey(r.raw),doc=LYD[k]||LYR[k]||lyLocal(k)||{};let seq=lySeq(r.x),src='leader';
@@ -7112,7 +7131,7 @@ function lyricsView(){lySub();if(!lyWeek)lyWeek=date;
  else if(!songs.length)main='<div class="ly-empty"><b>업로드된 콘티에 곡이 없어요</b></div>';
  else{const sg=songs[lySel];
   const rail=`<nav class="ly-rail" aria-label="곡 목록">${songs.map((s,i)=>{const p=lyProg(s),done=p.t&&p.f===p.t;return `<button type="button" class="ly-ri ${i===lySel?'on':''} ${done?'done':''}" data-ly-song="${i}"><span class="n">${done?'✓':i+1}</span><b>${esc(s.title)}</b><small>${s.hasForm?`송폼 ${s.labels.length}구간`:'송폼 없음'} · 가사 ${p.f}/${p.t}</small></button>`}).join('')}</nav>`;
-  const x=sg.x,score=x&&x.oaid?`<div class="ly-score"><button type="button" class="zb" data-ly-zoom aria-label="악보 크게 보기">${scImg(lyWeek,sg.i,x,1100)}</button><div class="cap"><span>${sg.i+1}번 곡 · 리더가 만든 송폼 그대로</span><span>누르면 확대</span></div></div>`:x&&x.aid?`<div class="ly-score"><button type="button" class="zb" data-ly-zoom><img src="${esc(BLOB(x.aid))}" alt=""></button></div>`:`<div class="ly-score none">이 곡은 악보가 없어요</div>`;
+  const x=sg.x,pgs=x&&Array.isArray(x._pages)?x._pages:x?[x]:[],score=x&&x.oaid?`<div class="ly-score ${pgs.length>1?'multi':''}">${pgs.map((p,j)=>`<button type="button" class="zb" data-ly-zoom aria-label="악보 ${j+1}장 크게 보기">${scImg(lyWeek,(x._idx&&x._idx[j]>=0)?x._idx[j]:sg.i,p,1100)}</button>`).join('')}<div class="cap"><span>${sg.i+1}번 곡${pgs.length>1?` · 악보 ${pgs.length}장`:''} · 리더가 만든 송폼 그대로</span><span>누르면 확대</span></div></div>`:x&&x.aid?`<div class="ly-score"><button type="button" class="zb" data-ly-zoom><img src="${esc(BLOB(x.aid))}" alt=""></button></div>`:`<div class="ly-score none">이 곡은 악보가 없어요</div>`;
   const strip=sg.hasForm?`<div class="ly-strip">${sg.seq.map((z,k)=>`${k?'<span class="ly-ar">→</span>':''}<button type="button" class="ly-chip ${String(sg.parts[z.t]||'').trim()?'fill':''} ${lyInst(z.t)?'inst':''}" style="--c:${esc(z.b?z.bc:z.c)}" data-ly-jump="${esc(z.t)}" title="${esc(z.t)} 입력칸으로">${esc(z.t)}</button>`).join('')}</div>${sg.src==='past'?`<div class="ly-st">송폼: ${sg.formDate?lbl(sg.formDate).replace(' · 이번 주',''):'예전'} 콘티에서 불러옴 · <a href="#" data-ly-unform>지우기</a></div>`:''}`:'';
   const past=!sg.hasForm?lyPastForms(sg.key,lyWeek):[];
   const nf=!sg.hasForm?`<div class="ly-nf"><b>이 곡은 이번 콘티에 송폼이 없어요</b>${past.length?`<span>같은 곡의 예전 송폼을 불러올 수 있어요</span><div class="opts">${past.map((p,k)=>`<button type="button" data-ly-form="${k}">${lbl(p.d)} · ${esc(p.seq.map(z=>z.t).join(' → '))}</button>`).join('')}</div>`:'<span>예전 콘티에도 이 곡의 송폼이 없어서, 곡 전체를 한 칸에 입력해요. 빈 줄로 슬라이드를 나눌 수 있어요.</span>'}</div>`:'';
@@ -7147,7 +7166,7 @@ function lyBind(songs){const B=$('#body'),q=s=>B.querySelector(s),sg=songs[lySel
  B.querySelectorAll('[data-ly-song]').forEach(b=>b.onclick=()=>{lySel=+b.dataset.lySong;lyFocus=null;lyricsView();window.scrollTo({top:0,behavior:'smooth'})});
  B.querySelectorAll('[data-ly-step]').forEach(b=>b.onclick=()=>{lySel=Math.max(0,Math.min(songs.length-1,lySel+(+b.dataset.lyStep)));lyFocus=null;lyricsView()});
  if(!sg)return;
- const z=q('[data-ly-zoom]');if(z)z.onclick=()=>{const im=z.querySelector('img');if(im&&(im.currentSrc||im.src))G2(()=>bigView(im.currentSrc||im.src,sg.title+' 악보'))};
+ B.querySelectorAll('[data-ly-zoom]').forEach((z,j,all)=>z.onclick=()=>{const im=z.querySelector('img');if(im&&(im.currentSrc||im.src))G2(()=>bigView(im.currentSrc||im.src,sg.title+' 악보'+(all.length>1?` ${j+1}/${all.length}`:'')))});
  const grow=t=>{t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'};
  B.querySelectorAll('[data-ly-size]').forEach(b=>b.onclick=()=>{lySize=b.dataset.lySize;LS('lySize',lySize);lyricsView()});
  B.querySelectorAll('[data-ly-al]').forEach(b=>b.onclick=()=>{lyAlign=b.dataset.lyAl;LS('lyAlign',lyAlign);lyricsView()});
@@ -8132,7 +8151,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  const tag=id=>{const n=nextSun();return id===n?'<em class="ab-tag now">이번 주</em>':id===shiftDate(n,-7)?'<em class="ab-tag">지난 주</em>':id===date?'<em class="ab-tag">보고 있는 주</em>':''};
  const songs=a=>{try{return scoreSongNames(a.scores||[])}catch(e){return []}};
  const songsFromMent=a=>{const m=String(a.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''));return m};
- const names=a=>{let s=[];try{s=scoreSongs(a.scores||[]).map(x=>(x.name||'제목 없음')+(kzScoreKey(x)?'\u0001'+kzScoreKey(x):''))}catch(e){}return s.length?s:songsFromMent(a)};
+ const names=a=>{let s=[];try{s=scoreSongs(a.scores||[]).map(x=>{const k=kzSongKeyStr(x,a.scores||[]);return (x.name||'제목 없음')+(k?'\u0001'+k:'')})}catch(e){}return s.length?s:songsFromMent(a)};
  const nmK=n=>{const[t,k]=String(n).split('\u0001');return esc(t)+(k?kzKeyBadge(k):'')};
  const who_=a=>a.by?`<span class="ab-who"><i class="ldot ${ldrCls(a.by)}"></i>${esc(a.by)}</span>`:'';
  function row(a){const s=names(a),f=firsts(a).slice(0,3),d=new Date(a.id+'T12:00:00');
@@ -8254,7 +8273,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   const r=await fetch('/api/community',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'연결하지 못했어요');return j}
  function assigned(d){const out=[],add=(n,r)=>{if(!n)return;let x=out.find(o=>o.n===n);if(!x){x={n,r:[]};out.push(x)}if(!x.r.includes(r))x.r.push(r)};
   try{add(ldrOf(d),'인도')}catch(e){}try{String(singersFor(d)||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(n=>add(n,'싱어'))}catch(e){}try{Object.entries(sessFill(d)||{}).forEach(([sl,n])=>add(n,slotLbl(sl)))}catch(e){}return out}
- function songsOf(d){try{if(d===date&&data&&data.up){const s=scoreSongs(data.scores||[]).map(x=>(x.name||'제목 없음')+(kzScoreKey(x)?'\u0001'+kzScoreKey(x):''));if(s.length)return s;return String(data.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''))}}catch(e){}return []}
+ function songsOf(d){try{if(d===date&&data&&data.up){const s=scoreSongs(data.scores||[]).map(x=>{const k=kzSongKeyStr(x,data.scores||[]);return (x.name||'제목 없음')+(k?'\u0001'+k:'')});if(s.length)return s;return String(data.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''))}}catch(e){}return []}
  const josa=(w,a,b)=>{const c=String(w).charCodeAt(String(w).length-1)-0xAC00;return w+(c>=0&&c<11172&&c%28?a:b)};
  function nextDuty(d,n){for(let k=1;k<=8;k++){const x=shiftDate(d,7*k),me_=assigned(x).find(o=>o.n===n);if(me_)return{d:x,r:me_.r}}return null}
  const IC={check:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',x:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',q:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5M12 16h.01"/></svg>'};
