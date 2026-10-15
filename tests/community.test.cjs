@@ -233,4 +233,24 @@ test('event rsvp: answer/get, deadline, staff-only notify, reminder once before 
  let r=await run({system:true},{action:'eventRemind'});assert.equal(r.reminded,1);assert.deepEqual(pushed[0].r.map(a=>a.id),['m1']);
  r=await run({system:true},{action:'eventRemind'});assert.equal(r.reminded,0);
  clock=Date.UTC(2026,9,26,3,0);/* 마감 지남 */await assert.rejects(run(people[2],{action:'evRsvpSet',id:'e1',s:'yes'}),{status:400});});
+test('sub request accept: appears in target list, accept writes override and notifies requester, only target can answer',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'a1',name:'가',rank:'팀원',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'},{id:'a3',name:'다',rank:'팀원',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,9,15,3,0);
+ const snap=p=>({id:p.split('/').at(-1),exists:data.has(p),data:()=>data.get(p)});
+ const ref=p=>({path:p,id:p.split('/').at(-1),get:async()=>snap(p),collection:c=>col(p+'/'+c)});
+ const col=n=>({doc:k=>ref(n+'/'+k),where:(f,op,v)=>({get:async()=>({docs:[...data.keys()].filter(k=>k.startsWith(n+'/')&&k.split('/').length===n.split('/').length+1&&data.get(k)[f]===v).map(k=>({id:k.split('/').at(-1),data:()=>data.get(k)}))})})});
+ const db={collection:col,runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v)=>w.push(()=>data.set(x.path,v))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ await run(people[0],{action:'subRequest',to:'나',date:'2026-10-25',role:'드럼',for:'가',kind:'session'});clock+=6000;
+ await run(people[0],{action:'subRequest',to:'다',date:'2026-10-25',role:'드럼',for:'가',kind:'session'});
+ let l=await run(people[1],{action:'subReqList'});assert.equal(l.items.length,1);assert.equal(l.items[0].fromName,'가');
+ await assert.rejects(run(people[2],{action:'subRespond',id:l.items[0].id,accept:true}),{status:403});
+ const r=await run(people[1],{action:'subRespond',id:l.items[0].id,accept:true});assert.equal(r.status,'accepted');
+ const ov=[...data.entries()].find(([k])=>k.startsWith('overrides/'));assert.ok(ov);assert.deepEqual([ov[1].date,ov[1].from,ov[1].to,ov[1].k],['2026-10-25','가','나','session']);
+ assert.equal(pushed.at(-1).r[0].id,'a1');assert.match(pushed.at(-1).n.title,/수락/);
+ await assert.rejects(run(people[1],{action:'subRespond',id:l.items[0].id,accept:true}),{status:409});
+ assert.equal((await run(people[1],{action:'subReqList'})).items.length,0);
+ const l3=await run(people[2],{action:'subReqList'});await run(people[2],{action:'subRespond',id:l3.items[0].id,accept:false});
+ assert.equal([...data.keys()].filter(k=>k.startsWith('overrides/')).length,1);});
 

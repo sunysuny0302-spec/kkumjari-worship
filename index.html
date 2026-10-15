@@ -8505,7 +8505,7 @@ window.kzPrac=(function(){
   const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),200)};
   w.querySelector('.pr-later').onclick=()=>{later(d);close()};
   w.querySelector('.pr-conti').onclick=()=>{later(d);close();try{kzWeekView()}catch(e){try{go('archive')}catch(_){}}};
-  const send=async(s,note)=>{const r=R();const bs=w.querySelectorAll('button');bs.forEach(b=>b.disabled=true);try{const j=await r.api({action:'rsvpSet',date:d,s,note});if(r.RS)r.RS[d]=j.answers||r.RS[d];close();toast(s==='yes'?'토요 연습 참석으로 알렸어요 ✓':'불참 사유를 전했어요');paintTile()}catch(e){bs.forEach(b=>b.disabled=false);toast(e.message||'보내지 못했어요')}};
+  const send=async(s,note)=>{const r=R();const bs=w.querySelectorAll('button');bs.forEach(b=>b.disabled=true);try{const j=await r.api({action:'rsvpSet',date:d,s,note});if(r.RS)r.RS[d]=j.answers||r.RS[d];close();toast(s==='yes'?'토요 연습 참석으로 알렸어요 ✓':'불참 사유를 전했어요');paintTile();try{window.kzRsvpHub&&kzRsvpHub.load(true)}catch(e){}}catch(e){bs.forEach(b=>b.disabled=false);toast(e.message||'보내지 못했어요')}};
   w.querySelector('[data-pr=yes]').onclick=()=>send('yes','');
   w.querySelector('[data-pr=no]').onclick=()=>{w.querySelector('[data-pr=no]').classList.add('on');w.querySelector('[data-pr=yes]').classList.remove('on');const y=w.querySelector('.pr-why');y.hidden=false;setTimeout(()=>w.querySelector('#prNote').focus(),50)};
   w.querySelector('.pr-send').onclick=()=>{const t=w.querySelector('#prNote').value.trim();if(t.length<2){w.querySelector('.pr-err').textContent='이유를 짧게라도 적어 주세요.';return}send('no',t)};}
@@ -9048,10 +9048,10 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const rec=cands.filter(n=>n&&n!==S.n).map(n=>({n,c:serves(n,kind)})).sort((a,b)=>a.c-b.c||a.n.localeCompare(b.n,'ko')).slice(0,3);
   const head=`<div class="sub-rec-h"><b>대타 추천</b><small>${S.ds.map(d=>wkLbl(d)).join(', ')} 에 비어 있고 최근 3달 동안 덜 선 순서예요</small></div>`;
   if(!rec.length)return `<div class="sub-rec">${head}<span class="mu" style="font-size:13px">그 주에 비어 있는 ${kind==='s'?'싱어가':'같은 악기 세션이'} 없어요</span></div>`;
-  return `<div class="sub-rec">${head}<div class="sub-rec-l">${rec.map(x=>`<div class="sub-rec-i"><b>${E(x.n)}</b><small>최근 ${x.c}번 섬김</small><button type="button" data-sr-pick="${E(x.n)}">대신 서기로</button><button type="button" class="pri" data-sr-ask="${E(x.n)}" data-sr-role="${E(role||'')}">요청 보내기</button></div>`).join('')}</div></div>`}
+  return `<div class="sub-rec">${head}<div class="sub-rec-l">${rec.map(x=>`<div class="sub-rec-i"><b>${E(x.n)}</b><small>최근 ${x.c}번 섬김</small><button type="button" data-sr-pick="${E(x.n)}">대신 서기로</button><button type="button" class="pri" data-sr-ask="${E(x.n)}" data-sr-role="${E(role||'')}" data-sr-kind="${kind==='e'?'session':'singer'}">요청 보내기</button></div>`).join('')}</div></div>`}
  function bind(S,rerender){document.querySelectorAll('[data-sr-pick]').forEach(b=>b.onclick=()=>{S.mode='rep';S.sub=b.dataset.srPick;rerender()});
   document.querySelectorAll('[data-sr-ask]').forEach(b=>b.onclick=async()=>{const to=b.dataset.srAsk;const R=window.kzRsvp;if(!R||!R.api)return toast('지금은 보낼 수 없어요');b.disabled=true;b.textContent='보내는 중…';
-   try{for(const d of S.ds)await R.api({action:'subRequest',to,date:d,role:b.dataset.srRole||'',for:S.n});b.textContent='보냈어요 ✓';toast(`${to}님에게 대타 요청을 보냈어요 · 수락하면 '대신 서기로'를 눌러 등록하세요`)}catch(e){b.disabled=false;b.textContent='요청 보내기';toast('보내지 못했어요: '+(e.message||e))}})}
+   try{for(const d of S.ds)await R.api({action:'subRequest',to,date:d,role:b.dataset.srRole||'',for:S.n,kind:b.dataset.srKind||'singer'});b.textContent='보냈어요 ✓';toast(`${to}님에게 대타 요청을 보냈어요 · 수락하면 일정표에 바로 반영돼요`)}catch(e){b.disabled=false;b.textContent='요청 보내기';toast('보내지 못했어요: '+(e.message||e))}})}
  if(typeof swapView==='function'){const o=swapView;swapView=function(){const r=o.apply(this,arguments);try{const S=swS,names=singRoster().map(x=>x.n),cand=names.filter(x=>x!==S.n&&(S.ds||[]).every(d=>!baseNames(d).includes(x)));const at=document.querySelector('#body .wz-sum');if(at){at.insertAdjacentHTML('beforebegin',html('s',S,cand,'싱어'));bind(S,swapView)}}catch(e){console.warn(e)}return r}}
  if(typeof absView==='function'){const o=absView;absView=function(){const r=o.apply(this,arguments);try{const S=swE,ms=sessRoster(),me=ms.find(m=>m.n===S.n),slot=me&&me.tag||'',cand=ms.filter(m=>m.n!==S.n&&(!slot||m.tag===slot)).map(m=>m.n).filter(n=>(S.ds||[]).every(d=>!Object.values(sessFill(d)).includes(n)));const at=document.querySelector('#body .cv6-summary');if(at){at.insertAdjacentHTML('beforebegin',html('e',S,cand,slot?String(slot).split('/').map(x=>(x==='메인'||x==='세컨')?'건반':x)[0]:'세션'));bind(S,absView)}}catch(e){console.warn(e)}return r}}
 })();</script>
@@ -9126,6 +9126,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
 .kzh-names span{background:#f3ece2;border-radius:7px;padding:2px 7px}.kzh-names span small{color:var(--mu);margin-left:4px}
 .kzh-why[hidden],.kzh-names[hidden]{display:none!important}
 .kzh-empty{text-align:center;color:var(--mu);font-size:13.5px;padding:40px 10px;line-height:1.6}
+.kzh-done{margin-top:4px}.kzh-done>summary{cursor:pointer;color:var(--mu);font-size:13px;font-weight:700;padding:6px 2px;list-style:none}.kzh-done>summary::before{content:'▸ ';}.kzh-done[open]>summary::before{content:'▾ ';}.kzh-dl{display:grid;gap:12px;margin-top:6px;opacity:.92}
 .kzh-closed{font-size:12px;color:#b54a3a;font-weight:700;margin-top:6px}
 .ev-rsvp{display:grid;gap:3px}.ev-rsvp-r{display:flex;align-items:center;gap:8px}.ev-rsvp-r input{width:18px;height:18px}.ev-rsvp small{color:var(--mu);font-size:12px}
 .ev-rsvp-tag{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:800;color:#9a5525;background:#f6e7d6;border-radius:5px;padding:1px 5px;vertical-align:middle}
@@ -9136,16 +9137,18 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const R=()=>window.kzRsvp||{};const me=()=>{try{return authAccount()}catch(e){return null}};const myName=()=>(me()||{}).name||'';
  const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 (${'일월화수목금토'[x.getDay()]})`};
  const today=()=>todayStr();
- let EV={},PR={},busy=false,openEl=null,lastLoad=0;
+ let EV={},PR={},SR=[],busy=false,openEl=null,lastLoad=0;
+ const isStaff=()=>{const a=me();return !!a&&(a.id==='management'||['단장','인도자','선임싱어','선임세션'].includes(a.rank))};
  function pracItem(){try{const d=nextSun();if(typeof isNoSvc==='function'&&isNoSvc(d))return null;const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const mine=list.find(o=>o.n===myName());return{kind:'prac',key:'prac',d,sat:shiftDate(d,-1),list,mine}}catch(e){return null}}
  function evItems(){try{return (typeof events!=='undefined'?events:[]).filter(e=>e&&e.rsvp&&e.date>=today()).sort((a,b)=>a.date<b.date?-1:1).slice(0,20)}catch(e){return []}}
  const until=e=>/^\d{4}-\d{2}-\d{2}$/.test(e.rsvpUntil||'')?e.rsvpUntil:shiftDate(e.date,-1);
  const roster=()=>{try{return (members||[]).map(m=>m.name).filter(Boolean)}catch(e){return []}};
- function pending(){if(!me()||me().id==='management')return 0;let n=0;const p=pracItem(),nm=myName();if(p&&p.mine&&!(PR[p.d]||{})[nm])n++;evItems().forEach(e=>{if(today()<=until(e)&&!(EV[e._id]||{})[nm])n++});return n}
+ function pending(){if(!me()||me().id==='management')return 0;let n=0;const p=pracItem(),nm=myName();if(p&&p.mine&&!(PR[p.d]||{})[nm])n++;evItems().forEach(e=>{if(today()<=until(e)&&!(EV[e._id]||{})[nm])n++});return n+SR.length}
  async function load(force){if(!R().api||!me())return;if(!force&&Date.now()-lastLoad<45000)return;lastLoad=Date.now();
   const p=pracItem(),ids=evItems().map(e=>e._id);
   try{if(p){const j=await R().api({action:'rsvpGet',date:p.d});PR[p.d]=j.answers||{};if(R().RS)R().RS[p.d]=PR[p.d]}}catch(e){}
   try{if(ids.length){const j=await R().api({action:'evRsvpGet',ids});EV={...EV,...(j.items||{})}}}catch(e){}
+  try{if(me().id!=='management'){const j=await R().api({action:'subReqList'});SR=Array.isArray(j.items)?j.items:[]}}catch(e){}
   badge();if(openEl)paint()}
  function badge(){const b=document.getElementById('kzRsvpBtn');if(!b)return;const n=pending(),c=b.querySelector('.kc-badge');c.hidden=!n;c.textContent=n;b.setAttribute('aria-label','참석 확인'+(n?`, 응답할 것 ${n}개`:''))}
  function topBtn(){const mail=document.getElementById('kcMail');if(!mail)return;const ex=document.getElementById('kzRsvpBtn');if(ex){if(ex.previousElementSibling!==mail)mail.after(ex);const o=getComputedStyle(mail).order;if(ex.style.order!==o)ex.style.order=o;return}const b=document.createElement('button');b.type='button';b.id='kzRsvpBtn';b.className='kc-mail';b.title='참석 확인';
@@ -9166,9 +9169,22 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
    <div class="kzh-s"><span>참석 <b>${nl.g.yes.length}</b></span><span>미정 <b>${nl.g.maybe.length}</b></span><span>불참 <b>${nl.g.no.length}</b></span><span>미응답 <b>${nl.g.none.length}</b></span></div><button type="button" class="kzh-more">명단 보기</button><div class="kzh-names" hidden>${nl.html}</div></section>`}
  function paint(){if(!openEl)return;const b=openEl.querySelector('.kzh-b'),p=pracItem(),ev=evItems(),items=[];if(p&&(p.list.length||p.mine))items.push(p);ev.forEach(e=>items.push(e));
   const opened=[...b.querySelectorAll('.kzh-names:not([hidden])')].map(x=>x.closest('.kzh-c').dataset.id||'prac');
-  b.innerHTML=items.length?items.map(card).join(''):'<div class="kzh-empty">지금 응답할 참석 확인이 없어요<br><small>토요 연습과 참석 여부를 받는 일정이 여기에 모여요</small></div>';
+  const nm=myName(),isMgr=me()&&me().id==='management',todo=[],done=[];
+  items.forEach(it=>{let need=false;if(!isMgr){if(it.kind==='prac')need=!!it.mine&&!(PR[it.d]||{})[nm];else need=today()<=until(it)&&!(EV[it._id]||{})[nm]}(need?todo:done).push(it)});
+  const srH=SR.map(r=>`<section class="kzh-c todo" data-k="sr" data-rid="${E(r.id)}"><span class="kzh-k">대타 요청</span><div class="kzh-t">${E(r.fromName)}님이 대신 서 줄 수 있는지 물어봐요</div><div class="kzh-m">${md(r.date)} 주일${r.role?' · '+E(r.role):''}${r.forName&&r.forName!==r.fromName?' · '+E(r.forName)+'님 대신':''}</div><div class="kzh-bs"><button type="button" class="yes" data-sr="1">수락할게요</button><button type="button" class="no" data-sr="0">어려워요</button></div></section>`).join('');
+  b.innerHTML=(srH+todo.map(card).join(''))||(!done.length?'':'<div class="kzh-empty" style="padding:18px 10px">지금 응답할 것이 없어요 ✓</div>');
+  if(done.length)b.insertAdjacentHTML('beforeend',`<details class="kzh-done" ${b.dataset.doneOpen?'open':''}><summary>응답한 항목 · 지난 항목 ${done.length}개</summary><div class="kzh-dl">${done.map(card).join('')}</div></details>`);
+  if(!SR.length&&!items.length)b.innerHTML='<div class="kzh-empty">지금 응답할 참석 확인이 없어요<br><small>토요 연습, 참석 여부를 받는 일정, 대타 요청이 여기에 모여요</small></div>';
+  const dd=b.querySelector('.kzh-done');if(dd)dd.ontoggle=()=>{b.dataset.doneOpen=dd.open?'1':''};
   b.querySelectorAll('.kzh-c').forEach(c=>{if(opened.includes(c.dataset.id||'prac')){c.querySelector('.kzh-names').hidden=false;c.querySelector('.kzh-more').textContent='명단 닫기'}});bind(b);badge()}
- function bind(b){b.querySelectorAll('.kzh-more').forEach(x=>x.onclick=()=>{const n=x.nextElementSibling;n.hidden=!n.hidden;x.textContent=n.hidden?'명단 보기':'명단 닫기'});
+ function copyText(c){const isP=c.dataset.k==='prac';let title,list,ans;if(isP){const p=pracItem();title=`${md(p.sat)} 토요 연습`;list=p.list.map(o=>o.n);ans=PR[p.d]||{}}else{const e=evItems().find(x=>x._id===c.dataset.id);if(!e)return '';title=`${e.title} (${md(e.date)})`;list=roster().filter(n=>n!=='관리계정');ans=EV[e._id]||{}}
+  const g=names(list,ans).g,L=(k,l)=>g[k].length?`${l} ${g[k].length}명: ${g[k].map(x=>x.n+(x.note?`(${x.note})`:'')).join(', ')}`:'';
+  return [`[꿈자리 찬양팀] ${title} 참석 확인`,L('yes','참석'),L('maybe','미정'),L('no','불참'),L('none','미응답')].filter(Boolean).join('\n')}
+ function bind(b){b.querySelectorAll('[data-k=sr] [data-sr]').forEach(x=>x.onclick=async()=>{const c=x.closest('[data-k=sr]'),acc=x.dataset.sr==='1';if(busy)return;busy=true;c.querySelectorAll('button').forEach(y=>y.disabled=true);
+   try{await R().api({action:'subRespond',id:c.dataset.rid,accept:acc});SR=SR.filter(r=>r.id!==c.dataset.rid);toast(acc?'수락했어요 · 일정표에 바로 반영됐어요':'거절했다고 알렸어요')}catch(e){toast(e.message||'보내지 못했어요')}finally{busy=false;paint()}});
+  if(isStaff())b.querySelectorAll('.kzh-c[data-k=prac],.kzh-c[data-k=ev]').forEach(c=>{const mb=c.querySelector('.kzh-more');if(!mb||c.querySelector('[data-copy]'))return;mb.insertAdjacentHTML('afterend','<button type="button" class="kzh-more" data-copy style="margin-left:14px">명단 복사</button>');
+   c.querySelector('[data-copy]').onclick=async()=>{const t=copyText(c);try{await navigator.clipboard.writeText(t);toast('명단을 복사했어요 · 단톡방에 붙여 넣으세요')}catch(e){prompt('아래 내용을 복사하세요',t)}}});
+  b.querySelectorAll('.kzh-more:not([data-copy])').forEach(x=>x.onclick=()=>{const n=x.closest('.kzh-c').querySelector('.kzh-names');n.hidden=!n.hidden;x.textContent=n.hidden?'명단 보기':'명단 닫기'});
   b.querySelectorAll('.kzh-c').forEach(c=>{const isP=c.dataset.k==='prac',id=c.dataset.id,why=c.querySelector('.kzh-why');
    const send=async(s,note)=>{if(busy)return;busy=true;c.querySelectorAll('button').forEach(x=>x.disabled=true);
     try{if(isP){const p=pracItem();const j=await R().api({action:'rsvpSet',date:p.d,s,note});PR[p.d]=j.answers||{};if(R().RS)R().RS[p.d]=PR[p.d]}else{const j=await R().api({action:'evRsvpSet',id,s,note});EV[id]=j.answers||{}}
