@@ -7518,12 +7518,14 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  const sec=(t,rows,cls='')=>{const h=rows.filter(Boolean).join('');return h?`<section class="km-tsec ${cls}"><div class="km-th"><p>${t}</p></div><div class="km-tiles">${h}</div></section>`:''};
  const att=staff?'출결 관리':'출결 순위';
  let title='내 자리',mine=[];
- if(isAdm){title='관리';mine=[T('kzhub','shield','계정 관리'),T('members','users','멤버'),T('storage','cloud','저장 공간'),T('trash','trash','휴지통')]}
+ if(isAdm){title='관리';mine=[T('kzhub','shield','계정 관리'),T('members','users','멤버 · 직책'),T('attend','attend','출결 관리'),T('minutes','note','회의록'),T('storage','cloud','저장 공간'),T('trash','trash','휴지통')]}
  else if(isChief){title='단장';mine=[T('attend','attend','출결 관리'),T('members','users','멤버 · 직책'),T('minutes','note','회의록'),T('prac','metro','참석 확인')]}
  else if(isLead){title='인도자';mine=[T('leader','leader','콘티 · 송폼'),T('lsw','roster','인도자 일정'),T('archive','archive','콘티 보관함'),T('library','music','악보')]}
  else if(isSS){title='선임싱어';mine=[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙'),T('attend','attend',att)]}
  else if(isSE){title='선임세션';mine=[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙'),T('attend','attend',att)]}
  else{title='내 자리';mine=[T('mobile_my','myturn','내 순서'),sing?T('swap','swap','싱어 불참·대타'):'',sess?T('abs','swap','세션 불참·대타'):'',T('prac','metro','참석 확인')]}
+ const admLead=isAdm?[T('leader','leader','콘티 · 송폼'),T('lsw','roster','인도자 일정'),T('archive','archive','콘티 보관함'),T('library','music','악보')]:[];
+ const admSing=isAdm?[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙')]:[],admSess=isAdm?[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙')]:[];
  const prep=[T('archive','archive','콘티 보관함'),T('library','music','악보'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')];
  const team=[T('prac','metro','참석 확인'),T('attend','attend',att),T('members','users','멤버'),T('minutes','note','회의록')];
  const sched=[sing||staff?T('sched_s','roster','싱어 일정'):'',sess||staff?T('sched_e','roster','세션 일정'):'',T('lsw','roster','인도자 일정'),(isChief||isAdm)?T('rule_s','rule','싱어 배정 규칙'):'',(isChief||isAdm)?T('rule_e','rule','세션 배정 규칙'):'',!sing&&!staff?T('sched_s','roster','싱어 일정'):'',!sess&&!staff?T('sched_e','roster','세션 일정'):''];
@@ -7531,6 +7533,9 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  const me=[!staff||isAdm?'':T('mobile_my','myturn','내 순서'),T('account','idcard','내 계정'),T('tour','help','사용법'),T('all','grid','전체 메뉴')];
  return `<section class="km-page km-more2">
  ${sec(title,mine,'km-mine')}
+ ${sec('인도자',admLead)}
+ ${sec('싱어',admSing)}
+ ${sec('세션',admSess)}
  ${sec('예배 준비',prep)}
  ${sec('팀',team)}
  ${sec('일정 보기',sched)}
