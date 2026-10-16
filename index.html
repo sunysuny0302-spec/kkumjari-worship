@@ -10504,12 +10504,14 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 </style>
 <style id="kz-thx-card2">
 /* 감사 카드: 수채화 편지지 디자인 (왼쪽 편지봉투 · 오른쪽 꽃 사이 가운데에 글) */
-#body .kf-card .kf-media.kf-thx{background:#fbf1e2 url(assets/thanks-card.webp) center/cover no-repeat!important;aspect-ratio:1600/766;min-height:0!important;padding:6% 14% 7% 25%!important;justify-content:center;gap:6px!important;color:#5a3340;box-sizing:border-box}
+#body .kf-card .kf-media.kf-thx{background:#fbf1e2 url(assets/thanks-card.webp) center/cover no-repeat!important;aspect-ratio:1600/766;min-height:0!important;padding:6% 20% 7% 20%!important;justify-content:center;align-items:center;text-align:center;gap:6px!important;color:#5a3340;box-sizing:border-box}
 #body .kf-card .kf-media.kf-thx .kf-thx-ic{display:none}
 #body .kf-card .kf-media.kf-thx .kf-thx-to{font-size:13px;color:#8a4a5e}
 #body .kf-card .kf-media.kf-thx .kf-thx-to b{font-size:15.5px;color:#5a3340}
 #body .kf-card .kf-media.kf-thx p{font-size:14.5px;line-height:1.6;color:#4a2a35;max-height:none}
-#body .kf-card .kf-media.kf-thx .kf-thx-from{font-size:12.5px;color:#8a4a5e;opacity:1}
+#body .kf-card .kf-media.kf-thx .kf-thx-from{font-size:12.5px;color:#8a4a5e;opacity:1;align-self:center!important;text-align:center}
+#body .kf-card .kf-media.kf-thx p{text-align:center;word-break:keep-all;overflow-wrap:anywhere}
+#body .kf-bdc .kf-bdc-t,.kf-roll-top b{word-break:keep-all}
 #body .kf-card .kf-media.kf-thx .kf-thx-pv{left:auto!important;right:12px!important;top:10px!important;font-size:11px;background:rgba(255,255,255,.78)}
 @media(min-width:700px){#body .kf-card .kf-media.kf-thx p{font-size:15.5px}#body .kf-card .kf-media.kf-thx .kf-thx-to b{font-size:17px}}
 </style>
@@ -10564,12 +10566,13 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  /* 감사 카드 */
  async function saveThanks(card){await fonts();const bg=await img('assets/thanks-card.webp');const W=1600,H0=766;
   const to=(card.querySelector('.kf-thx-to b')||{}).textContent||'',from=((card.querySelector('.kf-thx-from')||{}).textContent||'').replace(/^From\.\s*/,''),text=(card.querySelector('p')||{}).innerText||'';
-  const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font='600 44px '+FONT_H;const lines=wrap(ctx,text,W*0.58);const H=Math.max(H0,170+lines.length*62+150);c.width=W;c.height=H;
+  const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font='600 44px '+FONT_H;const lines=wrap(ctx,text,W*0.56);const H=Math.max(H0,170+lines.length*62+150);c.width=W;c.height=H;
   ctx.fillStyle='#fbf1e2';ctx.fillRect(0,0,W,H);const sc=Math.max(W/bg.width,H/bg.height);ctx.drawImage(bg,(W-bg.width*sc)/2,(H-bg.height*sc)/2,bg.width*sc,bg.height*sc);
-  const x=W*0.25;let y=(H-(lines.length*62+150))/2+40;ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  ctx.fillStyle='#8a4a5e';ctx.font='500 36px '+FONT_S;ctx.fillText('To. ',x,y);const tw=ctx.measureText('To. ').width;ctx.fillStyle='#5a3340';ctx.font='800 46px '+FONT_S;ctx.fillText(to,x+tw,y);
-  y+=78;ctx.fillStyle='#4a2a35';ctx.font='600 44px '+FONT_H;lines.forEach(l=>{ctx.fillText(l,x,y);y+=62});
-  y+=26;ctx.textAlign='right';ctx.fillStyle='#8a4a5e';ctx.font='500 34px '+FONT_S;ctx.fillText('From. '+from,W*0.84,y);
+  const cx=W/2;let y=(H-(lines.length*62+150))/2+40;ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  ctx.font='500 36px '+FONT_S;const tw1=ctx.measureText('To. ').width;ctx.font='800 46px '+FONT_S;const tw2=ctx.measureText(to).width;const tx=cx-(tw1+tw2)/2;
+  ctx.fillStyle='#8a4a5e';ctx.font='500 36px '+FONT_S;ctx.fillText('To. ',tx,y);ctx.fillStyle='#5a3340';ctx.font='800 46px '+FONT_S;ctx.fillText(to,tx+tw1,y);
+  y+=78;ctx.textAlign='center';ctx.fillStyle='#4a2a35';ctx.font='600 44px '+FONT_H;lines.forEach(l=>{ctx.fillText(l,cx,y);y+=62});
+  y+=26;ctx.fillStyle='#8a4a5e';ctx.font='500 34px '+FONT_S;ctx.fillText('From. '+from,cx,y);
   await save(c,'감사카드_'+(to||'꿈자리'))}
  /* 롤링페이퍼 */
  async function saveRoll(root){await fonts();const bg=await img('assets/bday-banner.webp');const W=1200,BH=675,pad=48;
