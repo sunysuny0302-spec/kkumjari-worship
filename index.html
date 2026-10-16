@@ -10472,6 +10472,36 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 #kzLoginLock label{min-width:0;max-width:100%}
 </style>
 <style id="kz-tb-badge-fix">.kz-tb-badge{white-space:nowrap!important;width:auto!important;max-width:none!important;display:inline-block;line-height:14px!important;height:18px!important}.kz-tb-badge[hidden]{display:none!important}#kcChatOpen #kcChatCount,.kc-badge{white-space:nowrap}</style>
+<script id="kz-pending-badge">
+/* 가입 승인 대기: 관리계정 · 단장에게 빨간 숫자로 알려 줌 (채팅 안 읽은 수처럼)
+   - 실시간: 승인 대기 계정만 구독(Firestore), 따로 서버를 부르지 않음
+   - 표시: 오른쪽 위 내 계정, 폰 아래 '더보기' 탭, 더보기의 '가입 승인' · '계정 관리' 칸, 내 계정 창의 가입 승인 제목 */
+(function(){let n=0,unsub=null,who='';
+ const eligible=()=>{try{const a=authAccount();if(!a||document.getElementById('kzLoginLock'))return '';return (a.rank==='관리계정'||a.id==='management'||a.rank==='단장')?a.id:''}catch(e){return ''}};
+ const mk=(host,cls)=>{if(!host)return null;let b=host.querySelector(':scope > .'+cls);if(!b){b=document.createElement('span');b.className='kz-pend-b '+cls;b.setAttribute('aria-hidden','true');host.append(b)}return b};
+ function paint(){const t=n>99?'99+':String(n);
+  const set=(b)=>{if(!b)return;if(b.hidden!==!n)b.hidden=!n;if(b.textContent!==t)b.textContent=t};
+  const acct=document.getElementById('acct');if(acct){acct.querySelectorAll(':scope > .kz-pend-acct').forEach(x=>x.remove());if(!acct.classList.contains('kz-pend-host'))acct.classList.add('kz-pend-host');const dv=n?t:'';if((acct.dataset.pend||'')!==dv){if(dv)acct.dataset.pend=dv;else delete acct.dataset.pend}const tt=n?`가입 승인 대기 ${n}명`:'내 계정';if(acct.getAttribute('title')!==tt)acct.setAttribute('title',tt)}
+  document.querySelectorAll('#tabbar [data-mobile-view="mobile_more"] .tb-i').forEach(h=>{h.style.position='relative';set(mk(h,'kz-tb-badge'))});
+  document.querySelectorAll('[data-mobile-action="approve"] i,[data-mobile-action="kzhub"] i').forEach(h=>{h.style.position='relative';set(mk(h,'kz-pend-tile'))});
+  document.querySelectorAll('#kzAdminPanel .kz-admin-section > b').forEach(h=>{if(!/가입 승인/.test(h.textContent))return;let c=h.querySelector('.kz-pend-chip');if(!c){c=document.createElement('span');c.className='kz-pend-chip';h.append(c)}if(c.hidden!==!n)c.hidden=!n;const ct=`대기 ${t}명`;if(c.textContent!==ct)c.textContent=ct});}
+ function sync(){const id=eligible();if(id===who){paint();return}who=id;if(unsub){try{unsub()}catch(e){}unsub=null}n=0;
+  if(id){try{const fs=(window.firebase&&firebase.firestore)?firebase.firestore():(typeof db!=='undefined'?db:null);if(fs)unsub=fs.collection('accounts').where('status','==','pending').onSnapshot(s=>{n=s.docs.filter(d=>d.id!=='management').length;paint()},e=>console.warn('[꿈자리] 승인 대기 구독 실패',e&&e.code))}catch(e){}}
+  paint()}
+ setInterval(sync,3000);setTimeout(sync,1200);
+ new MutationObserver(()=>{if(who)paint()}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<style id="kz-pending-badge-css">
+.kz-pend-host{position:relative}
+.kz-pend-b{position:absolute;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#e5483b;color:#fff;font-size:10.5px;font-weight:800;line-height:14px;text-align:center;border:2px solid var(--page,#fbf6ef);white-space:nowrap;font-style:normal;pointer-events:none;z-index:2}
+.kz-pend-b[hidden]{display:none!important}
+#acct.kz-pend-host{overflow:visible!important;position:relative!important}
+#acct[data-pend]::after{content:attr(data-pend);position:absolute;top:-5px;left:24px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#e5483b;color:#fff;font-size:10.5px;font-weight:800;line-height:14px;text-align:center;border:2px solid var(--page,#fbf6ef);white-space:nowrap;pointer-events:none;z-index:2}
+.kz-pend-tile{top:-6px;right:-8px}
+.kz-pend-chip{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#e5483b;color:#fff;font-size:11.5px;font-weight:800;vertical-align:middle}
+.kz-pend-chip[hidden]{display:none}
+</style>
 </html>
 
 <script id="kz-score-pages-script">
