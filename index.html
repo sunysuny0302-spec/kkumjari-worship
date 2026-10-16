@@ -8713,6 +8713,11 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  go=function(v){const prev=typeof view!=='undefined'?view:null;const out=base.apply(this,arguments);try{if(!popping&&typeof view!=='undefined'&&view!==prev&&!document.getElementById('kzLoginLock'))history.pushState(st(),'')}catch(e){}return out};
  /* 맨 처음 기록은 '홈'으로 깔아 둠 → 뒤로 가도 앱 밖(새로고침·로그인 화면)으로 나가지 않게 */
  try{history.replaceState({kz:1,guard:1,v:'home',i:0},'');history.pushState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:1},'');if(typeof view!=='undefined'&&view!=='home')history.pushState({kz:1,...cur(),i:2},'')}catch(e){}
+ /* 크롬·삼성 인터넷은 '사용자가 누르지 않고' 만든 기록을 뒤로 가기 때 건너뜀 → 처음 깔아 둔 보호 기록이 무시되어 앱 밖(로그인 화면)으로 나가던 문제.
+    첫 터치/클릭 때(로그인 직후 포함) 보호 기록을 한 번 더 '사용자 동작'으로 쌓아 둠 */
+ let armedFor='';const arm=()=>{try{if(document.getElementById('kzLoginLock'))return;const a=(typeof authAccount==='function'&&authAccount()||{}).id||'x';if(armedFor===a)return;armedFor=a;
+   history.replaceState({kz:1,guard:1,v:'home',i:0},'');history.pushState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:1},'');if(typeof view!=='undefined'&&view!=='home')history.pushState({kz:1,...cur(),i:2},'')}catch(e){}};
+ addEventListener('click',arm,true);addEventListener('keydown',arm,true);addEventListener('touchend',arm,{capture:true,passive:true});
  /* 열려 있는 창 하나 닫기 → 닫았으면 true */
  function closeTop(){
   for(const s of ['.kc-rpop','.kf-ov']){const el=[...document.querySelectorAll(s)].pop();if(el&&el.isConnected){el.remove();return true}}
@@ -9236,6 +9241,10 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 (${'일월화수목금토'[x.getDay()]})`};
  const today=()=>todayStr();
  let EV={},PR={},SR=[],busy=false,openEl=null,lastLoad=0;
+ /* 새 응답 표시: 마지막으로 참석 확인 창을 닫은 뒤에 다른 사람이 답한 것 */
+ const SK=()=>'kzRsvpSeenV1:'+((me()||{}).id||'');const seenAt=()=>{try{const v=localStorage.getItem(SK());if(v==null){if(me()){localStorage.setItem(SK(),String(Date.now()))}return Date.now()}return +v||0}catch(e){return Date.now()}};const markSeen=()=>{try{localStorage.setItem(SK(),String(Date.now()))}catch(e){}};
+ const isNew=(a,n)=>!!a&&Number(a.at)>seenAt()&&n!==myName();
+ function newCount(){let c=0;Object.values(PR).forEach(ans=>Object.entries(ans||{}).forEach(([n,a])=>{if(isNew(a,n))c++}));Object.values(EV).forEach(ans=>Object.entries(ans||{}).forEach(([n,a])=>{if(isNew(a,n))c++}));return c}
  const isStaff=()=>{const a=me();return !!a&&(a.id==='management'||['단장','인도자','선임싱어','선임세션'].includes(a.rank))};
  function pracItem(){try{const d=nextSun();if(typeof isNoSvc==='function'&&isNoSvc(d))return null;const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const mine=list.find(o=>o.n===myName());return{kind:'prac',key:'prac',d,sat:shiftDate(d,-1),list,mine}}catch(e){return null}}
  function evItems(){try{return (typeof events!=='undefined'?events:[]).filter(e=>e&&e.rsvp&&e.date>=today()).sort((a,b)=>a.date<b.date?-1:1).slice(0,20)}catch(e){return []}}
@@ -9248,13 +9257,13 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   try{if(ids.length){const j=await R().api({action:'evRsvpGet',ids});EV={...EV,...(j.items||{})}}}catch(e){}
   try{if(me().id!=='management'){const j=await R().api({action:'subReqList'});SR=Array.isArray(j.items)?j.items:[]}}catch(e){}
   badge();if(openEl)paint()}
- function badge(){const b=document.getElementById('kzRsvpBtn');if(!b)return;const n=pending(),c=b.querySelector('.kc-badge');c.hidden=!n;c.textContent=n;b.setAttribute('aria-label','참석 확인'+(n?`, 응답할 것 ${n}개`:''))}
+ function badge(){const b=document.getElementById('kzRsvpBtn');if(!b)return;const n=pending(),c=b.querySelector('.kc-badge');c.hidden=!n;c.textContent=n;const nc=newCount();let dt=b.querySelector('.kzh-dot');if(!dt){dt=document.createElement('i');dt.className='kzh-dot';dt.setAttribute('aria-hidden','true');b.append(dt)}dt.hidden=!nc;b.title=nc?`참석 확인 · 새 응답 ${nc}개`:'참석 확인';b.setAttribute('aria-label','참석 확인'+(n?`, 응답할 것 ${n}개`:''))}
  function topBtn(){const mail=document.getElementById('kcMail');if(!mail)return;const ex=document.getElementById('kzRsvpBtn');if(ex){if(ex.previousElementSibling!==mail)mail.after(ex);const o=getComputedStyle(mail).order;if(ex.style.order!==o)ex.style.order=o;return}const b=document.createElement('button');b.type='button';b.id='kzRsvpBtn';b.className='kc-mail';b.title='참석 확인';
   b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m9 15 2 2 4-4"/></svg><span class="kc-badge" hidden></span>';
   b.onclick=()=>open();mail.after(b);b.style.order=getComputedStyle(mail).order;badge()}
  const ansTxt={yes:'참석',no:'불참',maybe:'미정'};
- function names(list,ans){const g={yes:[],no:[],maybe:[],none:[]};list.forEach(n=>{const a=ans[n];(g[a&&g[a.s]?a.s:'none']).push({n,note:a&&a.note})});
-  const row=(k,l,c)=>g[k].length?`<div><em style="color:${c}">${l} ${g[k].length}</em>${g[k].map(x=>`<span>${E(x.n)}${x.note?`<small>${E(x.note)}</small>`:''}</span>`).join('')}</div>`:'';
+ function names(list,ans){const g={yes:[],no:[],maybe:[],none:[]};list.forEach(n=>{const a=ans[n];(g[a&&g[a.s]?a.s:'none']).push({n,note:a&&a.note,nw:isNew(a,n)})});
+  const row=(k,l,c)=>g[k].length?`<div><em style="color:${c}">${l} ${g[k].length}</em>${g[k].map(x=>`<span class="${x.nw?'kzh-isnew':''}">${E(x.n)}${x.nw?'<i class="kzh-nw">N</i>':''}${x.note?`<small>${E(x.note)}</small>`:''}</span>`).join('')}</div>`:'';
   return{g,html:row('yes','참석','#2f7a49')+row('no','불참','#b54a3a')+row('maybe','미정','#8a7764')+row('none','미응답','#8a7764')}}
  function card(it){const nm=myName(),isMgr=me()&&me().id==='management';
   if(it.kind==='prac'){const ans=PR[it.d]||{},mine=ans[nm],nl=names(it.list.map(o=>o.n),ans),can=!!it.mine&&!isMgr;
@@ -9274,7 +9283,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   if(done.length)b.insertAdjacentHTML('beforeend',`<details class="kzh-done" ${b.dataset.doneOpen?'open':''}><summary>응답한 항목 · 지난 항목 ${done.length}개</summary><div class="kzh-dl">${done.map(card).join('')}</div></details>`);
   if(!SR.length&&!items.length)b.innerHTML='<div class="kzh-empty">지금 응답할 참석 확인이 없어요<br><small>토요 연습, 참석 여부를 받는 일정, 대타 요청이 여기에 모여요</small></div>';
   const dd=b.querySelector('.kzh-done');if(dd)dd.ontoggle=()=>{b.dataset.doneOpen=dd.open?'1':''};
-  b.querySelectorAll('.kzh-c').forEach(c=>{if(opened.includes(c.dataset.id||'prac')){c.querySelector('.kzh-names').hidden=false;c.querySelector('.kzh-more').textContent='명단 닫기'}});bind(b);try{window.kzUrgent&&kzUrgent.hub(b)}catch(e){}badge()}
+  b.querySelectorAll('.kzh-c').forEach(c=>{if(opened.includes(c.dataset.id||'prac')){c.querySelector('.kzh-names').hidden=false;c.querySelector('.kzh-more').textContent='명단 닫기'}});bind(b);try{window.kzUrgent&&kzUrgent.hub(b)}catch(e){}b.querySelectorAll('.kzh-c[data-k=prac],.kzh-c[data-k=ev]').forEach(c=>{const k=c.querySelectorAll('.kzh-isnew').length;const tag=c.querySelector('.kzh-k');if(k&&tag&&!tag.querySelector('.kzh-newc'))tag.insertAdjacentHTML('beforeend',`<em class="kzh-newc">새 응답 ${k}</em>`)});badge()}
  function copyText(c){const isP=c.dataset.k==='prac';let title,list,ans;if(isP){const p=pracItem();title=`${md(p.sat)} 토요 연습`;list=p.list.map(o=>o.n);ans=PR[p.d]||{}}else{const e=evItems().find(x=>x._id===c.dataset.id);if(!e)return '';title=`${e.title} (${md(e.date)})`;list=roster().filter(n=>n!=='관리계정');ans=EV[e._id]||{}}
   const g=names(list,ans).g,L=(k,l)=>g[k].length?`${l} ${g[k].length}명: ${g[k].map(x=>x.n+(x.note?`(${x.note})`:'')).join(', ')}`:'';
   return [`[꿈자리 찬양팀] ${title} 참석 확인`,L('yes','참석'),L('maybe','미정'),L('no','불참'),L('none','미응답')].filter(Boolean).join('\n')}
@@ -9291,7 +9300,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
     if(a==='no'||(a==='maybe'&&!isP)){c.querySelectorAll('[data-a]').forEach(y=>y.classList.toggle('on',y===x));if(why){why.hidden=false;why.dataset.s=a;setTimeout(()=>why.querySelector('textarea').focus(),30)}return}send(a,'')});
    const sb=c.querySelector('[data-send]');if(sb)sb.onclick=()=>{const t=why.querySelector('textarea').value.trim(),s=why.dataset.s||'no';if(isP&&s==='no'&&t.length<2){toast('이유를 짧게라도 적어 주세요');return}send(s,t)}})}
  function open(){if(openEl)return;const o=document.createElement('div');o.className='kzh-ov';o.innerHTML='<div class="kzh-p" role="dialog" aria-modal="true" aria-label="참석 확인"><div class="kzh-h"><div style="flex:1"><b>참석 확인</b><small>토요 연습과 일정 참석 여부를 여기서 알려 주세요</small></div><button type="button" class="kzh-x" aria-label="닫기">✕</button></div><div class="kzh-b"><div class="kzh-empty">불러오는 중…</div></div></div>';
-  const close=()=>{o.remove();openEl=null;document.removeEventListener('keydown',kd)};const kd=e=>{if(e.key==='Escape')close()};
+  const close=()=>{o.remove();openEl=null;document.removeEventListener('keydown',kd);markSeen();badge()};const kd=e=>{if(e.key==='Escape')close()};
   o.onclick=e=>{if(e.target===o)close()};o.querySelector('.kzh-x').onclick=close;document.addEventListener('keydown',kd);document.body.append(o);openEl=o;paint();load(true)}
  window.kzRsvpHub={open,load,badge};
  setInterval(()=>{try{topBtn();if(me())load(false)}catch(e){}},5000);setTimeout(()=>{try{topBtn();load(true)}catch(e){}},2500);
@@ -10612,6 +10621,14 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .kz-save-thx{position:absolute;left:12px;bottom:10px;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(200,140,160,.4);background:rgba(255,255,255,.85);color:#8a4a5e;border-radius:999px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;z-index:2}
 .kz-save-thx:disabled,.kz-save-roll:disabled{opacity:.5}
 .kz-save-roll{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:16px;border:0;border-radius:14px;padding:13px;background:linear-gradient(135deg,#ff8fab,#ffb36b);color:#fff;font-family:var(--sans,system-ui);font-size:14.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px -12px rgba(230,90,120,.8)}
+</style>
+<style id="kz-rsvp-new-css">
+#kzRsvpBtn{position:relative}
+#kzRsvpBtn .kzh-dot{position:absolute;bottom:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#e5483b;border:2px solid var(--page,#fbf6ef);font-style:normal}
+#kzRsvpBtn .kzh-dot[hidden]{display:none}
+.kzh-nw{display:inline-block;margin-left:3px;min-width:14px;height:14px;line-height:14px;border-radius:7px;background:#e5483b;color:#fff;font-size:9px;font-weight:800;font-style:normal;text-align:center;vertical-align:1px}
+.kzh-isnew{font-weight:700}
+.kzh-newc{margin-left:6px;font-style:normal;font-size:10.5px;font-weight:800;color:#fff;background:#e5483b;border-radius:999px;padding:1px 7px;vertical-align:1px}
 </style>
 </html>
 
