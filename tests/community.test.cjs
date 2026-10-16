@@ -436,4 +436,8 @@ test('inbox: plain chat is not stored, likes and comments group per post, readMa
  items=(await f.run(f.user,{action:'inbox'})).items.filter(n=>n.type==='feed');assert.equal(items.length,2);assert.match(items.find(n=>/댓글/.test(n.title)).body,/댓글 2개/);
  await f.run(f.user,{action:'readMany',ids:items.map(n=>n.id)});assert.equal((await f.run(f.user,{action:'inbox'})).items.filter(n=>n.type==='feed').length,0);
  const r=await f.run({system:true},{action:'inboxClean'});assert.equal(typeof r.removed,'number');
-});
+});test('chatUnread clears for the management account after opening chat',async()=>{const f=fixture();const M={id:'management',name:'관리계정',rank:'관리계정',status:'approved'};
+ await f.run(f.user,{action:'send',room:'all',id:'mg_unread1',text:'안녕'});f.advance();
+ assert.equal((await f.run(M,{action:'chatUnread',room:'all'})).unread,1);
+ await f.run(M,{action:'chat',room:'all'});f.advance();
+ assert.equal((await f.run(M,{action:'chatUnread',room:'all'})).unread,0);});
