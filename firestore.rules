@@ -27,7 +27,8 @@ service cloud.firestore {
     function rankIn(list) { return isMgr() || (approved() && me().rank in list); }
     // 관리자급: 단장 · 인도자 · 선임싱어 · 선임세션 (+ 관리계정)
     function staff() { return rankIn(['단장', '인도자', '선임싱어', '선임세션']); }
-    function leader() { return rankIn(['인도자']); }
+    // 인도자: 직책이 인도자이거나, 인도자를 겸하는 단장
+    function leader() { return rankIn(['인도자']) || (approved() && me().rank == '단장' && ('parts' in me()) && me().parts.hasAny(['인도자'])); }
     function chief() { return rankIn(['단장']); }
 
     // ---------- 계정 ----------
@@ -56,7 +57,12 @@ service cloud.firestore {
     // 규칙은 겹치면 '하나라도 허용'이라, backup 은 여기서 빼고 아래에서 따로 정함
     match /settings/{doc} {
       allow read: if approved() && doc != 'backup';
-      allow write: if staff() && doc != 'backup';
+      allow write: if staff() && !(doc in ['backup', 'leaderRotation']);
+    }
+    // 인도자 로테이션은 인도자만 바꿈 (관리계정 포함)
+    match /settings/leaderRotation {
+      allow read: if approved();
+      allow write: if leader();
     }
     match /settings/backup {
       allow read, write: if chief();
@@ -90,7 +96,12 @@ service cloud.firestore {
     // 가사 PPT: 승인된 팀원 누구나
     match /lyrics/{id} { allow read, write: if approved(); }
     // 불참·대타·교대, 세션 불참: 본인이 직접 등록하므로 승인된 팀원 누구나
-    match /overrides/{id} { allow read, write: if approved(); }
+    // 인도자 일정 변경(k == 'L': 인도 교환 · 대신 서기)은 인도자만
+    match /overrides/{id} {
+      allow read: if approved();
+      allow create, update: if approved() && (request.resource.data.get('k', '') != 'L' || leader());
+      allow delete: if approved() && (resource.data.get('k', '') != 'L' || leader());
+    }
     match /sessAbs/{id}   { allow read, write: if approved(); }
 
     // ---------- 출결 · 메모 ----------
