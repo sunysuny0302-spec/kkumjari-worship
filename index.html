@@ -4956,6 +4956,8 @@ function editForView(v=view){
   if(['sched_s','rule_s'].includes(v)) return canSingerManage();
   if(v==='abs') return canSessionSelfEdit();
   if(['sched_e','rule_e'].includes(v)) return canSessionManage();
+  /* 직책 변경(멤버 명단 편집)은 단장 · 관리계정만 */
+  if(v==='members') return currentRank()==='단장';
   if(['members','notice','minutes','library','trash','storage','attend'].includes(v)) return canTeamManage();
   return false;
 }

@@ -57,7 +57,12 @@ service cloud.firestore {
     // 규칙은 겹치면 '하나라도 허용'이라, backup 은 여기서 빼고 아래에서 따로 정함
     match /settings/{doc} {
       allow read: if approved() && doc != 'backup';
-      allow write: if staff() && !(doc in ['backup', 'leaderRotation']);
+      allow write: if staff() && !(doc in ['backup', 'leaderRotation', 'members']);
+    }
+    // 멤버 명단(직책 · 파트 · 악기)은 단장 · 관리계정만 고침
+    match /settings/members {
+      allow read: if approved();
+      allow write: if chief();
     }
     // 인도자 로테이션은 인도자만 바꿈 (관리계정 포함)
     match /settings/leaderRotation {
