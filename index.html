@@ -9865,9 +9865,9 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  function keepAuto(){if(view!=='feed'||document.querySelector('.kf-ov'))return;const c=(S.bdayCards||[]).find(x=>{try{return !localStorage.getItem(KS(x.id))}catch(e){return false}});if(c)keepsake(c)}
  async function keepsake(p){try{localStorage.setItem(KS(p.id),'1')}catch(e){}const c=p.cheers||{n:0,who:[]};
   if(!document.getElementById('kzRollFont')){const l=document.createElement('link');l.id='kzRollFont';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap';document.head.append(l)}
-  const o=sheet('생일 롤링페이퍼',`<div class="kf-roll"><div class="kf-roll-top"><span class="kf-roll-cake" aria-hidden="true">🎂</span><b>${E(p.name)}님의 생일 롤링페이퍼</b><small>${mdText(p.bday&&p.bday.date)} · 축하 ${c.n} · 좋아요 ${p.likeCount} · 댓글 ${p.commentCount}</small></div>
+  const o=sheet('생일 롤링페이퍼',`<div class="kf-roll"><div class="kf-roll-hero" aria-hidden="true"></div><div class="kf-roll-top"><b>${E(p.name)}님의 생일 롤링페이퍼</b><small>${mdText(p.bday&&p.bday.date)}</small><div class="kf-roll-stat"><span>🎉 축하 ${c.n}</span><span>♥ 좋아요 ${p.likeCount}</span><span>댓글 ${p.commentCount}</span></div></div>
    <div class="kf-roll-paper"><div class="kf-roll-notes"><div class="kf-none">펼치는 중…</div></div>
-   ${c.n?`<div class="kf-roll-stamps">${(c.who||[]).map((n,k)=>`<span style="--r:${((k*37)%11)-5}deg">🎉 ${E(n)}</span>`).join('')}</div>`:''}
+   ${c.n?`<div class="kf-roll-who"><p>함께 축하해 준 사람</p><div class="kf-roll-stamps">${(c.who||[]).map((n,k)=>`<span style="--r:${((k*37)%11)-5}deg">${E(n)}</span>`).join('')}</div></div>`:''}
    ${(p.reacts||[]).length?`<div class="kf-roll-reacts">${p.reacts.map(r=>`<span>${r.e} ${r.n}</span>`).join('')}</div>`:''}</div></div>`);
   const box=o.querySelector('.kf-roll-notes');const COL=['#fff3a8','#ffd6e0','#d6f0ff','#dff5d2','#ffe2c4','#eadcff'];
   try{const r=await api({action:'feedComments',id:p.id});const it=r.items||[];
@@ -10515,22 +10515,99 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 </style>
 <style id="kz-bday-banner2">
 /* 생일 배너: 수채화 생일 배경 (왼쪽 케이크 · 오른쪽 선물 사이 가운데에 글) */
-#body .kf-bdc{background:#fbf3e6 url(assets/bday-banner.webp) center/cover no-repeat!important;aspect-ratio:16/9;padding:5% 21% 6% 27%!important;justify-content:center;box-sizing:border-box;color:#5a3340}
+#body .kf-bdc{background:#fbf3e6 url(assets/bday-banner.webp) center/cover no-repeat!important;aspect-ratio:16/9;padding:5% 20% 6% 20%!important;justify-content:center;box-sizing:border-box;color:#5a3340}
 #body .kf-bdc .kf-bdc-cake,#body .kf-bdc .kf-bdc-fx{display:none}
 #body .kf-bdc .kf-bdc-t{margin:0;font-size:15px;text-shadow:0 1px 0 rgba(255,255,255,.7)}
 #body .kf-bdc .kf-bdc-t b{font-size:18px}
-#body .kf-bdc .kf-bdc-ch{margin-top:6px;background:rgba(255,255,255,.8)}
+#body .kf-bdc .kf-bdc-ch{margin-top:6px;background:rgba(255,255,255,.85);max-width:100%;font-size:12px}
+#body .kf-bdc .kf-bdc-ch>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#body .kf-bdc .kf-bdc-ch{min-width:0}
 #body .kf-bdc .kf-bdc-btn{margin-top:8px;padding:9px 20px;font-size:14px}
 @media(min-width:700px){#body .kf-bdc .kf-bdc-t{font-size:18px}#body .kf-bdc .kf-bdc-t b{font-size:22px}#body .kf-bdc .kf-bdc-btn{padding:11px 26px;font-size:15px}}
 </style>
 <style id="kz-roll2">
-/* 롤링페이퍼: 생일 배너와 같은 수채화 배경 */
-.kf-roll-top{background:#fbf3e6 url(assets/bday-banner.webp) center/cover no-repeat;aspect-ratio:16/7;border-radius:18px;justify-content:center;padding:4% 22% 4% 27%;margin-bottom:14px!important;box-sizing:border-box;box-shadow:0 8px 22px -14px rgba(120,80,60,.5)}
+/* 롤링페이퍼: 생일 그림 위에 제목 · 날짜 · 축하 수를 올리고(생일 배너와 같은 모양), 아래는 메모지 */
+.kf-roll-hero{display:none}
+.kf-roll-top{background:#fbf3e6 url(assets/bday-banner.webp) center/cover no-repeat;aspect-ratio:16/9;border-radius:18px;justify-content:center;align-items:center;padding:4% 20% 5%!important;margin:0 0 16px!important;gap:8px!important;box-sizing:border-box;box-shadow:0 10px 24px -16px rgba(120,80,60,.55)}
 .kf-roll-top .kf-roll-cake{display:none}
-.kf-roll-top b{font-size:21px!important;text-shadow:0 1px 0 rgba(255,255,255,.8)}
-.kf-roll-top small{background:rgba(255,255,255,.75);border-radius:999px;padding:2px 10px;margin-top:2px}
-.kf-roll-paper{background:linear-gradient(rgba(255,252,244,.86),rgba(255,252,244,.9)),url(assets/bday-banner.webp) center/cover no-repeat!important}
-@media(max-width:520px){.kf-roll-top{aspect-ratio:16/9;padding:4% 20% 4% 26%}.kf-roll-top b{font-size:17px!important}}
+.kf-roll-top b{font-family:'Gaegu',var(--sans,system-ui);font-size:30px!important;line-height:1.25;color:#5a2e3c;text-shadow:0 1px 0 rgba(255,255,255,.9),0 0 14px rgba(255,250,240,.95)}
+.kf-roll-top small{font-size:13px;color:#8a5a68;background:rgba(255,255,255,.72);border-radius:999px;padding:2px 12px}
+.kf-roll-stat{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--sans,system-ui)}
+.kf-roll-stat span{font-size:12.5px;font-weight:700;color:#a3506a;background:rgba(255,255,255,.88);border:1px solid #f6d3dd;border-radius:999px;padding:3px 11px}
+.kf-roll-paper{background:#fffaf2!important;box-shadow:inset 0 0 0 1px #f1e2cf,0 8px 20px -14px rgba(120,80,40,.35)!important;padding:20px 14px 18px!important}
+.kf-roll-notes{gap:16px 12px!important}
+.kf-note{box-shadow:0 8px 14px -8px rgba(110,70,40,.35)!important;border-radius:6px 6px 16px 6px!important}
+.kf-note p,.kf-note span{font-family:'Gaegu',var(--sans,system-ui)}
+.kf-roll-who{margin-top:20px;text-align:center}
+.kf-roll-who p{margin:0 0 8px;font-family:var(--sans,system-ui);font-size:12px;font-weight:700;color:#9a7480}
+.kf-roll-who .kf-roll-stamps{margin-top:0!important;gap:6px!important}
+.kf-roll-who .kf-roll-stamps span{transform:none!important;border:1px solid #f3c6d3!important;background:#fff!important;color:#b23e66!important;border-radius:999px!important;padding:4px 12px!important;font-family:var(--sans,system-ui);font-size:13px!important;font-weight:700}
+.kf-roll-reacts{font-family:var(--sans,system-ui);font-size:15px!important}
+.kf-roll-reacts span{background:#fff;border:1px solid #f1e2cf;border-radius:999px;padding:3px 10px}
+@media(max-width:600px){.kf-roll-top{padding:3% 18% 4%!important;gap:5px!important}.kf-roll-top b{font-size:20px!important}.kf-roll-top small{font-size:11.5px}.kf-roll-stat span{font-size:11px;padding:2px 8px}}
+</style>
+<script id="kz-card-save">
+/* 감사 카드 · 생일 롤링페이퍼를 이미지(PNG)로 저장 — 화면 그대로 그려서 폰은 '공유 → 사진 저장', 컴퓨터는 파일로 내려받기 */
+(function(){
+ const FONT_H="'Gaegu','Noto Sans KR',sans-serif",FONT_S="'Noto Sans KR',system-ui,sans-serif";
+ const img=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src});
+ function wrap(ctx,text,maxW){const out=[];String(text||'').split('\n').forEach(par=>{let line='';for(const w of par.split(/(\s+)/)){if(!w)continue;const t=line+w;if(ctx.measureText(t).width<=maxW){line=t;continue}if(line.trim()){out.push(line.trimEnd());line=''}if(!w.trim())continue;if(ctx.measureText(w).width<=maxW){line=w;continue}for(const ch of [...w]){if(ctx.measureText(line+ch).width>maxW&&line){out.push(line);line=ch}else line+=ch}}out.push(line.trimEnd())});return out}
+ function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+ function pill(ctx,text,cx,y,font,fg,bg,bd){ctx.font=font;const w=ctx.measureText(text).width+28,h=34;rr(ctx,cx-w/2,y,w,h,17);ctx.fillStyle=bg;ctx.fill();if(bd){ctx.strokeStyle=bd;ctx.lineWidth=1.5;ctx.stroke()}ctx.fillStyle=fg;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,y+h/2+1);return w}
+ function pillsRow(ctx,items,cx,y,font,fg,bg,bd,maxW){ctx.font=font;const ws=items.map(t=>ctx.measureText(t).width+28);const rows=[];let cur=[],cw=0;ws.forEach((w,i)=>{if(cw+w+(cur.length?10:0)>maxW&&cur.length){rows.push(cur);cur=[];cw=0}cur.push(i);cw+=w+(cur.length>1?10:0)});if(cur.length)rows.push(cur);
+  rows.forEach((r,ri)=>{const tw=r.reduce((a,i)=>a+ws[i],0)+10*(r.length-1);let x=cx-tw/2;r.forEach(i=>{pill(ctx,items[i],x+ws[i]/2,y+ri*44,font,fg,bg,bd);x+=ws[i]+10})});return rows.length*44}
+ async function save(canvas,name){const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));if(!blob)return toastMsg('이미지를 만들지 못했어요');const file=new File([blob],name+'.png',{type:'image/png'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})&&matchMedia('(pointer:coarse)').matches){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'.png';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toastMsg('이미지로 저장했어요')}
+ const toastMsg=m=>{try{toast(m)}catch(e){}};
+ async function fonts(){try{await document.fonts.load('700 40px Gaegu');await document.fonts.load('700 30px "Noto Sans KR"')}catch(e){}}
+ /* 감사 카드 */
+ async function saveThanks(card){await fonts();const bg=await img('assets/thanks-card.webp');const W=1600,H0=766;
+  const to=(card.querySelector('.kf-thx-to b')||{}).textContent||'',from=((card.querySelector('.kf-thx-from')||{}).textContent||'').replace(/^From\.\s*/,''),text=(card.querySelector('p')||{}).innerText||'';
+  const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font='600 44px '+FONT_H;const lines=wrap(ctx,text,W*0.58);const H=Math.max(H0,170+lines.length*62+150);c.width=W;c.height=H;
+  ctx.fillStyle='#fbf1e2';ctx.fillRect(0,0,W,H);const sc=Math.max(W/bg.width,H/bg.height);ctx.drawImage(bg,(W-bg.width*sc)/2,(H-bg.height*sc)/2,bg.width*sc,bg.height*sc);
+  const x=W*0.25;let y=(H-(lines.length*62+150))/2+40;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#8a4a5e';ctx.font='500 36px '+FONT_S;ctx.fillText('To. ',x,y);const tw=ctx.measureText('To. ').width;ctx.fillStyle='#5a3340';ctx.font='800 46px '+FONT_S;ctx.fillText(to,x+tw,y);
+  y+=78;ctx.fillStyle='#4a2a35';ctx.font='600 44px '+FONT_H;lines.forEach(l=>{ctx.fillText(l,x,y);y+=62});
+  y+=26;ctx.textAlign='right';ctx.fillStyle='#8a4a5e';ctx.font='500 34px '+FONT_S;ctx.fillText('From. '+from,W*0.84,y);
+  await save(c,'감사카드_'+(to||'꿈자리'))}
+ /* 롤링페이퍼 */
+ async function saveRoll(root){await fonts();const bg=await img('assets/bday-banner.webp');const W=1200,BH=675,pad=48;
+  const title=(root.querySelector('.kf-roll-top b')||{}).textContent||'생일 롤링페이퍼',date=(root.querySelector('.kf-roll-top small')||{}).textContent||'';
+  const stats=[...root.querySelectorAll('.kf-roll-stat span')].map(e=>e.textContent.trim());
+  const notes=[...root.querySelectorAll('.kf-note')].map(n=>({t:(n.querySelector('p')||{}).innerText||'',n:(n.querySelector('span')||{}).textContent||'',bg:getComputedStyle(n).getPropertyValue('--bg').trim()||'#fff3a8',r:parseFloat(getComputedStyle(n).getPropertyValue('--r'))||0}));
+  const who=[...root.querySelectorAll('.kf-roll-stamps span')].map(e=>e.textContent.trim()),reacts=[...root.querySelectorAll('.kf-roll-reacts span')].map(e=>e.textContent.trim());
+  const cols=notes.length<=4?2:3,gap=26,nw=(W-pad*2-gap*(cols-1))/cols,m=document.createElement('canvas').getContext('2d');m.font='600 34px '+FONT_H;
+  const laid=notes.map(n=>{const ls=wrap(m,n.t,nw-48);return{...n,ls,h:Math.max(200,40+ls.length*44+70)}});
+  const rows=[];for(let i=0;i<laid.length;i+=cols)rows.push(laid.slice(i,i+cols));const notesH=rows.reduce((a,r)=>a+Math.max(...r.map(x=>x.h))+gap,0);
+  const whoH=who.length?60+Math.ceil(who.length/6)*44:0,reH=reacts.length?60:0;const H=BH+30+notesH+whoH+reH+50;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.fillStyle='#fffaf2';ctx.fillRect(0,0,W,H);
+  const sc=Math.max(W/bg.width,BH/bg.height);ctx.drawImage(bg,(W-bg.width*sc)/2,(BH-bg.height*sc)/2,bg.width*sc,bg.height*sc);
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font='700 58px '+FONT_H;ctx.fillStyle='rgba(255,252,244,.9)';ctx.shadowColor='rgba(255,250,240,.95)';ctx.shadowBlur=18;
+  const tl=wrap(ctx,title,W*0.62);let ty=BH/2-(tl.length*72)/2-20;tl.forEach(l=>{ctx.fillText(l,W/2,ty+60);ty+=72});ctx.shadowBlur=0;ty=BH/2-(tl.length*72)/2-20;ctx.fillStyle='#5a2e3c';tl.forEach(l=>{ctx.fillText(l,W/2,ty+60);ty+=72});
+  ty+=22;if(date)pill(ctx,date,W/2,ty,'500 24px '+FONT_S,'#8a5a68','rgba(255,255,255,.8)');ty+=50;if(stats.length)pillsRow(ctx,stats,W/2,ty,'700 22px '+FONT_S,'#a3506a','rgba(255,255,255,.9)','#f6d3dd',W*0.6);
+  let y=BH+30+10;rows.forEach(r=>{const rh=Math.max(...r.map(x=>x.h)),off=(cols-r.length)*(nw+gap)/2;r.forEach((n,i)=>{const x=pad+off+i*(nw+gap);ctx.save();ctx.translate(x+nw/2,y+rh/2);ctx.rotate(n.r*Math.PI/180);ctx.translate(-nw/2,-n.h/2);
+    ctx.shadowColor='rgba(110,70,40,.28)';ctx.shadowBlur=18;ctx.shadowOffsetY=8;rr(ctx,0,0,nw,n.h,10);ctx.fillStyle=n.bg;ctx.fill();ctx.shadowColor='transparent';
+    ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(nw/2-40,-10,80,22);ctx.fillStyle='#3a2a22';ctx.textAlign='left';ctx.font='600 34px '+FONT_H;n.ls.forEach((l,k)=>ctx.fillText(l,24,58+k*44));
+    ctx.textAlign='right';ctx.font='700 30px '+FONT_H;ctx.fillStyle='rgba(58,42,34,.75)';ctx.fillText(n.n,nw-24,n.h-26);ctx.restore()});y+=rh+gap});
+  if(who.length){ctx.textAlign='center';ctx.fillStyle='#9a7480';ctx.font='700 22px '+FONT_S;ctx.fillText('함께 축하해 준 사람',W/2,y+24);y+=40;y+=pillsRow(ctx,who,W/2,y,'700 22px '+FONT_S,'#b23e66','#fff','#f3c6d3',W-pad*2)}
+  if(reacts.length){y+=12;pillsRow(ctx,reacts,W/2,y,'500 24px '+FONT_S,'#5a3340','#fff','#f1e2cf',W-pad*2)}
+  ctx.textAlign='right';ctx.fillStyle='rgba(138,90,104,.6)';ctx.font='500 18px '+FONT_S;ctx.fillText('꿈자리 찬양팀',W-24,H-18);
+  await save(c,title.replace(/\s+/g,'_'))}
+ const btnHTML=t=>`<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg><span>${t}</span>`;
+ function decorate(){
+  document.querySelectorAll('.kf-thx').forEach(card=>{if(card.querySelector('.kz-save-thx'))return;const b=document.createElement('button');b.type='button';b.className='kz-save-thx';b.setAttribute('aria-label','감사 카드를 이미지로 저장');b.innerHTML=btnHTML('저장');
+   b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();b.disabled=true;try{await saveThanks(card)}catch(err){console.error(err);toastMsg('저장하지 못했어요')}finally{b.disabled=false}});b.addEventListener('dblclick',e=>e.stopPropagation());card.append(b)});
+  document.querySelectorAll('.kf-roll').forEach(r=>{if(r.querySelector('.kz-save-roll'))return;const b=document.createElement('button');b.type='button';b.className='kz-save-roll';b.innerHTML=btnHTML('롤링페이퍼 이미지로 저장');
+   b.onclick=async()=>{b.disabled=true;try{await saveRoll(r)}catch(err){console.error(err);toastMsg('저장하지 못했어요')}finally{b.disabled=false}};r.append(b)})}
+ new MutationObserver(()=>{if(document.querySelector('.kf-thx:not(:has(.kz-save-thx)),.kf-roll:not(:has(.kz-save-roll))'))decorate()}).observe(document.documentElement,{childList:true,subtree:true});
+ window.kzCardSave={saveThanks,saveRoll};
+})();
+</script>
+<style id="kz-card-save-css">
+.kz-save-thx{position:absolute;left:12px;bottom:10px;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(200,140,160,.4);background:rgba(255,255,255,.85);color:#8a4a5e;border-radius:999px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;z-index:2}
+.kz-save-thx:disabled,.kz-save-roll:disabled{opacity:.5}
+.kz-save-roll{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:16px;border:0;border-radius:14px;padding:13px;background:linear-gradient(135deg,#ff8fab,#ffb36b);color:#fff;font-family:var(--sans,system-ui);font-size:14.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px -12px rgba(230,90,120,.8)}
 </style>
 </html>
 
