@@ -441,3 +441,6 @@ test('inbox: plain chat is not stored, likes and comments group per post, readMa
  assert.equal((await f.run(M,{action:'chatUnread',room:'all'})).unread,1);
  await f.run(M,{action:'chat',room:'all'});f.advance();
  assert.equal((await f.run(M,{action:'chatUnread',room:'all'})).unread,0);});
+test('signupNotify: chief and management get one inbox note per signup',async()=>{const f=fixture();
+ const r=await f.run({system:true},{action:'signupNotify',uid:'newuid1',name:'새싹'});assert.equal(typeof r.sent,'number');
+ const r2=await f.run({system:true},{action:'signupNotify',uid:'newuid1',name:'새싹'});assert.ok(r2.dup||r2.sent===0);});

@@ -18,7 +18,10 @@ module.exports = async function handler(req, res) {
   if (a === 'signupBirth' && input && typeof input === 'object' && JSON.stringify(input).length < 400) {
     try {
       let tok;try { tok = await admin.auth().verifyIdToken(String(req.headers.authorization || '').replace(/^Bearer\s+/i, '')); } catch { return res.status(401).json({error: '로그인이 만료됐어요.'}); }
-      return res.status(200).json(await getService().birthRun(tok.uid, input));
+      const out = await getService().birthRun(tok.uid, input);
+      /* 승인 대기 중인 새 가입이면 관리계정 · 단장에게 알림 */
+      try { const acc = await admin.firestore().doc('accounts/' + tok.uid).get(); const x = acc.exists ? acc.data() || {} : {}; if (x.status === 'pending') await require('../lib/community-runtime.cjs').getRuntime().run({system: true}, {action: 'signupNotify', uid: tok.uid, name: x.name || ''}); } catch (e) { console.error('[signup-notify]', e && (e.code || e.message)); }
+      return res.status(200).json(out);
     } catch (e) { const status = Number(e && e.status) || 500; if (status >= 500) console.error('[admin-birth]', e && (e.code || e.message)); return res.status(status).json({error: status >= 500 ? '서버 처리 중 오류가 났어요.' : e.message}); }
   }
   if (!input || typeof input !== 'object' || !(PUBLIC.has(a) || ADMIN.has(a) || SELF.has(a)) || JSON.stringify(input).length > 4000) return res.status(400).json({error: '요청 내용을 확인해 주세요.'});
