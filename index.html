@@ -10504,7 +10504,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 </style>
 <style id="kz-thx-card2">
 /* 감사 카드: 수채화 편지지 디자인 (왼쪽 편지봉투 · 오른쪽 꽃 사이 가운데에 글) */
-#body .kf-card .kf-media.kf-thx{background:#fbf1e2 url(assets/thanks-card.webp) center/cover no-repeat!important;aspect-ratio:1600/766;min-height:0!important;padding:6% 20% 7% 20%!important;display:grid!important;grid-template-columns:minmax(0,max-content);justify-content:center;align-content:center;text-align:center;gap:6px!important;color:#5a3340;box-sizing:border-box}
+#body .kf-card .kf-media.kf-thx{background:#fbf1e2 url(assets/thanks-card.webp) center/cover no-repeat!important;aspect-ratio:1600/766;min-height:0!important;padding:6% 20% 7% 20%!important;display:grid!important;grid-template-columns:minmax(0,1fr);justify-content:stretch;align-content:center;text-align:center;gap:6px!important;color:#5a3340;box-sizing:border-box}
 #body .kf-card .kf-media.kf-thx .kf-thx-ic{display:none}
 #body .kf-card .kf-media.kf-thx .kf-thx-to{font-size:13px;color:#8a4a5e}
 #body .kf-card .kf-media.kf-thx .kf-thx-to b{font-size:15.5px;color:#5a3340}
@@ -10570,7 +10570,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font='600 44px '+FONT_H;const lines=wrap(ctx,text,W*0.56);const H=Math.max(H0,170+lines.length*62+150);c.width=W;c.height=H;
   ctx.fillStyle='#fbf1e2';ctx.fillRect(0,0,W,H);const sc=Math.max(W/bg.width,H/bg.height);ctx.drawImage(bg,(W-bg.width*sc)/2,(H-bg.height*sc)/2,bg.width*sc,bg.height*sc);
   const cx=W/2;let y=(H-(lines.length*62+150))/2+40;ctx.textBaseline='alphabetic';ctx.textAlign='left';
-  ctx.font='600 44px '+FONT_H;const bw=Math.max(...lines.map(l=>ctx.measureText(l).width),300),bx=cx-bw/2;
+  ctx.font='600 44px '+FONT_H;const bw=Math.max(...lines.map(l=>ctx.measureText(l).width),W*0.56),bx=cx-bw/2;
   ctx.fillStyle='#8a4a5e';ctx.font='500 36px '+FONT_S;ctx.fillText('To. ',bx,y);const tw1=ctx.measureText('To. ').width;ctx.fillStyle='#5a3340';ctx.font='800 46px '+FONT_S;ctx.fillText(to,bx+tw1,y);
   y+=78;ctx.textAlign='center';ctx.fillStyle='#4a2a35';ctx.font='600 44px '+FONT_H;lines.forEach(l=>{ctx.fillText(l,cx,y);y+=62});
   y+=26;ctx.textAlign='right';ctx.fillStyle='#8a4a5e';ctx.font='500 34px '+FONT_S;ctx.fillText('From. '+from,bx+bw,y);
