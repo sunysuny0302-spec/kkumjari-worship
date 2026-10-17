@@ -1,0 +1,20 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert');
+const {createAssistant,parseAnswer,cleanHistory,KB}=require('../lib/assistant.cjs');
+function fakeDb(){const store={};return{store,doc:p=>({p}),runTransaction:async fn=>fn({get:async r=>({exists:!!store[r.p],data:()=>store[r.p]}),set:(r,v)=>{store[r.p]=v}})}}
+const actor={uid:'u1',name:'김예음',rank:'싱어',parts:['싱어']};
+test('kb items have valid go keys and answers',()=>{for(const x of KB.items){assert.ok(x.id&&x.t&&x.a&&Array.isArray(x.k));(x.go||[]).forEach(g=>assert.ok(KB.go[g],x.id+' '+g));}});
+test('no key -> local fallback',async()=>{const a=createAssistant({db:fakeDb(),key:''});assert.deepStrictEqual(await a.ask(actor,{q:'알림 켜기'}),{ai:false});});
+test('empty question rejected',async()=>{const a=createAssistant({db:fakeDb(),key:'k'});await assert.rejects(a.ask(actor,{q:'  '}),/질문/);});
+test('calls API with manual and parses go',async()=>{let sent;const db=fakeDb();
+ const a=createAssistant({db,key:'k',fetchImpl:async(u,o)=>{sent=JSON.parse(o.body);assert.strictEqual(o.headers['x-api-key'],'k');return{ok:true,json:async()=>({content:[{type:'text',text:'더보기 → 싱어 불참·대타에서 해요.\n[[go:swap]]'}]})}}});
+ const r=await a.ask(actor,{q:'불참 어떻게 해?',history:[{role:'assistant',text:'안녕하세요'},{role:'user',text:'질문'},{role:'assistant',text:'답'}]});
+ assert.strictEqual(r.ai,true);assert.deepStrictEqual(r.go,['swap']);assert.match(r.answer,/불참/);
+ assert.match(sent.system[0].text,/앱 설명서/);assert.match(sent.system[0].text,/김예음/);
+ assert.strictEqual(sent.messages[0].role,'user');assert.strictEqual(sent.messages.at(-1).content,'불참 어떻게 해?');
+ assert.strictEqual(db.store['aiUsage/u1'].n,1);});
+test('daily limit',async()=>{const db=fakeDb();db.store['aiUsage/u1']={d:new Date(Date.now()+9*3600e3).toISOString().slice(0,10),n:40};
+ const a=createAssistant({db,key:'k',fetchImpl:async()=>{throw new Error('should not call')}});await assert.rejects(a.ask(actor,{q:'hi'}),e=>e.status===429);});
+test('api failure falls back',async()=>{const a=createAssistant({db:fakeDb(),key:'k',fetchImpl:async()=>({ok:false,status:500,text:async()=>'x'})});const r=await a.ask(actor,{q:'hi'});assert.strictEqual(r.ai,false);});
+test('history cleaned',()=>{const h=cleanHistory([{role:'assistant',text:'a'},{role:'user',text:'b'},{role:'user',text:'c'},{x:1}]);assert.deepStrictEqual(h,[{role:'user',content:'b\nc'}]);});
+test('parse limits go',()=>{assert.deepStrictEqual(parseAnswer('x [[go:home]][[go:feed]][[go:inbox]]').go,['home','feed']);});
