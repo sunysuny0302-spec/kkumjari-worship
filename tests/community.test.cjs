@@ -450,3 +450,6 @@ test('song requests accept several reference links (max 5) and keep url as the f
  await assert.rejects(f.run(f.user,{action:'songCreate',id:'song_multi_2',title:'x',urls:['a','b','c','d','e','f'].map(x=>'https://youtu.be/'+x)}),{status:400});
  f.advance();await f.run(f.user,{action:'songUpdate',id:r.item.id,revision:1,title:'은혜',urls:['https://youtu.be/ccccccccccc']});
  const l=(await f.run(f.user,{action:'songs'})).items.find(x=>x.id===r.item.id);assert.deepEqual(l.urls,['https://youtu.be/ccccccccccc']);assert.equal(l.url,'https://youtu.be/ccccccccccc');});
+test('song requests keep a short note per reference link',async()=>{const f=fixture();
+ const r=await f.run(f.user,{action:'songCreate',id:'song_links_1',title:'은혜',links:[{url:'https://youtu.be/aaaaaaaaaaa',note:'어노인팅 버전'},{url:'https://youtu.be/bbbbbbbbbbb'}]});
+ assert.deepEqual(r.item.links,[{url:'https://youtu.be/aaaaaaaaaaa',note:'어노인팅 버전'},{url:'https://youtu.be/bbbbbbbbbbb'}]);assert.equal(r.item.url,'https://youtu.be/aaaaaaaaaaa');assert.equal(r.item.urls.length,2);});
