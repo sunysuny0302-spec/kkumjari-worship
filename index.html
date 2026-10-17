@@ -10696,12 +10696,14 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 /* ===== 꿈자리 도우미: 앱 사용법 질문에 답하는 AI (서버 AI가 꺼져 있으면 설명서 검색으로 답함) ===== */
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let KB=null,kbP=null,hist=[],busy=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=1').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=2').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
  function nav(k){close();try{
+  if(k.startsWith('conti:')){const d=k.slice(6);try{window.kzNeedFull&&kzNeedFull()}catch(_){}return typeof kzArchView==='function'?kzArchView(d):(go('home'),goDate(d))}
+  if(k.startsWith('date:')){go('home');try{goDate(k.slice(5))}catch(_){}window.scrollTo({top:0,behavior:'instant'});return}
   if(k==='account')return openAccountPicker();if(k==='tour')return window.kzTour&&kzTour(true);if(k==='events'){try{ntTab='e'}catch(_){}return go('notice')}
   if(k==='prac')return window.kzRsvpHub&&kzRsvpHub.open();if(k==='approve')return window.kzOpenApprove?kzOpenApprove():openAccountPicker();
   if(k==='leader')return openLeaderRoom();if(k==='all'){const q=document.querySelector('[data-qk]');if(q){q.click();return}return document.getElementById('shell')?.classList.add('open')}
@@ -10711,34 +10713,95 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  /* 설명서 검색 (AI가 꺼져 있을 때) */
  const STRIP=/(으로는|에서는|으로|에서|에게|한테|까지|부터|이랑|하고|하려면|하는법|하는 법|어떻게|어디서|어디|해요|하나요|되나요|돼요|인가요|있나요|해야|할래|해줘|하기|이요|은|는|이|가|을|를|에|로|도|만|요|\?|！|!|\.)$/;
  function toks(q){return q.toLowerCase().replace(/[?!.,~·]/g,' ').split(/\s+/).map(w=>{let p;do{p=w;w=w.replace(STRIP,'')}while(w!==p&&w.length>1);return w}).filter(w=>w.length>=1)}
- function search(q){const ts=toks(q),flat=q.toLowerCase().replace(/\s+/g,''),rank=me().rank||'';
-  return KB.items.map(x=>{let s=0;const title=x.t.toLowerCase(),text=x.a.toLowerCase();
-   for(const k of x.k){const kk=k.toLowerCase().replace(/\s+/g,'');if(kk.length>=2&&flat.includes(kk))s+=4}
-   for(const t of ts){if(t.length<2)continue;if(title.includes(t))s+=3;if(x.k.some(k=>k.length>=2&&k.toLowerCase().includes(t)))s+=2;if(text.includes(t))s+=1}
+ function search(q){const ts=toks(q),flat=q.toLowerCase().replace(/\s+/g,''),rank=me().rank||'',howTo=/어떻게|방법|하는\s*법|하려면|어디서|순서/.test(q);const writeQ=/쓰|작성|올리|올려|등록|만들|보내|정하/.test(q);
+  return KB.items.map(x=>{let s=0;const title=x.t.toLowerCase(),text=(x.a+' '+(x.steps||[]).join(' ')+' '+(x.tips||[]).join(' ')).toLowerCase();
+   for(const kk of new Set(x.k.map(k=>k.toLowerCase().replace(/\s+/g,''))))if(kk.length>=2&&flat.includes(kk))s+=4;
+   if(howTo&&x.steps)s+=1.5;if(writeQ&&/쓰기|올리기|등록|만들기|작성|보내기|정하기/.test(x.t))s+=2;
+   for(const t of ts){if(t.length<2)continue;if(title.includes(t))s+=3;if(x.k.some(k=>k.length>=2&&k.toLowerCase().includes(t)))s+=2;if(x.a.toLowerCase().includes(t))s+=1;else if(text.includes(t))s+=.5}
    if(x.who&&rank&&x.who.includes(rank))s+=1;return{x,s}}).filter(r=>r.s>0).sort((a,b)=>b.s-a.s)}
  function localAnswer(q){const r=search(q);
   if(!r.length||r[0].s<3)return{text:'음… 설명서에서 딱 맞는 답을 못 찾았어요. 아래 자주 묻는 질문을 눌러 보거나, 조금 다르게 물어봐 주세요. 그래도 해결이 안 되면 단장이나 관리계정에게 물어봐 주세요.',go:[],rel:r.length?r.slice(0,3).map(v=>v.x):SUG.slice(0,4).map(t=>({t}))};
-  const x=r[0].x;return{title:x.t,text:x.a,go:(x.go||[]).slice(0,2),rel:r.slice(1,3).filter(v=>v.s>=3).map(v=>v.x)}}
+  const x=r[0].x;return{title:x.t,text:x.a,steps:x.steps,tips:x.tips,go:(x.go||[]).slice(0,2),rel:r.slice(1,4).filter(v=>v.s>=3).map(v=>v.x)}}
+ /* ===== 팀 기록 질문 (무료 · 이 기기에서 바로 계산): 콘티 · 서는 사람 · 내 순서 · 곡을 언제 불렀는지 ===== */
+ const pad=n=>String(n).padStart(2,'0'),ymd_=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,dt=s=>new Date(s+'T12:00:00');
+ const thisSun=()=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+(7-d.getDay())%7);return ymd_(d)};
+ const addW=(s,n)=>{const d=dt(s);d.setDate(d.getDate()+7*n);return ymd_(d)};
+ const nearSun=(y,m,dd)=>{const d=new Date(y,m-1,dd,12);const w=d.getDay();d.setDate(d.getDate()+(w===0?0:w<=3?-w:7-w));return ymd_(d)};
+ const sundaysOf=(y,m)=>{const out=[],d=new Date(y,m-1,1,12);d.setDate(1+(7-d.getDay())%7);while(d.getMonth()===m-1){out.push(ymd_(d));d.setDate(d.getDate()+7)}return out};
+ const fmt=s=>{const d=dt(s);return `${d.getMonth()+1}월 ${d.getDate()}일(${'일월화수목금토'[d.getDay()]})`},fmtY=s=>{const d=dt(s);return (d.getFullYear()!==new Date().getFullYear()?d.getFullYear()+'년 ':'')+fmt(s)};
+ const NTH={'첫':1,'1':1,'둘':2,'두':2,'2':2,'셋':3,'세':3,'3':3,'넷':4,'네':4,'4':4,'다섯':5,'5':5};
+ function when(q,past){const now=new Date(),cy=now.getFullYear();let y=null;
+  const ym=/(\d{4})\s*년/.exec(q);if(ym)y=+ym[1];else if(/작년|지난\s*해|재작년/.test(q))y=cy-(/재작년/.test(q)?2:1);else if(/내년/.test(q))y=cy+1;
+  const fixY=(mk)=>{if(y!=null)return mk(y);const a=mk(cy);return past&&a>addW(thisSun(),2)?mk(cy-1):a};
+  let m;
+  if((m=/(\d{4})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{1,2})/.exec(q)))return{list:[nearSun(+m[1],+m[2],+m[3])]};
+  if((m=/(\d{1,2})\s*월\s*(\d{1,2})\s*일/.exec(q))||(m=/(?:^|[^\d])(\d{1,2})\s*\/\s*(\d{1,2})(?!\d)/.exec(q))){const M=+m[1],D=+m[2];if(M>=1&&M<=12&&D>=1&&D<=31)return{list:[fixY(Y=>nearSun(Y,M,D))]}}
+  if((m=/(\d{1,2})\s*월\s*(?:의\s*)?(첫|둘|두|셋|세|넷|네|다섯|마지막|막|\d)\s*(?:번\s*)?째?\s*(?:주|주일|일요일|번째)/.exec(q))){const M=+m[1];if(M>=1&&M<=12){const pick=Y=>{const s=sundaysOf(Y,M);return /마지막|막/.test(m[2])?s[s.length-1]:s[(NTH[m[2]]||1)-1]||s[s.length-1]};return{list:[fixY(pick)]}}}
+  if((m=/(\d{1,2})\s*월/.exec(q))){const M=+m[1];if(M>=1&&M<=12){const Y=y!=null?y:(past&&sundaysOf(cy,M)[0]>thisSun()?cy-1:cy);return{list:sundaysOf(Y,M),month:`${Y!==cy?Y+'년 ':''}${M}월`}}}
+  const t=thisSun();
+  if((m=/(\d+)\s*주\s*(?:전|앞)/.exec(q)))return{list:[addW(t,-m[1])]};if((m=/(\d+)\s*주\s*(?:후|뒤)/.exec(q)))return{list:[addW(t,+m[1])]};
+  if(/지지난\s*주|저저번\s*주/.test(q))return{list:[addW(t,-2)]};if(/다다음\s*주/.test(q))return{list:[addW(t,2)]};
+  if(/지난\s*주|저번\s*주|전\s*주|지난\s*주일|저번\s*주일/.test(q))return{list:[addW(t,-1)]};if(/다음\s*주|담주|다음\s*주일/.test(q))return{list:[addW(t,1)]};
+  if(/이번\s*주|금주|이번\s*주일|오늘|이번에/.test(q))return{list:[t]};
+  return null}
+ const norm=s=>String(s||'').toLowerCase().replace(/\(.*?\)|\[.*?\]/g,'').replace(/[^0-9a-z가-힣]/g,'');
+ function arc(){try{return (typeof archive!=='undefined'&&Array.isArray(archive))?archive.filter(a=>a&&a.up):[]}catch(e){return[]}}
+ function songsIn(a){let s=[];try{if(typeof scoreSongs==='function')s=scoreSongs(a.scores||[]).map(x=>{let k='';try{k=typeof kzSongKeyStr==='function'?kzSongKeyStr(x,a.scores||[]):''}catch(_){}return (x.name||'제목 없음')+(k?` (${k})`:'')})}catch(e){}
+  if(!s.length)s=String(a.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''));return s}
+ async function full(){try{window.kzNeedFull&&kzNeedFull()}catch(e){}let last=-1,same=0;for(let i=0;i<14;i++){const n=arc().length;if(n===last&&n>0){if(++same>=2)break}else same=0;last=n;await new Promise(r=>setTimeout(r,250))}}
+ const noSvc=d=>{try{return typeof isNoSvc==='function'&&isNoSvc(d)?(typeof noSvcWhy==='function'?noSvcWhy(d):'예배 없음'):''}catch(e){return''}};
+ function people(d){try{return typeof kzPeopleFor==='function'?kzPeopleFor(d):[]}catch(e){return[]}}
+ function near_(d){const L=arc();return L.find(x=>x.id===d)||L.find(x=>Math.abs(dt(x.id)-dt(d))<=3*864e5)}
+ function contiOne(d){const a=near_(d);if(!a){const ns=noSvc(d);return{text:ns?`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`:`${fmtY(d)}에는 홈에 올라온 콘티가 없어요.`,go:[]}}
+  const s=songsIn(a);return{title:`${fmtY(a.id)} 콘티${a.by?' · 인도 '+a.by:''}`,text:s.length?s.map((n,i)=>`${i+1}. ${n}`).join('\n'):'곡 정보가 없는 콘티예요.',go:['conti:'+a.id]}}
+ function lineup(d){const ns=noSvc(d);if(ns)return{text:`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`,go:[]};const p=people(d);
+  if(!p.length)return{text:`${fmtY(d)}에 배정된 사람을 찾지 못했어요. 일정표에서 확인해 주세요.`,go:['date:'+d]};
+  const future=d>thisSun();return{title:`${fmtY(d)} 섬기는 사람`,text:p.map(([k,v])=>`${k} · ${v}`).join('\n')+(future?'\n\n앞으로의 순서는 불참·대타 신청에 따라 바뀔 수 있어요.':''),go:['date:'+d]}}
+ function myTurn(){const nm=String(me().name||'').trim();if(!nm||me().id==='management')return{text:'팀원 계정으로 들어오면 내 순서를 알려 드릴 수 있어요.',go:['mobile_my']};
+  const out=[];let d=thisSun();for(let i=0;i<14&&out.length<6;i++,d=addW(d,1)){if(noSvc(d))continue;const r=people(d).filter(([k,v])=>String(v).split(/[,，、\/]/).map(x=>x.trim()).includes(nm)).map(([k])=>k);if(r.length)out.push(`${fmt(d)} · ${r.join(', ')}`)}
+  return out.length?{title:`${nm}님의 다음 순서`,text:out.join('\n')+'\n\n못 서는 날이 있으면 불참·대타에서 신청해 주세요.',go:['mobile_my']}:{text:`앞으로 14주 안에 ${nm}님의 순서를 찾지 못했어요. 내 순서 화면에서 확인해 보세요.`,go:['mobile_my']}}
+ function songWhen(title){const k=norm(title);if(k.length<1)return null;const hits=arc().filter(a=>songsIn(a).some(n=>norm(n).includes(k))||norm(a.ment).includes(k)).sort((a,b)=>b.id.localeCompare(a.id));
+  if(!hits.length)return{text:`'${title}'를 부른 콘티를 찾지 못했어요. 곡 이름을 조금 다르게(띄어쓰기 없이, 짧게) 적어 보세요.`,go:['vault']};
+  return{title:`'${title}' 부른 날 · ${hits.length}번`,text:hits.slice(0,8).map(a=>`${fmtY(a.id)}${a.by?' · 인도 '+a.by:''}`).join('\n')+(hits.length>8?`\n… 외 ${hits.length-8}번`:''),go:['conti:'+hits[0].id,'vault']}}
+ async function dataAnswer(q){const s=q.replace(/\s+/g,' ').trim();if(/어떻게\s*(해|하|올|만들|쓰|바꾸|등록|신청)|방법|하는\s*법|어디서|어디에|사용법/.test(s))return null;
+  const isMine=/(내|나의|제|저의)\s*(순서|차례)|(나|내가|제가|저)\s*언제\s*(서|섬기|인도|들어가)|내\s*일정/.test(s);
+  if(isMine){await full();return myTurn()}
+  let m=/['"‘’“”「」『』]([^'"‘’“”「」『』]{1,40})['"‘’“”「」『』]/.exec(s),title=m?m[1]:'';
+  const songQ=/(언제|마지막으로|최근에?|몇\s*번).{0,12}(불렀|했|불러|부른|했었|썼|나왔)|(불렀|부른|한)\s*적|부른\s*날/.test(s);
+  if(songQ&&!/콘티\s*(뭐|어떤|보여)|무슨\s*(곡|노래|찬양)/.test(s)){if(!title){title=s.split(/\s*(언제|마지막으로|최근에?|몇\s*번|불렀|부른|한\s*적)/)[0].replace(/(이라는|라는|이란|란)?\s*(곡|노래|찬양)?\s*(을|를|은|는|이|가)?$/,'').replace(/^(우리|혹시|그)\s*/,'').trim()}
+   if(title&&title.length<=40){await full();return songWhen(title)}}
+  const contiW=/콘티|찬양|곡|송리스트|셋리스트|노래|불렀|부른|했던|했어|뭐\s*했/.test(s),peopleW=/누가|누구|인도자|인도|싱어|세션|드럼|건반|베이스|기타|섬기|라인업|서는|서요|서\?|멤버|엔지니어/.test(s);
+  if(!contiW&&!peopleW)return null;const w=when(s,contiW&&!peopleW);if(!w)return null;
+  await full();
+  if(w.month&&contiW&&!peopleW){const r=w.list.map(d=>{const a=near_(d);if(!a)return `${fmt(d)} · ${noSvc(d)?'예배 없음':'올라온 콘티 없음'}`;const sg=songsIn(a);return `${fmt(a.id)}${a.by?' · '+a.by:''}\n   ${sg.slice(0,6).join(' / ')||'곡 정보 없음'}`});return{title:`${w.month} 콘티`,text:r.join('\n'),go:['vault']}}
+  const d=w.list[0];
+  if(peopleW&&!contiW)return lineup(d);
+  if(contiW&&peopleW){const c=contiOne(d),l=lineup(d);return{title:c.title||l.title,text:(c.title?c.text:c.text)+'\n\n'+(l.title?l.text:l.text),go:[...new Set([...(c.go||[]),...(l.go||[])])].slice(0,2)}}
+  if(contiW&&w.month)return null;
+  return contiOne(d)}
+
  /* 화면 */
- const SUG=['알림이 안 와요','못 서는 날은 어떻게 해요?','토요 연습 참석 답하기','신청곡 남기는 법','PIN을 잊어버렸어요','폰 홈 화면에 추가하기'];
+ const SUG=['지난주 콘티 뭐였지?','이번 주 누가 서요?','내 순서 언제야?','송폼 만드는 법','못 서는 날은 어떻게 해요?','알림이 안 와요','신청곡 남기는 법','PIN을 잊어버렸어요'];
  function bubble(m){if(m.role==='user')return `<div class="ka-m ka-u"><p>${E(m.text)}</p></div>`;
-  const go=(m.go||[]).map(k=>`<button type="button" class="ka-go" data-ka-go="${E(k)}">${E((KB&&KB.go[k])||k)} 바로 가기 →</button>`).join('');
+  const lab=k=>k.startsWith('conti:')?'이 콘티 열기 →':k.startsWith('date:')?'그 주 홈에서 보기 →':`${(KB&&KB.go[k])||k} 바로 가기 →`;const go=(m.go||[]).map(k=>`<button type="button" class="ka-go" data-ka-go="${E(k)}">${E(lab(k))}</button>`).join('');
+  const st=m.steps&&m.steps.length?`<ol class="ka-st">${m.steps.map(v=>`<li>${E(v)}</li>`).join('')}</ol>`:'',tp=m.tips&&m.tips.length?`<ul class="ka-tp">${m.tips.map(v=>`<li>${E(v)}</li>`).join('')}</ul>`:'';
   const rel=(m.rel||[]).map(x=>`<button type="button" class="ka-chip" data-ka-q="${E(x.t)}">${E(x.t)}</button>`).join('');
-  return `<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div>${m.title?`<b class="ka-t">${E(m.title)}</b>`:''}<p>${E(m.text)}</p>${go?`<div class="ka-gos">${go}</div>`:''}${rel?`<small class="ka-rl">이것도 궁금하세요?</small><div class="ka-chips">${rel}</div>`:''}</div></div>`}
+  return `<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div>${m.title?`<b class="ka-t">${E(m.title)}</b>`:''}<p>${E(m.text)}</p>${st}${tp}${go?`<div class="ka-gos">${go}</div>`:''}${rel?`<small class="ka-rl">이것도 궁금하세요?</small><div class="ka-chips">${rel}</div>`:''}</div></div>`}
  function paint(){const w=document.getElementById('kzAsk');if(!w)return;const b=w.querySelector('.ka-b');const n=me().name||'';
-  b.innerHTML=`<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div><p>${E(n?n+'님, ':'')}안녕하세요! 꿈자리 도우미예요.\n앱 사용법이 궁금하면 편하게 물어보세요. 메뉴 위치, 불참·대타, 알림, 가입·로그인 같은 것들이요.</p><div class="ka-chips">${SUG.map(s=>`<button type="button" class="ka-chip" data-ka-q="${E(s)}">${E(s)}</button>`).join('')}</div></div></div>`+hist.map(bubble).join('')+(busy?'<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div><p class="ka-dots"><span></span><span></span><span></span></p></div></div>':'');
+  b.innerHTML=`<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div><p>${E(n?n+'님, ':'')}안녕하세요! 꿈자리 도우미예요.\n앱 사용법이 궁금하면 편하게 물어보세요. 하는 방법을 순서대로 알려 드려요.\n'지난주 콘티 뭐였지?', '이번 주 누가 서요?', '은혜 언제 불렀어?' 같은 팀 기록도 찾아 드려요.</p><div class="ka-chips">${SUG.map(s=>`<button type="button" class="ka-chip" data-ka-q="${E(s)}">${E(s)}</button>`).join('')}</div></div></div>`+hist.map(bubble).join('')+(busy?'<div class="ka-m ka-a"><i class="ka-av" aria-hidden="true">✦</i><div><p class="ka-dots"><span></span><span></span><span></span></p></div></div>':'');
   b.scrollTop=b.scrollHeight;w.querySelector('.ka-send').disabled=busy}
  async function ask(q){q=String(q||'').trim();if(!q||busy)return;hist.push({role:'user',text:q});busy=true;paint();
   let out=null;try{await loadKB()}catch(e){}
-  try{const u=window.KZ_FIREBASE_AUTH?.currentUser;if(u){const tk=await u.getIdToken(),ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),30000);
-    const r=await fetch('/api/assistant',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({q,history:hist.slice(0,-1).slice(-8).map(m=>({role:m.role,text:m.text}))})}).finally(()=>clearTimeout(tm));
-    const j=await r.json().catch(()=>({}));if(!r.ok&&j.error)out={text:j.error,go:[]};else if(j.ai&&j.answer)out={text:j.answer,go:j.go||[],ai:true}}}catch(e){}
+  try{out=await dataAnswer(q)}catch(e){console.warn('[도우미 기록]',e);out=null}
+  if(!out&&!aiOff)try{const u=window.KZ_FIREBASE_AUTH?.currentUser;if(u){const tk=await u.getIdToken(),ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),30000);
+    const r=await fetch('/api/assistant',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({q,history:hist.slice(0,-1).slice(-8).map(m=>({role:m.role,text:[m.title,m.text,...(m.steps||[]),...(m.tips||[])].filter(Boolean).join('\n')}))})}).finally(()=>clearTimeout(tm));
+    const j=await r.json().catch(()=>({}));if(!r.ok&&j.error)out={text:j.error,go:[]};else if(j.ai&&j.answer)out={text:j.answer,go:j.go||[],ai:true};else if(j.ai===false&&!j.error)aiOff=true}}catch(e){}
   if(!out){out=KB?localAnswer(q):{text:'지금은 답을 불러오지 못했어요. 잠시 후 다시 물어봐 주세요.',go:[]}}
   busy=false;hist.push({role:'assistant',...out});if(hist.length>40)hist=hist.slice(-40);paint()}
  function close(){document.getElementById('kzAsk')?.remove()}
  function open(){if(document.getElementById('kzAsk'))return;loadKB().then(()=>paint()).catch(()=>{});
   const w=document.createElement('div');w.id='kzAsk';w.className='kzh-ov ka-ov';
-  w.innerHTML=`<div class="kzh-p ka-p" role="dialog" aria-modal="true" aria-label="꿈자리 도우미"><div class="kzh-h"><i class="ka-logo" aria-hidden="true">✦</i><b>꿈자리 도우미<small>앱 사용법을 무엇이든 물어보세요</small></b>${hist.length?'<button type="button" class="ka-new" data-ka-new>새 대화</button>':''}<button type="button" class="kzh-x" aria-label="닫기">✕</button></div><div class="ka-b"></div><form class="ka-f"><textarea rows="1" maxlength="600" placeholder="궁금한 걸 적어 주세요 (예: 대타 요청은 어디서 받아요?)" aria-label="질문"></textarea><button type="submit" class="ka-send" aria-label="보내기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></form><p class="ka-note">도우미는 설명서를 바탕으로 답해요. 틀릴 수 있으니 중요한 일은 단장·관리계정에게 확인해 주세요.</p></div>`;
+  w.innerHTML=`<div class="kzh-p ka-p" role="dialog" aria-modal="true" aria-label="꿈자리 도우미"><div class="kzh-h"><i class="ka-logo" aria-hidden="true">✦</i><b>꿈자리 도우미<small>앱 사용법을 무엇이든 물어보세요</small></b>${hist.length?'<button type="button" class="ka-new" data-ka-new>새 대화</button>':''}<button type="button" class="kzh-x" aria-label="닫기">✕</button></div><div class="ka-b"></div><form class="ka-f"><textarea rows="1" maxlength="600" placeholder="궁금한 걸 적어 주세요 (예: 송폼 어떻게 만들어?)" aria-label="질문"></textarea><button type="submit" class="ka-send" aria-label="보내기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></form><p class="ka-note">도우미는 설명서를 바탕으로 답해요. 틀릴 수 있으니 중요한 일은 단장·관리계정에게 확인해 주세요.</p></div>`;
   document.body.append(w);paint();const ta=w.querySelector('textarea');
   const fit=()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,120)+'px'};ta.addEventListener('input',fit);
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();w.querySelector('form').requestSubmit()}});
@@ -10765,7 +10828,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .ka-u{justify-content:flex-end}.ka-u p{background:#3a2c20;color:#fff;padding:9px 13px;border-radius:16px 16px 4px 16px;max-width:82%}
 .ka-a>div{background:var(--card,#fff);border:1px solid var(--bd);padding:10px 13px;border-radius:4px 16px 16px 16px;max-width:calc(100% - 40px);min-width:0}
 .ka-av{font-style:normal;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#f3e7d6;color:#9a5a24;font-size:14px}
-#kzAsk .ka-t{display:block;font-size:13px;color:#9a5a24;margin:0 0 4px;padding:0;border:0;background:none;box-shadow:none;border-radius:0}
+#kzAsk .ka-st{margin:8px 0 0;padding-left:20px;display:grid;gap:5px;font-size:14px;line-height:1.55}#kzAsk .ka-st li::marker{color:#9a5a24;font-weight:700}#kzAsk .ka-tp{margin:10px 0 0;padding:9px 12px 9px 26px;background:#fbf4ea;border-radius:10px;display:grid;gap:4px;font-size:13px;line-height:1.5;color:#5a4636}#kzAsk .ka-t{display:block!important;font-size:13px!important;color:#9a5a24!important;margin:0 0 6px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}
 .ka-gos{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ka-go{border:0;background:#8a5a2b;color:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .ka-rl{display:block;margin-top:10px;color:var(--mu);font-size:12px}
