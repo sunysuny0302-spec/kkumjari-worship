@@ -41,6 +41,11 @@ self.addEventListener('push',event=>{
 self.addEventListener('notificationclick',event=>{
  event.notification.close();const link=event.notification.data?.link||'/?kz_open=inbox';
  event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(async list=>{
- for(const client of list){if(new URL(client.url).origin!==self.location.origin)continue;await client.navigate(link);return client.focus();}return self.clients.openWindow(link);
+ for(const client of list){if(new URL(client.url).origin!==self.location.origin)continue;
+ /* 이미 열린 앱: 새로 불러오지 말고 앱 안에서 이동(새로 불러오면 뒤로 가기 때 예전 화면·로그인 화면으로 나감) */
+ try{await client.focus()}catch(e){}
+ const ok=await new Promise(res=>{try{const ch=new MessageChannel();const tm=setTimeout(()=>res(false),1500);ch.port1.onmessage=e=>{clearTimeout(tm);res(!!(e.data&&e.data.ok))};client.postMessage({kzOpen:link},[ch.port2])}catch(e){res(false)}});
+ if(ok)return;await client.navigate(link);return;}
+ return self.clients.openWindow(link);
  }));
 });

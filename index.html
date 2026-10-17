@@ -7975,13 +7975,13 @@ function inboxGroup(n){if(n.type==='mention')return'mention';if(n.type==='celebr
 const inboxLabels={'chat-all':'채팅','chat-admin':'관리자방 채팅',mention:'나를 언급',notice:'공지',event:'일정',song:'신청곡',conti:'콘티',sched:'일정 변경 · 대타',rsvp:'참석 확인',ppt:'가사 PPT',feed:'꿈마당',celebrate:'생일 · 감사 카드',other:'기타 알림'};
 const inboxIcons={'chat-all':'💬','chat-admin':'💬',mention:'📣',notice:'📌',event:'📅',song:'🎵',conti:'🎼',sched:'🔁',rsvp:'✅',ppt:'🖥️',feed:'🏡',celebrate:'🎉',other:'🔔'};
 const inboxCollapsed=new Set();
-async function inboxView(){const gen=++pageGeneration;readNote=null;if(!shell('내 알림함','알림을 누르면 바로 그 화면으로 가요. 읽은 알림은 저절로 정리돼요.','<button type="button" class="kc-btn" id="kcReadAll">모두 읽음</button>'))return;
+async function inboxView(){const gen=++pageGeneration;readNote=null;if(!shell('내 알림함','알림을 누르면 바로 그 화면으로 가요. 읽은 알림은 저절로 정리돼요.','<button type="button" class="kc-btn" id="kcReadAll">전체 읽음</button>'))return;
  $c('#kcReadAll').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{const r=await api({action:'readAll'});mailItems=mailItems.filter(n=>!n.read&&n.createdAt>r.readThrough);mailCursor=null;unread=mailItems.length;statusAt=0;badge();if(activeView()==='inbox')paintInbox();}catch(err){error(err);}finally{if(b.isConnected)b.disabled=false;}};
  $c('#kcContent').innerHTML='<div class="kc-empty">알림을 불러오는 중…</div>';try{const r=await api({action:'inbox'});if(activeView()!=='inbox'||gen!==pageGeneration)return;mailItems=r.items;mailCursor=r.cursor;paintInbox();await status();}catch(e){if(activeView()==='inbox'&&gen===pageGeneration){$c('#kcContent').innerHTML='<button class="kc-btn" id="kcRetry">다시 불러오기</button>';$c('#kcRetry').onclick=inboxView;error(e);}}}
 function paintInbox(){const c=$c('#kcContent');if(!c||activeView()!=='inbox')return;const groups=new Map();for(const n of mailItems){const key=inboxGroup(n);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(n);}
  /* 최신 알림이 있는 종류가 위로. 종류는 기본으로 펼쳐 두고(접은 것만 기억), 알림은 줄 전체를 누르면 바로 열림 */
  const gs=[...groups].sort((a,b)=>Math.max(...b[1].map(n=>n.createdAt||0))-Math.max(...a[1].map(n=>n.createdAt||0)));
- c.innerHTML=gs.map(([key,items])=>`<details class="kc-notice-group kc-ng2" data-group="${escape(key)}" ${inboxCollapsed.has(key)?'':'open'}><summary><span class="kc-ng-ic" aria-hidden="true">${inboxIcons[key]||'🔔'}</span><strong>${escape(inboxLabels[key]||'기타 알림')}</strong><em>${items.length}</em><button type="button" class="kc-ng-all" data-group-read="${escape(key)}">모두 읽음</button></summary><div>${items.map(n=>`<button type="button" class="kc-group-item kc-gi2" data-note-read="${escape(n.id)}"><i class="kc-unread-dot" aria-hidden="true"></i><span class="kc-gi-t"><b>${escape(n.title)}</b>${n.body?`<small>${escape(n.body)}</small>`:''}</span><time>${escape(time(n.createdAt))}</time></button>`).join('')}</div></details>`).join('')||'<div class="kc-empty kc-inbox-empty"><b>새 알림이 없어요</b><span>읽은 알림은 목록에서 정리돼요.</span></div>';
+ c.innerHTML=gs.map(([key,items])=>`<details class="kc-notice-group kc-ng2" data-group="${escape(key)}" ${inboxCollapsed.has(key)?'':'open'}><summary><span class="kc-ng-ic" aria-hidden="true">${inboxIcons[key]||'🔔'}</span><strong>${escape(inboxLabels[key]||'기타 알림')}</strong><em>${items.length}</em></summary><div>${items.map(n=>`<button type="button" class="kc-group-item kc-gi2" data-note-read="${escape(n.id)}"><i class="kc-unread-dot" aria-hidden="true"></i><span class="kc-gi-t"><b>${escape(n.title)}</b>${n.body?`<small>${escape(n.body)}</small>`:''}</span><time>${escape(time(n.createdAt))}</time></button>`).join('')}</div></details>`).join('')||'<div class="kc-empty kc-inbox-empty"><b>새 알림이 없어요</b><span>읽은 알림은 목록에서 정리돼요.</span></div>';
  if(mailCursor)c.insertAdjacentHTML('beforeend','<button type="button" class="kc-btn kc-more" id="kcMoreMail">이전 알림 더 보기</button>');
  c.querySelectorAll('[data-group]').forEach(d=>d.ontoggle=()=>{if(d.open)inboxCollapsed.delete(d.dataset.group);else inboxCollapsed.add(d.dataset.group);});
  c.querySelectorAll('[data-group-read]').forEach(b=>b.onclick=async e=>{e.preventDefault();e.stopPropagation();const key=b.dataset.groupRead,ids=mailItems.filter(n=>inboxGroup(n)===key).map(n=>n.id);if(!ids.length)return;b.disabled=true;try{for(let k=0;k<ids.length;k+=100)await api({action:'readMany',ids:ids.slice(k,k+100)});mailItems=mailItems.filter(n=>!ids.includes(n.id));unread=Math.max(0,unread-ids.length);statusAt=0;badge();paintInbox();}catch(err){error(err);if(b.isConnected)b.disabled=false;}});
@@ -8016,7 +8016,7 @@ function setupPanelLayout(panel){
 function closePanel(){/* 버튼으로 닫으면 열 때 남긴 기록도 하나 되돌림 */try{if(history.state&&history.state.panel&&document.getElementById('kcPanel')){window.__kzPanelBack=1;history.back()}}catch(e){}const input=$c('#kcChatText');if(input)drafts[room]=input.value;if(memberDismiss){document.removeEventListener('click',memberDismiss);memberDismiss=null;}pageGeneration++;document.body.classList.remove('kc-panel-open');panelView=null;const panel=document.getElementById('kcPanel');if(panel){panel._layoutCleanup?.();panel.close();panel.remove();}document.body.classList.remove('kc-chat-active','kc-keyboard');imageCache.clear();}
 function openPanel(v){if(!ready())return toast('로그인 후 이용해 주세요.');const key=uid()+'|'+(authAccount()?.id||'');if(key!==session){session=key;reset();}panelView=v;document.body.classList.add('kc-panel-open');let d=$c('#kcPanel');if(!d){d=document.createElement('dialog');d.id='kcPanel';d.setAttribute('aria-label','팀 소통');d.innerHTML='<header class="kc-panel-head"><button type="button" id="kcPanelBack" class="kz-back" aria-label="이전 화면으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><strong id="kcPanelTitle">팀 채팅</strong><span class="kc-drag-hint">상단을 끌어 이동</span><button type="button" id="kcPanelReset" aria-label="창 위치와 크기 초기화" title="창 위치·크기 초기화">↗</button><button type="button" id="kcPanelClose" autofocus aria-label="닫기">✕</button></header><nav id="kcPanelTabs" aria-label="소통 메뉴"></nav><div id="kcPanelBody"></div>';document.body.append(d);try{const hs=history.state||{};history.pushState({kz:1,v:hs.v||(typeof view!=='undefined'?view:'home'),r:hs.r!==undefined?hs.r:(typeof role!=='undefined'?role:null),i:(hs.i||0)+1,panel:1},'')}catch(e){}d.addEventListener('cancel',e=>{e.preventDefault();closePanel();});d.addEventListener('close',()=>{/* 뒤로 가기·쓸기 등 다른 경로로 닫혀도 화면 가림 상태를 정리 */if(d.isConnected&&document.body.classList.contains('kc-panel-open'))closePanel();});d.addEventListener('click',e=>{if(e.isTrusted&&e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel();}});$c('#kcPanelClose').onclick=closePanel;$c('#kcPanelBack').onclick=closePanel;d.show();setupPanelLayout(d);}
 $c('#kcPanelTabs').innerHTML='';$c('#kcPanelTitle').textContent=pages[v];d.setAttribute('aria-label',pages[v]);d.dataset.panel=v;document.body.classList.toggle('kc-chat-active',v==='community');closeSide();viewport();if(v==='community')communityView();else if(v==='song_requests')songsView();else inboxView();}
-let pendingOpen=new URLSearchParams(location.search).get('kz_open');
+let pendingOpen=new URLSearchParams(location.search).get('kz_open');window.kzSetOpen=t=>{pendingOpen=t;setTimeout(()=>{try{tick()}catch(e){}},0)};
 async function tick(){if(busy||document.hidden)return;const key=ready()?uid()+'|'+(authAccount()?.id||''):'';if(key!==session){session=key;reset();}if(!key)return;busy=true;try{if(Date.now()-statusAt>(activeView()==='inbox'?15000:45000)){const before=actor?.rank;await status();if(activeView()==='inbox'&&!readNote&&mailItems.length<=60){const g=pageGeneration;const r=await api({action:'inbox'});if(activeView()==='inbox'&&!readNote&&g===pageGeneration){mailItems=r.items;mailCursor=r.cursor;paintInbox();}}if(activeView()==='community'&&before&&before!==actor.rank){roomCache.clear();chatItems=[];loadedRoom='';await communityView();}}
  if(pendingOpen){const target=pendingOpen;pendingOpen=null;if(target==='approve'){setTimeout(()=>{window.kzOpenApprove?kzOpenApprove():openAccountPicker()},600)}else if(['song_requests','inbox','community','lyrics','mobile_my','feed'].includes(target))go(target);}
  if(activeView()==='community'&&Date.now()-presenceAt>15000){presenceAt=Date.now();window.kzPresence?.load(true).catch(()=>{});}
@@ -8724,7 +8724,10 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  /* 크롬·삼성 인터넷은 '사용자가 누르지 않고' 만든 기록을 뒤로 가기 때 건너뜀 → 처음 깔아 둔 보호 기록이 무시되어 앱 밖(로그인 화면)으로 나가던 문제.
     첫 터치/클릭 때(로그인 직후 포함) 보호 기록을 한 번 더 '사용자 동작'으로 쌓아 둠 */
  let armedFor='';const arm=()=>{try{if(document.getElementById('kzLoginLock'))return;const a=(typeof authAccount==='function'&&authAccount()||{}).id||'x';if(armedFor===a)return;armedFor=a;
-   history.replaceState({kz:1,guard:1,v:'home',i:0},'');history.pushState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:1},'');if(typeof view!=='undefined'&&view!=='home')history.pushState({kz:1,...cur(),i:2},'')}catch(e){}};
+   /* 지금 기록을 '보호'로 바꾸고 현재 화면 하나만 '사용자 동작'으로 쌓음(채팅 창이 열려 있으면 그 표시도 유지) */
+   const pan=!!document.getElementById('kcPanel');history.replaceState({kz:1,guard:1,v:'home',i:0},'');history.pushState({kz:1,...cur(),i:1,...(pan?{panel:1}:{})},'')}catch(e){}};
+ /* 보호 기록에 닿은 뒤 다시 쌓은 기록은 '사용자 동작 없이' 만든 것이라 크롬이 건너뛸 수 있음 → 다음 터치 때 다시 무장 */
+ const rearm=()=>{armedFor=''};
  addEventListener('click',arm,true);addEventListener('keydown',arm,true);addEventListener('touchend',arm,{capture:true,passive:true});
  /* 열려 있는 창 하나 닫기 → 닫았으면 true */
  function closeTop(){
@@ -8736,9 +8739,9 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   return false}
  addEventListener('popstate',e=>{
   /* 맨 아래 '보호' 기록까지 왔으면 앱 밖(로그인 화면·이전 사이트)으로 나가지 않고 홈에 머묾 */
-  if(e.state&&e.state.guard){try{history.pushState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:1},'')}catch(_){}if(document.getElementById('kzLoginLock'))return;if(closeTop())return;if(typeof view!=='undefined'&&view!=='home'){popping=true;try{go('home')}finally{popping=false}}return}
+  if(e.state&&e.state.guard){rearm();try{history.pushState({kz:1,v:'home',r:typeof role!=='undefined'?role:null,i:1},'')}catch(_){}if(document.getElementById('kzLoginLock'))return;if(closeTop())return;if(typeof view!=='undefined'&&view!=='home'){popping=true;try{go('home')}finally{popping=false}}return}
   if(document.getElementById('kzLoginLock'))return;if(window.__kzPanelBack){window.__kzPanelBack=0;return}
-  const ct=closeTop();if(ct){/* 채팅 창은 열 때 기록을 남겼으니 다시 쌓지 않음 */if(ct!=='panel'){try{history.pushState({kz:1,...cur(),i:((e.state&&e.state.i)||0)+1},'')}catch(_){}}return}
+  const ct=closeTop();if(ct){/* 채팅 창은 열 때 기록을 남겼으니 다시 쌓지 않음 */if(ct!=='panel'){rearm();try{history.pushState({kz:1,...cur(),i:((e.state&&e.state.i)||0)+1},'')}catch(_){}}return}
   const s=e.state;popping=true;try{if(s&&s.kz){if(s.r!==undefined&&typeof role!=='undefined'&&s.r!==role){try{role=s.r;LS('role',role)}catch(_){}}go(s.v)}else go('home');window.scrollTo({top:0,behavior:'instant'})}catch(err){console.error(err)}finally{popping=false}});
  /* 아이폰 홈 화면 앱: 화면 왼쪽 끝에서 오른쪽으로 쓸면 뒤로 */
  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
@@ -9314,7 +9317,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  setInterval(()=>{try{topBtn();if(me())load(false)}catch(e){}},5000);setTimeout(()=>{try{topBtn();load(true)}catch(e){}},2500);
  new MutationObserver(()=>{const m=document.getElementById('kcMail'),b=document.getElementById('kzRsvpBtn');if(m&&(!b||b.previousElementSibling!==m))try{topBtn()}catch(e){}}).observe(document.documentElement,{childList:true,subtree:true});
  /* 알림의 '참석 확인' 링크 */
- try{const q=new URLSearchParams(location.search).get('kz_open');if(q==='rsvp')setTimeout(()=>open(),3500)}catch(e){}
+ window.kzRsvpOpen=()=>open();try{const q=new URLSearchParams(location.search).get('kz_open');if(q==='rsvp')setTimeout(()=>open(),3500)}catch(e){}
 })();</script>
 <style id="kz-urgent-css">
 .kz-urg-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#fff4ec;border:1px solid #f1c9a9;color:#5a3a22;font-size:14px;line-height:1.45}
@@ -10677,6 +10680,18 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 .sq-vt b{font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sq-vt small{font-size:11px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
+<script id="kz-sw-open">
+/* 앱이 이미 열려 있을 때 푸시 알림을 누르면: 페이지를 새로 불러오지 않고(→ 뒤로 가기 때 로그인 화면으로 나가던 원인) 앱 안에서 해당 화면으로 이동 */
+(function(){
+ if(!('serviceWorker' in navigator))return;
+ navigator.serviceWorker.addEventListener('message',e=>{const d=e.data||{};if(!d.kzOpen)return;
+  try{e.ports&&e.ports[0]&&e.ports[0].postMessage({ok:1})}catch(_){}
+  let t='';try{t=new URL(d.kzOpen,location.href).searchParams.get('kz_open')||''}catch(_){}
+  if(!t)return;
+  if(t==='rsvp'){const f=()=>{if(document.getElementById('kzLoginLock'))return setTimeout(f,1500);window.kzRsvpOpen&&kzRsvpOpen()};f();return}
+  window.kzSetOpen&&kzSetOpen(t)});
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
