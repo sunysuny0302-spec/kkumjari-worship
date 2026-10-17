@@ -10443,13 +10443,16 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){let n=0,busy=false,last=0;
  const chatOpen=()=>(typeof view!=='undefined'&&view==='community')||!!document.querySelector('.kc-panel.open,#kcPanel.open,.kc-panel[aria-hidden="false"]');
  function paint(){const t=n>99?'99+':String(n);
-  const top=document.getElementById('kcChatOpen');if(top){let b=top.querySelector('#kcChatCount');if(!b){b=document.createElement('span');b.id='kcChatCount';b.className='kc-badge';top.append(b)}b.hidden=!n;b.textContent=t;top.setAttribute('aria-label','팀 채팅'+(n?`, 안 읽은 메시지 ${t}개`:''))}
-  document.querySelectorAll('#tabbar button').forEach(btn=>{if(!/채팅/.test(btn.textContent||''))return;let b=btn.querySelector('.kz-tb-badge');if(!b){b=document.createElement('span');b.className='kz-tb-badge';(btn.querySelector('.tb-i')||btn).append(b)}b.hidden=!n;b.textContent=t})}
+  /* 값이 바뀔 때만 고침 — 같은 값을 다시 쓰면 화면 변경 감시가 다시 불려 무한 반복(페이지 응답 없음)이 됨 */
+  const set=b=>{if(b.hidden!==!n)b.hidden=!n;if(b.textContent!==t)b.textContent=t};
+  const top=document.getElementById('kcChatOpen');if(top){let b=top.querySelector('#kcChatCount');if(!b){b=document.createElement('span');b.id='kcChatCount';b.className='kc-badge';top.append(b)}set(b);const al='팀 채팅'+(n?`, 안 읽은 메시지 ${t}개`:'');if(top.getAttribute('aria-label')!==al)top.setAttribute('aria-label',al)}
+  chatTabs().forEach(btn=>{let b=btn.querySelector('.kz-tb-badge');if(!b){b=document.createElement('span');b.className='kz-tb-badge';(btn.querySelector('.tb-i')||btn).append(b)}set(b)})}
+ const chatTabs=()=>[...document.querySelectorAll('#tabbar button')].filter(btn=>/채팅/.test(btn.textContent||''));
  async function check(force){if(busy||document.hidden||!window.kzRsvp||!kzRsvp.api)return paint();let a=null;try{a=authAccount()}catch(e){}if(!a||document.getElementById('kzLoginLock'))return;
   if(chatOpen()){n=0;paint();return}if(!force&&Date.now()-last<20000)return paint();busy=true;last=Date.now();
   try{const r=await kzRsvp.api({action:'chatUnread',room:'all'});n=Number(r&&r.unread)||0}catch(e){}busy=false;paint()}
  setInterval(()=>check(false),30000);setTimeout(()=>check(true),2500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(true)});
- new MutationObserver(()=>{if(chatOpen()){if(n){n=0;paint()}}else{const tb=document.querySelector('#tabbar button .kz-tb-badge');const top=document.getElementById('kcChatOpen');if((top&&!top.querySelector('#kcChatCount'))||(!tb&&n))paint()}}).observe(document.body,{childList:true,subtree:true});
+ new MutationObserver(()=>{if(chatOpen()){if(n){n=0;paint()}}else{const top=document.getElementById('kcChatOpen');if((top&&!top.querySelector('#kcChatCount'))||(n&&chatTabs().some(btn=>!btn.querySelector('.kz-tb-badge'))))paint()}}).observe(document.body,{childList:true,subtree:true});
  let was=false;setInterval(()=>{const o=chatOpen();if(was&&!o){last=0;check(true)}was=o},1500);
  window.kzChatUnread={check,get:()=>n};
 })();
