@@ -444,3 +444,9 @@ test('inbox: plain chat is not stored, likes and comments group per post, readMa
 test('signupNotify: chief and management get one inbox note per signup',async()=>{const f=fixture();
  const r=await f.run({system:true},{action:'signupNotify',uid:'newuid1',name:'새싹'});assert.equal(typeof r.sent,'number');
  const r2=await f.run({system:true},{action:'signupNotify',uid:'newuid1',name:'새싹'});assert.ok(r2.dup||r2.sent===0);});
+test('song requests accept several reference links (max 5) and keep url as the first',async()=>{const f=fixture();
+ const r=await f.run(f.user,{action:'songCreate',id:'song_multi_1',title:'은혜',urls:['https://youtu.be/aaaaaaaaaaa','https://youtu.be/bbbbbbbbbbb']});
+ assert.equal(r.item.url,'https://youtu.be/aaaaaaaaaaa');assert.equal(r.item.urls.length,2);
+ await assert.rejects(f.run(f.user,{action:'songCreate',id:'song_multi_2',title:'x',urls:['a','b','c','d','e','f'].map(x=>'https://youtu.be/'+x)}),{status:400});
+ f.advance();await f.run(f.user,{action:'songUpdate',id:r.item.id,revision:1,title:'은혜',urls:['https://youtu.be/ccccccccccc']});
+ const l=(await f.run(f.user,{action:'songs'})).items.find(x=>x.id===r.item.id);assert.deepEqual(l.urls,['https://youtu.be/ccccccccccc']);assert.equal(l.url,'https://youtu.be/ccccccccccc');});
