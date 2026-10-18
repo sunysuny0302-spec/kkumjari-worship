@@ -453,3 +453,10 @@ test('song requests accept several reference links (max 5) and keep url as the f
 test('song requests keep a short note per reference link',async()=>{const f=fixture();
  const r=await f.run(f.user,{action:'songCreate',id:'song_links_1',title:'은혜',links:[{url:'https://youtu.be/aaaaaaaaaaa',note:'어노인팅 버전'},{url:'https://youtu.be/bbbbbbbbbbb'}]});
  assert.deepEqual(r.item.links,[{url:'https://youtu.be/aaaaaaaaaaa',note:'어노인팅 버전'},{url:'https://youtu.be/bbbbbbbbbbb'}]);assert.equal(r.item.url,'https://youtu.be/aaaaaaaaaaa');assert.equal(r.item.urls.length,2);});
+test('noServiceSave: staff only, validates dates, fixes existing overrides',async()=>{const f=fixture();
+ await assert.rejects(f.run(f.user,{action:'noServiceSave',days:{'2026-10-25':'추석'}}),{status:403});
+ await assert.rejects(f.run(f.admin,{action:'noServiceSave',days:{'10/25':'x'}}),{status:400});
+ f.data.set('overrides/o1',{from:'A',to:'B',date:'2026-11-01'});
+ const r=await f.run(f.admin,{action:'noServiceSave',days:{'2026-10-25':'추석 연휴'},fix:[{id:'o1',from:'C'},{id:'missing',from:'D'},{id:'../bad',from:'E'}]});
+ assert.equal(r.ok,true);assert.deepEqual(f.data.get('settings/noService').days,{'2026-10-25':'추석 연휴'});
+ assert.equal(f.data.get('overrides/o1').from,'C');assert.equal(f.data.has('overrides/missing'),false);});

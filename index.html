@@ -9122,9 +9122,12 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   try{for(const o of (ovr||[])){if(!o||!o.date||o.date<ns||next[o.date])continue;
    if(o.k==='L'){noSvc=prev;const b0=ldrBase(o.date);noSvc=next;const b1=ldrBase(o.date);if(o.from===b0&&b1&&b1!==b0)out.push({o,from:b1})}
    else if(!o.k){noSvc=prev;const a0=sg(o.date);noSvc=next;const a1=sg(o.date);if(a0.has(o.from)&&!a1.has(o.from)){const nw=[...a1].filter(n=>!a0.has(n));if(nw.length===1)out.push({o,from:nw[0]})}}}}finally{noSvc=prev}return out}
- async function save(days,msg){try{const fix=affected(days),a=me();await db.doc('settings/noService').set({days,up:Date.now(),by:a?a.name||'':''});
+ async function save(days,msg){const fix=affected(days);const ok=()=>toast(msg+(fix.length?` · 교환·대신 ${fix.length}건도 같이 맞췄어요`:''));try{const a=me();await db.doc('settings/noService').set({days,up:Date.now(),by:a?a.name||'':''});
    for(const x of fix){try{await db.doc('overrides/'+x.o._id).set({from:x.from},{merge:true})}catch(e){console.warn(e)}}
-   toast(msg+(fix.length?` · 교환·대신 ${fix.length}건도 같이 맞췄어요`:''))}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
+   ok()}catch(e){
+   /* 보안 규칙이 막으면 서버를 거쳐 저장 (서버가 관리자급인지 확인) */
+   if(e&&(e.code==='permission-denied'||/permission/i.test(e.message||''))&&window.kzRsvp&&kzRsvp.api){try{await kzRsvp.api({action:'noServiceSave',days,fix:fix.map(x=>({id:x.o._id,from:x.from}))});ok();return}catch(e2){toast('저장하지 못했어요: '+(e2.message||e2));return}}
+   toast('저장하지 못했어요: '+(e.message||e))}}
  function panel(){const ns=nextSun(),up=Object.keys(noSvc||{}).filter(d=>d>=ns).sort(),ed=canNs();
   if(!ed&&!up.length)return '';
   const opts=Array.from({length:60},(_,i)=>shiftDate(ns,i*7)).filter(d=>!isNoSvc(d));
