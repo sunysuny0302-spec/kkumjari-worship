@@ -10986,10 +10986,11 @@ body.kc-crop-open{overflow:hidden}
  window.kzNoSvcPop=open;
  /* 홈: 큰 안내 카드 대신 작은 안내 줄(누르면 안내 창) + 이번 주면 한 번 자동으로 */
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const box=document.querySelector('#body .hm-nosvc');if(box){const d=date,n=shiftDate(nextSun(),7),t=isNoSvc(d)?d:(d===nextSun()&&isNoSvc(n))?n:null;
-    if(t){box.outerHTML=`<button type="button" class="hm-nosvc2" data-nsv-open="${t}"><i>⛪</i><span><b>${t===nextSun()?'이번 주':t===n?'다음 주':E(md(t))} 청년부 예배 없음</b><small>${E(noSvcWhy(t))}</small></span><em>안내 보기 ›</em></button>`;
+    if(t){box.outerHTML=`<button type="button" class="hm-nosvc2" data-nsv-open="${t}"><i>⛪</i><span><b>${t===d?`이 주일(${E(md(t))})은 청년부 예배가 없어요`:`다음 주일(${E(md(t))})은 청년부 예배가 없어요`}</b><small>${E(noSvcWhy(t))}</small></span><em>안내 보기 ›</em></button>`;
      const b=document.querySelector('#body [data-nsv-open]');if(b)b.onclick=()=>open(b.dataset.nsvOpen)}}
-   const ns=nextSun();let seen=false;try{seen=!!localStorage.getItem(seenK(ns))}catch(e){}
-   if(isNoSvc(ns)&&!seen&&!document.getElementById('kzLoginLock')&&!document.getElementById('kzLiveWelcome'))setTimeout(()=>{if(view==='home'&&!document.getElementById('kzLoginLock'))open(ns)},700)}catch(e){}return r}}
+   /* 지금 보는 주(또는 이번 주 화면에서 보이는 다음 주)가 예배 없는 주면, 그 날짜마다 한 번 안내 창 */
+   const d0=date,n0=shiftDate(nextSun(),7),ns=isNoSvc(d0)?d0:(d0===nextSun()&&isNoSvc(n0))?n0:null;let seen=true;try{seen=!ns||!!localStorage.getItem(seenK(ns))}catch(e){}
+   if(ns&&!seen&&!document.getElementById('kzLoginLock')&&!document.getElementById('kzLiveWelcome'))setTimeout(()=>{if(view==='home'&&!document.getElementById('kzLoginLock')&&(date===ns||date===nextSun()))open(ns)},500)}catch(e){}return r}}
 })();
 </script>
 <style id="kz-nosvc-pop-css">
