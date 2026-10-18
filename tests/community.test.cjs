@@ -461,3 +461,8 @@ test('noServiceSave: staff only, validates dates, fixes existing overrides',asyn
  assert.equal(r.ok,true);assert.deepEqual(f.data.get('settings/noService').days,{'2026-10-25':'추석 연휴'});
  assert.equal(f.data.get('overrides/o1').from,'C');assert.equal(f.data.has('overrides/missing'),false);});
 test('noServiceGet returns saved days',async()=>{const f=fixture();assert.deepEqual((await f.run(f.user,{action:'noServiceGet'})).days,{});await f.run(f.admin,{action:'noServiceSave',days:{'2026-12-27':'성탄'}});assert.deepEqual((await f.run(f.user,{action:'noServiceGet'})).days,{'2026-12-27':'성탄'});});
+test('askMiss: anyone records question text only; management lists and clears',async()=>{const f=fixture();
+ await f.run(f.user,{action:'askMiss',q:'  드럼 스틱 어디 둬요?  '});f.advance();await f.run(f.outsider,{action:'askMiss',q:'x'});
+ await assert.rejects(f.run(f.user,{action:'askMissList'}),{status:403});
+ const r=await f.run(f.admin,{action:'askMissList'});assert.deepEqual(r.items.map(x=>x.q),['드럼 스틱 어디 둬요?']);assert.equal(JSON.stringify(r).includes(f.user.id),false);
+ await f.run(f.admin,{action:'askMissClear'});assert.equal((await f.run(f.admin,{action:'askMissList'})).items.length,0);});
