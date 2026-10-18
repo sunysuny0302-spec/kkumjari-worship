@@ -460,3 +460,4 @@ test('noServiceSave: staff only, validates dates, fixes existing overrides',asyn
  const r=await f.run(f.admin,{action:'noServiceSave',days:{'2026-10-25':'추석 연휴'},fix:[{id:'o1',from:'C'},{id:'missing',from:'D'},{id:'../bad',from:'E'}]});
  assert.equal(r.ok,true);assert.deepEqual(f.data.get('settings/noService').days,{'2026-10-25':'추석 연휴'});
  assert.equal(f.data.get('overrides/o1').from,'C');assert.equal(f.data.has('overrides/missing'),false);});
+test('noServiceGet returns saved days',async()=>{const f=fixture();assert.deepEqual((await f.run(f.user,{action:'noServiceGet'})).days,{});await f.run(f.admin,{action:'noServiceSave',days:{'2026-12-27':'성탄'}});assert.deepEqual((await f.run(f.user,{action:'noServiceGet'})).days,{'2026-12-27':'성탄'});});
