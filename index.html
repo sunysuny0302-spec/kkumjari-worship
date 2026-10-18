@@ -7207,7 +7207,7 @@ function lyricsView(){lySub();if(!lyWeek)lyWeek=date;
  const P=songs.reduce((a,sg)=>{const p=lyProg(sg);a.f+=p.f;a.t+=p.t;return a},{f:0,t:0});
  const top=`<div class="ly-top"><div class="ly-date"><button type="button" class="ly-ib" data-ly-nav="1" ${idx>=opts.length-1?'disabled':''} aria-label="이전 콘티">‹</button><select id="lyDate" aria-label="콘티 날짜">${opts.map(([d,w])=>`<option value="${d}" ${d===lyWeek?'selected':''}>${lbl(d)}${w?` · ${lyRaw(w).length}곡`:' · 업로드 없음'}</option>`).join('')}</select><button type="button" class="ly-ib" data-ly-nav="-1" ${idx<=0?'disabled':''} aria-label="다음 콘티">›</button></div>
   ${up&&songs.length?`<div class="ly-prog" title="가사를 넣은 구간 / 넣어야 할 구간"><i><em style="width:${P.t?Math.round(P.f/P.t*100):0}%"></em></i>가사 ${P.f}/${P.t} 구간</div>`:''}<span class="ly-sp"></span>
-  ${up&&songs.length?`<label class="ly-chk"><input type="checkbox" id="lyBlank" ${lyBlank?'checked':''}>빈 구간은 검은 화면</label><button type="button" class="ly-btn" id="lyPv">전체 미리보기</button><button type="button" class="ly-go" id="lyGo">PPT 만들기 <b>${all.length}장</b></button>`:''}</div>`;
+  ${up&&songs.length?`<label class="ly-chk"><input type="checkbox" id="lyBlank" ${lyBlank?'checked':''}>빈 구간은 배경 화면</label><button type="button" class="ly-btn" id="lyPv">전체 미리보기</button><button type="button" class="ly-go" id="lyGo">PPT 만들기 <b>${all.length}장</b></button>`:''}</div>`;
  let main;
  if(!up){const rec=wk.slice(0,6);main=`<div class="ly-empty"><b>${lyWeek===date&&G2(()=>subRes)?'불러오는 중…':'이 날짜에는 홈에 업로드된 콘티가 없어요'}</b><span>인도자가 송폼·악보를 만들어 홈에 업로드하면 여기서 바로 불러와요.</span>${rec.length?`<span class="mu" style="font-size:12.5px">업로드된 콘티</span><div class="wk">${rec.map(([d,w])=>`<button type="button" data-ly-pick="${d}">${lbl(d)} · ${lyRaw(w).length}곡</button>`).join('')}</div>`:''}</div>`}
  else if(!songs.length)main='<div class="ly-empty"><b>업로드된 콘티에 곡이 없어요</b></div>';
@@ -7218,7 +7218,7 @@ function lyricsView(){lySub();if(!lyWeek)lyWeek=date;
   const past=!sg.hasForm?lyPastForms(sg.key,lyWeek):[];
   const nf=!sg.hasForm?`<div class="ly-nf"><b>이 곡은 이번 콘티에 송폼이 없어요</b>${past.length?`<span>같은 곡의 예전 송폼을 불러올 수 있어요</span><div class="opts">${past.map((p,k)=>`<button type="button" data-ly-form="${k}">${lbl(p.d)} · ${esc(p.seq.map(z=>z.t).join(' → '))}</button>`).join('')}</div>`:'<span>예전 콘티에도 이 곡의 송폼이 없어서, 곡 전체를 한 칸에 입력해요. 빈 줄로 슬라이드를 나눌 수 있어요.</span>'}</div>`:'';
   const secs=sg.uniq.map(lb=>{const z=sg.seq.find(q=>q.t===lb)||{c:'#22336b',bc:'#22336b',b:true},col=z.b?z.bc:z.c,v=String(sg.parts[lb]||''),times=sg.labels.filter(q=>q===lb).length,inst=lyInst(lb)&&!v.trim()&&!lyOpenInst[sg.key+'|'+lb];
-   if(inst)return `<div class="ly-sec inst" data-ly-sec="${esc(lb)}"><div class="ly-sh"><span class="ly-chip inst" style="--c:${esc(col)}">${esc(lb)}</span><span class="ly-st">반주 · ${lyBlank?'검은 화면':'건너뜀'}${times>1?` · ${times}번`:''}</span><button type="button" class="ex" data-ly-open="${esc(lb)}">가사 넣기</button></div></div>`;
+   if(inst)return `<div class="ly-sec inst" data-ly-sec="${esc(lb)}"><div class="ly-sh"><span class="ly-chip inst" style="--c:${esc(col)}">${esc(lb)}</span><span class="ly-st">반주 · ${lyBlank?'십자가 배경 화면':'건너뜀'}${times>1?` · ${times}번`:''}</span><button type="button" class="ex" data-ly-open="${esc(lb)}">가사 넣기</button></div></div>`;
    const n=lyPages(v).length;return `<div class="ly-sec ${lyFocus===lb?'on':''}" style="--c:${esc(col)}" data-ly-sec="${esc(lb)}"><div class="ly-sh"><span class="ly-chip" style="--c:${esc(col)}">${esc(lb)}</span><small data-ly-cnt="${esc(lb)}">${times>1?`${times}번 반복 · `:''}${n?`슬라이드 ${n*times}장`:'아직 비어 있어요'}</small><span class="ly-inline-tools" role="toolbar" aria-label="가사 PPT 편집 도구"><button type="button" data-ly-size="m" class="${lySize==='m'?'on':''}" title="글자 작게" aria-label="글자 작게">A−</button><button type="button" data-ly-size="l" class="${lySize==='l'?'on':''}" title="글자 보통" aria-label="글자 보통">A</button><button type="button" data-ly-size="xl" class="${lySize==='xl'?'on':''}" title="글자 크게" aria-label="글자 크게">A+</button><i></i><button type="button" data-ly-al="left" class="${lyAlign==='left'?'on':''}" title="왼쪽 정렬" aria-label="왼쪽 정렬"><svg viewBox="0 0 20 20"><path d="M3 5h14M3 9h9M3 13h14M3 17h9"/></svg></button><button type="button" data-ly-al="center" class="${lyAlign==='center'?'on':''}" title="가운데 정렬" aria-label="가운데 정렬"><svg viewBox="0 0 20 20"><path d="M3 5h14M5.5 9h9M3 13h14M5.5 17h9"/></svg></button><button type="button" data-ly-al="right" class="${lyAlign==='right'?'on':''}" title="오른쪽 정렬" aria-label="오른쪽 정렬"><svg viewBox="0 0 20 20"><path d="M3 5h14M8 9h9M3 13h14M8 17h9"/></svg></button></span></div><textarea data-ly-l="${esc(lb)}" rows="2" placeholder="${esc(lb==='가사'?'':lb+' ')}가사를 입력하세요&#10;Enter 한 번 = 줄바꿈 · Enter 두 번(빈 줄) = 다음 장">${esc(v)}</textarea><div class="ly-next"><button type="button" class="ly-next-btn" data-ly-break="${esc(lb)}" title="커서 위치에서 PPT 다음 장(슬라이드)으로 넘겨요"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="2.5" width="14" height="6" rx="1.5"/><rect x="3" y="11.5" width="14" height="6" rx="1.5"/><path d="M10 8.8v2.4M8.4 9.8 10 11.4l1.6-1.6"/></svg><span>다음 장으로 넘기기</span></button><span class="ly-next-tip">커서가 있는 곳부터 새 슬라이드 · 빈 줄을 넣어도 돼요</span></div><div class="ly-page-map ${n>1?'multi':''}" data-ly-map="${esc(lb)}">${lyPageMap(v)}</div></div>`}).join('');
   const st=lyState[sg.key];
   const ed=`<section class="ly-ed"><div class="ly-eh"><span class="lab">제목 슬라이드</span><input id="lyTitle" value="${esc(sg.title)}" aria-label="제목 슬라이드에 표시할 곡 제목"></div>${strip}${nf}<div class="ly-tools"><button type="button" id="lyPaste1">가사 한 번에 붙여넣기</button>${lySel>0?'<button type="button" data-ly-step="-1">← 이전 곡</button>':''}${lySel<songs.length-1?'<button type="button" data-ly-step="1">다음 곡 →</button>':''}</div><div class="ly-secs">${secs}</div>
@@ -7297,14 +7297,14 @@ function lyPaste(sg){const vocal=sg.uniq.filter(l=>!lyInst(l));const targets=voc
 /* ---------- 전체 미리보기 ---------- */
 function lyPreview(){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!sl.length)return toast('만들 슬라이드가 없어요');const base=LY_BASE[lySize]||48;
  const o=document.createElement('div');o.id='lyPrev';
- o.innerHTML=`<div class="lp-c" role="dialog" aria-modal="true" aria-label="PPT 미리보기"><div class="lp-h"><b>전체 미리보기 · 슬라이드 ${sl.length}장</b><span></span><button type="button" class="btn" id="lpGo">PPT 만들기</button><button type="button" class="sm" id="lpX">닫기</button></div><div class="lp-g">${sl.map((s,i)=>{const fs=lyFont(s.text,base);return `<figure><div class="lp-s ${s.kind==='title'?'ti':''}" data-fs="${fs}" style="${(s.kind==='title'||s.kind==='lyric')?`background:#000 url(${LY_PPT_BG}) center/cover no-repeat`: 'background:#000'}"><div class="tx" style="text-align:${lyAlign}">${esc(s.text)}</div></div><figcaption>${i+1}. ${s.kind==='gap'?'곡 사이 (검은 화면)':esc(s.song)+(s.label?' · '+esc(s.label):' · 제목')+(s.kind==='blank'?' (검은 화면)':'')}</figcaption></figure>`}).join('')}</div></div>`;
+ o.innerHTML=`<div class="lp-c" role="dialog" aria-modal="true" aria-label="PPT 미리보기"><div class="lp-h"><b>전체 미리보기 · 슬라이드 ${sl.length}장</b><span></span><button type="button" class="btn" id="lpGo">PPT 만들기</button><button type="button" class="sm" id="lpX">닫기</button></div><div class="lp-g">${sl.map((s,i)=>{const fs=lyFont(s.text,base);return `<figure><div class="lp-s ${s.kind==='title'?'ti':''}" data-fs="${fs}" style="${(s.kind==='title'||s.kind==='lyric'||s.kind==='blank')?`background:#000 url(${LY_PPT_BG}) center/cover no-repeat`: 'background:#000'}"><div class="tx" style="text-align:${lyAlign}">${esc(s.text)}</div></div><figcaption>${i+1}. ${s.kind==='gap'?'곡 사이 (검은 화면)':esc(s.song)+(s.label?' · '+esc(s.label):' · 제목')+(s.kind==='blank'?' (배경 화면)':'')}</figcaption></figure>`}).join('')}</div></div>`;
  document.body.appendChild(o);
  const fit=()=>o.querySelectorAll('.lp-s').forEach(el=>{const w=el.clientWidth;el.style.fontSize=(+el.dataset.fs*w/(13.333*72))+'px'});fit();setTimeout(fit,50);
  const close=()=>{o.remove();document.removeEventListener('keydown',kd)},kd=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',kd);
  o.onclick=e=>{if(e.target===o)close()};o.querySelector('#lpX').onclick=close;o.querySelector('#lpGo').onclick=e=>lyMake(e.currentTarget)}
 
 /* ---------- PPT 만들기 ---------- */
-/* 기본 가사/제목 배경: 우측 하단 십자가 이미지. 곡 사이 gap 및 빈 구간은 완전 검정 유지 */
+/* 기본 가사/제목 배경: 우측 하단 십자가 이미지. 곡 중간 빈 구간도 십자가 배경, 곡 사이 gap만 검정 */
 const LY_PPT_BG='assets/ppt-bg.baed69fd.jpg';
 let lyBgP=null;function lyBgData(){return lyBgP||(lyBgP=fetch(LY_PPT_BG).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.blob()}).then(b=>new Promise((res,rej)=>{const f=new FileReader();f.onload=()=>res(f.result);f.onerror=()=>rej(f.error);f.readAsDataURL(b)})).catch(e=>{lyBgP=null;throw e}))}
 let lyLibP=null;
@@ -7313,16 +7313,16 @@ function lyLib(){if(window.PptxGenJS)return Promise.resolve(window.PptxGenJS);if
  lyLibP=new Promise((res,rej)=>{let k=0;const next=()=>{if(window.PptxGenJS)return res(window.PptxGenJS);if(k>=srcs.length){lyLibP=null;return rej(new Error('PPT 도구를 불러오지 못했어요'))}const s=document.createElement('script');s.src=srcs[k++];s.async=true;s.onload=()=>window.PptxGenJS?res(window.PptxGenJS):next();s.onerror=next;document.head.appendChild(s)};next()});return lyLibP}
 async function lyMake(btn){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!sl.length)return toast('만들 슬라이드가 없어요');
  const empty=songs.filter(s=>{const p=lyProg(s);return p.t&&p.f<p.t}).map(s=>s.title);
- if(empty.length&&!await cfBox('아직 가사를 다 넣지 않았어요',[`가사가 비어 있는 곡: ${empty.join(', ')}`,lyBlank?'비어 있는 구간은 검은 화면으로 들어가요.':'비어 있는 구간은 건너뛰어요.'],'그래도 만들기','계속 입력하기'))return;
+ if(empty.length&&!await cfBox('아직 가사를 다 넣지 않았어요',[`가사가 비어 있는 곡: ${empty.join(', ')}`,lyBlank?'비어 있는 구간은 십자가 배경 화면(글자 없이)으로 들어가요.':'비어 있는 구간은 건너뛰어요.'],'그래도 만들기','계속 입력하기'))return;
  const h=btn?btn.innerHTML:'';if(btn){btn.disabled=true;btn.textContent='만드는 중…'}
  try{const P=await lyLib(),pres=new P(),bg=await lyBgData().catch(e=>{console.warn('[꿈자리] PPT 배경 이미지를 불러오지 못해 검은 배경으로 만들어요',e);return null});pres.layout='LAYOUT_WIDE';pres.title=`${lyWeek} 꿈자리 찬양 가사`;pres.author='꿈자리 찬양팀';
   const base=LY_BASE[lySize]||48,FONT='Malgun Gothic';
   sl.forEach(s=>{const sd=pres.addSlide();sd.background={color:'000000'};
-   /* 실제 가사/제목 슬라이드에만 기본 십자가 배경을 깔고, gap/blank는 완전 검정으로 둔다. */
-   if(bg&&(s.kind==='title'||s.kind==='lyric'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
+   /* 가사·제목·곡 중간 빈 구간(반주 등)은 십자가 배경, 곡 사이(gap)만 검정 */
+   if(bg&&(s.kind==='title'||s.kind==='lyric'||s.kind==='blank'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
    /* 제목도 가사와 똑같이 화면 윗줄에 배치 */
    if(s.kind==='title'||s.kind==='lyric')sd.addText(s.text,{x:0.5,y:0.35,w:12.33,h:4.75,align:lyAlign,valign:'top',fontFace:FONT,fontSize:lyFont(s.text,base),bold:true,color:'FFFFFF',lineSpacingMultiple:1.1,isTextBox:true,margin:0.05});
-   sd.addNotes(s.kind==='gap'?`곡 사이 검은 화면 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (검은 화면)':'')}`)});
+   sd.addNotes(s.kind==='gap'?`곡 사이 검은 화면 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (배경 화면)':'')}`)});
   const blob=await pres.write({outputType:'blob'}),name=`${lyWeek.replace(/-/g,'').slice(2)}_꿈자리_가사.pptx`,d=await claude.use('downloads');
   if(d&&d.save)await d.save({filename:name,data:blob});else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
   toast(`PPT를 저장했어요 (슬라이드 ${sl.length}장)`)}
@@ -10718,7 +10718,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=5').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=6').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
