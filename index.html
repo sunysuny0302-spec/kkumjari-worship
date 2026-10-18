@@ -10718,7 +10718,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=8').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=9').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -10771,16 +10771,16 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  function songsIn(a){let s=[];try{if(typeof scoreSongs==='function')s=scoreSongs(a.scores||[]).map(x=>{let k='';try{k=typeof kzSongKeyStr==='function'?kzSongKeyStr(x,a.scores||[]):''}catch(_){}return (x.name||'제목 없음')+(k?` (${k})`:'')})}catch(e){}
   if(!s.length)s=String(a.ment||'').split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+\s*[.)]\s*\S/.test(x)).map(x=>x.replace(/^\d+\s*[.)]\s*/,''));return s}
  async function full(){try{window.kzNeedFull&&kzNeedFull()}catch(e){}let last=-1,same=0;for(let i=0;i<14;i++){const n=arc().length;if(n===last&&n>0){if(++same>=2)break}else same=0;last=n;await new Promise(r=>setTimeout(r,250))}}
- const noSvc=d=>{try{return typeof isNoSvc==='function'&&isNoSvc(d)?(typeof noSvcWhy==='function'?noSvcWhy(d):'예배 없음'):''}catch(e){return''}};
+ const noSvcR=d=>{try{return typeof isNoSvc==='function'&&isNoSvc(d)?(typeof noSvcWhy==='function'?noSvcWhy(d):'예배 없음'):''}catch(e){return''}};
  function people(d){try{return typeof kzPeopleFor==='function'?kzPeopleFor(d):[]}catch(e){return[]}}
  function near_(d){const L=arc();return L.find(x=>x.id===d)||L.find(x=>Math.abs(dt(x.id)-dt(d))<=3*864e5)}
- function contiOne(d){const a=near_(d);if(!a){const ns=noSvc(d);return{text:ns?`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`:`${fmtY(d)}에는 홈에 올라온 콘티가 없어요.`,go:[]}}
+ function contiOne(d){const a=near_(d);if(!a){const ns=noSvcR(d);return{text:ns?`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`:`${fmtY(d)}에는 홈에 올라온 콘티가 없어요.`,go:[]}}
   const s=songsIn(a);return{title:`${fmtY(a.id)} 콘티${a.by?' · 인도 '+a.by:''}`,text:s.length?s.map((n,i)=>`${i+1}. ${n}`).join('\n'):'곡 정보가 없는 콘티예요.',go:['conti:'+a.id]}}
- function lineup(d){const ns=noSvc(d);if(ns)return{text:`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`,go:[]};const p=people(d);
+ function lineup(d){const ns=noSvcR(d);if(ns)return{text:`${fmtY(d)}은 예배가 없는 주일이에요 (${ns}).`,go:[]};const p=people(d);
   if(!p.length)return{text:`${fmtY(d)}에 배정된 사람을 찾지 못했어요. 일정표에서 확인해 주세요.`,go:['date:'+d]};
   const future=d>thisSun();return{title:`${fmtY(d)} 섬기는 사람`,text:p.map(([k,v])=>`${k} · ${v}`).join('\n')+(future?'\n\n앞으로의 순서는 불참·대타 신청에 따라 바뀔 수 있어요.':''),go:['date:'+d]}}
  function myTurn(){const nm=String(me().name||'').trim();if(!nm||me().id==='management')return{text:'팀원 계정으로 들어오면 내 순서를 알려 드릴 수 있어요.',go:['mobile_my']};
-  const out=[];let d=thisSun();for(let i=0;i<14&&out.length<6;i++,d=addW(d,1)){if(noSvc(d))continue;const r=people(d).filter(([k,v])=>String(v).split(/[,，、\/]/).map(x=>x.trim()).includes(nm)).map(([k])=>k);if(r.length)out.push(`${fmt(d)} · ${r.join(', ')}`)}
+  const out=[];let d=thisSun();for(let i=0;i<14&&out.length<6;i++,d=addW(d,1)){if(noSvcR(d))continue;const r=people(d).filter(([k,v])=>String(v).split(/[,，、\/]/).map(x=>x.trim()).includes(nm)).map(([k])=>k);if(r.length)out.push(`${fmt(d)} · ${r.join(', ')}`)}
   return out.length?{title:`${nm}님의 다음 순서`,text:out.join('\n')+'\n\n못 서는 날이 있으면 불참·대타에서 신청해 주세요.',go:['mobile_my']}:{text:`앞으로 14주 안에 ${nm}님의 순서를 찾지 못했어요. 내 순서 화면에서 확인해 보세요.`,go:['mobile_my']}}
  function songWhen(title){const k=norm(title);if(k.length<1)return null;const hits=arc().filter(a=>songsIn(a).some(n=>norm(n).includes(k))||norm(a.ment).includes(k)).sort((a,b)=>b.id.localeCompare(a.id));
   if(!hits.length)return{text:`'${title}'를 부른 콘티를 찾지 못했어요. 곡 이름을 조금 다르게(띄어쓰기 없이, 짧게) 적어 보세요.`,go:['vault']};
@@ -10792,10 +10792,27 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   const songQ=/(언제|마지막으로|최근에?|몇\s*번).{0,12}(불렀|했|불러|부른|했었|썼|나왔)|(불렀|부른|한)\s*적|부른\s*날/.test(s);
   if(songQ&&!/콘티\s*(뭐|어떤|보여)|무슨\s*(곡|노래|찬양)/.test(s)){if(!title){title=s.split(/\s*(언제|마지막으로|최근에?|몇\s*번|불렀|부른|한\s*적)/)[0].replace(/(이라는|라는|이란|란)?\s*(곡|노래|찬양)?\s*(을|를|은|는|이|가)?$/,'').replace(/^(우리|혹시|그)\s*/,'').trim()}
    if(title&&title.length<=40){await full();return songWhen(title)}}
+  /* 예배 없는 주일 목록 */
+  if(/예배\s*(가\s*)?없|예배\s*안\s*(드려|해)|쉬는\s*주일/.test(s)&&/언제|다음|목록|있어|있나|며칠|날짜|알려/.test(s)&&!/콘티|누가|인도자|등록|넣|추가|취소/.test(s)){const t=thisSun(),L=[];try{Object.keys(noSvc||{}).filter(d=>d>=t).sort().slice(0,6).forEach(d=>L.push(`${fmtY(d)} · ${noSvcWhy(d)}`))}catch(e){}
+   return L.length?{title:'다가오는 예배 없는 주일',text:L.join('\n'),go:['events']}:{text:'앞으로 등록된 예배 없는 주일이 없어요.',go:['events']}}
+  /* 가사 PPT 담당 */
+  if(/ppt|피피티|가사/i.test(s)&&/담당|누구|차례/.test(s)&&!/정하|정해|바꾸|바꿔|설정|로테이션/.test(s)){const w=when(s,false),d=w?w.list[0]:thisSun();let nm='';try{nm=window.kzPptDuty?kzPptDuty(d):''}catch(e){}
+   return nm?{title:`${fmtY(d)} 가사 PPT 담당`,text:`${nm}님이에요.`,go:['lyrics']}:{text:`${fmtY(d)} 가사 PPT 담당이 아직 정해지지 않았어요. 관리자급이 가사 PPT → PPT 담당에서 정할 수 있어요.`,go:['lyrics']}}
+  /* 공지 */
+  if(/공지/.test(s)&&/뭐|최근|새|있|올라와|알려|보여/.test(s)&&!/올리|쓰|작성|등록|고정|수정|삭제/.test(s)){let L=[];try{L=(typeof notices!=='undefined'&&Array.isArray(notices)?notices:[]).slice().sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.at||0)-(a.at||0)).slice(0,5)}catch(e){}
+   return L.length?{title:'지금 올라와 있는 공지',text:L.map(n=>`${n.pin?'📌 ':'• '}${n.title||'제목 없음'}`).join('\n'),go:['notice']}:{text:'지금 올라와 있는 공지가 없어요.',go:['notice']}}
+  /* 일정 · 행사 */
+  const evW=/일정|행사|수련회|모임|엠티|mt|체육대회|연습\s*(언제|몇\s*시|어디)|언제\s*(해|하|있|모여)/i.test(s);
+  if(evW&&!/콘티|누가|인도자|싱어|세션|참석|신청|등록|체크|받기|쓰기|만들|올리/.test(s)){let all=[];try{all=(typeof events!=='undefined'&&Array.isArray(events)?events:[]).filter(e=>e&&e.date&&e.title)}catch(e){}
+   const today=ymd_(new Date()),kw=(s.match(/수련회|체육대회|엠티|mt|연습|모임|회식|행사/i)||[])[0],w=when(s,false);
+   let L=all.filter(e=>e.date>=today);if(kw&&kw!=='행사'&&kw!=='모임')L=all.filter(e=>String(e.title).toLowerCase().includes(kw.toLowerCase())&&e.date>=today);if(w&&!kw)L=L.filter(e=>w.month?e.date.slice(0,7)===w.list[0].slice(0,7):Math.abs(dt(e.date)-dt(w.list[0]))<=6*864e5);
+   L.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));L=L.slice(0,6);
+   const dd=d=>{const x=dt(d);return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]})`};
+   return L.length?{title:kw&&kw!=='행사'?`다가오는 ${kw} 일정`:'다가오는 일정',text:L.map(e=>`${dd(e.date)} · ${e.title}${e.time?' · '+e.time:''}${e.place?' · '+e.place:''}`).join('\n'),go:['events']}:{text:kw?`앞으로 잡힌 '${kw}' 일정이 없어요.`:'앞으로 잡힌 일정이 없어요.',go:['events']}}
   const contiW=/콘티|찬양|곡|송리스트|셋리스트|노래|불렀|부른|했던|했어|뭐\s*했/.test(s),peopleW=/누가|누구|인도자|인도|싱어|세션|드럼|건반|베이스|기타|섬기|라인업|서는|서요|서\?|멤버|엔지니어/.test(s);
   if(!contiW&&!peopleW)return null;const w=when(s,contiW&&!peopleW);if(!w)return null;
   await full();
-  if(w.month&&contiW&&!peopleW){const r=w.list.map(d=>{const a=near_(d);if(!a)return `${fmt(d)} · ${noSvc(d)?'예배 없음':'올라온 콘티 없음'}`;const sg=songsIn(a);return `${fmt(a.id)}${a.by?' · '+a.by:''}\n   ${sg.slice(0,6).join(' / ')||'곡 정보 없음'}`});return{title:`${w.month} 콘티`,text:r.join('\n'),go:['vault']}}
+  if(w.month&&contiW&&!peopleW){const r=w.list.map(d=>{const a=near_(d);if(!a)return `${fmt(d)} · ${noSvcR(d)?'예배 없음':'올라온 콘티 없음'}`;const sg=songsIn(a);return `${fmt(a.id)}${a.by?' · '+a.by:''}\n   ${sg.slice(0,6).join(' / ')||'곡 정보 없음'}`});return{title:`${w.month} 콘티`,text:r.join('\n'),go:['vault']}}
   const d=w.list[0];
   if(peopleW&&!contiW)return lineup(d);
   if(contiW&&peopleW){const c=contiOne(d),l=lineup(d);return{title:c.title||l.title,text:(c.title?c.text:c.text)+'\n\n'+(l.title?l.text:l.text),go:[...new Set([...(c.go||[]),...(l.go||[])])].slice(0,2)}}
@@ -10803,7 +10820,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   return contiOne(d)}
 
  /* 화면 */
- const SUG=['지난주 콘티 뭐였지?','이번 주 누가 서요?','내 순서 언제야?','송폼 만드는 법','못 서는 날은 어떻게 해요?','알림이 안 와요','신청곡 남기는 법','PIN을 잊어버렸어요'];
+ const SUG=['지난주 콘티 뭐였지?','이번 주 누가 서요?','내 순서 언제야?','다음 일정 뭐 있어?','송폼 만드는 법','못 서는 날은 어떻게 해요?','알림이 안 와요','PIN을 잊어버렸어요'];
  function bubble(m){if(m.role==='user')return `<div class="ka-m ka-u"><p>${E(m.text)}</p></div>`;
   const lab=k=>k==='askclear'?'목록 비우기':k.startsWith('conti:')?'이 콘티 열기 →':k.startsWith('date:')?'그 주 홈에서 보기 →':`${(KB&&KB.go[k])||k} 바로 가기 →`;const go=(m.go||[]).map(k=>`<button type="button" class="ka-go" data-ka-go="${E(k)}">${E(lab(k))}</button>`).join('');
   const st=m.steps&&m.steps.length?`<ol class="ka-st">${m.steps.map(v=>`<li>${E(v)}</li>`).join('')}</ol>`:'',tp=m.tips&&m.tips.length?`<ul class="ka-tp">${m.tips.map(v=>`<li>${E(v)}</li>`).join('')}</ul>`:'';
