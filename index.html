@@ -17,6 +17,19 @@
 <link rel="preconnect" href="https://www.gstatic.com"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
+<script id="kz-mo-guard">
+/* 안전장치: 화면 변경 감시(MutationObserver)가 스스로를 계속 다시 부르는 무한 반복에 빠지면
+   그 감시만 0.3초에 한 번씩 돌게 늦춰서, 페이지가 멈추는('응답 없는 페이지') 일이 없게 함 */
+(function(){const O=window.MutationObserver;if(!O||O.__kzGuard)return;
+ function G(cb){let n=0,t0=0,slow=false,timer=0,queue=[],warned=false,o;
+  const run=ms=>{try{cb.call(o,ms,o)}catch(e){setTimeout(()=>{throw e})}};
+  o=new O(ms=>{const now=performance.now();if(now-t0>1000){t0=now;n=0;slow=false}
+   if(++n>150)slow=true;if(!slow)return run(ms);
+   for(const m of ms)queue.push(m);if(!warned){warned=true;console.warn('[꿈자리] 화면 감시가 너무 자주 불려 잠시 늦춰요:',String(cb).slice(0,140))}
+   if(!timer)timer=setTimeout(()=>{timer=0;const q=queue;queue=[];run(q)},300)});
+  return o}
+ G.prototype=O.prototype;G.__kzGuard=true;window.MutationObserver=G})();
+</script>
 <script id="kz-image-attachments">
 window.KZImages=(()=>{
 const valid=s=>typeof s==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(s)&&s.length<=220000;
@@ -10700,7 +10713,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=2').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=3').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -10845,6 +10858,15 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 @keyframes kaDot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 @media(max-width:820px){.ka-ov .kzh-p{width:100%}}
 </style>
+<script id="kz-self-pick">
+/* 더 간편하게: 일정 변경(싱어·세션)과 인도자 작업실을 처음 열 때 '나'를 미리 골라 둠.
+   다른 사람 일을 할 땐 그 이름을 누르거나 '인도자 다시 선택'을 누르면 돼요. */
+(function(){const myName=()=>{try{return String((authAccount()||{}).name||'').trim()}catch(e){return ''}};
+ if(typeof swapView==='function'){const b=swapView;swapView=function(){try{if(!swS.n&&!swS._auto){swS._auto=1;const nm=myName();if(nm&&singRoster().some(x=>x.n===nm))swS.n=nm}}catch(e){}return b.apply(this,arguments)}}
+ if(typeof absView==='function'){const b=absView;absView=function(){try{if(!swE.n&&!swE._auto){swE._auto=1;const nm=myName();if(nm&&sessRoster().some(x=>x.n===nm))swE.n=nm}}catch(e){}return b.apply(this,arguments)}}
+ if(typeof openLeaderRoom==='function'){const b=openLeaderRoom;openLeaderRoom=function(){const r=b.apply(this,arguments);try{const nm=myName();if(nm&&Array.isArray(LEADERS)&&LEADERS.includes(nm)&&view==='lpick'&&!lrPick){openRole=null;openLead=null;switchLeader(nm);lrPick=nm;renderNav();renderTop();lpickView()}}catch(e){}return r}}
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
