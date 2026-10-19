@@ -10801,6 +10801,10 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   /* 공지 */
   if(/공지/.test(s)&&/뭐|최근|새|있|올라와|알려|보여/.test(s)&&!/올리|쓰|작성|등록|고정|수정|삭제/.test(s)){let L=[];try{L=(typeof notices!=='undefined'&&Array.isArray(notices)?notices:[]).slice().sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.at||0)-(a.at||0)).slice(0,5)}catch(e){}
    return L.length?{title:'지금 올라와 있는 공지',text:L.map(n=>`${n.pin?'📌 ':'• '}${n.title||'제목 없음'}`).join('\n'),go:['notice']}:{text:'지금 올라와 있는 공지가 없어요.',go:['notice']}}
+  /* 이번 주 토요 연습 (인도자가 정한 시간) */
+  if(/연습/.test(s)&&/몇\s*시|언제|있어|있나|없어|없나|시간|해\?|하나/.test(s)&&!/참석|신청|등록|체크|받기|정하|바꾸|못\s*가|어려/.test(s)&&window.kzSatPrac){const w=when(s,false),d=w?w.list[0]:thisSun(),p=kzSatPrac.of(d),st=(()=>{const x=dt(d);x.setDate(x.getDate()-1);return `${x.getMonth()+1}월 ${x.getDate()}일(토)`})();
+   if(noSvcR(d))return{text:`${fmtY(d)}은 예배가 없는 주라 토요 연습도 쉬어요.`,go:['home']};
+   if(p)return p.on?{title:`${st} 토요 연습`,text:[p.singer?'싱어 · '+kzSatPrac.tm(p.singer):'',p.session?'세션 · '+kzSatPrac.tm(p.session):'',p.place?'장소 · '+p.place:''].filter(Boolean).join('\n'),go:['prac']}:{text:`${st}에는 토요 연습이 없어요.`,go:['home']}}
   /* 일정 · 행사 */
   const evW=/일정|행사|수련회|모임|엠티|mt|체육대회|연습\s*(언제|몇\s*시|어디)|언제\s*(해|하|있|모여)/i.test(s);
   if(evW&&!/콘티|누가|인도자|싱어|세션|참석|신청|등록|체크|받기|쓰기|만들|올리/.test(s)){let all=[];try{all=(typeof events!=='undefined'&&Array.isArray(events)?events:[]).filter(e=>e&&e.date&&e.title)}catch(e){}
