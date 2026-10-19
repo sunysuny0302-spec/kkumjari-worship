@@ -10718,7 +10718,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=11').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=12').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11065,38 +11065,31 @@ window.kzSatPrac=(function(){
  function summary(p){if(!p)return '';if(!p.on)return '토요 연습 없음';const a=[];if(p.singer)a.push('싱어 '+tm(p.singer));if(p.session)a.push('세션 '+tm(p.session));return a.join(' · ')+(p.place?' · '+p.place:'')}
  /* 정하기 창 → {on,singer,session,place} 또는 null(취소)
     폰은 아래에서 올라오는 시트, 컴퓨터는 가운데 카드. 시간은 칩 한 번 터치(시) + 정각/30분 */
- const HOURS=[8,9,10,11,12,13,14,15,16,17,18,19];
- const hLbl=h=>h<12?`${h}`:h===12?'12':`${h-12}`;
  const recentPlaces=()=>{const out=[];try{(archive||[]).filter(a=>a&&a.prac&&a.prac.place).sort((a,b)=>b.id.localeCompare(a.id)).forEach(a=>{if(!out.includes(a.prac.place))out.push(a.prac.place)})}catch(e){}return out.slice(0,4)};
  function ask(d,opt){return new Promise(res=>{opt=opt||{};const cur=of(d),df=defaults(),v={on:cur?cur.on!==false:true,singer:(cur&&cur.singer)||df.singer,session:(cur&&cur.session)||df.session,place:(cur&&cur.place)||df.place};
   v.same=v.singer===v.session;const places=[...new Set([...(v.place?[v.place]:[]),'벧엘채플',...recentPlaces()])].slice(0,4);
   const w=document.createElement('div');w.className='sp-ov';w.id='kzSatPracAsk';
-  const hm=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?[+m[1],+m[2]]:[10,30]};
-  const picker=(key,label,icon)=>{const [h,mi]=hm(v[key]);return `<div class="sp-pk"><div class="sp-pk-h"><span>${icon} ${label}</span><b>${E(tm(v[key]))}</b></div>
-    <div class="sp-hrs" role="group" aria-label="${label} 시">${HOURS.map(x=>`<button type="button" class="${x===h?'on':''}" data-h="${key}:${x}">${hLbl(x)}<small>${x<12?'오전':x===12?'낮':'오후'}</small></button>`).join('')}</div>
-    <div class="sp-mins"><button type="button" class="${mi===0?'on':''}" data-m="${key}:0">정각</button><button type="button" class="${mi===30?'on':''}" data-m="${key}:30">30분</button></div></div>`};
+  /* 시간은 직접 입력 (폰은 기본 시간 선택기가 떠요) */
+  const picker=(key,label,icon)=>`<label class="sp-tr"><span>${icon} ${label}</span><input type="time" lang="ko" step="300" value="${E(v[key])}" data-t="${key}"></label>`;
   const paint=()=>{const sc=w.querySelector('.sp-body')?.scrollTop||0;
    w.innerHTML=`<div class="sp-box" role="dialog" aria-modal="true" aria-label="토요 연습 정하기"><i class="sp-grab" aria-hidden="true"></i>
    <div class="sp-body"><p class="sp-k">${md(sat(d))} 토요일${opt.upload?' · 홈에 올리기 전 확인':''}</p><h3 class="sp-t">토요 연습 있나요?</h3>
    <div class="sp-sw"><button type="button" class="${v.on?'on':''}" data-sp="on">있어요</button><button type="button" class="${!v.on?'on':''}" data-sp="off">없어요</button></div>
-   ${v.on?`${picker('singer',v.same?'싱어 · 세션':'싱어','🎤')}
+   ${v.on?`<div class="sp-trs">${picker('singer',v.same?'싱어 · 세션':'싱어','🎤')}${v.same?'':picker('session','세션','🎸')}</div>
     <label class="sp-same"><input type="checkbox" ${v.same?'checked':''} data-same> 세션도 같은 시간</label>
-    ${v.same?'':picker('session','세션','🎸')}
     <div class="sp-pl"><span>📍 장소 <small>(선택)</small></span><div class="sp-plc">${places.map(x=>`<button type="button" class="${x===v.place?'on':''}" data-pl="${E(x)}">${E(x)}</button>`).join('')}<input type="text" maxlength="30" value="${E(places.includes(v.place)?'':v.place)}" placeholder="직접 입력" data-plin></div></div>`
    :`<div class="sp-offnote">이번 주는 연습을 쉬어요.<br><small>팀원들에게 참석 확인 창과 저녁 알림이 가지 않아요.</small></div>`}</div>
    <div class="sp-bs"><button type="button" class="sp-x" data-sp="cancel">취소</button><button type="button" class="sp-ok" data-sp="ok">${opt.upload?'확인하고 홈에 올리기':'저장'}</button></div></div>`;
    const b=w.querySelector('.sp-body');if(b)b.scrollTop=sc;
    const pin=w.querySelector('[data-plin]');if(pin)pin.oninput=()=>{v.place=pin.value;w.querySelectorAll('[data-pl]').forEach(x=>x.classList.remove('on'))};
-   const sm=w.querySelector('[data-same]');if(sm)sm.onchange=()=>{v.same=sm.checked;if(v.same)v.session=v.singer;paint()}};
+   w.querySelectorAll('[data-t]').forEach(x=>x.oninput=x.onchange=()=>{v[x.dataset.t]=x.value;if(v.same&&x.dataset.t==='singer')v.session=x.value});const sm=w.querySelector('[data-same]');if(sm)sm.onchange=()=>{v.same=sm.checked;if(v.same)v.session=v.singer;paint()}};
   paint();document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));
   const close=r=>{w.classList.remove('in');setTimeout(()=>w.remove(),180);res(r)};
-  w.addEventListener('click',e=>{if(e.target===w)return close(null);const t=e.target.closest('[data-sp],[data-h],[data-m],[data-pl]');if(!t)return;
-   if(t.dataset.h){const [k,h]=t.dataset.h.split(':'),[,mi]=hm(v[k]);v[k]=`${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;if(v.same&&k==='singer')v.session=v.singer;return paint()}
-   if(t.dataset.m){const [k,mi]=t.dataset.m.split(':'),[h]=hm(v[k]);v[k]=`${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;if(v.same&&k==='singer')v.session=v.singer;return paint()}
+  w.addEventListener('click',e=>{if(e.target===w)return close(null);const t=e.target.closest('[data-sp],[data-pl]');if(!t)return;
    if(t.dataset.pl!=null){v.place=v.place===t.dataset.pl?'':t.dataset.pl;return paint()}
    const k=t.dataset.sp;if(k==='on'||k==='off'){v.on=k==='on';return paint()}
    if(k==='cancel')return close(null);
-   if(k==='ok'){if(v.same)v.session=v.singer;const out=v.on?{on:true,singer:v.singer||'',session:v.session||'',place:String(v.place||'').trim().slice(0,30)}:{on:false};
+   if(k==='ok'){if(v.on&&!v.singer&&!v.session){toast('시간을 입력해 주세요');return}if(v.same)v.session=v.singer;const out=v.on?{on:true,singer:v.singer||'',session:v.session||'',place:String(v.place||'').trim().slice(0,30)}:{on:false};
     if(v.on)try{localStorage.setItem(DK,JSON.stringify(out))}catch(e){}close(out)}})})}
  async function save(d,v){const a=(()=>{try{return authAccount()||{}}catch(e){return{}}})();const p={...v,by:a.name||'',at:Date.now()};
   await db.doc('weeks/'+d).set({prac:p},{merge:true});const w=weekObj(d);if(w)w.prac=p;try{if(d===date&&data)data.prac=p}catch(e){}
@@ -11134,16 +11127,13 @@ window.kzSatPrac=(function(){
 .sp-sw{display:grid;grid-template-columns:1fr 1fr;padding:4px;background:#f1e8dc;border-radius:14px}
 .sp-sw button{border:0;background:none;border-radius:11px;padding:10px;font:inherit;font-size:15px;font-weight:700;color:#8a7764;cursor:pointer}
 .sp-sw button.on{background:#fff;color:#2b211a;box-shadow:0 2px 8px -3px rgba(60,40,20,.35)}
-.sp-pk{display:grid;gap:8px}
-.sp-pk-h{display:flex;align-items:baseline;justify-content:space-between}
-.sp-pk-h span{font-size:14px;font-weight:700;color:#6b5a4a}.sp-pk-h b{font-size:18px;font-weight:800;color:#b4612c}
-.sp-hrs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.sp-hrs::-webkit-scrollbar{display:none}
-.sp-hrs button{height:48px;border:1px solid #eadcca;background:#fff;border-radius:12px;font:inherit;font-size:17px;font-weight:800;color:#3a2c20;display:grid;place-content:center;line-height:1.05;cursor:pointer}
-.sp-hrs button small{font-size:10px;font-weight:600;color:#a8937e}
-.sp-hrs button.on{background:#3a2c20;border-color:#3a2c20;color:#fff}.sp-hrs button.on small{color:#e9d6bf}
-.sp-mins{display:flex;gap:6px}
-.sp-mins button{border:1px solid #eadcca;background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:700;color:#6b5a4a;cursor:pointer}
-.sp-mins button.on{background:#f3e3cf;border-color:#e2c7a6;color:#8a4f1f}
+.sp-trs{display:grid;gap:8px}
+.sp-tr{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #eadcca;border-radius:14px;padding:8px 8px 8px 16px;cursor:pointer}
+.sp-tr span{font-size:15px;font-weight:700;color:#4a3a2c;white-space:nowrap}
+.sp-tr input{border:0;background:#f7efe4;border-radius:10px;padding:10px 12px;font:inherit;font-size:18px;font-weight:800;color:#b4612c;width:150px;min-height:44px;text-align:center;outline:none;-webkit-appearance:none;appearance:none}
+.sp-tr input:focus{box-shadow:0 0 0 2px #e2c7a6}
+.sp-tr input::-webkit-date-and-time-value{text-align:center}
+.sp-tr input::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
 .sp-same{display:flex!important;align-items:center;gap:8px;font-size:13.5px;color:#6b5a4a;font-weight:600;margin:-4px 0 0!important;padding:0!important;background:none!important;border:0!important;cursor:pointer}
 .sp-same input{width:18px;height:18px;accent-color:#b4612c;margin:0}
 .sp-pl{display:grid;gap:8px}.sp-pl>span{font-size:14px;font-weight:700;color:#6b5a4a}.sp-pl small{font-weight:500;color:#a8937e}
