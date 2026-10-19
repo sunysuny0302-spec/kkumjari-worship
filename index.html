@@ -11108,8 +11108,10 @@ window.kzSatPrac=(function(){
   return `<section class="kz-rd kz-sp"><div class="kz-h">${V13I('list')}<h2>이번 주 토요 연습</h2><span class="kz-dd2">${E(md(sat(d)))}(토)${dd>0?' · D-'+dd:dd===0?' · 오늘':''}</span><span class="sp"></span>${s?`<button type="button" class="sp-edit" data-sp-edit>${p?'바꾸기':'정하기'}</button>`:''}</div>${body2}${p&&p.on?'<div class="kz-rd-g sp-g"></div>':''}</section>`}}
  /* 홈 그린 뒤: 버튼 연결 + 폰 위쪽 얇은 띠 */
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const b=document.querySelector('#body [data-sp-edit]');if(b)b.onclick=()=>edit(date);
-   const hm=document.querySelector('#body .hm');if(hm&&!hm.querySelector('.hm-sp')&&!(typeof isNoSvc==='function'&&isNoSvc(date))){const p=of(date);if(p||staff()){const t=p?(p.on?`토요 연습 · ${summary(p)}`:'이번 주 토요 연습 없음'):'토요 연습 아직 안 정했어요';
-     const html=`<button type="button" class="hm-sp ${p&&!p.on?'off':''}" ${staff()?'data-sp-m':''}><i>${p&&!p.on?'🔕':'🎶'}</i><span>${E(t)}</span>${staff()?'<em>'+(p?'바꾸기':'정하기')+'</em>':''}</button>`;
+   const hm=document.querySelector('#body .hm');if(hm&&!hm.querySelector('.hm-sp')&&!(typeof isNoSvc==='function'&&isNoSvc(date))){const p=of(date);if(p||staff()){const st=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?`${(+m[1])%12||12}:${m[2]}`:''};
+     let inner;if(p&&p.on){const tt=p.singer&&p.session&&p.singer!==p.session?`싱어 <b>${st(p.singer)}</b> · 세션 <b>${st(p.session)}</b>`:`싱어·세션 <b>${st(p.singer||p.session)}</b>`;inner=`<span class="hm-sp-t">${tt}</span>${p.place?`<small>${E(p.place)}</small>`:''}`}
+     else inner=`<span class="hm-sp-t">${p?'이번 주는 없어요':'아직 안 정했어요'}</span>`;
+     const html=`<button type="button" class="hm-sp ${p&&!p.on?'off':''}" ${staff()?'data-sp-m':''} title="${E(p?(p.on?summary(p):'이번 주 토요 연습 없음'):'토요 연습 미정')}"><i>토요 연습</i>${inner}${staff()?'<em>'+(p?'바꾸기':'정하기')+'</em>':''}</button>`;
      const anchor=hm.querySelector('.hm-nosvc2');if(anchor)anchor.insertAdjacentHTML('afterend',html);else hm.insertAdjacentHTML('afterbegin',html);
      const m=hm.querySelector('[data-sp-m]');if(m)m.onclick=()=>edit(date)}}}catch(e){console.warn('[꿈자리] 토요 연습 표시',e)}return r}}
  return{of,label,summary,ask,save,edit,tm};
@@ -11164,8 +11166,11 @@ window.kzSatPrac=(function(){
 .kz-sp .sp-edit{white-space:nowrap;flex:none;order:10;margin-left:auto}
 .kz-sp .sp-row{gap:8px;flex-wrap:wrap}.kz-sp .sp-row span{white-space:nowrap}.kz-sp .sp-row b{white-space:nowrap}
 @media screen and (max-width:820px){
- .hm-sp{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 10px;padding:9px 13px;border-radius:12px;border:1px solid #e9d8c3;background:#fbf4ea;color:#5a3f28;font:inherit;font-size:13.5px;font-weight:700;text-align:left;cursor:pointer}
- .hm-sp i{font-style:normal}.hm-sp span{flex:1;min-width:0;line-height:1.4;word-break:keep-all}
+ .hm-sp{display:flex;align-items:center;gap:7px;width:100%;margin:0 0 10px;padding:8px 12px 8px 9px;white-space:nowrap;overflow:hidden;border-radius:12px;border:1px solid #e9d8c3;background:#fbf4ea;color:#5a3f28;font:inherit;font-size:13.5px;font-weight:700;text-align:left;cursor:pointer}
+ .hm-sp i{font-style:normal;flex:none;font-size:11.5px;font-weight:800;color:#fff;background:#b4612c;border-radius:999px;padding:3px 8px}.hm-sp.off i{background:#9b8875}
+ .hm-sp-t{flex:none;white-space:nowrap;font-weight:600}.hm-sp-t b{font-weight:800;color:#3a2a1c}
+ .hm-sp small{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;color:#9a7f63}.hm-sp small:before{content:'· '}
+ .hm-sp:not(:has(small)) .hm-sp-t{flex:1}
  .hm-sp em{font-style:normal;font-size:12px;color:#b4612c;white-space:nowrap}
  .hm-sp.off{background:#f1eae2;color:#6b5a4a}
 }
