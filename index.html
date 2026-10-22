@@ -11385,6 +11385,25 @@ window.kzSatPrac=(function(){
  document.addEventListener('click',e=>{const t=e.target.closest('[data-tgo="feed"],[data-kf-nav]');try{if(t&&view==='feed'&&window.scrollY>200){e.preventDefault();e.stopImmediatePropagation();window.scrollTo({top:0,behavior:'smooth'})}}catch(_){}},true);
 })();
 </script>
+<style id="kz-me-dock-css">
+/* 폰 송폼: 마커 고르는 칸을 화면 아래 독으로 → 악보를 가리지 않아요 */
+@media(max-width:820px){
+ .ed3.kme-markers .kme-bar>.rcol>.lp-s{position:fixed!important;top:auto!important;left:8px!important;right:8px!important;bottom:var(--kme-dock,86px)!important;width:auto!important;max-height:38dvh!important;overflow:auto!important;border-radius:18px!important;border:1px solid var(--bd,#e6d9c8)!important;z-index:60!important;padding:8px 10px 10px!important;box-shadow:0 -6px 26px -10px rgba(60,40,20,.35)!important}
+ .ed3.kme-markers>.main2>.tools{display:none!important}
+ .ed3.kme-markers>.main2{padding-bottom:150px}
+ .ed3 #kmeHint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .ed3.kme-markers .kme-bar{box-shadow:0 8px 18px -14px rgba(60,40,20,.4)}
+}
+</style>
+<script id="kz-me-dock">
+(function(){const mob=()=>matchMedia('(max-width:820px)').matches;
+ const dock=()=>{const tb=document.getElementById('tabbar');const h=tb&&getComputedStyle(tb).display!=='none'?Math.max(0,innerHeight-tb.getBoundingClientRect().top):0;document.documentElement.style.setProperty('--kme-dock',(h+8)+'px')};
+ addEventListener('resize',dock);
+ /* 마커 칸을 열면 악보가 바로 보이도록 위로 맞춰 줘요 */
+ document.addEventListener('click',e=>{const b=e.target.closest('.ed3 [data-kme-panel="markers"]');if(!b||!mob())return;dock();setTimeout(()=>{const r=document.querySelector('.ed3');if(!r||!r.classList.contains('kme-markers'))return;const st=document.getElementById('stage'),bar=r.querySelector('.kme-bar');if(!st||!bar)return;const y=st.getBoundingClientRect().top-bar.getBoundingClientRect().bottom-6;if(Math.abs(y)>4)window.scrollBy({top:y,behavior:'smooth'})},60)});
+ dock();
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
