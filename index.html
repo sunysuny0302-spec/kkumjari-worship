@@ -11316,10 +11316,11 @@ window.kzSatPrac=(function(){
  kzSideHTML=function(){try{if(!window.__kzNsBase&&typeof isNoSvc==='function'&&isNoSvc(date))return html(date)}catch(e){}return base.apply(this,arguments)};
  /* 칸 높이는 그대로 두고 글자 크기만 줄여서 맞춰요 */
  function fit(){const c=document.getElementById('kzSide');if(!c||!c.dataset.nsH)return;const pg=c.querySelector('.kz-pg'),q=c.querySelector('.kz-bible blockquote'),nt=c.querySelector('.kz-vnote');if(!pg||!q)return;
-  if(nt)nt.style.display='';let f=17.5;q.style.fontSize=f+'px';q.style.lineHeight='1.85';
+  if(nt)nt.style.display='';pg.classList.remove('tight');let f=17.5;q.style.fontSize=f+'px';q.style.lineHeight='1.85';
   const over=()=>pg.scrollHeight>pg.clientHeight+1||c.scrollHeight>c.clientHeight+1;
-  while(over()&&f>12){f-=.5;q.style.fontSize=f+'px';if(f<15)q.style.lineHeight='1.7'}
-  if(over()&&nt){nt.style.display='none';f=Math.min(17.5,f+3);q.style.fontSize=f+'px';while(over()&&f>11){f-=.5;q.style.fontSize=f+'px'}}
+  while(over()&&f>12.5){f-=.5;q.style.fontSize=f+'px';if(f<15)q.style.lineHeight='1.7'}
+  if(f<14.5){pg.classList.add('tight');f=Math.min(17,f+2);q.style.fontSize=f+'px';while(over()&&f>12.5){f-=.5;q.style.fontSize=f+'px'}}
+  while(over()&&f>10.5){f-=.5;q.style.fontSize=f+'px';q.style.lineHeight='1.6'}
   if(over())q.style.lineHeight='1.5'}
  window.kzNsVerseFill=function(){const c=document.getElementById('kzSide');if(!c)return;c.innerHTML=html(date);try{bindKzSide()}catch(e){}fit()};
  document.addEventListener('click',e=>{const b=e.target.closest('[data-nsv-next]');if(!b)return;off++;window.kzNsVerseFill()});
@@ -11350,8 +11351,9 @@ window.kzSatPrac=(function(){
 .kz-bible blockquote{position:relative;margin:0;padding:0;font-family:var(--serif);font-size:17px;line-height:1.9;font-weight:600;color:#3a2a1c;word-break:keep-all;letter-spacing:-.2px}
 .kz-bible blockquote sup{font-size:11px;font-weight:800;color:#a14a3a;margin-right:5px;vertical-align:.55em;font-family:inherit}
 .kz-bible figcaption{position:relative;text-align:right;font-family:var(--serif);font-size:13px;font-weight:700;color:#8a5a33}.kz-bible figcaption small{font-weight:600;color:#a8937e}
-.kz-bible .kz-vnote{margin:6px 2px 0;padding:0;border:0;font-size:12.5px;color:#8a7764}
+.kz-bible .kz-vnote{flex:none;margin:4px 2px 0;padding:0;border:0;font-size:12px;color:#8a7764;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(min-width:701px){.kz-bible blockquote{font-size:17.5px}}
+.kz-bible .kz-pg.tight{padding:12px 18px 9px 26px;gap:7px}.kz-pg.tight .kz-bh{padding-bottom:6px}.kz-pg.tight .kz-bh span,.kz-pg.tight .kz-bh b{font-size:11.5px}.kz-pg.tight figcaption{font-size:11.5px}.kz-bible:has(.tight) .kz-rib{height:38px;right:22px}
 </style>
 </html>
 
