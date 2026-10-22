@@ -466,3 +466,14 @@ test('askMiss: anyone records question text only; management lists and clears',a
  await assert.rejects(f.run(f.user,{action:'askMissList'}),{status:403});
  const r=await f.run(f.admin,{action:'askMissList'});assert.deepEqual(r.items.map(x=>x.q),['드럼 스틱 어디 둬요?']);assert.equal(JSON.stringify(r).includes(f.user.id),false);
  await f.run(f.admin,{action:'askMissClear'});assert.equal((await f.run(f.admin,{action:'askMissList'})).items.length,0);});
+
+test('chat reply snapshot and emoji reactions',async()=>{
+ const f=fixture();const a=await f.run(f.user,{action:'send',room:'all',id:'request_aaaa1111',text:'원래 메시지',images:[]});f.advance();
+ const b=await f.run(f.outsider,{action:'send',room:'all',id:'request_bbbb2222',text:'답장이에요',images:[],reply:a.item.id});
+ assert.equal(b.item.reply.id,a.item.id);assert.equal(b.item.reply.text,'원래 메시지');assert.equal(b.item.reply.name,'팀원');
+ let r=await f.run(f.outsider,{action:'chatReact',room:'all',id:a.item.id,e:'👍'});assert.deepEqual(r.rx[f.outsider.id],{e:'👍',n:'다른 팀원'});
+ r=await f.run(f.user,{action:'chatReact',room:'all',id:a.item.id,e:'❤️'});assert.equal(Object.keys(r.rx).length,2);
+ r=await f.run(f.outsider,{action:'chatReact',room:'all',id:a.item.id,e:'👍'});assert.equal(r.rx[f.outsider.id],undefined);
+ await assert.rejects(f.run(f.user,{action:'chatReact',room:'all',id:a.item.id,e:'💩'}),{status:400});
+ const list=await f.run(f.user,{action:'chat',room:'all'});const m=list.items.find(x=>x.id===a.item.id);assert.ok(m.rx[f.user.id]);
+});
