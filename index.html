@@ -9070,7 +9070,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  const busy=()=>{const a=document.activeElement;return !!(a&&a.closest&&a.closest('.lyr')&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))};
  function sub(){if(subd||typeof db==='undefined'||!db)return;subd=true;db.doc('settings/pptRotation').onSnapshot(d=>{rot=d.exists?d.data()||{}:{};if(view==='lyrics'&&!busy()&&!draft)lyricsView()},e=>{subd=false;console.warn('[꿈자리] PPT 담당 정보를 불러오지 못했어요',e)})}
  async function save(next,msg){if(!canRot())return toast('관리자급만 바꿀 수 있어요');try{const a=me();await db.doc('settings/pptRotation').set({members:next.members||[],weeks:Math.max(1,Math.min(8,(next.weeks|0)||1)),start:next.start||'',overrides:next.overrides||{},up:Date.now(),by:a?a.name||'':''});toast(msg||'저장했어요')}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
- function tabs(){return `<div class="ly-tabs" role="tablist"><button type="button" role="tab" data-lyt="ppt" class="${tab==='ppt'?'on':''}" aria-selected="${tab==='ppt'}">PPT 만들기</button><button type="button" role="tab" data-lyt="rot" class="${tab==='rot'?'on':''}" aria-selected="${tab==='rot'}">PPT 담당</button></div>`}
+ function tabs(){return `<div class="ly-tabs" role="tablist"><button type="button" role="tab" data-lyt="ppt" class="${tab==='ppt'?'on':''}" aria-selected="${tab==='ppt'}">콘티</button><button type="button" role="tab" data-lyt="rot" class="${tab==='rot'?'on':''}" aria-selected="${tab==='rot'}">PPT 담당</button></div>`}
  function sundays(c,from,to){const o=[];for(let i=from;i<=to;i++)o.push(shiftDate(c,i*7));return o}
  function rotHTML(){const now=nextSun(),nx=shiftDate(now,7),ed=canRot(),r=rot||{};const has=(r.members||[]).length&&r.start;
   const nowB=`<section class="card lyr-now"><div class="on"><small>이번 주 ${md(now)} PPT 담당</small>${who(now)?`<b>${E(who(now))}</b>`:'<span class="none">아직 정하지 않았어요</span>'}</div><div><small>다음 주 ${md(nx)}</small>${who(nx)?`<b>${E(who(nx))}</b>`:'<span class="none">-</span>'}</div></section>`;
@@ -11551,7 +11551,7 @@ window.kzSatPrac=(function(){
   finally{if(btn){btn.disabled=false;btn.innerHTML=h}}}
  /* 탭 붙이기 */
  const orig=lyricsView;lyricsView=function(){const r=orig.apply(this,arguments);try{const B=document.getElementById('body'),tabs=B&&B.querySelector('.ly2 .ly-tabs');if(!tabs)return r;
-   if(!tabs.querySelector('[data-lyt-apply]')){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.lytApply='1';b.textContent='적용찬양';tabs.append(b);
+   if(!tabs.querySelector('[data-lyt-apply]')){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.lytApply='1';b.textContent='적용찬양';const f=tabs.querySelector('[data-lyt="ppt"]');if(f)f.after(b);else tabs.append(b);
     b.onclick=()=>{on=true;LS('lyApply','1');lyricsView()};tabs.querySelectorAll('[data-lyt]').forEach(x=>x.addEventListener('click',()=>{on=false;LS('lyApply','0')},true))}
    const ab=tabs.querySelector('[data-lyt-apply]');ab.classList.toggle('on',on);ab.setAttribute('aria-selected',String(on));
    if(on){tabs.querySelectorAll('[data-lyt]').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});B.querySelector('.ly2 .ly-duty')?.remove();view(B)}}catch(e){console.error('[꿈자리] 적용찬양',e)}return r};
