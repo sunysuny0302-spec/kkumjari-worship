@@ -9755,7 +9755,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   try{const r=await api({action:'profiles',ids});for(const p of r.profiles||[])PROF.set(p.id,{photo:p.photo||''});document.querySelectorAll('[data-kf-pid]').forEach(el=>{const p=PROF.get(el.dataset.kfPid);if(p&&p.photo&&!el.querySelector('img'))el.innerHTML=`<img alt="" src="${E(p.photo)}">`})}catch(e){}}
  const likesLine=p=>{if(!p.likeCount)return '';const mine=me().name,others=(p.likers||[]).filter(n=>n!==mine);
   const who=p.liked&&p.likeCount===1?'내가 좋아해요':others.length?`<b>${E(others[0])}</b>님${p.likeCount>1?` 외 <b>${p.likeCount-1}명</b>`:''}이 좋아해요`:'';
-  return `<button type="button" class="kf-likes" data-kf-likers><b>좋아요 ${p.likeCount}개</b>${who?`<span class="kf-lw">${who}</span>`:''}</button>`};
+  return `<button type="button" class="kf-likes" data-kf-likers>${who?`<span class="kf-lw">${who}</span>`:`<b>좋아요 ${p.likeCount}개</b>`}</button>`};
  const PAL=[['#f6d365','#fda085'],['#a1c4fd','#c2e9fb'],['#d4fc79','#96e6a1'],['#fbc2eb','#a6c1ee'],['#ffecd2','#fcb69f'],['#e0c3fc','#8ec5fc'],['#f5d0a9','#d4a373']];
  const textArt=p=>{const t=p.text||'';return !p.imageCount&&t.length<=140&&t.split('\n').length<=5};
  const REACTS=['😂','🔥','👏','🙏','😍'];
@@ -9817,8 +9817,9 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   let hide=false;try{hide=!!localStorage.getItem('kzBdayHint:'+m.id)}catch(e){}
   if(!S.myBday&&S.loaded&&m.id!=='management'&&!hide)out.push(`<div class="kf-bday hint"><span aria-hidden="true">🎈</span><div><b>생일을 알려 주세요</b><small>그날 꿈마당에서 함께 축하해요</small></div><button type="button" data-kf-bday>등록</button><button type="button" class="kf-bx" data-kf-bdx aria-label="닫기">✕</button></div>`);
   return out.join('')}
- function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;const bdays=S.items.filter(p=>p.kind==='bday');items=items.filter(p=>p.kind!=='bday');if(tab==='thanks')items=items.filter(p=>p.kind==='thanks');const who=only&&S.items.find(p=>p.owner===only);
-  const tabs=`<div class="kf-tabs" role="tablist">${[['all','전체'],['album','사진첩'],['thanks','감사 카드']].map(([k,t])=>`<button type="button" role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-kf-tab="${k}">${t}</button>`).join('')}${me().id!=='management'?`<button type="button" class="kf-tab-bd" data-kf-bday aria-label="내 생일 ${S.myBday?'바꾸기':'등록'}">🎂<span>${S.myBday?(+S.myBday.slice(0,2))+'.'+(+S.myBday.slice(3)):'생일'}</span></button>`:''}</div>`;
+ function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const drafts={};b.querySelectorAll('.kf-card').forEach(c=>{const i=c.querySelector('.kf-add input');if(i&&i.value)drafts[c.dataset.id]=i.value});try{paint0(b)}finally{for(const id in drafts){const i=b.querySelector(`.kf-card[data-id="${CSS.escape(id)}"] .kf-add input`);if(i){i.value=drafts[id];const bt=i.form&&i.form.querySelector('button');if(bt)bt.disabled=!i.value.trim()}}}}
+ function paint0(b){const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;const bdays=S.items.filter(p=>p.kind==='bday');items=items.filter(p=>p.kind!=='bday');if(tab==='thanks')items=items.filter(p=>p.kind==='thanks');const who=only&&S.items.find(p=>p.owner===only);
+  const tabs=`<div class="kf-tabs" role="tablist">${[['all','전체'],['album','사진첩'],['thanks','감사 카드']].map(([k,t])=>`<button type="button" role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-kf-tab="${k}">${t}</button>`).join('')}${me().id!=='management'?`<button type="button" class="kf-tab-bd" data-kf-bday aria-label="내 생일 ${S.myBday?'바꾸기':'등록'}">🎂<span>${S.myBday?'내 생일 '+(+S.myBday.slice(0,2))+'.'+(+S.myBday.slice(3)):'생일 등록'}</span></button>`:''}</div>`;
   const list=tab==='album'?album(items):items.length?(tab==='thanks'?'':'')+items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   const side=(()=>{const by=new Map();S.items.filter(p=>p.kind!=='bday').forEach(p=>{const x=by.get(p.owner);if(!x)by.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt});else if(p.createdAt>x.at)x.at=p.createdAt});const m=me();
    const all=[...by.values()].filter(x=>x.id!==m.id).map(x=>({...x,n:fresh(x.id)}));const list=[...all.filter(x=>x.n).sort((a,b)=>b.at-a.at),...all.filter(x=>!x.n).sort((a,b)=>b.at-a.at)].slice(0,12);
@@ -9967,7 +9968,11 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  async function load(force){if(S.loading)return;if(!force&&Date.now()-S.at<8000&&S.loaded)return paint();S.loading=true;S.err='';
   names().then(()=>{if(view==='feed'&&!S.painted){S.painted=1;const y=window.scrollY;paint();window.scrollTo(0,y)}});
   try{const r=await api({action:'feedList'});if(typeof r.notify==='boolean')S.notify=r.notify;if(Array.isArray(r.birthdays))S.birthdays=r.birthdays;if(Array.isArray(r.bdayCards)){S.bdayCards=r.bdayCards;setTimeout(keepAuto,400)}if(typeof r.myBday==='string')S.myBday=r.myBday;if(r.thanks&&typeof r.thanks==='object')S.thanks=r.thanks;const older=S.items.filter(x=>!r.items.some(y=>y.id===x.id)&&S.cursor&&x.createdAt<Math.min(...r.items.map(y=>y.createdAt)));S.items=[...r.items,...older];if(!older.length)S.cursor=r.cursor;S.loaded=true;S.at=Date.now()}catch(e){S.err=e.message||'불러오지 못했어요';S.loaded=true}
-  S.loading=false;if(view==='feed'){const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.kf-card');if(typing&&!force)return;const y=window.scrollY;paint();window.scrollTo(0,y)}}
+  S.loading=false;if(view==='feed'){
+   /* 30초 새로고침: 바뀐 게 없으면 다시 그리지 않고(깜빡임·사진 다시 불러오기 없음), 댓글 쓰는 중이면 미뤄요 */
+   const sig=feedSig();if(force==='poll'){if(sig===S.sig)return;const ae=document.activeElement,typing=(ae&&ae.closest&&ae.closest('.kf')&&/INPUT|TEXTAREA/.test(ae.tagName))||[...document.querySelectorAll('.kf .kf-add input')].some(i=>i.value.trim());if(typing){S.pend=1;return}}
+   S.sig=sig;S.pend=0;const typing=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.kf-card');if(typing&&!force)return;const y=window.scrollY;paint();window.scrollTo(0,y)}}
+ function feedSig(){try{return JSON.stringify([S.notify,S.myBday,S.cursor,(S.items||[]).map(x=>[x.id,x.likeCount,x.commentCount,x.liked,x.myReact,x.editedAt,x.text,(x.reacts||[]).map(r=>r.e+r.n).join(),x.poll?JSON.stringify(x.poll):'',x.cheers?x.cheers.n:0,(x.recent||[]).map(c=>c.id).join()])])}catch(e){return Math.random()+''}}
  /* 화면 연결: 홈은 건드리지 않고 메뉴에만 '피드' */
  if(typeof body==='function'){const o=body;body=function(){if(view==='feed'){const b=document.getElementById('body');if(b){paint();load()}return}return o.apply(this,arguments)}}
  if(typeof renderDbar==='function'){const o=renderDbar;renderDbar=function(){if(view==='feed'){const b=document.getElementById('dbar');if(b)b.hidden=true;try{setBH()}catch(e){}return}return o.apply(this,arguments)}}
@@ -9976,7 +9981,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  false&&new MutationObserver(()=>{if(typeof view==='undefined'||view!=='mobile_more')return;const secs=[...document.querySelectorAll('#body .km-tsec')];const t=secs.find(s=>(s.querySelector('.km-th p')||{}).textContent==='팀');if(!t||t.querySelector('[data-kf-tile]'))return;const tiles=t.querySelector('.km-tiles');if(!tiles)return;
   const b=document.createElement('button');b.type='button';b.className='km-tile';b.dataset.kfTile='1';b.innerHTML=`<i>${V13I('feed')}</i><span>꿈마당</span>`;b.onclick=()=>go('feed');tiles.prepend(b)}).observe(document.documentElement,{childList:true,subtree:true});
  /* 피드를 보고 있으면 30초마다 새 글 확인 */
- setInterval(()=>{if(typeof view!=='undefined'&&view==='feed'&&!document.hidden&&!document.querySelector('.kf-ov'))load(true)},30000);
+ setInterval(()=>{if(typeof view!=='undefined'&&view==='feed'&&!document.hidden&&!document.querySelector('.kf-ov'))load('poll')},30000);
  window.kzPosts={open:()=>go("feed"),load,state:S};
  try{if(typeof renderTabbar==='function')renderTabbar()}catch(e){}
 })();</script>
@@ -11355,6 +11360,31 @@ window.kzSatPrac=(function(){
 @media(min-width:701px){.kz-bible blockquote{font-size:17.5px}}
 .kz-bible .kz-pg.tight{padding:12px 18px 9px 26px;gap:7px}.kz-pg.tight .kz-bh{padding-bottom:6px}.kz-pg.tight .kz-bh span,.kz-pg.tight .kz-bh b{font-size:11.5px}.kz-pg.tight figcaption{font-size:11.5px}.kz-bible:has(.tight) .kz-rib{height:38px;right:22px}
 </style>
+<style id="kz-feed-tune-css">
+/* 꿈마당 다듬기: 탭 고정 · 댓글 입력 가볍게 · 맨 위로 · 브랜드색 */
+#body .kf .kf-tabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:6;background:rgba(255,251,245,.97)!important;box-shadow:0 8px 20px -14px rgba(60,40,20,.35)}
+@media(min-width:821px){#body .kf .kf-tabs{top:68px}}
+#body .kf .kf-add{margin-top:6px;padding:2px 0!important;border:0!important;border-top:1px solid rgba(120,88,56,.10)!important;border-radius:0!important;background:transparent!important;padding-top:8px!important}
+#body .kf .kf-add .kf-av{width:22px;height:22px}
+#body .kf .kf-add input{font-size:13.5px!important}
+#body .kf .kf-add button{color:#b4612c}
+#body .kf-side-new{background:#b4612c;box-shadow:0 8px 18px -10px rgba(180,97,44,.7)}
+#body .kf-side-new:hover{background:#9e5324}
+.kf-tab-bd span{white-space:nowrap}
+.kf-totop{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:50;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:1px solid rgba(120,88,56,.18);background:rgba(255,252,247,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 10px 24px -12px rgba(60,40,20,.45);font:inherit;font-size:13px;font-weight:700;color:#5a4030;cursor:pointer;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .18s,transform .18s}
+.kf-totop.on{opacity:1;transform:none;pointer-events:auto}
+@media(min-width:821px){.kf-totop{bottom:28px;right:28px}}
+</style>
+<script id="kz-feed-tune">
+(function(){
+ /* 맨 위로: 피드를 많이 내렸을 때만 보여요 · 아래 '꿈마당' 탭을 한 번 더 눌러도 맨 위로 */
+ const btn=document.createElement('button');btn.type='button';btn.className='kf-totop';btn.innerHTML='↑ 맨 위로';btn.setAttribute('aria-label','맨 위로');
+ btn.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});document.body.append(btn);
+ const upd=()=>{let on=false;try{on=view==='feed'&&window.scrollY>1100&&!document.querySelector('.kf-ov')}catch(e){}btn.classList.toggle('on',on)};
+ window.addEventListener('scroll',()=>{if(!btn._t){btn._t=requestAnimationFrame(()=>{btn._t=0;upd()})}},{passive:true});setInterval(upd,1500);
+ document.addEventListener('click',e=>{const t=e.target.closest('[data-tgo="feed"],[data-kf-nav]');try{if(t&&view==='feed'&&window.scrollY>200){e.preventDefault();e.stopImmediatePropagation();window.scrollTo({top:0,behavior:'smooth'})}}catch(_){}},true);
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
