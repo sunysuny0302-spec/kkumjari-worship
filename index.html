@@ -10718,7 +10718,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=14').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=15').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11255,6 +11255,39 @@ window.kzSatPrac=(function(){
  document.addEventListener('visibilitychange',()=>{if(document.hidden){const k=key();if(k&&form())save(k)}});
 })();
 </script>
+<script id="kz-ns-verse">
+/* 예배 없는 주: '이번 주 찬양' 칸 → 이번 주 묵상 말씀 (개역한글) */
+(function(){if(typeof kzSideHTML!=='function')return;
+ const V=[
+  ['마태복음 11:28','수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라'],
+  ['시편 23:1','여호와는 나의 목자시니 내가 부족함이 없으리로다'],
+  ['이사야 40:31','오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리의 날개치며 올라감 같을 것이요 달음박질하여도 곤비치 아니하겠고 걸어가도 피곤치 아니하리로다'],
+  ['데살로니가전서 5:16-18','항상 기뻐하라 쉬지 말고 기도하라 범사에 감사하라 이는 그리스도 예수 안에서 너희를 향하신 하나님의 뜻이니라'],
+  ['빌립보서 4:6-7','아무 것도 염려하지 말고 다만 모든 일에 기도와 간구로 너희 구할 것을 감사함으로 하나님께 아뢰라 그리하면 모든 지각에 뛰어난 하나님의 평강이 그리스도 예수 안에서 너희 마음과 생각을 지키시리라'],
+  ['예레미야애가 3:22-23','여호와의 자비와 긍휼이 무궁하시므로 우리가 진멸되지 아니함이니이다 이것들이 아침마다 새로우니 주의 성실이 크도소이다'],
+  ['잠언 3:5-6','너는 마음을 다하여 여호와를 의뢰하고 네 명철을 의지하지 말라 너는 범사에 그를 인정하라 그리하면 네 길을 지도하시리라'],
+  ['요한복음 14:27','평안을 너희에게 끼치노니 곧 나의 평안을 너희에게 주노라 내가 너희에게 주는 것은 세상이 주는 것 같지 아니하니라 너희는 마음에 근심도 말고 두려워하지도 말라'],
+  ['시편 121:1-2','내가 산을 향하여 눈을 들리라 나의 도움이 어디서 올꼬 나의 도움이 천지를 지으신 여호와에게서로다'],
+  ['골로새서 3:16','그리스도의 말씀이 너희 속에 풍성히 거하여 모든 지혜로 피차 가르치며 권면하고 시와 찬미와 신령한 노래를 부르며 마음에 감사함으로 하나님을 찬양하고'],
+  ['시편 150:6','호흡이 있는 자마다 여호와를 찬양할지어다 할렐루야']];
+ const E=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ let off=0;const pick=d=>{let h=0;for(const c of String(d))h=(h*31+c.charCodeAt(0))>>>0;return V[(h+off)%V.length]};
+ const html=d=>{const [r,t]=pick(d);return `<div class="kz-h">${V13I('music')}<h2>이번 주 묵상 말씀</h2><span class="sp"></span><button type="button" class="kz-all" data-nsv-next>다른 말씀 <span aria-hidden="true">↻</span></button></div>
+  <figure class="kz-verse"><span class="kz-vq" aria-hidden="true">“</span><blockquote>${E(t)}</blockquote><figcaption>${E(r)} <small>· 개역한글</small></figcaption>
+  <p class="kz-vnote">예배가 없는 한 주, 이 말씀을 마음에 품고 지내요 🙏</p></figure>`};
+ const base=kzSideHTML;
+ kzSideHTML=function(){try{if(typeof isNoSvc==='function'&&isNoSvc(date))return html(date)}catch(e){}return base.apply(this,arguments)};
+ document.addEventListener('click',e=>{const b=e.target.closest('[data-nsv-next]');if(!b)return;off++;const c=document.getElementById('kzSide');if(c){c.innerHTML=html(date);try{bindKzSide()}catch(_){}}});
+})();
+</script>
+<style id="kz-ns-verse-css">
+.kz-verse{position:relative;flex:1;margin:4px 0 0;padding:22px 20px 18px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;gap:12px;background:radial-gradient(120% 90% at 0% 0%,#fdf3e6 0%,rgba(253,243,230,0) 60%),linear-gradient(180deg,#fffaf3,#fbf2e6);border:1px solid #efe0cc;min-height:220px}
+.kz-vq{position:absolute;top:2px;left:14px;font-family:var(--serif);font-size:64px;line-height:1;color:#e3c39c;opacity:.7}
+.kz-verse blockquote{margin:0;padding:10px 4px 0;font-family:var(--serif);font-size:17px;line-height:1.85;font-weight:600;color:#3d2e22;word-break:keep-all;letter-spacing:-.2px}
+.kz-verse figcaption{font-size:13.5px;font-weight:800;color:#b4612c}.kz-verse figcaption small{font-weight:600;color:#a8937e}
+.kz-vnote{margin:2px 0 0;padding-top:12px;border-top:1px dashed #e6d3bd;font-size:12.5px;color:#8a7764}
+@media(min-width:701px){.kz-verse blockquote{font-size:18px}}
+</style>
 </html>
 
 <script id="kz-score-pages-script">
