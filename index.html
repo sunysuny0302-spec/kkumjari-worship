@@ -11023,10 +11023,16 @@ body.kc-crop-open{overflow:hidden}
     const l1=kind==='next'?`다음 주(${E(md(d))})는`:d===nextSun()?`이번 주(${E(md(d))})는`:`${E(md(d))} 주일은`;
     return `<button type="button" class="kz-ns-art ${kind} se-${se}" data-nsv-open="${d}" aria-label="${E(md(d))} 청년부 예배 안내 보기"><span class="kz-ns-tx"><span class="kz-ns-k"><i aria-hidden="true"></i>${SE[0]} ${SE[1]}<i aria-hidden="true"></i></span><span class="kz-ns-l1">${l1}</span><b class="kz-ns-l2">청년부 예배가 없어요</b>${w2?`<span class="kz-ns-why">${E(w2)}</span>`:''}<span class="kz-ns-l3">${kind==='next'?'그다음 주일에 기쁨으로 다시 만나요':'다음 주일에 기쁨으로 다시 만나요'} <i aria-hidden="true">♥</i></span></span></button>`};
    const nsApply=()=>{try{if(view!=='home')return;
-   const wk=document.querySelector('#body .kz-wk');
-   if(wk&&isNoSvc(date)){const hero=wk.querySelector('.kz-hero');if(hero&&!hero.classList.contains('kz-ns-on')){hero.classList.add('kz-ns-on');['background','padding','min-height'].forEach(k=>hero.style.setProperty(k,k==='background'?'none':'0','important'));hero.innerHTML=nsArt(date,'this')}wk.classList.add('kz-wk-ns')}
-   const nd=shiftDate(date,7);
-   if(isNoSvc(nd))document.querySelectorAll('#body .kz-nx').forEach(nx=>{if(nx.querySelector('.kz-ns-art'))return;nx.classList.add('kz-nx-ns');[...nx.children].forEach(c=>{if(!c.classList.contains('kz-h')&&!c.classList.contains('kz-nx-go'))c.remove()});const h=nx.querySelector('.kz-h');if(h)h.insertAdjacentHTML('afterend',nsArt(nd,'next'))});
+   /* 칸 크기는 평소와 똑같이: 바꾸기 전에 원래 높이를 재서 고정 → 그 안에 그림·말씀을 맞춰 넣어요 */
+   const H=el=>Math.round(el.getBoundingClientRect().height),lock=el=>{if(!el||el.dataset.nsH||innerWidth<=820)return;const h=H(el);if(h>0){el.dataset.nsH=h;el.style.setProperty('height',h+'px','important');el.style.setProperty('min-height','0','important');el.style.setProperty('max-height',h+'px','important')}};
+   const wk=document.querySelector('#body .kz-wk'),side=document.getElementById('kzSide'),nd=shiftDate(date,7),nsT=isNoSvc(date),nsN=isNoSvc(nd);
+   const freshWk=wk&&nsT&&!wk.querySelector('.kz-hero.kz-ns-on'),freshSide=side&&nsT&&!side.dataset.nsH;
+   if(freshSide){window.__kzNsBase=1;try{side.innerHTML=kzSideHTML()}finally{window.__kzNsBase=0}}
+   const nxs=nsN?[...document.querySelectorAll('#body .kz-nx')].filter(nx=>!nx.querySelector('.kz-ns-art')):[];
+   if(freshWk)lock(wk);if(freshSide)lock(side);nxs.forEach(lock);
+   if(wk&&nsT){const hero=wk.querySelector('.kz-hero');if(hero&&!hero.classList.contains('kz-ns-on')){hero.classList.add('kz-ns-on');['background','padding','min-height'].forEach(k=>hero.style.setProperty(k,k==='background'?'none':'0','important'));hero.innerHTML=nsArt(date,'this')}wk.classList.add('kz-wk-ns')}
+   if(freshSide&&window.kzNsVerseFill)kzNsVerseFill();
+   nxs.forEach(nx=>{nx.classList.add('kz-nx-ns');[...nx.children].forEach(c=>{if(!c.classList.contains('kz-h')&&!c.classList.contains('kz-nx-go'))c.remove()});const h=nx.querySelector('.kz-h');if(h)h.insertAdjacentHTML('afterend',nsArt(nd,'next'))});
    document.querySelectorAll('#body .kz-ns-art').forEach(b=>b.onclick=()=>open(b.dataset.nsvOpen));
    }catch(e){console.warn('[꿈자리] 예배 없음 그림',e)}};nsApply();setTimeout(nsApply,0);setTimeout(nsApply,600);
    /* 지금 보는 주(또는 이번 주 화면에서 보이는 다음 주)가 예배 없는 주면, 그 날짜마다 한 번 안내 창 */
@@ -11307,14 +11313,33 @@ window.kzSatPrac=(function(){
    <figcaption>${E(r)} <small>· 개역한글</small></figcaption></div>
   <p class="kz-vnote">예배가 없는 한 주, 이 말씀을 마음에 품고 지내요 🙏</p></figure>`};
  const base=kzSideHTML;
- kzSideHTML=function(){try{if(typeof isNoSvc==='function'&&isNoSvc(date))return html(date)}catch(e){}return base.apply(this,arguments)};
- document.addEventListener('click',e=>{const b=e.target.closest('[data-nsv-next]');if(!b)return;off++;const c=document.getElementById('kzSide');if(c){c.innerHTML=html(date);try{bindKzSide()}catch(_){}}});
+ kzSideHTML=function(){try{if(!window.__kzNsBase&&typeof isNoSvc==='function'&&isNoSvc(date))return html(date)}catch(e){}return base.apply(this,arguments)};
+ /* 칸 높이는 그대로 두고 글자 크기만 줄여서 맞춰요 */
+ function fit(){const c=document.getElementById('kzSide');if(!c||!c.dataset.nsH)return;const pg=c.querySelector('.kz-pg'),q=c.querySelector('.kz-bible blockquote'),nt=c.querySelector('.kz-vnote');if(!pg||!q)return;
+  if(nt)nt.style.display='';let f=17.5;q.style.fontSize=f+'px';q.style.lineHeight='1.85';
+  const over=()=>pg.scrollHeight>pg.clientHeight+1||c.scrollHeight>c.clientHeight+1;
+  while(over()&&f>12){f-=.5;q.style.fontSize=f+'px';if(f<15)q.style.lineHeight='1.7'}
+  if(over()&&nt){nt.style.display='none';f=Math.min(17.5,f+3);q.style.fontSize=f+'px';while(over()&&f>11){f-=.5;q.style.fontSize=f+'px'}}
+  if(over())q.style.lineHeight='1.5'}
+ window.kzNsVerseFill=function(){const c=document.getElementById('kzSide');if(!c)return;c.innerHTML=html(date);try{bindKzSide()}catch(e){}fit()};
+ document.addEventListener('click',e=>{const b=e.target.closest('[data-nsv-next]');if(!b)return;off++;window.kzNsVerseFill()});
+ window.addEventListener('resize',()=>{clearTimeout(window.__kzNsRz);window.__kzNsRz=setTimeout(fit,150)});
 })();
 </script>
 <style id="kz-ns-verse-css">
+#kzSide[data-ns-h]{display:flex!important;flex-direction:column!important;overflow:hidden}
+#kzSide[data-ns-h] .kz-bible{flex:1 1 auto;min-height:0}
+.kz-bible .kz-pg{min-height:0;overflow:hidden}
+.kz-wk-ns[data-ns-h]{display:flex!important;flex-direction:column!important;overflow:hidden}
+.kz-wk-ns[data-ns-h] .kz-wk-in{flex:1 1 auto;min-height:0;display:block!important;height:auto!important}
+.kz-wk-ns[data-ns-h] .kz-hero.kz-ns-on{height:100%!important}
+.kz-wk-ns[data-ns-h] .kz-ns-art{height:100%;min-height:0!important}
+.kz-nx-ns[data-ns-h]{display:flex!important;flex-direction:column!important;overflow:hidden}
+.kz-nx-ns[data-ns-h] .kz-ns-art{flex:1 1 auto;min-height:0!important;height:auto}
+
 /* 펼친 성경책 한 면 위에 말씀이 적힌 느낌 */
-.kz-bible{position:relative;flex:1;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;min-height:230px;border:0;background:none}
-.kz-bible .kz-pg{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:30px 26px 22px 30px;border-radius:4px 12px 12px 4px;
+.kz-bible{position:relative;flex:1;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;min-height:0;border:0;background:none}
+.kz-bible .kz-pg{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:20px 22px 14px 28px;border-radius:4px 12px 12px 4px;
  background:radial-gradient(130% 100% at 0% 50%,rgba(150,110,60,.16) 0%,rgba(150,110,60,0) 22%),radial-gradient(120% 120% at 100% 0%,rgba(255,255,255,.5),rgba(255,255,255,0) 40%),linear-gradient(180deg,#fbf4e4 0%,#f6ecd6 100%);
  box-shadow:inset 10px 0 18px -10px rgba(110,70,30,.35),inset -1px 0 0 #e9d7b5,0 1px 0 #e7d5b3,3px 3px 0 -1px #f1dcae,3px 3px 0 0 #d8b26a,6px 6px 0 -1px #ecd29c,6px 6px 0 0 #c99b4c,0 12px 24px -14px rgba(80,50,20,.45)}
 .kz-bible .kz-pg:before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.35;background-image:radial-gradient(rgba(140,100,50,.18) .6px,transparent .7px);background-size:5px 5px}
