@@ -7846,11 +7846,11 @@ function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near
  l.innerHTML=(chatCursor?'<button class="kc-more" id="kcOlder">이전 대화 보기</button>':'')+(items.length?items.map((m,i)=>{const dk=dayKey(m.createdAt);
 const header=dk!==day?`<div class="kc-day"><span>${escape(dayLabel(m.createdAt))}</span></div>`:'';day=dk;
 const mine=isMyChatMessage(m),first=!!header||!same(items[i-1],m),last=!same(m,items[i+1]);
-const initial=String(m.name||'?').trim().slice(0,1)||'?',text=String(m.text||''),big=!m.imageCount&&emojiOnly(text.trim());
+const initial=String(m.name||'?').trim().slice(0,1)||'?',text=m.deleted?'':String(m.text||''),big=!m.imageCount&&emojiOnly(text.trim());
 const photo=m.imageCount?`<div class="kc-message-images" data-images="${escape(m.id)}"><button type="button">${KC_ICON.photo}<span>사진 ${m.imageCount}장 보기</span></button></div>`:'';
 const face=mine?'':first?`<span class="kc-avatar" data-profile-id="${escape(m.owner||'')}" data-initial="${escape(initial)}" aria-hidden="true">${escape(initial)}</span>`:'<span class="kc-avatar-gap" aria-hidden="true"></span>';
 const stamp=m._pending?`<time class="pending" datetime="${new Date(m.createdAt).toISOString()}"><i class="kc-sendwait" aria-label="보내는 중"></i>${escape(clock(m.createdAt))}</time>`:last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
-return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}" data-mid="${escape(m.id)}" data-at="${Number(m.createdAt)||0}" data-own="${escape(m.owner||'')}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big&&!m.reply?' emoji':''}${!text&&photo?' photo':''}${m.reply?' has-reply':''}">${m.reply?kzReplyQ(m.reply):''}${mentionHTML(text)}${photo}</div><span class="kc-meta"><button type="button" class="kc-rc" hidden></button>${stamp}</span></div>${kzRxRow(m)}</div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
+return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}" data-mid="${escape(m.id)}" data-at="${Number(m.createdAt)||0}" data-own="${escape(m.owner||'')}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big&&!m.reply?' emoji':''}${!text&&photo?' photo':''}${m.reply&&!m.deleted?' has-reply':''}${m.deleted?' kc-del':''}">${m.deleted?'삭제된 메시지예요':(m.reply?kzReplyQ(m.reply):'')+mentionHTML(text)+photo}</div><span class="kc-meta"><button type="button" class="kc-rc" hidden></button>${m.editedAt&&!m.deleted?'<small class="kc-edited">수정됨</small>':''}${stamp}</span></div>${m.deleted?'':kzRxRow(m)}</div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  paintProfiles();refreshProfiles();paintReads();l.querySelectorAll('.kc-rc').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.closest('.kc-message');if(m){if(document.querySelector('.kc-rpop'))return document.querySelectorAll('.kc-rpop').forEach(x=>x.remove());readsPop(m,b)}});kzBindGestures(l);
  l.querySelectorAll('.kc-rx button[data-rx]').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.closest('.kc-message');if(m)kzReact(m.dataset.mid,b.dataset.rx)});
  l.querySelectorAll('.kc-quote[data-qid]').forEach(q=>q.onclick=e=>{e.stopPropagation();kzJumpTo(q.dataset.qid)});
@@ -7869,9 +7869,10 @@ function kzRxRow(m){const rx=m.rx&&typeof m.rx==='object'?m.rx:{};const g=new Ma
 async function kzReact(mid,e){const m=chatItems.find(x=>x.id===mid);if(!m||m._pending)return;const me=kzMyId(),old=m.rx?{...m.rx}:{};const rx={...old};if(rx[me]&&rx[me].e===e)delete rx[me];else rx[me]={e,n:actor?.name||''};m.rx=rx;paintChat();
  try{const r=await api({action:'chatReact',room,id:mid,e});const n=chatItems.find(x=>x.id===mid);if(n){n.rx=r.rx;paintChat()}}catch(err){const n=chatItems.find(x=>x.id===mid);if(n){n.rx=old;paintChat()}toast(err.message||'반응을 남기지 못했어요')}}
 function kzJumpTo(id){const el=$c('#kcChatLog')?.querySelector(`.kc-message[data-mid="${CSS.escape(id)}"]`);if(!el)return toast('원래 메시지가 위쪽에 있어요 · "이전 대화 보기"로 더 불러와 주세요');el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('kc-flash');void el.offsetWidth;el.classList.add('kc-flash')}
-function kzPaintReply(){const b=$c('#kcReplyBar');if(!b)return;const ta=$c('#kcChatText');if(ta)ta.placeholder=kzReplyTo?'답장 메시지 입력':'메시지 입력';if(!kzReplyTo){b.hidden=true;b.innerHTML='';return}const t=String(kzReplyTo.text||'').trim()||(kzReplyTo.img?'사진':'');
+function kzPaintReply(){const b=$c('#kcReplyBar');if(!b)return;const ta=$c('#kcChatText');if(ta)ta.placeholder=kzEditing?'고칠 내용 입력':kzReplyTo?'답장 메시지 입력':'메시지 입력';
+ if(kzEditing){const m=chatItems.find(x=>x.id===kzEditing.id);b.hidden=false;b.innerHTML=`<div><b>메시지 수정</b><span>${escape(String(m&&m.text||'').slice(0,80))}</span></div><button type="button" aria-label="수정 취소">✕</button>`;b.querySelector('button').onclick=()=>{kzEditing=null;if(ta){ta.value='';ta.style.height='auto'}kzPaintReply()};return}if(!kzReplyTo){b.hidden=true;b.innerHTML='';return}const t=String(kzReplyTo.text||'').trim()||(kzReplyTo.img?'사진':'');
  b.hidden=false;b.innerHTML=`<div><b>${kzReplyTo.mine?'나':escape(kzReplyTo.name||'팀원')}에게 답장</b><span>${escape(t.length>80?t.slice(0,80)+'…':t)}</span></div><button type="button" aria-label="답장 취소">✕</button>`;b.querySelector('button').onclick=()=>{kzReplyTo=null;kzPaintReply()}}
-function kzStartReply(id){const m=chatItems.find(x=>x.id===id);if(!m||m._pending)return;kzReplyTo={id:m.id,name:m.name||'팀원',text:String(m.text||''),img:m.imageCount||0,mine:isMyChatMessage(m)};kzPaintReply();const t=$c('#kcChatText');try{t&&t.focus({preventScroll:true})}catch(_){}}
+function kzStartReply(id){const m=chatItems.find(x=>x.id===id);if(!m||m._pending||m.deleted)return;if(kzEditing){kzEditing=null;const t=$c('#kcChatText');if(t)t.value=''}kzReplyTo={id:m.id,name:m.name||'팀원',text:String(m.text||''),img:m.imageCount||0,mine:isMyChatMessage(m)};kzPaintReply();const t=$c('#kcChatText');try{t&&t.focus({preventScroll:true})}catch(_){}}
 /* 이모지만 고르는 작은 창 (더블탭 · 컴퓨터는 더블클릭/오른쪽 클릭/☺) */
 function kzChatActions(el,ev){document.querySelectorAll('.kc-act').forEach(x=>x.remove());const id=el.dataset.mid,m=chatItems.find(x=>x.id===id);if(!m)return;if(m._pending)return toast('보내는 중인 메시지예요');const mine=(m.rx||{})[kzMyId()]?.e||'';
  const p=document.createElement('div');p.className='kc-act';p.setAttribute('role','dialog');p.setAttribute('aria-label','이모지 반응');
@@ -7881,17 +7882,35 @@ function kzChatActions(el,ev){document.querySelectorAll('.kc-act').forEach(x=>x.
  const lg=$c('#kcChatLog');if(lg)lg.addEventListener('scroll',close,{once:true,passive:true});
  p.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{close();kzReact(id,b.dataset.e)})}
 /* 손가락 동작: 말풍선 더블탭 = 이모지, 메시지를 왼쪽으로 살짝 밀기 = 답장 (카톡처럼) */
-function kzBindGestures(l){l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{if(el.dataset.g)return;el.dataset.g='1';const bub=el.querySelector('.kc-bubble'),row=el;if(!bub)return;
+function kzBindGestures(l){l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{if(el.dataset.g)return;el.dataset.g='1';const bub=el.querySelector('.kc-bubble'),row=el;if(!bub||bub.classList.contains('kc-del'))return;let lp=0;
   let sx=0,sy=0,dx=0,mode='',lastTap=0,moved=false,arrow=null;const MAX=72,TH=52;
   const setX=(v,anim)=>{row.style.transition=anim?'transform .22s cubic-bezier(.2,.8,.2,1)':'none';row.style.transform=v?`translateX(${v}px)`:'';if(arrow){const k=Math.min(1,Math.abs(v)/TH);arrow.style.opacity=String(k);arrow.style.transform=`translateY(-50%) scale(${.6+.4*k})`;arrow.classList.toggle('go',Math.abs(v)>=TH)}};
-  el.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;mode='';moved=false},{passive:true});
-  el.addEventListener('touchmove',e=>{const t=e.touches[0],x=t.clientX-sx,y=t.clientY-sy;if(!mode){if(Math.abs(x)<10&&Math.abs(y)<10)return;moved=true;mode=(x<0&&Math.abs(x)>Math.abs(y)*1.4)?'swipe':'scroll';if(mode==='swipe'&&!arrow){arrow=document.createElement('span');arrow.className='kc-swipe-ar';arrow.innerHTML='↩';const r=el.getBoundingClientRect(),lg=$c('#kcChatLog')?.getBoundingClientRect();arrow.style.top=(r.top+Math.min(r.height,70)/2)+'px';arrow.style.left=((lg?lg.right:innerWidth)-44)+'px';document.body.append(arrow)}}
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const t=e.touches[0];sx=t.clientX;sy=t.clientY;dx=0;mode='';moved=false;clearTimeout(lp);if(e.target.closest('.kc-bubble')&&!e.target.closest('a,button,img'))lp=setTimeout(()=>{if(!moved&&!mode){lastTap=0;mode='lp';try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}kzMsgMenu(el)}},500)},{passive:true});
+  el.addEventListener('touchmove',e=>{const t=e.touches[0],x=t.clientX-sx,y=t.clientY-sy;if(mode==='lp')return;if(!mode){if(Math.abs(x)<10&&Math.abs(y)<10)return;moved=true;clearTimeout(lp);mode=(x<0&&Math.abs(x)>Math.abs(y)*1.4)?'swipe':'scroll';if(mode==='swipe'&&!arrow){arrow=document.createElement('span');arrow.className='kc-swipe-ar';arrow.innerHTML='↩';const r=el.getBoundingClientRect(),lg=$c('#kcChatLog')?.getBoundingClientRect();arrow.style.top=(r.top+Math.min(r.height,70)/2)+'px';arrow.style.left=((lg?lg.right:innerWidth)-44)+'px';document.body.append(arrow)}}
    if(mode!=='swipe')return;e.preventDefault();dx=Math.max(-MAX,Math.min(0,x));const v=dx>-TH?dx:-TH+(dx+TH)*.35;setX(v);if(dx<=-TH&&!el._buzz){el._buzz=1;try{navigator.vibrate&&navigator.vibrate(10)}catch(_){}}if(dx>-TH)el._buzz=0},{passive:false});
   const end=()=>{if(mode==='swipe'){const go=dx<=-TH;setX(0,true);setTimeout(()=>{arrow&&arrow.remove();arrow=null},230);el._buzz=0;if(go)kzStartReply(el.dataset.mid)}mode=''};
-  el.addEventListener('touchend',e=>{if(mode==='swipe')return end();if(moved)return;if(!e.target.closest('.kc-bubble'))return;if(e.target.closest('a,button,img,.kc-quote'))return;const now=Date.now();if(now-lastTap<320){lastTap=0;e.preventDefault();try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}kzChatActions(el)}else lastTap=now});
+  el.addEventListener('touchend',e=>{clearTimeout(lp);if(mode==='lp'){mode='';e.preventDefault();return}if(mode==='swipe')return end();if(moved)return;if(!e.target.closest('.kc-bubble'))return;if(e.target.closest('a,button,img,.kc-quote'))return;const now=Date.now();if(now-lastTap<320){lastTap=0;e.preventDefault();try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}kzChatActions(el)}else lastTap=now});
   el.addEventListener('touchcancel',end);
   bub.addEventListener('dblclick',e=>{if(matchMedia('(hover:none)').matches)return;e.preventDefault();try{window.getSelection().removeAllRanges()}catch(_){}kzChatActions(el,e)});
-  bub.addEventListener('contextmenu',e=>{if(matchMedia('(hover:none)').matches){e.preventDefault();return}if(window.getSelection().toString())return;e.preventDefault();kzChatActions(el,e)})})}
+  bub.addEventListener('contextmenu',e=>{if(matchMedia('(hover:none)').matches){e.preventDefault();return}if(window.getSelection().toString())return;e.preventDefault();kzMsgMenu(el,e)})})}
+/* 꾹 누르기(컴퓨터는 오른쪽 클릭): 복사 · 내 메시지는 5분 안에 수정 · 삭제 */
+let kzEditing=null;
+const kzCanFix=m=>m&&!m._pending&&!m.deleted&&isMyChatMessage(m)&&Date.now()-Number(m.createdAt)<5*60000;
+function kzMsgMenu(el,ev){document.querySelectorAll('.kc-act').forEach(x=>x.remove());const id=el.dataset.mid,m=chatItems.find(x=>x.id===id);if(!m||m.deleted)return;const txt=String(m.text||'').trim(),fix=kzCanFix(m);
+ const btns=[txt?'<button type="button" data-a="copy">복사</button>':'',fix&&txt?'<button type="button" data-a="edit">수정</button>':'',fix?'<button type="button" data-a="del" class="del">삭제</button>':''].filter(Boolean);if(!btns.length)return;
+ const p=document.createElement('div');p.className='kc-act kc-menu';p.setAttribute('role','menu');p.innerHTML=`<div class="kc-act-b">${btns.join('')}</div>${fix?`<small class="kc-menu-n">보낸 지 5분 안에만 수정·삭제할 수 있어요</small>`:''}`;
+ document.body.append(p);const bub=el.querySelector('.kc-bubble')||el,r=bub.getBoundingClientRect(),w=p.offsetWidth,h=p.offsetHeight;let x=el.classList.contains('mine')?r.right-w:r.left;x=Math.min(innerWidth-w-8,Math.max(8,x));let y=r.top-h-8;if(y<60)y=Math.min(innerHeight-h-8,r.bottom+8);p.style.left=x+'px';p.style.top=y+'px';el.classList.add('kc-picked');
+ const close=()=>{p.remove();el.classList.remove('kc-picked');document.removeEventListener('pointerdown',off,true)};const off=e=>{if(!p.contains(e.target))close()};setTimeout(()=>document.addEventListener('pointerdown',off,true),0);
+ const lg=$c('#kcChatLog');if(lg)lg.addEventListener('scroll',close,{once:true,passive:true});
+ p.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;close();
+  if(a==='copy'){try{await navigator.clipboard.writeText(String(m.text||''));toast('복사했어요')}catch(e){const ta=document.createElement('textarea');ta.value=String(m.text||'');document.body.append(ta);ta.select();try{document.execCommand('copy');toast('복사했어요')}catch(_){}ta.remove()}}
+  else if(a==='edit'){if(!kzCanFix(m))return toast('보낸 지 5분이 지나서 수정할 수 없어요');kzEditing={id:m.id};kzReplyTo=null;kzPaintReply();const t=$c('#kcChatText');if(t){t.value=String(m.text||'');t.dispatchEvent(new Event('input',{bubbles:true}));try{t.focus();t.setSelectionRange(t.value.length,t.value.length)}catch(_){}}}
+  else if(a==='del'){if(!kzCanFix(m))return toast('보낸 지 5분이 지나서 지울 수 없어요');if(!confirm('이 메시지를 지울까요? 모두에게 "삭제된 메시지예요"로 보여요.'))return;
+   try{const r=await api({action:'chatDelete',room,id:m.id});const n=chatItems.find(x=>x.id===m.id);if(n)Object.assign(n,r.item);paintChat()}catch(err){toast(err.message||'지우지 못했어요')}}})}
+async function kzSaveEdit(){const t=$c('#kcChatText'),v=kzMentionWire(t?.value||'').trim(),ed=kzEditing;if(!ed)return;if(!v)return toast('메시지를 입력해 주세요');const m=chatItems.find(x=>x.id===ed.id);
+ if(!kzCanFix(m)){kzEditing=null;kzPaintReply();return toast('보낸 지 5분이 지나서 수정할 수 없어요')}
+ try{const r=await api({action:'chatEdit',room,id:ed.id,text:v});if(m)Object.assign(m,r.item);kzEditing=null;if(t){t.value='';t.style.height='auto'}kzPaintReply();paintChat();toast('수정했어요')}catch(err){toast(err.message||'수정하지 못했어요')}}
+
 
 /* 채팅에서 상대 프로필 사진을 누르면 크게 보기 */
 document.addEventListener('click',e=>{const av=e.target.closest('#kcPanel .kc-avatar');if(!av)return;const im=av.querySelector('img');if(!im)return;e.preventDefault();e.stopPropagation();
@@ -7962,6 +7981,7 @@ async function loadChat(older=false,gen=pageGeneration){
 let sendQ=Promise.resolve();
 async function send(e){
  e.preventDefault();
+ if(kzEditing)return kzSaveEdit();
  const input=$c('#kcChatText'),value=kzMentionWire(input?.value||'').trim(),attachment=$c('#kcChatAttachments');if(KZImages.busy(attachment))return toast('사진을 준비하고 있어요.');const images=[...imageDrafts[room]];if(!value&&!images.length)return;
  const targetRoom=room,gen=pageGeneration,ticket=epoch;
  const rp=kzReplyTo&&kzReplyTo.id?{...kzReplyTo}:null;
@@ -9856,7 +9876,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   if(!S.myBday&&S.loaded&&m.id!=='management'&&!hide)out.push(`<div class="kf-bday hint"><span aria-hidden="true">🎈</span><div><b>생일을 알려 주세요</b><small>그날 꿈마당에서 함께 축하해요</small></div><button type="button" data-kf-bday>등록</button><button type="button" class="kf-bx" data-kf-bdx aria-label="닫기">✕</button></div>`);
   return out.join('')}
  function paint(){const b=document.getElementById('body');if(!b||view!=='feed')return;const drafts={};b.querySelectorAll('.kf-card').forEach(c=>{const i=c.querySelector('.kf-add input');if(i&&i.value)drafts[c.dataset.id]=i.value});try{paint0(b)}finally{for(const id in drafts){const i=b.querySelector(`.kf-card[data-id="${CSS.escape(id)}"] .kf-add input`);if(i){i.value=drafts[id];const bt=i.form&&i.form.querySelector('button');if(bt)bt.disabled=!i.value.trim()}}}}
- function paint0(b){const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;const bdays=S.items.filter(p=>p.kind==='bday');items=items.filter(p=>p.kind!=='bday');if(tab==='thanks')items=items.filter(p=>p.kind==='thanks');const who=only&&S.items.find(p=>p.owner===only);
+ function paint0(b){const tab=S.tab||'all';let items=only?S.items.filter(p=>p.owner===only):S.items;const bdays=S.items.filter(p=>p.kind==='bday');items=items.filter(p=>p.kind!=='bday');items=tab==='thanks'?items.filter(p=>p.kind==='thanks'):items.filter(p=>p.kind!=='thanks'||p.priv===false);const who=only&&S.items.find(p=>p.owner===only);
   const tabs=`<div class="kf-tabs" role="tablist">${[['all','전체'],['album','사진첩'],['thanks','감사 카드']].map(([k,t])=>`<button type="button" role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-kf-tab="${k}">${t}</button>`).join('')}${me().id!=='management'?`<button type="button" class="kf-tab-bd" data-kf-bday aria-label="내 생일 ${S.myBday?'바꾸기':'등록'}">🎂<span>${S.myBday?'내 생일 '+(+S.myBday.slice(0,2))+'.'+(+S.myBday.slice(3)):'생일 등록'}</span></button>`:''}</div>`;
   const list=tab==='album'?album(items):items.length?(tab==='thanks'?'':'')+items.map(card).join(''):S.loaded?`<div class="kf-empty"><span class="kf-empty-ic">${IC.cam}</span><b>아직 게시물이 없어요</b><span>연습 사진, 예배 뒷이야기, 나누고 싶은 순간을 올려 보세요.</span><button type="button" class="btn" data-kf-new>첫 게시물 올리기</button></div>`:'<div class="kf-none">불러오는 중…</div>';
   const side=(()=>{const by=new Map();S.items.filter(p=>p.kind!=='bday').forEach(p=>{const x=by.get(p.owner);if(!x)by.set(p.owner,{id:p.owner,name:p.name,at:p.createdAt});else if(p.createdAt>x.at)x.at=p.createdAt});const m=me();
@@ -10761,7 +10781,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=18').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=19').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11476,6 +11496,10 @@ window.kzSatPrac=(function(){
 .kc-message{position:relative}
 .kc-swipe-ar{position:fixed;z-index:2147481500;transform:translateY(-50%) scale(.6);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(60,45,30,.12);color:#5a4030;font-size:17px;font-weight:800;opacity:0;pointer-events:none;transition:background .12s}
 .kc-swipe-ar.go{background:#b4612c;color:#fff}
+.kc-bubble.kc-del{font-style:italic;color:#9a8b7c!important;background:rgba(255,255,255,.55)!important;border:1px dashed rgba(120,88,56,.25)!important}
+.kc-edited{display:block;font-size:10.5px;color:#a8937e;line-height:1.1}
+.kc-menu{min-width:150px}.kc-menu .kc-act-b{border-top:0;padding-top:0}.kc-menu .kc-act-b button.del{color:#ff9a8a}
+.kc-menu-n{display:block;color:rgba(255,255,255,.55);font-size:11px;padding:2px 4px 0}
 @media(hover:none){#kcChatLog .kc-bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#kcChatLog{touch-action:pan-y}}
 .kc-message:hover .kc-more-act{opacity:1}
 @media(hover:none){.kc-more-act{display:none}}

@@ -477,3 +477,13 @@ test('chat reply snapshot and emoji reactions',async()=>{
  await assert.rejects(f.run(f.user,{action:'chatReact',room:'all',id:a.item.id,e:'💩'}),{status:400});
  const list=await f.run(f.user,{action:'chat',room:'all'});const m=list.items.find(x=>x.id===a.item.id);assert.ok(m.rx[f.user.id]);
 });
+
+test('chat edit/delete: own message within 5 minutes only',async()=>{
+ const f=fixture();const a=await f.run(f.user,{action:'send',room:'all',id:'request_edit0001',text:'오타있음',images:[]});
+ await assert.rejects(f.run(f.outsider,{action:'chatEdit',room:'all',id:a.item.id,text:'남의 글'}),{status:403});
+ const e=await f.run(f.user,{action:'chatEdit',room:'all',id:a.item.id,text:'고쳤어요'});assert.equal(e.item.text,'고쳤어요');assert.ok(e.item.editedAt);
+ const d=await f.run(f.user,{action:'chatDelete',room:'all',id:a.item.id});assert.equal(d.item.deleted,true);assert.equal(d.item.text,'');
+ f.advance(1000);const b=await f.run(f.user,{action:'send',room:'all',id:'request_edit0002',text:'오래된',images:[]});f.advance(6*60000);
+ await assert.rejects(f.run(f.user,{action:'chatEdit',room:'all',id:b.item.id,text:'x'}),{status:403});
+ await assert.rejects(f.run(f.user,{action:'chatDelete',room:'all',id:b.item.id}),{status:403});
+});
