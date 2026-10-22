@@ -7852,7 +7852,9 @@ const face=mine?'':first?`<span class="kc-avatar" data-profile-id="${escape(m.ow
 const stamp=m._pending?`<time class="pending" datetime="${new Date(m.createdAt).toISOString()}"><i class="kc-sendwait" aria-label="보내는 중"></i>${escape(clock(m.createdAt))}</time>`:last?`<time datetime="${new Date(m.createdAt).toISOString()}">${escape(clock(m.createdAt))}</time>`:'';
 return `${header}<div class="kc-message ${mine?'mine':'other'}${first?' first':''}${last?' last':''}" data-mid="${escape(m.id)}" data-at="${Number(m.createdAt)||0}" data-own="${escape(m.owner||'')}">${face}<div class="kc-message-wrap">${!mine&&first?`<b class="kc-name">${escape(m.name||'팀원')}</b>`:''}<div class="kc-line"><div class="kc-bubble${big&&!m.reply?' emoji':''}${!text&&photo?' photo':''}${m.reply&&!m.deleted?' has-reply':''}${m.deleted?' kc-del':''}">${m.deleted?'삭제된 메시지예요':(m.reply?kzReplyQ(m.reply):'')+mentionHTML(text)+photo}</div><span class="kc-meta"><button type="button" class="kc-rc" hidden></button>${m.editedAt&&!m.deleted?'<small class="kc-edited">수정됨</small>':''}${stamp}</span></div>${m.deleted?'':kzRxRow(m)}</div></div>`;}).join(''):'<div class="kc-empty">아직 대화가 없어요.<br>첫 인사를 남겨 보세요.</div>');
  paintProfiles();refreshProfiles();paintReads();l.querySelectorAll('.kc-rc').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.closest('.kc-message');if(m){if(document.querySelector('.kc-rpop'))return document.querySelectorAll('.kc-rpop').forEach(x=>x.remove());readsPop(m,b)}});kzBindGestures(l);
- l.querySelectorAll('.kc-rx button[data-rx]').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.closest('.kc-message');if(m)kzReact(m.dataset.mid,b.dataset.rx)});
+ l.querySelectorAll('.kc-rx button[data-rx]').forEach(b=>{let lt=0,lpd=false;b.onclick=e=>{e.stopPropagation();if(lpd){lpd=false;return}const m=b.closest('.kc-message');if(m)kzReact(m.dataset.mid,b.dataset.rx)};
+  b.addEventListener('touchstart',()=>{lpd=false;clearTimeout(lt);lt=setTimeout(()=>{lpd=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}const m=b.closest('.kc-message');if(m)kzRxSheet(m.dataset.mid,b.dataset.rx)},450)},{passive:true});['touchend','touchmove','touchcancel'].forEach(t=>b.addEventListener(t,e=>{clearTimeout(lt);if(lpd&&t==='touchend')e.preventDefault()}));
+  b.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();const m=b.closest('.kc-message');if(m)kzRxSheet(m.dataset.mid,b.dataset.rx)})});
  l.querySelectorAll('.kc-quote[data-qid]').forEach(q=>q.onclick=e=>{e.stopPropagation();kzJumpTo(q.dataset.qid)});
  l.querySelectorAll('.kc-message[data-mid]').forEach(el=>{if(el.querySelector('.kc-more-act'))return;const w=document.createElement('span');w.className='kc-more-act';w.innerHTML='<button type="button" data-h="e" aria-label="이모지 반응" title="이모지 반응">☺</button><button type="button" data-h="r" aria-label="답장" title="답장">↩</button>';w.querySelector('[data-h=e]').onclick=e=>{e.stopPropagation();kzChatActions(el,e)};w.querySelector('[data-h=r]').onclick=e=>{e.stopPropagation();kzStartReply(el.dataset.mid)};el.querySelector('.kc-line')?.append(w)});
  if(force||near)l.scrollTop=l.scrollHeight;else l.scrollTop=scroll;
@@ -7893,6 +7895,19 @@ function kzBindGestures(l){l.querySelectorAll('.kc-message[data-mid]').forEach(e
   el.addEventListener('touchcancel',end);
   bub.addEventListener('dblclick',e=>{if(matchMedia('(hover:none)').matches)return;e.preventDefault();try{window.getSelection().removeAllRanges()}catch(_){}kzChatActions(el,e)});
   bub.addEventListener('contextmenu',e=>{if(matchMedia('(hover:none)').matches){e.preventDefault();return}if(window.getSelection().toString())return;e.preventDefault();kzMsgMenu(el,e)})})}
+
+/* 반응 길게 누르기 → '리액션' 창: 이모지별로 누가 눌렀는지 */
+function kzRxSheet(mid,pick){const m=chatItems.find(x=>x.id===mid);if(!m)return;const rx=Object.entries(m.rx||{}).filter(([,v])=>v&&v.e);if(!rx.length)return;
+ const by=new Map();rx.forEach(([u,v])=>{if(!by.has(v.e))by.set(v.e,[]);by.get(v.e).push({id:u,n:v.n||'팀원'})});const tabs=[...by.entries()].sort((a,b)=>b[1].length-a[1].length);let cur=pick&&by.has(pick)?pick:'all';
+ document.querySelectorAll('.kc-rxs-ov').forEach(x=>x.remove());const o=document.createElement('div');o.className='kf-ov kc-rxs-ov';
+ const face=u=>{const ph=profileCache.get(u.id)?.photo;return `<span class="kc-rxs-av">${ph?`<img alt="" src="${escape(ph)}">`:escape(String(u.n).slice(0,1))}</span>`};
+ const paint=()=>{const list=cur==='all'?rx.map(([u,v])=>({id:u,n:v.n||'팀원',e:v.e})):by.get(cur).map(x=>({...x,e:cur}));
+  o.innerHTML=`<div class="kf-sheet kc-rxs" role="dialog" aria-modal="true" aria-label="리액션"><i class="kc-rxs-grab" aria-hidden="true"></i><b class="kc-rxs-t">리액션</b>
+   <div class="kc-rxs-tabs" role="tablist">${tabs.length>1?`<button type="button" role="tab" data-t="all" class="${cur==='all'?'on':''}">전체 <small>${rx.length}</small></button>`:''}${tabs.map(([e,a])=>`<button type="button" role="tab" data-t="${e}" class="${cur===e||(tabs.length===1)?'on':''}">${e}${tabs.length>1?` <small>${a.length}</small>`:''}</button>`).join('')}</div>
+   <p class="kc-rxs-n">${list.length}명</p><div class="kc-rxs-l">${list.map(u=>`<div class="kc-rxs-p">${face(u)}<b>${escape(u.n)}${u.id===kzMyId()?' <small>(나)</small>':''}</b>${cur==='all'?`<span>${u.e}</span>`:''}</div>`).join('')}</div></div>`;
+  o.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{cur=b.dataset.t;paint()})};
+ paint();document.body.append(o);o.onclick=e=>{if(e.target===o)o.remove()};
+ const ids=rx.map(([u])=>u).filter(u=>!profileCache.has(u));if(ids.length)api({action:'profiles',ids}).then(r=>{(r.profiles||[]).forEach(p=>profileCache.set(p.id,{photo:p.photo||'',at:Date.now()}));if(o.isConnected)paint()}).catch(()=>{})}
 /* 꾹 누르기(컴퓨터는 오른쪽 클릭): 복사 · 내 메시지는 5분 안에 수정 · 삭제 */
 let kzEditing=null;
 const kzCanFix=m=>m&&!m._pending&&!m.deleted&&isMyChatMessage(m)&&Date.now()-Number(m.createdAt)<5*60000;
@@ -10781,7 +10796,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=19').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=20').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11498,7 +11513,19 @@ window.kzSatPrac=(function(){
 .kc-swipe-ar.go{background:#b4612c;color:#fff}
 .kc-bubble.kc-del{font-style:italic;color:#9a8b7c!important;background:rgba(255,255,255,.55)!important;border:1px dashed rgba(120,88,56,.25)!important}
 .kc-edited{display:block;font-size:10.5px;color:#a8937e;line-height:1.1}
-.kc-menu{min-width:150px}.kc-menu .kc-act-b{border-top:0;padding-top:0}.kc-menu .kc-act-b button.del{color:#ff9a8a}
+.kc-menu{min-width:150px}
+.kc-rxs{padding-top:10px!important;max-height:70dvh;background:#fffaf4!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;display:flex;flex-direction:column}
+.kc-rxs-grab{display:block;width:40px;height:4px;border-radius:9px;background:rgba(120,88,56,.25);margin:0 auto 10px}
+.kc-rxs-t{display:block;text-align:center;font-size:16px;margin-bottom:8px}
+.kc-rxs-tabs{display:flex;gap:4px;border-bottom:1px solid rgba(120,88,56,.15);overflow-x:auto;scrollbar-width:none;padding:0 12px}
+.kc-rxs-tabs button{flex:none;border:0;background:none;padding:8px 12px 10px;font:inherit;font-size:22px;line-height:1;border-bottom:3px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.kc-rxs-tabs button small{font-size:12.5px;font-weight:800;color:#8a7764}.kc-rxs-tabs button[data-t=all]{font-size:14px;font-weight:800}
+.kc-rxs-tabs button.on{border-bottom-color:#3a2c20}
+.kc-rxs-n{margin:12px 16px 6px;font-size:13px;color:#8a7764}
+.kc-rxs-l{overflow:auto;padding:0 16px 18px;display:grid;gap:10px}
+.kc-rxs-p{display:flex;align-items:center;gap:12px}.kc-rxs-p b{flex:1;font-size:15px}.kc-rxs-p b small{font-weight:600;color:#a8937e}.kc-rxs-p>span:last-child{font-size:20px}
+.kc-rxs-av{width:42px;height:42px;border-radius:14px;overflow:hidden;display:grid;place-items:center;background:#f1e4d3;color:#7a5a3a;font-weight:800;flex:none}.kc-rxs-av img{width:100%;height:100%;object-fit:cover}
+.kc-rx button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.kc-menu .kc-act-b{border-top:0;padding-top:0}.kc-menu .kc-act-b button.del{color:#ff9a8a}
 .kc-menu-n{display:block;color:rgba(255,255,255,.55);font-size:11px;padding:2px 4px 0}
 @media(hover:none){#kcChatLog .kc-bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#kcChatLog{touch-action:pan-y}}
 .kc-message:hover .kc-more-act{opacity:1}
