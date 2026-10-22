@@ -41,11 +41,15 @@ document.addEventListener('click',e=>{const b=e.target.closest('.kz-image-open')
  /* 같은 메시지(갤러리)의 사진들을 좌우로 넘겨 보기 · 스와이프 · 방향키 */
  const g=b.closest('.kz-image-gallery'),list=(g?[...g.querySelectorAll('.kz-image-open img')].map(i=>i.src):[src]).filter(valid);let k=Math.max(0,list.indexOf(src));
  const d=document.createElement('dialog');d.className='kz-image-viewer kz-iv2';d.setAttribute('aria-label','첨부 사진');
- d.innerHTML='<div class="kz-iv-top"><span class="kz-iv-n"></span><button type="button" class="kz-iv-x" aria-label="사진 닫기">✕ 닫기</button></div><div class="kz-iv-stage"><button type="button" class="kz-iv-nav prev" aria-label="이전 사진">‹</button><img alt="첨부 사진 확대"><button type="button" class="kz-iv-nav next" aria-label="다음 사진">›</button></div>';
+ d.innerHTML='<div class="kz-iv-top"><span class="kz-iv-n"></span><button type="button" class="kz-iv-save" aria-label="사진 저장">⬇ 저장</button><button type="button" class="kz-iv-x" aria-label="사진 닫기">✕ 닫기</button></div><div class="kz-iv-stage"><button type="button" class="kz-iv-nav prev" aria-label="이전 사진">‹</button><img alt="첨부 사진 확대"><button type="button" class="kz-iv-nav next" aria-label="다음 사진">›</button></div>';
  const im=d.querySelector('img'),n=d.querySelector('.kz-iv-n'),pv=d.querySelector('.prev'),nx=d.querySelector('.next');
  const show=()=>{im.src=list[k];n.textContent=list.length>1?(k+1)+' / '+list.length:'';pv.hidden=nx.hidden=list.length<2;pv.disabled=k===0;nx.disabled=k===list.length-1};
  const step=s=>{const j=k+s;if(j<0||j>=list.length)return;k=j;show()};
  pv.onclick=()=>step(-1);nx.onclick=()=>step(1);d.querySelector('.kz-iv-x').onclick=()=>d.close();
+ /* 저장: 폰은 공유 창(→ '이미지 저장'), 안 되면 파일로 내려받기 · 사진을 꾹 눌러도 저장 메뉴가 떠요 */
+ d.querySelector('.kz-iv-save').onclick=async()=>{const src=list[k],name='꿈자리_사진_'+new Date().toISOString().slice(0,10)+'_'+(k+1)+'.jpg';try{const blob=await (await fetch(src)).blob(),file=new File([blob],name,{type:'image/jpeg'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})&&matchMedia('(hover:none)').matches){await navigator.share({files:[file]});return}
+  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);try{toast('사진을 저장했어요')}catch(_){}}catch(e){if(e&&e.name==='AbortError')return;try{toast('저장하지 못했어요 · 사진을 꾹 눌러 저장해 주세요')}catch(_){}}};
  d.addEventListener('keydown',ev=>{if(ev.key==='ArrowLeft'){ev.preventDefault();step(-1)}else if(ev.key==='ArrowRight'){ev.preventDefault();step(1)}});
  let sx=null,sy=0;d.addEventListener('touchstart',ev=>{if(ev.touches.length===1){sx=ev.touches[0].clientX;sy=ev.touches[0].clientY}},{passive:true});
  d.addEventListener('touchend',ev=>{if(sx==null)return;const t=ev.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;sx=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3)step(dx<0?1:-1)},{passive:true});
@@ -7754,6 +7758,7 @@ async function communityView(){document.body.classList.add('kc-chat-active');con
        <span class="kc-title-copy"><strong>팀 채팅</strong><small>전체 ${totalMembers||'여러'}명</small></span>
      </button>
      <div class="kc-chat-modern-actions">
+       <button type="button" id="kcChatSearch" class="kc-icon-btn" aria-label="대화 검색" title="대화 검색"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
        <button type="button" id="kcChatNotify" class="kc-icon-btn" aria-pressed="true" aria-label="알림 확인 중" title="알림 확인 중" disabled>${KC_ICON.bell}</button>
        <button type="button" id="kcChatClose" class="kc-icon-btn kc-chat-close" aria-label="채팅 닫기" title="닫기 (Esc)">${KC_ICON.close}</button>
      </div>
@@ -7908,6 +7913,18 @@ function kzRxSheet(mid,pick){const m=chatItems.find(x=>x.id===mid);if(!m)return;
   o.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{cur=b.dataset.t;paint()})};
  paint();document.body.append(o);o.onclick=e=>{if(e.target===o)o.remove()};
  const ids=rx.map(([u])=>u).filter(u=>!profileCache.has(u));if(ids.length)api({action:'profiles',ids}).then(r=>{(r.profiles||[]).forEach(p=>profileCache.set(p.id,{photo:p.photo||'',at:Date.now()}));if(o.isConnected)paint()}).catch(()=>{})}
+/* 대화 검색 (30일 보관분 전체) → 누르면 그 메시지로 이동 (위쪽이면 이전 대화를 자동으로 더 불러옴) */
+document.addEventListener('click',e=>{if(e.target.closest('#kcChatSearch'))kzSearchOpen()});
+async function kzJumpLoad(id){const has=()=>$c('#kcChatLog')?.querySelector(`.kc-message[data-mid="${CSS.escape(id)}"]`);let n=0;while(!has()&&chatCursor&&n<20){n++;try{await loadChat(true,pageGeneration)}catch(e){break}}if(has())kzJumpTo(id);else toast('메시지를 찾지 못했어요')}
+function kzSearchOpen(){const host=$c('#kcPanel')||document.body;host.querySelector('.kc-search')?.remove();const w=document.createElement('div');w.className='kc-search';
+ w.innerHTML=`<div class="kc-search-bar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input type="search" placeholder="대화 검색" aria-label="대화 검색" enterkeyhint="search"><button type="button" class="kc-search-x">닫기</button></div><div class="kc-search-r"><p class="kc-search-h">최근 30일 대화에서 찾아요</p></div>`;
+ const log=$c('#kcChatLog');(log?log.parentNode:host).prepend(w);const inp=w.querySelector('input'),res=w.querySelector('.kc-search-r');setTimeout(()=>inp.focus(),30);
+ const close=()=>w.remove();w.querySelector('.kc-search-x').onclick=close;let t=0,seq=0;
+ const hl=(txt,q)=>{const i=txt.toLowerCase().indexOf(q.toLowerCase());if(i<0)return escape(txt.slice(0,90));const st=Math.max(0,i-20),pre=(st?'…':'')+txt.slice(st,i);return escape(pre)+'<mark>'+escape(txt.slice(i,i+q.length))+'</mark>'+escape(txt.slice(i+q.length,i+q.length+60))};
+ const run=async()=>{const q=inp.value.trim();if(!q){res.innerHTML='<p class="kc-search-h">최근 30일 대화에서 찾아요</p>';return}const my=++seq;res.innerHTML='<p class="kc-search-h">찾는 중…</p>';
+  try{const r=await api({action:'chatSearch',room,q});if(my!==seq)return;const it=r.items||[];res.innerHTML=it.length?`<p class="kc-search-h">${it.length}개 찾았어요</p>`+it.map(x=>`<button type="button" class="kc-search-i" data-sid="${escape(x.id)}"><b>${escape(x.name||'팀원')}</b><time>${escape(new Date(x.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}))}</time><span>${hl(String(x.text||''),q)}</span></button>`).join(''):'<p class="kc-search-h">찾는 말이 들어간 대화가 없어요</p>';
+   res.querySelectorAll('[data-sid]').forEach(b=>b.onclick=()=>{close();kzJumpLoad(b.dataset.sid)})}catch(err){if(my===seq)res.innerHTML=`<p class="kc-search-h">${escape(err.message||'찾지 못했어요')}</p>`}};
+ inp.oninput=()=>{clearTimeout(t);t=setTimeout(run,350)};inp.onkeydown=e=>{if(e.key==='Enter'){clearTimeout(t);run()}else if(e.key==='Escape')close()}}
 /* 꾹 누르기(컴퓨터는 오른쪽 클릭): 복사 · 내 메시지는 5분 안에 수정 · 삭제 */
 let kzEditing=null;
 const kzCanFix=m=>m&&!m._pending&&!m.deleted&&isMyChatMessage(m)&&Date.now()-Number(m.createdAt)<5*60000;
@@ -10036,6 +10053,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
    let last=0,timer=0;m.addEventListener('click',e=>{const now=Date.now();if(now-last<320){clearTimeout(timer);last=0;like(id,true,true);return}last=now;const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));timer=setTimeout(()=>openViewer(id,k),330)});
    if(S.imgs.has(id))fillImgs(c,S.imgs.get(id));else if(io)io.observe(m);else loadImgs(c)}}
  function bind(b){b.querySelectorAll('[data-kf-new]').forEach(x=>x.onclick=()=>write());b.querySelector('[data-kf-retry]')?.addEventListener('click',()=>load(true));
+  {const ob=b.querySelector('[data-kf-older]');if(ob&&typeof IntersectionObserver==='function'){const io2=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting)&&!ob.disabled&&ob.isConnected){io2.disconnect();ob.textContent='불러오는 중…';ob.click()}},{rootMargin:'700px 0px'});io2.observe(ob)}}
   b.querySelector('[data-kf-older]')?.addEventListener('click',async e=>{e.currentTarget.disabled=true;try{const r=await api({action:'feedList',cursor:S.cursor});S.items=[...S.items,...r.items.filter(x=>!find(x.id))];S.cursor=r.cursor;paint()}catch(err){toast(err.message||'불러오지 못했어요');e.currentTarget.disabled=false}});
   b.querySelectorAll('.kf-card').forEach(bindCard)}
  async function load(force){if(S.loading)return;if(!force&&Date.now()-S.at<8000&&S.loaded)return paint();S.loading=true;S.err='';
@@ -10796,7 +10814,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=20').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=21').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -10819,7 +10837,9 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
    if(howTo&&x.steps)s+=1.5;if(writeQ&&/쓰기|올리기|등록|만들기|작성|보내기|정하기/.test(x.t))s+=2;
    for(const t of ts){if(t.length<2)continue;if(title.includes(t))s+=3;if(x.k.some(k=>k.length>=2&&k.toLowerCase().includes(t)))s+=2;if(x.a.toLowerCase().includes(t))s+=1;else if(text.includes(t))s+=.5}
    if(x.who&&rank&&x.who.includes(rank))s+=1;return{x,s}}).filter(r=>r.s>0).sort((a,b)=>b.s-a.s)}
- function localAnswer(q){const r=search(q);
+ function custHit(q){if(!CUST||!CUST.length)return null;const ts=toks(q).filter(t=>t.length>=2),flat=q.toLowerCase().replace(/\s+/g,'');let best=null;
+  for(const c of CUST){const cq=String(c.q||'').toLowerCase(),cf=cq.replace(/\s+/g,''),ct=toks(cq).filter(t=>t.length>=2);let sc=0;if(cf&&(flat===cf||flat.includes(cf)||cf.includes(flat)))sc+=6;for(const t of ts)if(ct.some(u=>u.includes(t)||t.includes(u)))sc+=2;const need=Math.max(2,Math.ceil(ct.length*2*0.6));if(sc>=need&&(!best||sc>best.sc))best={c,sc}}return best&&best.c}
+ function localAnswer(q){const ch=custHit(q);if(ch)return{title:'팀 답변',text:ch.a,go:[]};const r=search(q);
   if(!r.length||r[0].s<3)return{miss:true,text:'음… 설명서에서 딱 맞는 답을 못 찾았어요. 아래 자주 묻는 질문을 눌러 보거나, 조금 다르게 물어봐 주세요. 그래도 해결이 안 되면 단장이나 관리계정에게 물어봐 주세요.',go:[],rel:r.length?r.slice(0,3).map(v=>v.x):SUG.slice(0,4).map(t=>({t}))};
   const x=r[0].x;return{title:x.t,text:x.a,steps:x.steps,tips:x.tips,go:(x.go||[]).slice(0,2),rel:r.slice(1,4).filter(v=>v.s>=3).map(v=>v.x)}}
  /* ===== 팀 기록 질문 (무료 · 이 기기에서 바로 계산): 콘티 · 서는 사람 · 내 순서 · 곡을 언제 불렀는지 ===== */
@@ -10922,10 +10942,29 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   busy=false;hist.push({role:'assistant',...out});if(hist.length>40)hist=hist.slice(-40);paint()}
  function close(){document.getElementById('kzAsk')?.remove()}
  const isBoss=()=>{const a=me();return a.id==='management'||a.rank==='관리계정'||a.rank==='단장'};
- async function showMiss(){if(busy)return;busy=true;paint();let out;try{const r=await kzRsvp.api({action:'askMissList'}),it=(r&&r.items)||[];const f=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()}`};
-  out=it.length?{title:`도우미가 답을 못 찾은 질문 · ${it.length}개`,text:it.map(x=>`${f(x.at)} · ${x.q}`).join('\n')+'\n\n누가 물었는지는 저장하지 않아요. 자주 나오는 질문은 설명서에 넣어 달라고 알려 주세요.',go:['askclear']}:{text:'아직 도우미가 답을 못 찾은 질문이 없어요.',go:[]}}catch(e){out={text:e.message||'불러오지 못했어요',go:[]}}
-  busy=false;hist.push({role:'assistant',...out});paint()}
- function open(){if(document.getElementById('kzAsk'))return;loadKB().then(()=>paint()).catch(()=>{});
+ /* 관리자: 못 찾은 질문에 직접 답 달기 → 다음부터 도우미가 그 답을 알려줘요 */
+ let CUST=null;async function loadCust(force){if(CUST&&!force)return CUST;try{const r=await kzRsvp.api({action:'askCustomList'});CUST=r.items||[]}catch(e){CUST=CUST||[]}return CUST}
+ async function showMiss(){document.querySelectorAll('.ka-ms-ov').forEach(x=>x.remove());const o=document.createElement('div');o.className='kf-ov ka-ms-ov';document.body.append(o);
+  const fd=t=>{const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()}`};let miss=[],cust=[],err='';
+  const draw=()=>{o.innerHTML=`<div class="kf-sheet ka-ms" role="dialog" aria-modal="true" aria-label="도우미 답 관리"><div class="kf-sh"><b>도우미 답 관리</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">
+   ${err?`<p class="ka-ms-e">${E(err)}</p>`:''}<p class="ka-ms-h">못 찾은 질문 <b>${miss.length}</b> <small>누가 물었는지는 저장하지 않아요</small></p>
+   ${miss.length?miss.map(x=>`<div class="ka-ms-i"><span><small>${fd(x.at)}</small>${E(x.q)}</span><button type="button" data-ans="${E(x.id)}">답 달기</button><button type="button" class="x" data-mdel="${E(x.id)}" aria-label="지우기">✕</button></div>`).join(''):'<p class="ka-ms-n">새로 쌓인 질문이 없어요</p>'}
+   <p class="ka-ms-h">내가 단 답 <b>${cust.length}</b> <small>도우미가 비슷한 질문에 이 답을 알려줘요</small></p>
+   ${cust.length?cust.map(x=>`<div class="ka-ms-c"><b>Q. ${E(x.q)}</b><p>${E(x.a)}</p><div><button type="button" data-cedit="${E(x.id)}">고치기</button><button type="button" class="x" data-cdel="${E(x.id)}">지우기</button></div></div>`).join(''):'<p class="ka-ms-n">아직 없어요</p>'}
+   <button type="button" class="ka-ms-add" data-cnew>＋ 질문·답 직접 추가</button></div></div>`;
+   o.querySelector('.kf-x').onclick=()=>o.remove();
+   o.querySelectorAll('[data-ans]').forEach(b=>b.onclick=()=>{const m=miss.find(x=>x.id===b.dataset.ans);form({q:m.q},m.id)});
+   o.querySelectorAll('[data-mdel]').forEach(b=>b.onclick=async()=>{try{await kzRsvp.api({action:'askMissDel',id:b.dataset.mdel});miss=miss.filter(x=>x.id!==b.dataset.mdel);draw()}catch(e){toast(e.message||'지우지 못했어요')}});
+   o.querySelectorAll('[data-cedit]').forEach(b=>b.onclick=()=>form(cust.find(x=>x.id===b.dataset.cedit)));
+   o.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(!confirm('이 답을 지울까요?'))return;try{await kzRsvp.api({action:'askCustomDel',id:b.dataset.cdel});cust=cust.filter(x=>x.id!==b.dataset.cdel);CUST=cust;draw()}catch(e){toast(e.message||'지우지 못했어요')}});
+   o.querySelector('[data-cnew]').onclick=()=>form({})};
+  const form=(x,missId)=>{const f=document.createElement('div');f.className='ka-ms-f';f.innerHTML=`<label>질문<input maxlength="200" value="${E(x.q||'')}" placeholder="예: 주차는 어디에 해요?"></label><label>답<textarea rows="5" maxlength="2000" placeholder="팀원에게 보여줄 답을 적어 주세요">${E(x.a||'')}</textarea></label><div><button type="button" class="sm" data-fx>취소</button><button type="button" class="btn" data-fs>저장</button></div>`;
+   const sb=o.querySelector('.kf-sb');sb.prepend(f);sb.scrollTop=0;f.querySelector(x.q?'textarea':'input').focus();f.querySelector('[data-fx]').onclick=()=>f.remove();
+   f.querySelector('[data-fs]').onclick=async e=>{const q=f.querySelector('input').value.trim(),a=f.querySelector('textarea').value.trim();if(q.length<2||!a)return toast('질문과 답을 적어 주세요');e.currentTarget.disabled=true;
+    try{await kzRsvp.api({action:'askCustomSave',id:x.id||'',q,a});if(missId){await kzRsvp.api({action:'askMissDel',id:missId}).catch(()=>{});miss=miss.filter(y=>y.id!==missId)}cust=await loadCust(true);toast('저장했어요 · 이제 도우미가 이 답을 알려줘요');draw()}catch(err){e.currentTarget.disabled=false;toast(err.message||'저장하지 못했어요')}}};
+  o.innerHTML='<div class="kf-sheet ka-ms"><div class="kf-sb"><p class="ka-ms-n">불러오는 중…</p></div></div>';o.onclick=e=>{if(e.target===o)o.remove()};
+  try{const [r,c]=await Promise.all([kzRsvp.api({action:'askMissList'}),loadCust(true)]);miss=(r&&r.items)||[];cust=c}catch(e){err=e.message||'불러오지 못했어요'}draw()}
+ function open(){if(document.getElementById('kzAsk'))return;loadKB().then(()=>paint()).catch(()=>{});loadCust().catch(()=>{});
   const w=document.createElement('div');w.id='kzAsk';w.className='kzh-ov ka-ov';
   w.innerHTML=`<div class="kzh-p ka-p" role="dialog" aria-modal="true" aria-label="꿈자리 도우미"><div class="kzh-h"><i class="ka-logo" aria-hidden="true">✦</i><b>꿈자리 도우미<small>앱 사용법을 무엇이든 물어보세요</small></b>${isBoss()?'<button type="button" class="ka-new" data-ka-miss>못 찾은 질문</button>':''}${hist.length?'<button type="button" class="ka-new" data-ka-new>새 대화</button>':''}<button type="button" class="kzh-x" aria-label="닫기">✕</button></div><div class="ka-b"></div><form class="ka-f"><textarea rows="1" maxlength="600" placeholder="궁금한 걸 적어 주세요 (예: 송폼 어떻게 만들어?)" aria-label="질문"></textarea><button type="submit" class="ka-send" aria-label="보내기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></form><p class="ka-note">도우미는 설명서를 바탕으로 답해요. 틀릴 수 있으니 중요한 일은 단장·관리계정에게 확인해 주세요.</p></div>`;
   document.body.append(w);paint();const ta=w.querySelector('textarea');
@@ -11232,7 +11271,7 @@ window.kzSatPrac=(function(){
   else if(!p)body2=`<div class="sp-big none">아직 안 정했어요<small>${s?'인도자가 홈에 업로드할 때 정하거나, \'정하기\'를 눌러 정해요':'정해지면 여기에 시간이 나와요'}</small></div>`;
   else if(!p.on)body2=`<div class="sp-big off">이번 주 토요 연습 없음<small>참석 확인과 저녁 알림도 쉬어요</small></div>`;
   else body2=`<div class="sp-rows">${p.singer?`<div class="sp-row"><span>🎤 싱어</span><b>${E(tm(p.singer))}</b></div>`:''}${p.session?`<div class="sp-row"><span>🎸 세션</span><b>${E(tm(p.session))}</b></div>`:''}${p.place?`<div class="sp-row pl"><span>📍 장소</span><b>${E(p.place)}</b></div>`:''}</div>`;
-  return `<section class="kz-rd kz-sp"><div class="kz-h">${V13I('list')}<h2>이번 주 토요 연습</h2><span class="kz-dd2">${E(md(sat(d)))}(토)${dd>0?' · D-'+dd:dd===0?' · 오늘':''}</span><span class="sp"></span>${s?`<button type="button" class="sp-edit" data-sp-edit>${p?'바꾸기':'정하기'}</button>`:''}</div>${body2}${p&&p.on?'<div class="kz-rd-g sp-g"></div>':''}</section>`}}
+  return `<section class="kz-rd kz-sp"><div class="kz-h">${V13I('list')}<h2>이번 주 토요 연습</h2><span class="kz-dd2">${E(md(sat(d)))}(토)${dd>0?' · D-'+dd:dd===0?' · 오늘':''}</span><span class="sp"></span>${s&&!(typeof isNoSvc==='function'&&isNoSvc(d))?`<button type="button" class="sp-edit" data-sp-edit>${p?'바꾸기':'정하기'}</button>`:''}</div>${body2}${p&&p.on?'<div class="kz-rd-g sp-g"></div>':''}</section>`}}
  /* 홈 그린 뒤: 버튼 연결 + 폰 위쪽 얇은 띠 */
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const b=document.querySelector('#body [data-sp-edit]');if(b)b.onclick=()=>edit(date);
    const hm=document.querySelector('#body .hm');if(hm&&!hm.querySelector('.hm-sp')&&!(typeof isNoSvc==='function'&&isNoSvc(date))){const p=of(date);if(p||staff()){const st=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?`${(+m[1])%12||12}:${m[2]}`:''};
@@ -11514,6 +11553,17 @@ window.kzSatPrac=(function(){
 .kc-bubble.kc-del{font-style:italic;color:#9a8b7c!important;background:rgba(255,255,255,.55)!important;border:1px dashed rgba(120,88,56,.25)!important}
 .kc-edited{display:block;font-size:10.5px;color:#a8937e;line-height:1.1}
 .kc-menu{min-width:150px}
+.kz-iv2 img{-webkit-touch-callout:default!important;-webkit-user-select:auto!important;user-select:auto!important}
+.kz-iv-save{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;margin-left:auto;margin-right:8px}
+.kc-search{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;background:var(--page,#f7f2eb)}
+.kc-search-bar{display:flex;align-items:center;gap:8px;margin:10px 12px 6px;padding:6px 6px 6px 12px;border-radius:14px;background:#fff;border:1px solid rgba(120,88,56,.2);color:#8a7764}
+.kc-search-bar input{flex:1;min-width:0;border:0!important;outline:0;background:transparent!important;font:inherit;font-size:16px;padding:6px 0!important;box-shadow:none!important}
+.kc-search-x{border:0;background:rgba(120,88,56,.08);border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;color:#5a4030;cursor:pointer}
+.kc-search-r{flex:1;overflow:auto;padding:0 12px 16px;display:grid;align-content:start;gap:6px}
+.kc-search-h{margin:6px 4px;font-size:12.5px;color:#8a7764}
+.kc-search-i{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;border:1px solid rgba(120,88,56,.14);background:#fff;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer}
+.kc-search-i b{font-size:13px}.kc-search-i time{font-size:11.5px;color:#a8937e}.kc-search-i span{grid-column:1/-1;font-size:14px;color:#3a2c20;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc-search-i mark{background:#ffe2a8;color:inherit;border-radius:3px;padding:0 1px}
 .kc-rxs{padding-top:10px!important;max-height:70dvh;background:#fffaf4!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;display:flex;flex-direction:column}
 .kc-rxs-grab{display:block;width:40px;height:4px;border-radius:9px;background:rgba(120,88,56,.25);margin:0 auto 10px}
 .kc-rxs-t{display:block;text-align:center;font-size:16px;margin-bottom:8px}
@@ -11600,15 +11650,22 @@ window.kzSatPrac=(function(){
    if(dl&&dl.save)await dl.save({filename:name,data:blob});else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
    toast(`PPT를 저장했어요 (슬라이드 ${sl.length}장)`)}catch(e){console.error(e);toast(String(e&&e.message||'').includes('불러오지')?'PPT 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요':'PPT를 만들지 못했어요')}
   finally{if(btn){btn.disabled=false;btn.innerHTML=h}}}
+ /* 주일 콘티 PPT 맨 뒤에 적용찬양 붙이기 (주마다 고른 걸 기억) */
+ const addKey=()=>'lyApAdd:'+(typeof lyWeek!=='undefined'&&lyWeek||'');
+ const baseSlides=lySlides;lySlides=function(songs){const out=baseSlides.apply(this,arguments);try{const k=LS(addKey());if(!k||on)return out;const d=get(k);if(!d||d.del)return out;const dd={pages:Array.isArray(d.pages)?d.pages:[],title:d.title||'적용찬양',showTitle:d.showTitle!==false};const t=dd.title;
+   if(out.length)out.push({kind:'gap',text:'',song:t,label:'곡 사이'});slides(dd).forEach(x=>out.push(x.kind==='title'?{kind:'title',text:x.text,song:t}:{kind:x.kind,text:x.text,song:t,label:'적용찬양 '+x.n+'장'}))}catch(e){}return out};
  /* 탭 붙이기 */
  const orig=lyricsView;lyricsView=function(){const r=orig.apply(this,arguments);try{const B=document.getElementById('body'),tabs=B&&B.querySelector('.ly2 .ly-tabs');if(!tabs)return r;
    if(!tabs.querySelector('[data-lyt-apply]')){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.lytApply='1';b.textContent='적용찬양';const f=tabs.querySelector('[data-lyt="ppt"]');if(f)f.after(b);else tabs.append(b);
     b.onclick=()=>{on=true;LS('lyApply','1');lyricsView()};tabs.querySelectorAll('[data-lyt]').forEach(x=>x.addEventListener('click',()=>{on=false;LS('lyApply','0')},true))}
    const ab=tabs.querySelector('[data-lyt-apply]');ab.classList.toggle('on',on);ab.setAttribute('aria-selected',String(on));
+   if(!on&&tabs.querySelector('[data-lyt="ppt"].on')){const top=B.querySelector('.ly2 .ly-top'),L=list();if(top&&L.length&&top.querySelector('#lyGo')&&!top.querySelector('#lyApAdd')){const v=LS(addKey())||'';const lab=document.createElement('label');lab.className='ly-apadd';lab.innerHTML=`<span>＋ 적용찬양</span><select id="lyApAdd" aria-label="PPT 맨 뒤에 붙일 적용찬양"><option value="">안 붙임</option>${L.map(x=>`<option value="${E(x.k)}" ${x.k===v?'selected':''}>${E(x.title||'제목 없음')}</option>`).join('')}</select>`;
+     const ref=top.querySelector('#lyPv')||top.querySelector('.ly-sp');if(ref)ref.before(lab);else top.append(lab);lab.querySelector('select').onchange=e=>{LS(addKey(),e.target.value||null);lyricsView()}}}
    if(on){tabs.querySelectorAll('[data-lyt]').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});B.querySelector('.ly2 .ly-duty')?.remove();view(B)}}catch(e){console.error('[꿈자리] 적용찬양',e)}return r};
 })();
 </script>
 <style id="kz-ly-apply-css">
+.ly-apadd{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#8a4f1f;padding:4px 6px 4px 10px;border:1px dashed #d9b48a;border-radius:10px;background:#fff8ef}.ly-apadd select{font:inherit;font-size:13px;border:0;background:transparent;max-width:150px}
 .ap-ws{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start}
 .ap-rail{display:flex;flex-direction:column;gap:6px;position:sticky;top:76px}
 .ap-new{border:1px dashed #c99a6b;background:#fff8ef;color:#8a4f1f;border-radius:12px;padding:10px;font:inherit;font-weight:800;cursor:pointer}
@@ -11645,6 +11702,20 @@ window.kzSatPrac=(function(){
  .ap-body{grid-template-columns:1fr}
  .ap-pv{position:sticky;top:0;z-index:5;order:-1;background:var(--page,#fbf8f3);padding:8px 0;grid-template-columns:44% 1fr;grid-template-rows:auto auto auto;column-gap:10px;row-gap:6px;align-items:center;box-shadow:0 10px 16px -16px rgba(60,40,20,.5)}
  .ap-pv .lp-s{grid-row:1/4;grid-column:1;width:100%}.ap-pv small{grid-column:2;flex-direction:column;gap:2px}.ap-pv .ly-btn,.ap-pv .ly-go{grid-column:2;padding:9px 10px!important;font-size:13px!important;min-height:0!important}.ap-pv .ap-tip{display:none}}
+</style>
+<style id="ka-ms-css">
+.ka-ms{max-height:82dvh;display:flex;flex-direction:column}.ka-ms .kf-sb{overflow:auto}
+.ka-ms-h{margin:14px 2px 8px;font-size:14px;font-weight:800}.ka-ms-h small{font-weight:600;color:var(--mu);font-size:11.5px;margin-left:4px}
+.ka-ms-n{color:var(--mu);font-size:13px;margin:4px 2px}
+.ka-ms-e{color:#b23b3b;font-size:13px}
+.ka-ms-i{display:flex;align-items:center;gap:6px;padding:9px 10px;border:1px solid var(--bd);border-radius:12px;margin-bottom:6px;background:var(--card)}
+.ka-ms-i span{flex:1;min-width:0;font-size:14px}.ka-ms-i small{display:block;font-size:11px;color:var(--mu)}
+.ka-ms-i button,.ka-ms-c button{border:1px solid var(--bd);background:#fff;border-radius:9px;padding:6px 10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ka-ms-i button.x,.ka-ms-c button.x{color:#b23b3b}
+.ka-ms-c{padding:10px 12px;border:1px solid #ecd7bd;border-radius:12px;margin-bottom:6px;background:#fffaf3}.ka-ms-c b{font-size:13.5px}.ka-ms-c p{margin:4px 0 8px;font-size:13.5px;white-space:pre-wrap;color:#4a3a2c}.ka-ms-c div{display:flex;gap:6px;justify-content:flex-end}
+.ka-ms-add{width:100%;margin-top:8px;border:1.5px dashed #c99a6b;background:#fff8ef;color:#8a4f1f;border-radius:12px;padding:11px;font:inherit;font-weight:800;cursor:pointer}
+.ka-ms-f{display:grid;gap:8px;padding:12px;border-radius:14px;background:#fff8ef;border:1px solid #ecd7bd;margin:6px 0 4px}.ka-ms-f label{display:grid;gap:4px;font-size:12.5px;font-weight:700;color:#8a4f1f}
+.ka-ms-f input,.ka-ms-f textarea{font:inherit;font-size:15px;padding:9px 11px;border-radius:10px;border:1px solid var(--bd);background:#fff}.ka-ms-f>div{display:flex;gap:8px;justify-content:flex-end}
 </style>
 </html>
 

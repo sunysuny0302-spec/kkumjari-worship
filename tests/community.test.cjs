@@ -487,3 +487,12 @@ test('chat edit/delete: own message within 5 minutes only',async()=>{
  await assert.rejects(f.run(f.user,{action:'chatEdit',room:'all',id:b.item.id,text:'x'}),{status:403});
  await assert.rejects(f.run(f.user,{action:'chatDelete',room:'all',id:b.item.id}),{status:403});
 });
+
+test('chat search and custom assistant answers',async()=>{
+ const f=fixture();await f.run(f.user,{action:'send',room:'all',id:'request_srch0001',text:'토요 연습 4시예요',images:[]});f.advance();await f.run(f.outsider,{action:'send',room:'all',id:'request_srch0002',text:'네 알겠어요',images:[]});
+ const r=await f.run(f.user,{action:'chatSearch',room:'all',q:'연습'});assert.equal(r.items.length,1);assert.equal(r.items[0].text,'토요 연습 4시예요');
+ await assert.rejects(f.run(f.user,{action:'askCustomSave',q:'주차 어디?',a:'교회 뒤편'}),{status:403});
+ const s=await f.run(f.admin,{action:'askCustomSave',q:'주차 어디?',a:'교회 뒤편 주차장'});
+ const l=await f.run(f.user,{action:'askCustomList'});assert.equal(l.items[0].a,'교회 뒤편 주차장');
+ await f.run(f.admin,{action:'askCustomDel',id:s.id});assert.equal((await f.run(f.user,{action:'askCustomList'})).items.length,0);
+});
