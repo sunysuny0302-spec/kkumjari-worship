@@ -11272,8 +11272,11 @@ window.kzSatPrac=(function(){
   ['시편 150:6','호흡이 있는 자마다 여호와를 찬양할지어다 할렐루야']];
  const E=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  let off=0;const pick=d=>{let h=0;for(const c of String(d))h=(h*31+c.charCodeAt(0))>>>0;return V[(h+off)%V.length]};
- const html=d=>{const [r,t]=pick(d);return `<div class="kz-h">${V13I('music')}<h2>이번 주 묵상 말씀</h2><span class="sp"></span><button type="button" class="kz-all" data-nsv-next>다른 말씀 <span aria-hidden="true">↻</span></button></div>
-  <figure class="kz-verse"><span class="kz-vq" aria-hidden="true">“</span><blockquote>${E(t)}</blockquote><figcaption>${E(r)} <small>· 개역한글</small></figcaption>
+ const html=d=>{const [r,t]=pick(d),m=/^(.*)\s(\d+):([\d-]+)$/.exec(r)||[0,r,'',''],bk=m[1],ch=m[2],vs=m[3];return `<div class="kz-h">${V13I('music')}<h2>이번 주 묵상 말씀</h2><span class="sp"></span><button type="button" class="kz-all" data-nsv-next>다른 말씀 <span aria-hidden="true">↻</span></button></div>
+  <figure class="kz-verse kz-bible" aria-label="${E(r)}"><i class="kz-rib" aria-hidden="true"></i><div class="kz-pg">
+   <header class="kz-bh"><span>${E(bk)}</span><b>${E(ch)}</b></header>
+   <blockquote><sup>${E(vs)}</sup>${E(t)}</blockquote>
+   <figcaption>${E(r)} <small>· 개역한글</small></figcaption></div>
   <p class="kz-vnote">예배가 없는 한 주, 이 말씀을 마음에 품고 지내요 🙏</p></figure>`};
  const base=kzSideHTML;
  kzSideHTML=function(){try{if(typeof isNoSvc==='function'&&isNoSvc(date))return html(date)}catch(e){}return base.apply(this,arguments)};
@@ -11281,12 +11284,21 @@ window.kzSatPrac=(function(){
 })();
 </script>
 <style id="kz-ns-verse-css">
-.kz-verse{position:relative;flex:1;margin:4px 0 0;padding:22px 20px 18px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;gap:12px;background:radial-gradient(120% 90% at 0% 0%,#fdf3e6 0%,rgba(253,243,230,0) 60%),linear-gradient(180deg,#fffaf3,#fbf2e6);border:1px solid #efe0cc;min-height:220px}
-.kz-vq{position:absolute;top:2px;left:14px;font-family:var(--serif);font-size:64px;line-height:1;color:#e3c39c;opacity:.7}
-.kz-verse blockquote{margin:0;padding:10px 4px 0;font-family:var(--serif);font-size:17px;line-height:1.85;font-weight:600;color:#3d2e22;word-break:keep-all;letter-spacing:-.2px}
-.kz-verse figcaption{font-size:13.5px;font-weight:800;color:#b4612c}.kz-verse figcaption small{font-weight:600;color:#a8937e}
-.kz-vnote{margin:2px 0 0;padding-top:12px;border-top:1px dashed #e6d3bd;font-size:12.5px;color:#8a7764}
-@media(min-width:701px){.kz-verse blockquote{font-size:18px}}
+/* 펼친 성경책 한 면 위에 말씀이 적힌 느낌 */
+.kz-bible{position:relative;flex:1;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;min-height:230px;border:0;background:none}
+.kz-bible .kz-pg{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:30px 26px 22px 30px;border-radius:4px 12px 12px 4px;
+ background:radial-gradient(130% 100% at 0% 50%,rgba(150,110,60,.16) 0%,rgba(150,110,60,0) 22%),radial-gradient(120% 120% at 100% 0%,rgba(255,255,255,.5),rgba(255,255,255,0) 40%),linear-gradient(180deg,#fbf4e4 0%,#f6ecd6 100%);
+ box-shadow:inset 10px 0 18px -10px rgba(110,70,30,.35),inset -1px 0 0 #e9d7b5,0 1px 0 #e7d5b3,3px 3px 0 -1px #f1dcae,3px 3px 0 0 #d8b26a,6px 6px 0 -1px #ecd29c,6px 6px 0 0 #c99b4c,0 12px 24px -14px rgba(80,50,20,.45)}
+.kz-bible .kz-pg:before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.35;background-image:radial-gradient(rgba(140,100,50,.18) .6px,transparent .7px);background-size:5px 5px}
+.kz-bible .kz-pg:after{content:'';position:absolute;top:14px;bottom:14px;left:16px;border-left:1px solid rgba(178,74,58,.28)}
+.kz-rib{position:absolute;z-index:2;top:-6px;right:28px;width:14px;height:64px;background:linear-gradient(90deg,#8e2a26,#b8403a 45%,#8e2a26);clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.kz-bh{position:relative;display:flex;align-items:baseline;justify-content:center;gap:8px;padding-bottom:9px;border-bottom:1px solid rgba(140,100,50,.28);font-family:var(--serif);color:#7a5a3a}
+.kz-bh span{font-size:13px;font-weight:700;letter-spacing:.24em}.kz-bh b{font-size:13px;font-weight:700;color:#a14a3a}
+.kz-bible blockquote{position:relative;margin:0;padding:0;font-family:var(--serif);font-size:17px;line-height:1.9;font-weight:600;color:#3a2a1c;word-break:keep-all;letter-spacing:-.2px}
+.kz-bible blockquote sup{font-size:11px;font-weight:800;color:#a14a3a;margin-right:5px;vertical-align:.55em;font-family:inherit}
+.kz-bible figcaption{position:relative;text-align:right;font-family:var(--serif);font-size:13px;font-weight:700;color:#8a5a33}.kz-bible figcaption small{font-weight:600;color:#a8937e}
+.kz-bible .kz-vnote{margin:6px 2px 0;padding:0;border:0;font-size:12.5px;color:#8a7764}
+@media(min-width:701px){.kz-bible blockquote{font-size:17.5px}}
 </style>
 </html>
 
