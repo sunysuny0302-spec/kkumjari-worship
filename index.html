@@ -6201,8 +6201,8 @@ window.kzNeedFull=function(){if(!window.__kzWeeksFull){window.__kzWeeksFull=true
 db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;noSvc=d&&typeof d==='object'?{...d}:{};try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>{console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e);window.__kzNoSvcViaApi=true;const t=async()=>{try{if(!(window.kzRsvp&&kzRsvp.api))return setTimeout(t,1500);const r=await kzRsvp.api({action:'noServiceGet'});noSvc=r&&r.days&&typeof r.days==='object'?{...r.days}:{};if(view!=='edit'&&view!=='ment')body()}catch(x){setTimeout(t,5000)}};t();setInterval(()=>{if(!document.hidden)t()},120000)});
 db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))body()}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
 db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
-db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
-db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
+db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
+db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('trash').onSnapshot(x=>{const lim=Date.now()-TRASH_DAYS*864e5;trash=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));purgeTrash();trash=trash.filter(t=>(t.deletedAt||0)>=lim);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if($('#side'))renderNav();if(view==='trash'&&$('#body'))trashView()},e=>console.error(e));
 setTimeout(()=>refreshStorage(false),2500);
 {const onLib=x=>{library=x.docs.map(d=>({...d.data(),_id:d.id}));if($('#side'))renderNav();const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='library'&&$('#body'))libraryView()};
@@ -10718,7 +10718,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=12').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=13').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11175,6 +11175,43 @@ window.kzSatPrac=(function(){
  .hm-sp.off{background:#f1eae2;color:#6b5a4a}
 }
 </style>
+<script id="kz-nt-draft">
+/* 공지·일정 작성 중 화면이 다시 그려져도(다른 사람이 공지를 올리거나 읽음 표시가 바뀔 때 등) 쓰던 글이 지워지지 않게 지켜요.
+   + 기기에도 임시 저장 → 앱이 꺼졌다 켜져도 '새 공지/새 일정'을 다시 열면 이어서 쓸 수 있어요. 저장·취소하면 지워요. */
+(function(){if(typeof noticeView!=='function')return;
+ const LK='kzNtDraftV1',TTL=3*864e5;let last=null,tid=0;
+ const key=()=>{try{if(view!=='notice')return null;if(ntTab==='e')return evEdit?'e:'+evEdit:null;return ntEdit?'n:'+ntEdit:null}catch(e){return null}};
+ const form=()=>document.querySelector('#body .kw-form');
+ const rd=()=>{try{return JSON.parse(localStorage.getItem(LK)||'{}')||{}}catch(e){return{}}};
+ const wr=m=>{try{localStorage.setItem(LK,JSON.stringify(m))}catch(e){}};
+ const drop=k=>{const m=rd();if(m[k]){delete m[k];wr(m)}};
+ function cap(){const f=form();if(!f)return null;const o={f:{},d:{}};
+  f.querySelectorAll('input[id],textarea[id],select[id]').forEach(x=>{if(x.type==='file'||x.type==='search')return;o.f[x.id]=(x.type==='checkbox'||x.type==='radio')?{c:x.checked}:{v:x.value}});
+  f.querySelectorAll('[contenteditable=true][id]').forEach(x=>o.f[x.id]={h:x.innerHTML});
+  f.querySelectorAll('.dpk[id]').forEach(x=>{try{if(pk[x.id])o.d[x.id]=pk[x.id].v}catch(e){}});return o}
+ const hasText=o=>!!o&&Object.values(o.f).some(s=>(s.v&&String(s.v).trim())||(s.h&&s.h.replace(/<[^>]*>/g,'').trim()));
+ function put(o){const f=form();if(!f||!o)return 0;let n=0;
+  for(const [id,s] of Object.entries(o.f||{})){let x;try{x=f.querySelector('#'+CSS.escape(id))}catch(e){}if(!x)continue;
+   if('c' in s){if(x.checked!==s.c){x.checked=s.c;x.dispatchEvent(new Event('change',{bubbles:true}));n++}}
+   else if('h' in s){if(x.innerHTML!==s.h){x.innerHTML=s.h;n++}}
+   else if(x.value!==s.v){x.value=s.v;x.dispatchEvent(new Event('input',{bubbles:true}));n++}}return n}
+ function save(k){const o=cap();if(!o)return;const m=rd();if(hasText(o))m[k]={o,at:Date.now()};else delete m[k];
+  for(const x in m)if(!m[x]||Date.now()-m[x].at>TTL)delete m[x];wr(m)}
+ const base=noticeView;
+ noticeView=function(){const k=key();let snap=null,fromLS=false;
+  if(k&&k===last&&form())snap=cap();
+  else if(k){const e=rd()[k];if(e&&Date.now()-e.at<TTL){snap=e.o;fromLS=true}}
+  if(!k&&last)drop(last);
+  if(snap&&snap.d)for(const [id,v] of Object.entries(snap.d)){try{if(v){pk[id]=pk[id]||{};pk[id].v=v}}catch(e){}}
+  const r=base.apply(this,arguments);
+  try{last=k;const f=form();
+   if(k&&f){const n=snap?put(snap):0;if(fromLS&&n&&hasText(snap))try{toast('작성 중이던 글을 이어서 불러왔어요')}catch(e){}
+    const on=()=>{clearTimeout(tid);tid=setTimeout(()=>{if(key()===k)save(k)},400)};f.addEventListener('input',on);f.addEventListener('change',on);f.addEventListener('click',on)}}catch(e){console.warn('[꿈자리] 작성 중 글 지키기',e)}
+  return r};
+ window.addEventListener('pagehide',()=>{const k=key();if(k&&form())save(k)});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){const k=key();if(k&&form())save(k)}});
+})();
+</script>
 </html>
 
 <script id="kz-score-pages-script">
