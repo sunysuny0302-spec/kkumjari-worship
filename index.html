@@ -5021,7 +5021,7 @@ function hcCardInner(dt){const b=hcBase(dt),ty=new Date().getFullYear(),lab=`<sm
 return `<div class="cal-mini-head">${V13I('calendar')}<h2>팀 일정</h2><span class="hc-mnav"><button type="button" class="hc-nav" data-hcm="-1" title="이전 달" aria-label="이전 달">‹</button><button type="button" class="hc-m" data-hcm="0" title="${moved?'이번 주가 있는 달로 돌아가기':''}">${lab}</button><button type="button" class="hc-nav" data-hcm="1" title="다음 달" aria-label="다음 달">›</button></span><span class="sp"></span><span class="hc-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span></div>${homeMiniCalendar(b,dt)}${homeUpcoming()}`}
 function bindHomeCal(dt){const c=document.querySelector('.hc-card');if(!c)return;
 c.querySelectorAll('[data-hc]').forEach(b=>b.onclick=e=>{e.stopPropagation();homeDayPop(b,b.dataset.hc)});
-c.querySelectorAll('[data-hcm]').forEach(b=>b.onclick=()=>{const n=+b.dataset.hcm;if(n===0)hcM=null;else{const cur=hcBase(dt),x=new Date(cur.getFullYear(),cur.getMonth()+n,1,12);hcM=`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`;if(x.getFullYear()===dt.getFullYear()&&x.getMonth()===dt.getMonth())hcM=null}document.querySelectorAll('.kz-pop').forEach(x=>x.remove());c.innerHTML=hcCardInner(dt);bindHomeCal(dt)});
+c.querySelectorAll('[data-hcm]').forEach(b=>b.onclick=()=>{const n=+b.dataset.hcm;if(n===0)hcM=null;else{const cur=hcBase(dt),x=new Date(cur.getFullYear(),cur.getMonth()+n,1,12);{const nm=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'),R=kzCalRange();if(nm<R.min||nm>R.max){try{toast(nm<R.min?`${R.min.slice(0,4)}년 ${+R.min.slice(5)}월까지 볼 수 있어요`:`${R.max.slice(0,4)}년 12월까지 볼 수 있어요`)}catch(e){}return}}hcM=`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`;if(x.getFullYear()===dt.getFullYear()&&x.getMonth()===dt.getMonth())hcM=null}document.querySelectorAll('.kz-pop').forEach(x=>x.remove());c.innerHTML=hcCardInner(dt);bindHomeCal(dt)});
 c.querySelectorAll('[data-gi]').forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.gi.split('|');ntTab=k;ntEdit=null;evEdit=null;ntFocus=id;go('notice')});
 c.querySelectorAll('[data-gn]').forEach(b=>b.onclick=()=>{ntTab=b.dataset.gn;ntEdit=null;evEdit=null;go('notice')})}
 function kzD(t){const x=new Date(t),p=v=>String(v).padStart(2,'0');return isNaN(x)?'':`${x.getFullYear()}. ${p(x.getMonth()+1)}. ${p(x.getDate())}`}
@@ -6027,7 +6027,9 @@ $$('[data-nx]').forEach(b=>b.onclick=()=>arm2(b,()=>toTrash('notice',b.dataset.n
 const SHOWS=[['3','3일 전부터'],['7','1주 전부터'],['14','2주 전부터'],['30','1개월 전부터']];
 let evCalendarMonth='',evCalendarDay='';var khDayHide=true;
 function evCalendarInit(){if(!evCalendarDay)evCalendarDay=todayStr();if(!evCalendarMonth)evCalendarMonth=evCalendarDay.slice(0,7);}
-function evCalendarMove(delta){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),d=new Date(y,m-1+delta,1,12);evCalendarMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');evCalendarDay=evCalendarMonth+'-01';}
+/* 달력 범위: 1년 전 같은 달 ~ (2030 + 올해-2026)년 12월 · 해가 바뀌면 앞뒤로 1년씩 자동으로 밀려요 */
+function kzCalRange(){const n=new Date(),y=n.getFullYear();return{min:(y-1)+'-'+String(n.getMonth()+1).padStart(2,'0'),max:Math.max(2030,2030+(y-2026))+'-12'}}
+function evCalendarMove(delta){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),d=new Date(y,m-1+delta,1,12);const nm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),R=kzCalRange();if(nm<R.min||nm>R.max){try{toast(nm<R.min?`${R.min.slice(0,4)}년 ${+R.min.slice(5)}월까지 볼 수 있어요`:`${R.max.slice(0,4)}년 12월까지 볼 수 있어요`)}catch(e){}return}evCalendarMonth=nm;evCalendarDay=evCalendarMonth+'-01';}
 function eventCalendar(editing=!!evEdit){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),first=new Date(y,m-1,1,12).getDay(),days=new Date(y,m,0,12).getDate();const disabled=editing?'disabled':'';
  const byDay=new Map();for(const e of events){if(!byDay.has(e.date))byDay.set(e.date,[]);byDay.get(e.date).push(e);}
  let cells='';for(let i=0;i<Math.ceil((first+days)/7)*7;i++){const n=i-first+1;if(n<1||n>days){cells+='<span class="kec-blank" aria-hidden="true"></span>';continue;}const key=evCalendarMonth+'-'+String(n).padStart(2,'0'),items=byDay.get(key)||[];
@@ -11726,10 +11728,15 @@ window.kzHoliday=(function(){
  const LUNAR={2025:{s:'01-28',b:'05-05',c:'10-05'},2026:{s:'02-16',b:'05-24',c:'09-24'},2027:{s:'02-06',b:'05-13',c:'09-14'},2028:{s:'01-26',b:'05-02',c:'10-02'},2029:{s:'02-12',b:'05-20',c:'09-21'},2030:{s:'02-02',b:'05-09',c:'09-11'}};
  const ELECT={'2025-06-03':'대통령 선거일','2026-06-03':'지방선거일','2028-04-12':'국회의원 선거일','2030-06-12':'지방선거일'};
  const cache={};const p2=n=>String(n).padStart(2,'0');const ymd=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;const add=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};const dow=s=>new Date(s+'T12:00:00').getDay();
+ /* 표에 없는 해는 브라우저의 한국 음력(단기) 달력으로 계산 → 해가 바뀌어도 자동으로 이어져요 */
+ function lunar(y){if(LUNAR[y])return LUNAR[y];try{const f=new Intl.DateTimeFormat('ko-KR-u-ca-dangi',{month:'numeric',day:'numeric',timeZone:'UTC'});
+   const find=(lm,ld,a,b)=>{for(let d=new Date(Date.UTC(y,a[0]-1,a[1]));d<=new Date(Date.UTC(y,b[0]-1,b[1]));d.setUTCDate(d.getUTCDate()+1)){const p=f.formatToParts(d),mm=(p.find(x=>x.type==='month')||{}).value,dd=(p.find(x=>x.type==='day')||{}).value;if(mm===String(lm)&&dd===String(ld))return d.toISOString().slice(0,10)}return null};
+   const s=find(1,1,[1,15],[2,25]),b=find(4,8,[4,10],[6,10]),c=find(8,15,[9,1],[10,15]);if(!s||!b||!c)return null;const prev=x=>{const d=new Date(x+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(5,10)};
+   return LUNAR[y]={s:prev(s),b:b.slice(5),c:prev(c)}}catch(e){return null}}
  function year(y){if(cache[y])return cache[y];const m={};const put=(d,n,sub)=>{(m[d]=m[d]||[]).push({n,sub:!!sub})};
   const fixed=[['01-01','신정',0],['03-01','삼일절',1],['05-05','어린이날',1],['06-06','현충일',0],['08-15','광복절',1],['10-03','개천절',1],['10-09','한글날',1],['12-25','성탄절',1]];
   if(y>=2026){fixed.push(['05-01','노동절',1]);fixed.push(['07-17','제헌절',1])}
-  const L=LUNAR[y];const subs=[];
+  const L=lunar(y);const subs=[];
   fixed.forEach(([md,n,s])=>{put(`${y}-${md}`,n);if(s)subs.push({days:[`${y}-${md}`],n,block:false})});
   if(L){const s0=add(`${y}-${L.s}`,0);const sd=[add(s0,0),add(s0,1),add(s0,2)];put(sd[0],'설날 연휴');put(sd[1],'설날');put(sd[2],'설날 연휴');subs.push({days:sd,n:'설날',block:true});
    put(`${y}-${L.b}`,'부처님오신날');subs.push({days:[`${y}-${L.b}`],n:'부처님오신날',block:false});
