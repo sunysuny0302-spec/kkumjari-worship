@@ -245,6 +245,23 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
+t('탈퇴: removes account and personal data by name, keeps team records', async () => {
+  const db = fakeDb({...seed(), 'settings/members': {list: [{name: '김태양', accountId: 'u1'}, {name: '이찬양'}]}, 'settings/leaderRotation': {periods: [{from: '2026-10-04', order: ['김태양', '이찬양']}]}, 'settings/markerPresets': {'김태양': [1], '이찬양': [2]},
+    'attendance/a1': {list: [{n: '김태양'}, {n: '이찬양'}], recs: {'김태양': {s: '출석'}, '이찬양': {s: '출석'}}}, 'care/c1': {name: '김태양'}, 'care/c2': {name: '이찬양'},
+    'overrides/o1': {date: '2099-01-01', from: '김태양', to: '이찬양'}, 'overrides/o2': {date: '2000-01-01', from: '김태양'}, 'notices/n1': {by: '김태양'}, '_kzCommunity/profile_u1': {photo: 'x'}, '_kzCommunity/birthdays': {m: {u1: {md: '01-01'}, u9: {md: '02-02'}}}});
+  const auth = fakeAuth(), s = createAdminService({db, auth, now: () => Date.UTC(2026, 9, 23)});
+  await assert.rejects(s.run(ME, {action: 'withdraw', id: 'u1'}), {status: 403});
+  const r = await s.run(ADMIN, {action: 'withdraw', id: 'u1'}); assert.equal(r.name, '김태양');
+  assert.ok(!db.store.has('accounts/u1'));assert.ok(!db.store.has('passkeys/c1'));
+  assert.deepEqual(db.store.get('settings/members').list.map(m => m.name), ['이찬양']);
+  assert.deepEqual(db.store.get('settings/leaderRotation').periods[0].order, ['이찬양']);
+  assert.ok(!('김태양' in db.store.get('settings/markerPresets')));
+  assert.deepEqual(db.store.get('attendance/a1').list.map(p => p.n), ['이찬양']);assert.ok(!('김태양' in db.store.get('attendance/a1').recs));
+  assert.ok(!db.store.has('care/c1'));assert.ok(db.store.has('care/c2'));
+  assert.ok(!db.store.has('overrides/o1'));assert.ok(db.store.has('overrides/o2'));assert.ok(db.store.has('notices/n1'));
+  assert.ok(!db.store.has('_kzCommunity/profile_u1'));assert.deepEqual(Object.keys(db.store.get('_kzCommunity/birthdays').m), ['u9']);
+});
+
 (async () => {
   let fail = 0;
   for (const [n, f] of tests) { try { await f(); console.log('ok -', n); } catch (e) { fail++; console.log('FAIL -', n, e); } }
