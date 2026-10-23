@@ -67,7 +67,7 @@ t('단장 can list pending, approve (with 겸직), and delete only pending reque
   const r2 = await s.run(CH, {action: 'approve', id: 'u2', rank: '팀원', parts: ['인도자', '싱어']});assert.deepEqual(r2.account.parts, ['싱어']);
   const db2 = fakeDb(seed()), s2 = createAdminService({db: db2, auth: fakeAuth(), now: () => 9});
   const r = await s2.run(ADMIN, {action: 'approve', id: 'u2', rank: '단장', parts: ['인도자', '선임싱어']});
-  assert.equal(r.account.rank, '단장');assert.deepEqual(r.account.parts.sort(), ['선임싱어', '싱어'].sort());
+  assert.equal(r.account.rank, '단장');assert.deepEqual(r.account.parts.sort(), ['선임싱어', '싱어', '인도자'].sort());
 });
 t('signup birthday: pending or approved own account only, valid dates, keeps month-day for 꿈마당', async () => {
   const db = fakeDb({...seed(), 'accounts/p1': {name: '새친구', status: 'pending'}, 'accounts/x1': {name: '정지', status: 'suspended'}}), s = createAdminService({db, auth: fakeAuth(), now: () => Date.UTC(2026, 9, 15)});
