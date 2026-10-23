@@ -7002,7 +7002,7 @@ function atBind(B,re){
  B.querySelectorAll('[data-at-mo]').forEach(b=>b.onclick=()=>{atRange=null;const m=+b.dataset.atMo;atMonths.has(m)?atMonths.delete(m):atMonths.add(m);re()});
  B.querySelectorAll('[data-at-pre]').forEach(b=>b.onclick=()=>{atPreset(b.dataset.atPre);re()});
  B.querySelectorAll('[data-at-m]').forEach(b=>b.onclick=()=>atModal(b.dataset.atM));
- if(q('#atPdfAll'))q('#atPdfAll').onclick=()=>atPdf(atStats().rows.filter(r=>r.assigned).map(r=>r.n),q('#atPdfAll'));
+ if(q('#atPdfAll'))q('#atPdfAll').onclick=()=>atPdfPick(atStats().rows.filter(r=>r.assigned).map(r=>r.n),q('#atPdfAll'));
  if(q('#atCsv1'))q('#atCsv1').onclick=()=>{const st=atStats();atSaveFile(`출결통계_${atPeriodText().replace(/[\s(),~]+/g,'_').replace(/_+$/,'')}.csv`,atCsv([['이름','배정','입력','출석','일반 지각','인정 지각','무단 결석','인정 결석','참여율(%)'],...st.rows.map(r=>[r.n,r.assigned,r.counted,r.p,r.nl,r.el,r.ua,r.ea,r.counted?r.rate:''])]))};
  if(q('#atCsv2'))q('#atCsv2').onclick=()=>{const rows=[['날짜','일정','이름','역할','상태','비고']];atFiltered().sort((a,b)=>a.date<b.date?-1:1).forEach(a=>(a.list||[]).forEach(p=>{const r=(a.recs||{})[p.n]||{};rows.push([a.date,atTypeLbl(a),p.n,p.r||'',r.s||'미입력',r.n||''])}));atSaveFile(`출결기록_${atPeriodText().replace(/[\s(),~]+/g,'_').replace(/_+$/,'')}.csv`,atCsv(rows))};
  /* 개인 메모 */
@@ -7101,6 +7101,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&atModalName&&!docum
 window.addEventListener('beforeunload',e=>{if(Object.values(atDraft).some(d=>d.dirty)||memoState==='wait'){e.preventDefault();e.returnValue=''}});
 
 /* ---------- 개인 보고서 PDF ---------- */
+/* 누구 것을 뽑을지 고르기 (전체 · 일부) */
+function atPdfPick(all,btn){if(!all.length)return toast('보고서를 만들 팀원이 없어요');document.querySelectorAll('.at-pick-ov').forEach(x=>x.remove());let sel=new Set(all);
+ const o=document.createElement('div');o.className='kf-ov at-pick-ov';document.body.append(o);
+ const draw=()=>{o.innerHTML=`<div class="kf-sheet at-pick" role="dialog" aria-modal="true" aria-label="개인 보고서 PDF"><div class="kf-sh"><b>개인 보고서 PDF</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">
+  <div class="at-pick-h"><span>보고서를 만들 팀원을 골라요 · <b>${sel.size}</b>/${all.length}명</span><button type="button" data-pa>${sel.size===all.length?'모두 해제':'모두 선택'}</button></div>
+  <div class="at-pick-l">${all.map(n=>`<label class="${sel.has(n)?'on':''}"><input type="checkbox" value="${esc(n)}" ${sel.has(n)?'checked':''}><span>${esc(n)}</span><small>${esc(atRoleOf(n)||'')}</small></label>`).join('')}</div>
+  <button type="button" class="btn at-pick-go" data-pg ${sel.size?'':'disabled'}>PDF 만들기 (${sel.size}명)</button></div></div>`;
+  o.querySelector('.kf-x').onclick=()=>o.remove();o.querySelector('[data-pa]').onclick=()=>{sel=sel.size===all.length?new Set():new Set(all);draw()};
+  o.querySelectorAll('.at-pick-l input').forEach(i=>i.onchange=()=>{i.checked?sel.add(i.value):sel.delete(i.value);draw()});
+  o.querySelector('[data-pg]').onclick=()=>{const list=all.filter(n=>sel.has(n));o.remove();atPdf(list,btn)}};
+ o.onclick=e=>{if(e.target===o)o.remove()};draw()}
 function atWrap(c,t,maxW){const out=[];String(t||'').split('\n').forEach(par=>{let line='';for(const ch of par){const tt=line+ch;if(c.measureText(tt).width>maxW&&line){out.push(line);line=ch}else line=tt}out.push(line)});return out}
 async function atPdf(names,btn){if(!names.length)return toast('보고서를 만들 팀원이 없어요');const t0=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='만드는 중…'}
  try{try{await document.fonts.ready}catch(e){}
@@ -11777,6 +11788,17 @@ window.kzHoliday=(function(){
 <style id="kz-login-center">
 #kzNameInput,#kzPin,.lx .kz-pin{text-align:center!important}
 #kzNameInput::placeholder,#kzPin::placeholder,.lx .kz-pin::placeholder{text-align:center}
+</style>
+<style id="at-pick-css">
+.at-pick{max-height:82dvh;display:flex;flex-direction:column}.at-pick .kf-sb{overflow:auto}
+.at-pick-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 2px 10px;font-size:13.5px;color:var(--mu)}
+.at-pick-h button{border:1px solid var(--bd);background:var(--card);border-radius:9px;padding:6px 10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.at-pick-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.at-pick-l label{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--bd);border-radius:11px;background:var(--card);cursor:pointer;font-size:14px}
+.at-pick-l label.on{border-color:var(--sAc,#b4612c);background:var(--sSoft,#fff8ef)}
+.at-pick-l label span{font-weight:700}.at-pick-l label small{margin-left:auto;font-size:11px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
+.at-pick-l input{accent-color:var(--sAc,#b4612c);width:17px;height:17px;flex:none}
+.at-pick-go{width:100%;margin-top:14px}
 </style>
 </html>
 
