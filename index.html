@@ -8983,7 +8983,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  const img=()=>{const s=kzSeason();document.querySelectorAll('img.kz-dev-image').forEach(i=>{const u='assets/devotion-'+s+'.webp';if(!i.src.endsWith(u))i.src=u})};
  new MutationObserver(img).observe(document.body,{childList:true,subtree:true});document.addEventListener('kzseason',img);img();
  /* 서버 설정 받아오기 (관리계정이 고정한 테마) */
- setTimeout(async()=>{try{const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'versionInfo'})});const j=await r.json();if(j&&j.theme)kzSeasonSet(j.theme)}catch(e){}},1500);
+ setTimeout(async()=>{try{const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'versionInfo'})});const j=await r.json();if(j&&j.theme&&j.theme!==(localStorage.getItem('kzSeasonV1')||'auto'))kzSeasonSet(j.theme)}catch(e){}},30);
  /* 관리계정 사이트 탭: 계절 테마 칸 */
  const NM={auto:'자동',spring:'봄',summer:'여름',autumn:'가을',winter:'겨울'};
  new MutationObserver(()=>{const p=document.getElementById('kzSitePane');if(!p||p.hidden||p.querySelector('.ss-th'))return;const first=p.querySelector('.st-card');if(!first)return;
@@ -11752,6 +11752,12 @@ window.kzHoliday=(function(){
 .ev-c.kz-holi{position:relative}.ev-c .kz-holi-n{position:absolute;left:0;right:0;bottom:1px;font-size:8.5px;text-align:center}
 .kz-holi.today .kec-number{color:#fff!important}
 .kz-holi-n{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9.5px;font-weight:700;line-height:1.2;color:#d23c3c;letter-spacing:-.3px}
+</style>
+<style id="kz-login-top-fix">
+/* 폰 로그인: 상태 표시줄 색(#fbfaf7)에서 사진으로 끊김 없이 이어지게 — 맨 위는 완전히 같은 색, 아래로 천천히 사라짐 */
+@media (max-width:859px){
+ :root .lx .lx-art::before{display:block!important;height:46%!important;background:linear-gradient(180deg,#fbfaf7 0%,#fbfaf7 4%,rgba(251,250,247,.86) 14%,rgba(251,250,247,.6) 30%,rgba(251,250,247,.32) 50%,rgba(251,250,247,.12) 72%,rgba(251,250,247,0) 100%)!important;-webkit-mask-image:none!important;mask-image:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+}
 </style>
 </html>
 
