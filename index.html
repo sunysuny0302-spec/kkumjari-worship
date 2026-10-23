@@ -10814,7 +10814,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=21').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=22').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11716,6 +11716,39 @@ window.kzSatPrac=(function(){
 .ka-ms-add{width:100%;margin-top:8px;border:1.5px dashed #c99a6b;background:#fff8ef;color:#8a4f1f;border-radius:12px;padding:11px;font:inherit;font-weight:800;cursor:pointer}
 .ka-ms-f{display:grid;gap:8px;padding:12px;border-radius:14px;background:#fff8ef;border:1px solid #ecd7bd;margin:6px 0 4px}.ka-ms-f label{display:grid;gap:4px;font-size:12.5px;font-weight:700;color:#8a4f1f}
 .ka-ms-f input,.ka-ms-f textarea{font:inherit;font-size:15px;padding:9px 11px;border-radius:10px;border:1px solid var(--bd);background:#fff}.ka-ms-f>div{display:flex;gap:8px;justify-content:flex-end}
+</style>
+<script id="kz-holidays">
+/* 한국 공휴일 (양력 고정 + 설·추석·부처님오신날 + 대체공휴일 + 선거일) → 달력 날짜를 빨갛게, 이름 표시 */
+window.kzHoliday=(function(){
+ const LUNAR={2025:{s:'01-28',b:'05-05',c:'10-05'},2026:{s:'02-16',b:'05-24',c:'09-24'},2027:{s:'02-06',b:'05-13',c:'09-14'},2028:{s:'01-26',b:'05-02',c:'10-02'},2029:{s:'02-12',b:'05-20',c:'09-21'},2030:{s:'02-02',b:'05-09',c:'09-11'}};
+ const ELECT={'2025-06-03':'대통령 선거일','2026-06-03':'지방선거일','2028-04-12':'국회의원 선거일','2030-06-12':'지방선거일'};
+ const cache={};const p2=n=>String(n).padStart(2,'0');const ymd=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;const add=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};const dow=s=>new Date(s+'T12:00:00').getDay();
+ function year(y){if(cache[y])return cache[y];const m={};const put=(d,n,sub)=>{(m[d]=m[d]||[]).push({n,sub:!!sub})};
+  const fixed=[['01-01','신정',0],['03-01','삼일절',1],['05-05','어린이날',1],['06-06','현충일',0],['08-15','광복절',1],['10-03','개천절',1],['10-09','한글날',1],['12-25','성탄절',1]];
+  if(y>=2026){fixed.push(['05-01','노동절',1]);fixed.push(['07-17','제헌절',1])}
+  const L=LUNAR[y];const subs=[];
+  fixed.forEach(([md,n,s])=>{put(`${y}-${md}`,n);if(s)subs.push({days:[`${y}-${md}`],n,block:false})});
+  if(L){const s0=add(`${y}-${L.s}`,0);const sd=[add(s0,0),add(s0,1),add(s0,2)];put(sd[0],'설날 연휴');put(sd[1],'설날');put(sd[2],'설날 연휴');subs.push({days:sd,n:'설날',block:true});
+   put(`${y}-${L.b}`,'부처님오신날');subs.push({days:[`${y}-${L.b}`],n:'부처님오신날',block:false});
+   const cd=[`${y}-${L.c}`,add(`${y}-${L.c}`,1),add(`${y}-${L.c}`,2)];put(cd[0],'추석 연휴');put(cd[1],'추석');put(cd[2],'추석 연휴');subs.push({days:cd,n:'추석',block:true})}
+  Object.entries(ELECT).forEach(([d,n])=>{if(d.startsWith(y+'-'))put(d,n)});
+  /* 대체공휴일: 설·추석은 일요일이나 다른 공휴일과 겹치면, 그 밖의 날은 토·일이나 다른 공휴일과 겹치면 → 그다음 첫 평일 */
+  subs.forEach(x=>{const over=x.days.some(d=>(x.block?dow(d)===0:(dow(d)===0||dow(d)===6))||m[d].length>1);if(!over)return;let d=add(x.days[x.days.length-1],1);while(dow(d)===0||dow(d)===6||m[d])d=add(d,1);put(d,`대체공휴일(${x.n})`,true)});
+  return cache[y]=m}
+ const get=d=>{const y=+String(d).slice(0,4);if(!y)return null;const a=year(y)[d];return a&&a.length?a:null};
+ const name=d=>{const a=get(d);return a?a.map(x=>x.n).filter((v,i,arr)=>arr.indexOf(v)===i).join(' · '):''};
+ const shortN=n=>n.replace('대체공휴일','대체휴일').replace(/\(.*\)/,'').replace(' 연휴','')||n;
+ function paint(root){(root||document).querySelectorAll('[data-hc],[data-ec-day],[data-hc-day]').forEach(el=>{const d=el.dataset.hc||el.dataset.ecDay||el.dataset.hcDay;if(!d||el.dataset.holi===d)return;el.dataset.holi=d;const n=name(d);el.classList.toggle('kz-holi',!!n);el.querySelector('.kz-holi-n')?.remove();if(!n)return;
+   const t=el.getAttribute('title');el.setAttribute('title',t?`${n} · ${t}`:n);if(el.matches('.kec-day,.ev-c')){const s=document.createElement('small');s.className='kz-holi-n';s.textContent=shortN(get(d)[0].n);el.append(s)}})}
+ let t=0;new MutationObserver(()=>{if(t)return;t=requestAnimationFrame(()=>{t=0;paint()})}).observe(document.documentElement,{childList:true,subtree:true});setTimeout(paint,500);
+ return{get,name,paint,year}})();
+</script>
+<style id="kz-holidays-css">
+.kz-holi{color:#d23c3c!important}
+.kz-holi .kec-number,.kz-holi>span:first-child{color:#d23c3c!important}
+.ev-c.kz-holi{position:relative}.ev-c .kz-holi-n{position:absolute;left:0;right:0;bottom:1px;font-size:8.5px;text-align:center}
+.kz-holi.today .kec-number{color:#fff!important}
+.kz-holi-n{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9.5px;font-weight:700;line-height:1.2;color:#d23c3c;letter-spacing:-.3px}
 </style>
 </html>
 
