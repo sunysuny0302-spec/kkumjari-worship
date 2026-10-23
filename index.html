@@ -11799,46 +11799,6 @@ window.kzHoliday=(function(){
 .at-pick-go{width:100%;margin-top:14px}
 </style>
 <style id="mb-out-css">.mrow3 .mb-out{color:#b23b3b!important;font-weight:700}</style>
-<script id="kz-reset">
-/* 관리계정 → 사이트 탭: '새로 시작' — 관리계정만 남기고 계정 · 멤버 · 기록 정리 (일정 · 콘티 · 공지 · 악보 · 가사 · 예배 없는 주일 · 기능 설정은 그대로) */
-(function(){const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let backed=false,busy=false;
- const opt=c=>({minutes:!!c.querySelector('#rsMin')?.checked,logs:!!c.querySelector('#rsLog')?.checked});
- async function info(c){const box=c.querySelector('.rs-list');box.innerHTML='<p class="st-note">불러오는 중…</p>';try{const r=await kzAdm({action:'resetInfo',opt:opt(c)});box.innerHTML=r.targets.map(x=>`<div class="rs-i"><span>${E(x.label)}</span><b>${x.n<0?'?':x.n+'개'}</b></div>`).join('')}catch(e){box.innerHTML=`<p class="st-note">${E(e.message||'불러오지 못했어요')}</p>`}}
- async function backup(c,b){if(busy)return;busy=true;const t0=b.textContent;b.disabled=true;const out={app:'꿈자리 찬양팀',at:new Date().toISOString(),note:'새로 시작 전에 받은 백업 (사진은 빠져 있어요)',data:{}};
-  try{const r=await kzAdm({action:'resetInfo',opt:opt(c)});for(const x of r.targets){if(!x.n)continue;b.textContent=`백업 중… ${x.label}`;const d=await kzAdm({action:'resetDump',k:x.k,opt:opt(c)});out.data[x.k]={label:x.label,items:d.items,more:!!d.more}}
-   const blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'}),name=`꿈자리_새로시작_백업_${new Date().toISOString().slice(0,10)}.json`;let dl=null;try{dl=await claude.use('downloads')}catch(e){}
-   if(dl&&dl.save)await dl.save({filename:name,data:blob});else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
-   backed=true;toast('백업 파일을 저장했어요');c.querySelector('[data-rs-go]').disabled=false}catch(e){toast('백업하지 못했어요: '+(e.message||''))}finally{busy=false;b.disabled=false;b.textContent=t0}}
- async function go(c,b){if(busy)return;const v=c.querySelector('#rsConfirm').value.trim();if(v!=='새로 시작')return toast("확인 칸에 '새로 시작'을 정확히 적어 주세요");
-  if(!backed&&!confirm('백업 파일을 받지 않았어요. 그래도 지울까요? 지운 건 되돌릴 수 없어요.'))return;
-  if(!confirm('정말 시작할까요?\n\n관리계정을 뺀 모든 계정과 멤버 명단, 출결 · 메모 · 채팅 · 꿈마당 등 기록이 지워져요.\n일정 · 콘티 · 공지 · 악보 · 가사 · 예배 없는 주일은 남아요.\n되돌릴 수 없어요.'))return;
-  busy=true;b.disabled=true;const log=c.querySelector('.rs-prog');log.hidden=false;let total=0,n=0;
-  try{for(;n<2000;n++){const r=await kzAdm({action:'resetStep',confirm:'새로 시작',opt:opt(c)});if(r.done)break;total+=r.deleted||0;log.textContent=`지우는 중… ${r.label} (지금까지 ${total}개)`}
-   log.textContent=`끝났어요 · ${total}개를 지웠어요. 화면을 새로 불러올게요.`;try{localStorage.removeItem('kzNoSvcCache')}catch(e){}toast('새로 시작 준비가 끝났어요');setTimeout(()=>location.reload(),2200)}
-  catch(e){log.textContent='중간에 멈췄어요: '+(e.message||'')+' · 다시 누르면 남은 것부터 이어서 지워요';b.disabled=false}finally{busy=false}}
- new MutationObserver(()=>{const p=document.getElementById('kzSitePane');if(!p||p.hidden||p.querySelector('.rs-card'))return;if(typeof isManagementAccount==='function'&&!isManagementAccount())return;if(!p.querySelector('.st-card'))return;
-  const c=document.createElement('section');c.className='st-card rs-card';
-  c.innerHTML=`<div class="st-h"><b>새로 시작 (전체 정리)</b><small>관리계정만 남기고 계정과 기록을 지워요</small></div>
-   <div class="rs-keep"><b>남는 것</b><span>일정 · 콘티(송폼·악보 배치 포함) · 공지 · 악보 보관함 · 가사 PPT 가사·적용찬양 · 예배 없는 주일 · 관리계정 · 기능 설정(계절 테마 · 가입 설정 · 마커)</span></div>
-   <label class="rs-chk"><input type="checkbox" id="rsMin"> 회의록도 지우기</label><label class="rs-chk"><input type="checkbox" id="rsLog"> 관리 기록 로그도 지우기</label>
-   <div class="rs-step"><span>1</span><div><b>지울 항목 확인</b><button type="button" class="kad-btn" data-rs-info>개수 보기</button><div class="rs-list"></div></div></div>
-   <div class="rs-step"><span>2</span><div><b>백업 받기</b><p class="st-note">지울 기록을 파일로 먼저 받아 둬요 (사진 제외)</p><button type="button" class="kad-btn" data-rs-bak>백업 파일 받기</button></div></div>
-   <div class="rs-step"><span>3</span><div><b>지우기</b><p class="st-note">아래 칸에 <b>새로 시작</b>이라고 적고 누르세요. 되돌릴 수 없어요.</p><input id="rsConfirm" placeholder="새로 시작" autocomplete="off"><button type="button" class="kad-btn rs-go" data-rs-go>새로 시작</button><p class="rs-prog st-note" hidden></p></div></div>`;
-  p.append(c);c.querySelector('[data-rs-info]').onclick=()=>info(c);c.querySelector('[data-rs-bak]').onclick=e=>backup(c,e.currentTarget);c.querySelector('[data-rs-go]').onclick=e=>go(c,e.currentTarget);
-  c.querySelectorAll('.rs-chk input').forEach(i=>i.onchange=()=>{if(c.querySelector('.rs-list').children.length)info(c)})}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
-})();
-</script>
-<style id="kz-reset-css">
-.rs-card{border:1px solid rgba(178,59,59,.25)!important}
-.rs-keep{display:grid;gap:3px;padding:10px 12px;border-radius:12px;background:rgba(79,138,79,.08);font-size:12.5px;margin:6px 0 8px}.rs-keep b{font-size:12.5px;color:#3a6b3b}
-.rs-chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 2px}
-.rs-step{display:flex;gap:10px;margin-top:12px}.rs-step>span{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--sSoft,#fbeee2);color:var(--sAcd,#94491a);font-size:12px;font-weight:800}
-.rs-step>div{flex:1;min-width:0;display:grid;gap:6px;justify-items:start}.rs-step b{font-size:13.5px}
-.rs-list{display:grid;gap:3px;width:100%}.rs-i{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:4px 2px;border-top:1px solid rgba(110,80,50,.08)}.rs-i b{font-size:12.5px;color:#b23b3b}
-#rsConfirm{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1px solid var(--bd);width:100%;max-width:220px}
-.rs-go{background:#b23b3b!important;color:#fff!important;border-color:#b23b3b!important}
-</style>
 </html>
 
 <script id="kz-score-pages-script">
