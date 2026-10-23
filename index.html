@@ -5981,7 +5981,9 @@ function minList(){const q=abQ.toLowerCase(),mob=minMob(),l=minutes.filter(m=>!q
 /* ---------- 공지 · 일정 ---------- */
 let notices=[],events=[],ntEdit=null,evEdit=null,ntTab='n',ntFocus=null,ntImageDraft=null,evImageDraft=null;
 const fmtTs=t=>{const d=new Date(t||Date.now());return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`};
-function purgeExpired(ns,es){if(!canEdit||!db)return;const t=todayStr();ns.filter(n=>n.until&&n.until<t).forEach(n=>db.doc('notices/'+n._id).delete().catch(()=>{}))}
+function purgeExpired(ns,es){if(!canEdit||!db)return;const t=todayStr();ns.filter(n=>n.until&&n.until<t).forEach(n=>db.doc('notices/'+n._id).delete().catch(()=>{}));
+ /* 일정은 달력에 보이는 기간(1년 전 같은 달부터)만 남기고 그보다 오래된 건 지워요 */
+ const cut=kzCalRange().min+'-01';(es||[]).filter(e=>e&&e.date&&/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&e.date<cut).forEach(e=>db.doc('events/'+e._id).delete().catch(()=>{}))}
 const ntSort=()=>[...notices].sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.at||0)-(a.at||0));
 const daysTo=d=>Math.round((new Date(d+'T12:00:00')-new Date(todayStr()+'T12:00:00'))/864e5);
 const ntActive=n=>!n.until||n.until>=todayStr();
@@ -6062,7 +6064,7 @@ function bindEvent(){
  const cur=evEdit&&evEdit!=='new'?events.find(n=>n._id===evEdit):null;
 if(evEdit&&evImageDraft?.id!==evEdit)evImageDraft={id:evEdit,images:cur?.images||[]};KZImages.mount($('#kzEventImages'),evImageDraft?.images||[],a=>evImageDraft={id:evEdit,images:a});dpBind('ev1');ssBind('ev4');if($('#evs'))kwSaveKey(()=>$('#evs')?.click());if(evEdit==='new'&&!ntMob())setTimeout(()=>$('#ev0')?.focus(),0);
 if($('#evc'))$('#evc').onclick=()=>{evEdit=null;evImageDraft=null;noticeView()};
-if($('#evs'))$('#evs').onclick=async()=>{if(KZImages.busy($('#kzEventImages')))return toast('사진을 준비하고 있어요.');const t=$('#ev0').value.trim();if(!t)return toast('일정 이름을 입력하세요');
+if($('#evs'))$('#evs').onclick=async()=>{if(KZImages.busy($('#kzEventImages')))return toast('사진을 준비하고 있어요.');const t=$('#ev0').value.trim();if(!t)return toast('일정 이름을 입력하세요');{const R=kzCalRange(),dm=String(pk.ev1&&pk.ev1.v||'').slice(0,7);if(dm&&(dm<R.min||dm>R.max))return toast(`일정은 ${R.min.slice(0,4)}년 ${+R.min.slice(5)}월 ~ ${R.max.slice(0,4)}년 12월 사이 날짜로 등록할 수 있어요`)}
 const _rsvp=!!($('#evR')&&$('#evR').checked),_ru=_rsvp&&$('#evRU')&&/^\d{4}-\d{2}-\d{2}$/.test($('#evRU').value)?$('#evRU').value:'';const _ev={title:t,date:pk.ev1.v,time:$('#ev2').value.trim(),place:$('#ev3').value.trim(),rsvp:_rsvp,rsvpUntil:_ru};const _eid=cur?cur._id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);try{await db.doc('events/'+_eid).set({...kzByFields(cur),..._ev,images:KZImages.get($('#kzEventImages')),show:+(SS.ev4||14),at:cur?(cur.at||Date.now()):Date.now()});evCalendarDay=_ev.date;evCalendarMonth=_ev.date.slice(0,7);evEdit=null;evImageDraft=null;noticeView();toast(_rsvp&&!(cur&&cur.rsvp)?'일정을 저장했어요 · 팀원들에게 참석 여부를 물어볼게요':'일정을 저장했어요');if(_rsvp&&!(cur&&cur.rsvp)&&window.kzRsvp&&kzRsvp.api)kzRsvp.api({action:'evRsvpNotify',id:_eid}).catch(e=>console.warn('[꿈자리] 참석 확인 알림',e));if(!cur&&!_rsvp&&window.kzPush)kzPush.eventPush(_ev);if(!cur&&window.kzShare)setTimeout(()=>kzShare.ask('단톡방에 새 일정을 알릴까요?',kzShare.eventMsg(_ev)),400)}catch(e){console.error(e);toast('저장하지 못했어요. 편집 권한이 필요해요')}};
 $$('[data-ee]').forEach(b=>b.onclick=()=>{evEdit=b.dataset.ee;noticeView()});
 $$('[data-ex]').forEach(b=>b.onclick=()=>arm2(b,()=>toTrash('event',b.dataset.ex,'events').then(()=>toast('삭제했어요')).catch(()=>toast('삭제하지 못했어요')),''))}
@@ -6210,7 +6212,7 @@ db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data()
 db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))body()}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
 db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
-db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));events=eAll;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
+db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));try{purgeExpired([],eAll)}catch(e){}const _cut=kzCalRange().min+'-01';events=eAll.filter(e=>!(e&&e.date&&e.date<_cut));const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
 db.collection('trash').onSnapshot(x=>{const lim=Date.now()-TRASH_DAYS*864e5;trash=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));purgeTrash();trash=trash.filter(t=>(t.deletedAt||0)>=lim);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if($('#side'))renderNav();if(view==='trash'&&$('#body'))trashView()},e=>console.error(e));
 setTimeout(()=>refreshStorage(false),2500);
 {const onLib=x=>{library=x.docs.map(d=>({...d.data(),_id:d.id}));if($('#side'))renderNav();const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='library'&&$('#body'))libraryView()};
@@ -10818,7 +10820,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=22').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=23').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
