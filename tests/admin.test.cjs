@@ -262,6 +262,16 @@ t('탈퇴: removes account and personal data by name, keeps team records', async
   assert.ok(!db.store.has('_kzCommunity/profile_u1'));assert.deepEqual(Object.keys(db.store.get('_kzCommunity/birthdays').m), ['u9']);
 });
 
+t('동명이인 승인: 먼저 있던 사람은 그대로, 새 사람은 이름+태어난 해 두 자리', async () => {
+  const db = fakeDb({...seed(), 'accounts/u3': {id: 'u3', name: '김태양', status: 'pending'}, 'accounts/u4': {id: 'u4', name: '김태양', status: 'pending'}, 'accounts/u5': {id: 'u5', name: '김태양', status: 'pending'},
+    '_kzCommunity/birthdays': {m: {u3: {md: '03-02', y: 1997}, u4: {md: '05-05', y: 1997}}}});
+  const s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  const r = await s.run(ADMIN, {action: 'approve', id: 'u3', rank: '팀원', parts: ['싱어']});
+  assert.equal(r.account.name, '김태양97');assert.deepEqual(r.renamed, {from: '김태양', to: '김태양97'});assert.equal(db.store.get('accounts/u1').name, '김태양');
+  const r2 = await s.run(ADMIN, {action: 'approve', id: 'u4', rank: '팀원', parts: ['싱어']}); assert.equal(r2.account.name, '김태양970505');
+  await assert.rejects(s.run(ADMIN, {action: 'approve', id: 'u5', rank: '팀원', parts: ['싱어']}), {status: 409});
+});
+
 (async () => {
   let fail = 0;
   for (const [n, f] of tests) { try { await f(); console.log('ok -', n); } catch (e) { fail++; console.log('FAIL -', n, e); } }
