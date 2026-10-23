@@ -5050,7 +5050,7 @@ function kzNoticeCard(){
  let calendar='';if(homeInfoTab==='calendar'){
  calendar=eventCalendar(false).replaceAll('data-ec-','data-hc-');
  const dayEvents=events.filter(e=>e.date===evCalendarDay);
- calendar+=`<div class="kh-day-detail"><b>${fmtD(evCalendarDay)}</b>${dayEvents.length?dayEvents.map(e=>`<button type="button" class="kz-nt-r" data-gi="e|${e._id}"><b>${esc(e.title)}<small>${esc([e.time,e.place,e.by?e.by+' 등록':''].filter(Boolean).join(' · '))}</small></b></button>`).join(''):'<p class="mu">등록된 일정이 없어요.</p>'}${canEdit?'<button type="button" class="kz-mini" data-home-add-event>＋ 선택한 날짜에 일정 등록</button>':''}</div>`;
+ if(!khDayHide)calendar+=`<div class="kh-day-detail"><div class="kh-day-h"><b>${fmtD(evCalendarDay)}</b><button type="button" class="kh-day-x" data-hc-close aria-label="일정 닫고 달력 보기">달력 보기 <span aria-hidden="true">⌃</span></button></div>${dayEvents.length?dayEvents.map(e=>`<button type="button" class="kz-nt-r" data-gi="e|${e._id}"><b>${esc(e.title)}<small>${esc([e.time,e.place,e.by?e.by+' 등록':''].filter(Boolean).join(' · '))}</small></b></button>`).join(''):'<p class="mu">등록된 일정이 없어요.</p>'}${canEdit?'<button type="button" class="kz-mini" data-home-add-event>＋ 선택한 날짜에 일정 등록</button>':''}</div>`;
  }
  return `<section class="kz-nt kh-info" id="khInfo"><div class="kz-h"><div class="kh-info-tabs" role="tablist" aria-label="공지와 일정"><button type="button" role="tab" aria-selected="${homeInfoTab==='notice'}" data-home-info="notice">공지${homeInfoBadge('notice')}</button><button type="button" role="tab" aria-selected="${homeInfoTab==='calendar'}" data-home-info="calendar">일정${homeInfoBadge('calendar')}</button></div><span class="sp"></span><button type="button" class="kz-all" data-home-info-all>전체 보기 →</button></div><div class="kh-info-content"><div class="kh-info-scroll">${homeInfoTab==='notice'?noticesHTML:calendar}</div></div></section>`;
 }
@@ -6025,7 +6025,7 @@ const _nb=$('#nt2').value.trim();try{const nid=cur?cur._id:'n'+Date.now().toStri
 $$('[data-ne]').forEach(b=>b.onclick=()=>{ntEdit=b.dataset.ne;noticeView()});$$('[data-nsel]').forEach(b=>b.onclick=()=>{ntSel=b.dataset.nsel;ntEdit=null;noticeView();if(ntMob())window.scrollTo({top:0});else document.querySelector('.nt-detail')?.scrollTo?.({top:0})});$$('[data-nback]').forEach(b=>b.onclick=()=>{const id=ntSel;ntSel=null;noticeView();const r=$('[data-nsel="'+id+'"]');if(r)r.scrollIntoView({block:'center'})});const nq=$('#ntq');if(nq)nq.oninput=e=>{ntQ=e.target.value;const pos=e.target.selectionStart;noticeView();const j=$('#ntq');if(j){j.focus();j.setSelectionRange(pos,pos)}};const np=$('.nt-past');if(np)np.ontoggle=()=>{ntPast=np.open};
 $$('[data-nx]').forEach(b=>b.onclick=()=>arm2(b,()=>toTrash('notice',b.dataset.nx,'notices').then(()=>{if(ntSel===b.dataset.nx)ntSel=null;toast('삭제했어요')}).catch(()=>toast('삭제하지 못했어요')),''))}
 const SHOWS=[['3','3일 전부터'],['7','1주 전부터'],['14','2주 전부터'],['30','1개월 전부터']];
-let evCalendarMonth='',evCalendarDay='';
+let evCalendarMonth='',evCalendarDay='';var khDayHide=false;
 function evCalendarInit(){if(!evCalendarDay)evCalendarDay=todayStr();if(!evCalendarMonth)evCalendarMonth=evCalendarDay.slice(0,7);}
 function evCalendarMove(delta){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),d=new Date(y,m-1+delta,1,12);evCalendarMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');evCalendarDay=evCalendarMonth+'-01';}
 function eventCalendar(editing=!!evEdit){evCalendarInit();const [y,m]=evCalendarMonth.split('-').map(Number),first=new Date(y,m-1,1,12).getDay(),days=new Date(y,m,0,12).getDate();const disabled=editing?'disabled':'';
@@ -8253,7 +8253,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  function bind(){const card=document.getElementById('khInfo');if(!card)return;if(card.getClientRects().length)homeInfoMarkSeen(homeInfoTab);const switchTab=tab=>{if(tab===homeInfoTab)return;homeInfoTab=tab;LS('kzHomeInfoTab',tab);homeView();};
  card.querySelectorAll('[data-home-info]').forEach(b=>b.onclick=()=>switchTab(b.dataset.homeInfo));card.querySelector('[data-home-info-all]').onclick=()=>{ntTab=homeInfoTab==='notice'?'n':'e';go('notice');};
  let start=null;card.addEventListener('touchstart',e=>{if(e.touches.length===1)start={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});card.addEventListener('touchend',e=>{if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;start=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)switchTab(dx<0?'calendar':'notice');},{passive:true});
- card.querySelectorAll('[data-hc-day]').forEach(b=>b.onclick=()=>{evCalendarDay=b.dataset.hcDay;homeView();});card.querySelectorAll('[data-hc-move]').forEach(b=>b.onclick=()=>{evCalendarMove(+b.dataset.hcMove);homeView();});const today=card.querySelector('[data-hc-today]');if(today)today.onclick=()=>{evCalendarDay=todayStr();evCalendarMonth=evCalendarDay.slice(0,7);homeView();};const add=card.querySelector('[data-home-add-event]');if(add)add.onclick=()=>{ntTab='e';evEdit='new';evImageDraft=null;go('notice');};document.querySelectorAll('[data-home-songs]').forEach(b=>b.onclick=()=>go('song_requests'));songs();
+ card.querySelectorAll('[data-hc-day]').forEach(b=>b.onclick=()=>{const same=evCalendarDay===b.dataset.hcDay&&!khDayHide;evCalendarDay=b.dataset.hcDay;khDayHide=same;homeView();});card.querySelectorAll('[data-hc-close]').forEach(b=>b.onclick=()=>{khDayHide=true;homeView();});card.querySelectorAll('[data-hc-move]').forEach(b=>b.onclick=()=>{evCalendarMove(+b.dataset.hcMove);homeView();});const today=card.querySelector('[data-hc-today]');if(today)today.onclick=()=>{evCalendarDay=todayStr();evCalendarMonth=evCalendarDay.slice(0,7);homeView();};const add=card.querySelector('[data-home-add-event]');if(add)add.onclick=()=>{ntTab='e';evEdit='new';evImageDraft=null;go('notice');};document.querySelectorAll('[data-home-songs]').forEach(b=>b.onclick=()=>go('song_requests'));songs();
  }
  const previous=homeView;homeView=function(){const out=previous.apply(this,arguments);bind();return out;};if(typeof view!=='undefined'&&view==='home')bind();
 })();
@@ -11758,6 +11758,12 @@ window.kzHoliday=(function(){
 @media (max-width:859px){
  :root .lx .lx-art::before{display:block!important;height:46%!important;background:linear-gradient(180deg,#fbfaf7 0%,#fbfaf7 4%,rgba(251,250,247,.86) 14%,rgba(251,250,247,.6) 30%,rgba(251,250,247,.32) 50%,rgba(251,250,247,.12) 72%,rgba(251,250,247,0) 100%)!important;-webkit-mask-image:none!important;mask-image:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 }
+</style>
+<style id="kh-day-x-css">
+#khInfo .kh-day-h{display:flex;align-items:center;gap:8px;width:100%}
+#khInfo .kh-day-h>b{flex:1;min-width:0}
+#khInfo .kh-day-x{flex:none;border:1px solid var(--bd);background:var(--card);border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+#khInfo .kh-day-x:hover{color:var(--tx);border-color:var(--sAc,#b4612c)}
 </style>
 </html>
 
