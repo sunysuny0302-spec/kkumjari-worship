@@ -5691,16 +5691,16 @@ GORD.forEach(k=>{const l=members.filter(m=>k==='단장'||k==='인도자'?inGrp(m
 const senior=(m,k)=>(k==='싱어'&&m.rank==='선임싱어')||(k==='세션'&&m.rank==='선임세션');
 const tag=(m,k)=>k==='세션'?(m.slots||[]).join(' · '):k==='단장'?CHX.filter(x=>(m.parts||[]).includes(x)).map(x=>x+' 겸직').join(' · '):k==='인도자'&&m.rank==='단장'?'단장 겸직':'';
 const panel=(k,l)=>`<section class="rp2" data-g="${k}"><div class="rp2-h"><i></i><b>${k}</b><span>${l.length}명</span></div><div class="rp2-l">${l.map(m=>`<div class="rp2-r" data-l="${ldrCls(m.name)}">${ldrCls(m.name)?`<i class="ldot ${ldrCls(m.name)}"></i>`:''}<span class="rn">${esc(m.name)}</span>${senior(m,k)?'<span class="sn">선임</span>':''}<span class="rt">${esc(tag(m,k))}</span></div>`).join('')}</div></section>`;
-$('#body').innerHTML=`<div class="wk mnw"><div class="ro-h"><div><h1 class="ht2">멤버 명단</h1><div class="mu">총 ${members.length}명 · ${GORD.map(k=>k+' '+cnt(k)).join(' · ')}</div></div><span class="sp"></span>${E?'<button class="btn" id="medit">'+(members.length?'편집':'+ 멤버 추가')+'</button>':''}</div>${members.length?`<div class="rgrid">${Object.entries(g).map(([k,l])=>panel(k,l)).join('')}</div>`:'<div class="card mu">등록된 멤버가 없어요. + 멤버 추가를 눌러 첫 멤버를 등록하세요.</div>'}</div>`;
+$('#body').innerHTML=`<div class="wk mnw"><div class="ro-h"><div><h1 class="ht2">멤버 명단</h1><div class="mu">총 ${members.length}명 · ${GORD.map(k=>k+' '+cnt(k)).join(' · ')}</div></div><span class="sp"></span>${E&&members.length?'<button class="btn" id="medit">역할 수정 · 탈퇴</button>':''}</div>${members.length?`<div class="rgrid">${Object.entries(g).map(([k,l])=>panel(k,l)).join('')}</div>`:'<div class="card mu">아직 멤버가 없어요. 팀원이 가입하고 관리계정·단장이 승인하면서 역할을 정하면 여기에 자동으로 추가돼요.</div>'}</div>`;
 if($('#medit'))$('#medit').onclick=()=>{mbEdit=true;membersView()}}
 function membersEdit(){const E=canEdit||members.length===0,vis=members.filter(m=>mbF==='전체'||inGrp(m,mbF)).sort((a,b)=>RANKS.indexOf(a.rank)-RANKS.indexOf(b.rank)||ko(a,b));
 const lock=(s,p)=>((s.rank==='선임싱어'||(s.rank==='단장'&&s.parts.includes('선임싱어')))&&p==='싱어')||((s.rank==='선임세션'||(s.rank==='단장'&&s.parts.includes('선임세션')))&&p==='세션');
 const parts=(s,dis)=>`<div class="mpt">${s.rank==='단장'?CHX.map(p=>`<button type="button" class="rb kj ${s.parts.includes(p)?'on':''}" data-p="${p}" ${dis} title="단장과 함께 맡는 역할">+${p}</button>`).join(''):''}${PARTS.map(p=>{const on=s.parts.includes(p)||lock(s,p);return`<button type="button" class="rb ${on?'on':''}" data-p="${p}" ${dis||lock(s,p)?'disabled':''}>${p}</button>`}).join('')}</div>`;
 const sel=(s,dis)=>`<select class="rk" ${dis}>${RANKS.map(x=>`<option ${s.rank===x?'selected':''}>${x}</option>`).join('')}</select>`;
 const ins=(s,dis)=>(s.parts.includes('세션')||s.rank==='선임세션')?`<div class="mins"><span class="mu">다루는 악기</span>${SLOTS.map(x=>`<button type="button" class="rb ${(s.slots||[]).includes(x)?'on':''}" data-i="${x}" ${dis}>${x}</button>`).join('')}</div>`:'';
-const row=m=>`<div class="mrow3" data-id="${m.id}">${E?`<input class="mn" value="${esc(m.name)}">`:`<b class="mn">${esc(m.name)}</b>`}${sel(m,E?'':'disabled')}${parts(m,E?'':'disabled')}${E?'<button class="sm" data-x>삭제</button>':'<span></span>'}${ins(m,E?'':'disabled')}</div>`;
+const row=m=>`<div class="mrow3" data-id="${m.id}"><b class="mn">${esc(m.name)}</b>${sel(m,E?'':'disabled')}${parts(m,E?'':'disabled')}${E&&typeof isManagementAccount==='function'&&isManagementAccount()?'<button class="sm mb-out" data-x>탈퇴</button>':'<span></span>'}${ins(m,E?'':'disabled')}</div>`;
 const st={rank:mbRank,parts:mbParts,slots:mbSlots};
-$('#body').innerHTML=`<div class="wk mnw">${E?`<section class="card"><div class="ch"><b>＋ 새 멤버 추가</b></div><div class="mrow3 add"><input class="mn" id="mn0" placeholder="이름" value="${esc(mbName)}">${sel(st,'')}${parts(st,'')}<button class="btn" id="ma">추가</button>${ins(st,'')}</div></section>`:''}<section class="card"><div class="ch"><b>👥 멤버 명단</b><span class="sp"></span><span class="mu">전체 ${members.length}명</span><button class="btn" id="mdone" style="margin-left:8px">완료</button></div><div class="g" style="margin-bottom:8px">${['전체',...GORD].map(k=>`<button class="sm ${mbF===k?'on':''}" data-f="${k}">${k}</button>`).join('')}</div>${vis.length?vis.map((m,i)=>(i===0||vis[i-1].rank!==m.rank?`<div class="mgl" data-g="${m.rank==='단장'||m.rank==='인도자'?m.rank:(m.rank==='선임싱어'?'싱어':m.rank==='선임세션'?'세션':'')}">${m.rank}</div>`:'')+row(m)).join(''):'<div class="empty">조건에 맞는 멤버가 없어요</div>'}</section></div>`;
+$('#body').innerHTML=`<div class="wk mnw"><section class="card"><div class="ch"><b>👥 멤버 명단</b><span class="sp"></span><span class="mu">전체 ${members.length}명</span><button class="btn" id="mdone" style="margin-left:8px">완료</button></div><div class="g" style="margin-bottom:8px">${['전체',...GORD].map(k=>`<button class="sm ${mbF===k?'on':''}" data-f="${k}">${k}</button>`).join('')}</div>${vis.length?vis.map((m,i)=>(i===0||vis[i-1].rank!==m.rank?`<div class="mgl" data-g="${m.rank==='단장'||m.rank==='인도자'?m.rank:(m.rank==='선임싱어'?'싱어':m.rank==='선임세션'?'세션':'')}">${m.rank}</div>`:'')+row(m)).join(''):'<div class="empty">조건에 맞는 멤버가 없어요</div>'}</section></div>`;
 reopenDD();$('#mdone').onclick=()=>{mbEdit=false;membersView()};$$('[data-f]').forEach(b=>b.onclick=()=>{mbF=b.dataset.f;membersView()});
 if(!E)return;
 $$('.mrow3[data-id]').forEach(el=>{const id=el.dataset.id,get=()=>members.find(x=>x.id===id),upd=p=>{saveMembers(members.map(x=>x.id===id?{...x,...p}:x));membersView()};
@@ -5708,13 +5708,11 @@ $('.mn',el).onchange=e=>{const v=e.target.value.trim();if(!v){e.target.value=get
 $('.rk',el).onchange=e=>{const v=e.target.value;if(v==='단장'){const o=members.find(x=>x.id!==id&&x.rank==='단장');if(o&&!isManagementAccount()&&((authAccount()||{}).id===o.accountId||o.name===me)){const tgt=get(),mr=CHX.find(r=>(o.parts||[]).includes(r))||'팀원';e.target.value=tgt.rank;if(!confirm(`${tgt.name}님에게 단장 위임 요청을 보낼까요?\n\n${tgt.name}님이 수락하면 단장직만 넘어가요.`))return;(window.kzAdm?window.kzAdm({action:'chiefOffer',to:tgt.accountId||'',toName:tgt.name}):Promise.reject(new Error('잠시 후 다시 해 주세요'))).then(()=>toast(`${tgt.name}님에게 위임 요청을 보냈어요 · 수락하면 위임돼요`)).catch(err=>toast(err.message||'요청을 보내지 못했어요'));return}if(o){const nr=CHX.find(r=>(o.parts||[]).includes(r))||'팀원';if(!confirm(`단장은 한 명만 둘 수 있어요.\n\n${o.name}님은 ${nr}(으)로, ${get().name}님은 단장으로 바꿀까요?`)){e.target.value=get().rank;return}saveMembers(members.map(x=>x.id===o.id?{...x,rank:nr,parts:(x.parts||[]).filter(p=>!CHX.includes(p))}:x.id===id?{...x,rank:'단장'}:x));return membersView()}}upd({rank:v})};
 $$('[data-p]',el).forEach(b=>b.onclick=()=>{const m=get(),p=b.dataset.p;upd({parts:m.parts.includes(p)?m.parts.filter(x=>x!==p):[...m.parts,p]})});
 $$('[data-i]',el).forEach(b=>b.onclick=()=>{const m=get(),x=b.dataset.i;upd({slots:(m.slots||[]).includes(x)?m.slots.filter(y=>y!==x):[...(m.slots||[]),x]})});
-const dx=$('[data-x]',el);dx.onclick=()=>{if(dx.dataset.arm!=='1'){dx.dataset.arm='1';dx.textContent='정말?';dx.style.cssText='background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(dx.isConnected){dx.dataset.arm='0';dx.textContent='삭제';dx.style.cssText=''}},3000);return}saveMembers(members.filter(x=>x.id!==id));membersView()}});
-const add=$('.mrow3.add');$('#mn0').oninput=e=>{mbName=e.target.value};
-$('.rk',add).onchange=e=>{mbRank=e.target.value;if(mbRank==='단장'&&members.some(x=>x.rank==='단장')){toast('단장은 한 명만 둘 수 있어요. 지금 단장을 먼저 바꿔 주세요');mbRank='팀원';return membersView()}if(mbRank!=='단장')mbParts=mbParts.filter(x=>!CHX.includes(x));if(mbRank==='선임싱어'&&!mbParts.includes('싱어'))mbParts=[...mbParts,'싱어'];if(mbRank==='선임세션'&&!mbParts.includes('세션'))mbParts=[...mbParts,'세션'];membersView()};
-$$('[data-p]',add).forEach(b=>b.onclick=()=>{const p=b.dataset.p;mbParts=mbParts.includes(p)?mbParts.filter(x=>x!==p):[...mbParts,p];if(!mbParts.includes('세션'))mbSlots=[];membersView()});
-$$('[data-i]',add).forEach(b=>b.onclick=()=>{const x=b.dataset.i;mbSlots=mbSlots.includes(x)?mbSlots.filter(y=>y!==x):[...mbSlots,x];membersView()});
-$('#ma').onclick=()=>{const n=$('#mn0').value.trim();if(!n)return toast('이름을 입력하세요');if(members.some(m=>m.name===n))return toast('이미 있는 이름이에요');
-saveMembers([...members,{id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n,rank:mbRank,parts:mbParts,slots:mbSlots}]);mbName='';mbRank='팀원';mbParts=[];mbSlots=[];membersView();toast('추가했어요')}}
+const dx=$('[data-x]',el);if(dx)dx.onclick=async()=>{const m=get();if(!m)return;
+ if(!confirm(`${m.name}님을 탈퇴 처리할까요?\n\n· 로그인 계정이 완전히 삭제돼서 더 이상 들어올 수 없어요\n· 멤버 명단과 인도자·싱어·세션 순서에서도 빠져요\n· 되돌릴 수 없어요. 다시 함께하려면 새로 가입해야 해요`))return;dx.disabled=true;dx.textContent='처리 중…';
+ if(m.accountId){if(!window.kzAdm){dx.disabled=false;dx.textContent='탈퇴';return toast('잠시 후 다시 해 주세요')}try{await kzAdm({action:'remove',id:m.accountId})}catch(e){if(!/찾을 수 없/.test(e.message||'')){dx.disabled=false;dx.textContent='탈퇴';return toast('계정을 지우지 못했어요: '+(e.message||''))}}}
+ saveMembers(members.filter(x=>x.id!==id));membersView();toast(`${m.name}님을 탈퇴 처리했어요 · 계정도 삭제했어요`)}});
+}
 
 /* ---------- 일정 변경 (세션) ---------- */
 /* ---------- 인도자 선택 ---------- */
@@ -10831,7 +10829,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=23').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=24').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11800,6 +11798,7 @@ window.kzHoliday=(function(){
 .at-pick-l input{accent-color:var(--sAc,#b4612c);width:17px;height:17px;flex:none}
 .at-pick-go{width:100%;margin-top:14px}
 </style>
+<style id="mb-out-css">.mrow3 .mb-out{color:#b23b3b!important;font-weight:700}</style>
 </html>
 
 <script id="kz-score-pages-script">
