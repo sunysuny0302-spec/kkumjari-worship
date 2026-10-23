@@ -4821,7 +4821,9 @@ function singersFor(d,o){return singEff(d,o).filter(x=>!x.abs).map(x=>x.n).sort(
 function singerMemberNames(){return new Set(members.filter(m=>m.roles.includes('싱어')&&!m.roles.includes('인도자')).map(m=>m.name))}
 function cleanSing(o){o=o||sing;const ok=singerMemberNames();return{fixed:(o.fixed||[]).filter(n=>ok.has(n)),rot:(o.rot||[]).filter(n=>ok.has(n)),every:Math.max(1,+o.every||2),anchor:o.anchor||nextSun()}}
 /* 예배 없는 주일: settings/noService {days:{날짜:사유}}. 그 주는 아무도 배정하지 않고, 로테이션은 그 주를 건너뛰어 한 주씩 밀림 */
-let noSvc={};
+/* 예배 없는 주일: 지난번 값을 기기에 기억해 두고 바로 그려요 (처음 화면이 두 번 바뀌어 보이지 않게) */
+let noSvc=(()=>{try{const v=JSON.parse(localStorage.getItem('kzNoSvcCache')||'{}');return v&&typeof v==='object'?v:{}}catch(e){return{}}})();
+function kzNoSvcSet(v){const nv=v&&typeof v==='object'?{...v}:{};const same=JSON.stringify(nv)===JSON.stringify(noSvc);noSvc=nv;try{localStorage.setItem('kzNoSvcCache',JSON.stringify(nv))}catch(e){}return !same}
 function isNoSvc(d){return !!(d&&noSvc&&Object.prototype.hasOwnProperty.call(noSvc,d))}
 function noSvcWhy(d){const v=noSvc&&noSvc[d];return String(v||'').trim()||'청년부 예배 없음'}
 function svcShift(a,d){let c=0;if(!a||!d||a===d)return 0;for(const x of Object.keys(noSvc||{})){if(d>a){if(x>=a&&x<d)c++}else if(x>=d&&x<a)c--}return c}
@@ -6202,7 +6204,7 @@ const _cut=(w)=>shiftDate(nextSun(),-7*w);
 unsubA=_canQ?db.collection('weeks').where(_FP.documentId(),'>=',_cut(12)).onSnapshot(onWeeks,e=>console.error(e)):db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e));
 window.__kzWeeksFull=!_canQ;
 window.kzNeedFull=function(){if(!window.__kzWeeksFull){window.__kzWeeksFull=true;try{unsubA&&unsubA()}catch(e){}unsubA=db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e))}if(window.__kzLibLite)window.__kzLibFull&&window.__kzLibFull();if(window.__kzMinLite)window.__kzMinFull&&window.__kzMinFull()};
-db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;noSvc=d&&typeof d==='object'?{...d}:{};try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>{console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e);window.__kzNoSvcViaApi=true;const t=async()=>{try{if(!(window.kzRsvp&&kzRsvp.api))return setTimeout(t,1500);const r=await kzRsvp.api({action:'noServiceGet'});noSvc=r&&r.days&&typeof r.days==='object'?{...r.days}:{};if(view!=='edit'&&view!=='ment')body()}catch(x){setTimeout(t,5000)}};t();setInterval(()=>{if(!document.hidden)t()},120000)});
+db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;if(!kzNoSvcSet(d))return;try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>{console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e);window.__kzNoSvcViaApi=true;const t=async()=>{try{if(!(window.kzRsvp&&kzRsvp.api))return setTimeout(t,1500);const r=await kzRsvp.api({action:'noServiceGet'});if(!kzNoSvcSet(r&&r.days))return;if(view!=='edit'&&view!=='ment')body()}catch(x){setTimeout(t,5000)}};t();setInterval(()=>{if(!document.hidden)t()},120000)});
 db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))body()}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
 db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
 db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
@@ -9216,7 +9218,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
    for(const x of fix){try{await db.doc('overrides/'+x.o._id).set({from:x.from},{merge:true})}catch(e){console.warn(e)}}
    ok()}catch(e){
    /* 보안 규칙이 막으면 서버를 거쳐 저장 (서버가 관리자급인지 확인) */
-   if(e&&(e.code==='permission-denied'||/permission/i.test(e.message||''))&&window.kzRsvp&&kzRsvp.api){try{await kzRsvp.api({action:'noServiceSave',days,fix:fix.map(x=>({id:x.o._id,from:x.from}))});try{noSvc={...days};if(view!=='edit'&&view!=='ment')body()}catch(_){}ok();return}catch(e2){toast('저장하지 못했어요: '+(e2.message||e2));return}}
+   if(e&&(e.code==='permission-denied'||/permission/i.test(e.message||''))&&window.kzRsvp&&kzRsvp.api){try{await kzRsvp.api({action:'noServiceSave',days,fix:fix.map(x=>({id:x.o._id,from:x.from}))});try{kzNoSvcSet(days);if(view!=='edit'&&view!=='ment')body()}catch(_){}ok();return}catch(e2){toast('저장하지 못했어요: '+(e2.message||e2));return}}
    toast('저장하지 못했어요: '+(e.message||e))}}
  function panel(){const ns=nextSun(),up=Object.keys(noSvc||{}).filter(d=>d>=ns).sort(),ed=canNs();
   if(!ed&&!up.length)return '';
