@@ -7,7 +7,9 @@ function videoId(value){if(!value)return'';try{const u=new URL(value);let id='';
 function channelUrl(value){if(!value)return'';try{const u=new URL(value);if(['www.youtube.com','youtube.com','m.youtube.com'].includes(u.hostname)&&/^\/(?:@[^/]+|channel\/UC[\w-]{22})(?:\/(?:streams|live|videos))?\/?$/.test(u.pathname))return'https://www.youtube.com'+u.pathname.replace(/\/(streams|live|videos)\/?$/,'').replace(/\/$/,'');}catch{}throw err(400,'유튜브 채널의 @주소 또는 /channel/ 주소를 입력해 주세요.');}
 async function yt(resource,params,key){const u=new URL('https://www.googleapis.com/youtube/v3/'+resource);for(const[k,v]of Object.entries({...params,key}))u.searchParams.set(k,v);const r=await fetch(u,{signal:AbortSignal.timeout(8000)});if(!r.ok)throw err(502,'유튜브 자동 연결을 확인해 주세요. 등록된 링크로 시청할 수 있어요.');return r.json();}
 function select(videos,keyword){
- const matching=videos.filter(v=>{const start=v.liveStreamingDetails?.actualStartTime;if(!start)return false;return new Date(Date.parse(start)+9*3600000).getUTCDay()===0&&(!keyword||(v.snippet?.title||'').includes(keyword));}).sort((a,b)=>Date.parse(b.liveStreamingDetails.actualStartTime)-Date.parse(a.liveStreamingDetails.actualStartTime));
+ const sunday=v=>{const start=v.liveStreamingDetails?.actualStartTime;return !!start&&new Date(Date.parse(start)+9*3600000).getUTCDay()===0};
+ /* 제목에 키워드가 없으면(제목 형식이 바뀐 경우) 주일 라이브 중 가장 최근 것 */
+ const norm=x=>String(x||'').replace(/\s+/g,'');let matching=videos.filter(v=>sunday(v)&&(!keyword||norm(v.snippet?.title).includes(norm(keyword))));if(!matching.length)matching=videos.filter(sunday);matching=matching.sort((a,b)=>Date.parse(b.liveStreamingDetails.actualStartTime)-Date.parse(a.liveStreamingDetails.actualStartTime));
  const video=matching[0]||null;
  const live=video&&!video.liveStreamingDetails.actualEndTime&&video.snippet?.liveBroadcastContent==='live'?video:null;
  return {video,live,ended:video&&!live?video:null};
@@ -40,7 +42,7 @@ module.exports=async(req,res)=>{
     const previousVideo=old?.version===(cfg.updatedAt||0)?old.auto?.video:null;
     const ids=new Set([cfg.current,cfg.replay,previousVideo?.id].filter(Boolean));let cid='';
     if(cfg.channel){const u=new URL(cfg.channel),ch=await yt('channels',{part:'contentDetails',...(u.pathname.startsWith('/@')?{forHandle:decodeURIComponent(u.pathname.slice(1))}:{id:u.pathname.split('/')[2]})},key),c=ch.items?.[0];cid=c?.id||'';const playlist=c?.contentDetails?.relatedPlaylists?.uploads;if(playlist){const items=await yt('playlistItems',{part:'contentDetails',playlistId:playlist,maxResults:50},key);for(const x of items.items||[])ids.add(x.contentDetails.videoId);}}
-    const result=ids.size?await yt('videos',{part:'snippet,liveStreamingDetails',id:[...ids].join(',')},key):{items:[]};
+    /* 유튜브는 한 번에 영상 50개까지만 조회 → 50개씩 나눠서 (넘으면 오류가 나서 지난 영상이 계속 걸렸음) */const all=[...ids],result={items:[]};for(let i=0;i<all.length;i+=50){const r=await yt('videos',{part:'snippet,liveStreamingDetails',id:all.slice(i,i+50).join(',')},key);result.items.push(...(r.items||[]));}
     const items=(result.items||[]).filter(v=>!cid||v.snippet?.channelId===cid||[cfg.current,cfg.replay].includes(v.id));
     const chosen=select(items,cfg.keyword),explicit=items.find(v=>v.id===cfg.current);
     // A manually supplied current video is a fallback, not a permanent pin to an old week.
