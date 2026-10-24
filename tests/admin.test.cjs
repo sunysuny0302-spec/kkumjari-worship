@@ -245,6 +245,12 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
+t('승인 대기 목록에 생년월일', async () => {
+  const db = fakeDb({...seed(), '_kzCommunity/birthdays': {m: {u2: {y: 2001, md: '03-07'}}}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  const r = await s.run(ADMIN, {action: 'pending'});
+  assert.equal(r.accounts.find(x => x.id === 'u2').birth, '2001-03-07');
+});
+
 t('인도자 색: 인도자만, 남이 쓰는 색은 안 됨', async () => {
   const db = fakeDb({...seed(), 'settings/leaderColors': {map: {'김태양': '#2d68dc'}}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
   const L = {id: 'u3', name: '김예음', rank: '인도자', status: 'approved'}, T = {id: 'u4', name: '민원준', rank: '팀원', status: 'approved'};
