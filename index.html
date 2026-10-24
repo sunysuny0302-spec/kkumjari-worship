@@ -11848,7 +11848,7 @@ window.kzHoliday=(function(){
    backed=true;toast('백업 파일을 저장했어요');c.querySelector('[data-rs-go]').disabled=false}catch(e){toast('백업하지 못했어요: '+(e.message||''))}finally{busy=false;b.disabled=false;b.textContent=t0}}
  async function go(c,b){if(busy)return;const v=c.querySelector('#rsConfirm').value.trim();if(v!=='새로 시작')return toast("확인 칸에 '새로 시작'을 정확히 적어 주세요");
   if(!backed&&!confirm('백업 파일을 받지 않았어요. 그래도 지울까요? 지운 건 되돌릴 수 없어요.'))return;
-  if(!confirm('정말 시작할까요?\n\n관리계정을 뺀 모든 계정과 멤버 명단, 출결 · 메모 · 채팅 · 꿈마당 등 기록이 지워져요.\n일정 · 콘티 · 공지 · 악보 · 가사 · 예배 없는 주일은 남아요.\n되돌릴 수 없어요.'))return;
+  if(!confirm('정말 시작할까요?\n\n관리계정을 뺀 모든 계정과 멤버 명단, 출결 · 메모 · 채팅 · 꿈마당 등 기록이 지워져요.\n일정 · 콘티 · 공지 · 악보 · 가사 · 신청곡 · 예배 없는 주일은 남아요.\n되돌릴 수 없어요.'))return;
   busy=true;b.disabled=true;const log=c.querySelector('.rs-prog');log.hidden=false;let total=0,n=0;
   try{for(;n<2000;n++){const r=await kzAdm({action:'resetStep',confirm:'새로 시작',opt:opt(c)});if(r.done)break;total+=r.deleted||0;log.textContent=`지우는 중… ${r.label} (지금까지 ${total}개)`}
    log.textContent=`끝났어요 · ${total}개를 지웠어요. 화면을 새로 불러올게요.`;try{localStorage.removeItem('kzNoSvcCache')}catch(e){}toast('새로 시작 준비가 끝났어요');setTimeout(()=>location.reload(),2200)}
@@ -11856,7 +11856,7 @@ window.kzHoliday=(function(){
  new MutationObserver(()=>{const p=document.getElementById('kzSitePane');if(!p||p.hidden||p.querySelector('.rs-card'))return;if(typeof isManagementAccount==='function'&&!isManagementAccount())return;if(!p.querySelector('.st-card'))return;
   const c=document.createElement('section');c.className='st-card rs-card';
   c.innerHTML=`<div class="st-h"><b>새로 시작 (전체 정리)</b><small>관리계정만 남기고 계정과 기록을 지워요</small></div>
-   <div class="rs-keep"><b>남는 것</b><span>일정 · 콘티(송폼·악보 배치 포함) · 공지 · 악보 보관함 · 가사 PPT 가사·적용찬양 · 예배 없는 주일 · 관리계정 · 기능 설정(계절 테마 · 가입 설정 · 마커)</span></div>
+   <div class="rs-keep"><b>남는 것</b><span>일정 · 콘티(송폼·악보 배치 포함) · 공지 · 악보 보관함 · 가사 PPT 가사·적용찬양 · 신청곡 · 예배 없는 주일 · 관리계정 · 기능 설정(계절 테마 · 가입 설정 · 마커)</span></div>
    <label class="rs-chk"><input type="checkbox" id="rsMin"> 회의록도 지우기</label><label class="rs-chk"><input type="checkbox" id="rsLog"> 관리 기록 로그도 지우기</label>
    <div class="rs-step"><span>1</span><div><b>지울 항목 확인</b><button type="button" class="kad-btn" data-rs-info>개수 보기</button><div class="rs-list"></div></div></div>
    <div class="rs-step"><span>2</span><div><b>백업 받기</b><p class="st-note">지울 기록을 파일로 먼저 받아 둬요 (사진 제외)</p><button type="button" class="kad-btn" data-rs-bak>백업 파일 받기</button></div></div>

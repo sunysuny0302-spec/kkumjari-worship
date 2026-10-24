@@ -228,10 +228,10 @@ t('loginLookup finds only approved accounts by name', async () => {
   assert.strictEqual((await s.publicRun({action: 'loginLookup', name: '관리계정'}, '9.9.9.9')).found, false);
 });
 
-t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사·예배 없는 주일, deletes accounts and records', async () => {
+t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사·신청곡·예배 없는 주일, deletes accounts and records', async () => {
   const db = fakeDb({...seed(), 'settings/members': {list: [{name: '김태양'}]}, 'settings/noService': {days: {'2026-10-25': 'x'}}, 'settings/markerPresets': {a: 1},
     'attendance/a1': {name: '김태양'}, 'care/c1': {name: '김태양'}, 'weeks/2026-10-25': {ment: '콘티'}, 'notices/n1': {title: '공지'}, 'events/e1': {title: '일정'}, 'library/l1': {name: '악보'}, 'lyrics/s_x': {title: '가사'},
-    'minutes/m1': {title: '회의록'}, '_kzAdmin/loginFails': {u1: {n: 2}}, 'passkeys/pm': {accountId: 'management'}});
+    'minutes/m1': {title: '회의록'}, '_kzCommunity/songs': {n: 1}, '_kzCommunity/profile_u1': {photo: 'x'}, '_kzAdmin/loginFails': {u1: {n: 2}}, 'passkeys/pm': {accountId: 'management'}});
   const auth = fakeAuth(), s = createAdminService({db, auth, now: () => 9});
   await assert.rejects(s.run(ME, {action: 'resetInfo'}), {status: 403});
   const info = await s.run(ADMIN, {action: 'resetInfo'});
@@ -240,8 +240,8 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   await assert.rejects(s.run(ADMIN, {action: 'resetStep', confirm: '새로'}), {status: 400});
   let r, n = 0; do { r = await s.run(ADMIN, {action: 'resetStep', confirm: '새로 시작'}); n++; } while (!r.done && n < 50);
   assert.ok(r.done);
-  for (const k of ['accounts/management', 'weeks/2026-10-25', 'notices/n1', 'events/e1', 'library/l1', 'lyrics/s_x', 'settings/noService', 'settings/markerPresets', 'minutes/m1', 'passkeys/pm']) assert.ok(db.store.has(k), 'kept ' + k);
-  for (const k of ['accounts/u1', 'accounts/u2', 'passkeys/c1', 'settings/members', 'attendance/a1', 'care/c1', '_kzAdmin/loginFails']) assert.ok(!db.store.has(k), 'deleted ' + k);
+  for (const k of ['accounts/management', 'weeks/2026-10-25', 'notices/n1', 'events/e1', 'library/l1', 'lyrics/s_x', 'settings/noService', 'settings/markerPresets', 'minutes/m1', 'passkeys/pm', '_kzCommunity/songs']) assert.ok(db.store.has(k), 'kept ' + k);
+  for (const k of ['accounts/u1', 'accounts/u2', 'passkeys/c1', 'settings/members', 'attendance/a1', 'care/c1', '_kzAdmin/loginFails', '_kzCommunity/profile_u1']) assert.ok(!db.store.has(k), 'deleted ' + k);
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
