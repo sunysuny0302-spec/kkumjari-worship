@@ -10499,18 +10499,18 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  function isLeaderMe(){try{return typeof hasRole==='function'&&hasRole('인도자')&&!isManagementAccount()}catch(e){return false}}
  function pick(first){const me=myName();if(!me)return;document.querySelector('.lrt-ov')?.remove();const taken=new Map();(LEADERS||[]).filter(n=>n!==me).forEach(n=>taken.set(colorOf(n),n));let cur=MAP[me]||'';
   const o=document.createElement('div');o.className='lrt-ov';o.innerHTML='<div class="lrt lcol" role="dialog" aria-modal="true" aria-label="인도자 색 고르기"></div>';document.body.append(o);const box=o.querySelector('.lrt');
-  const close=()=>{o.remove();document.removeEventListener('keydown',onKey)},onKey=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',onKey);o.onclick=e=>{if(e.target===o)close()};
-  const paint=()=>{const show=cur||colorOf(me);box.innerHTML=`<div class="lrt-h"><b>${first?'인도자가 되신 걸 환영해요!':'내 인도자 색'}</b><button type="button" class="lrt-x" aria-label="닫기">✕</button></div>
-   <div class="lrt-b"><p class="lcol-d">달력 · 인도자 일정 · 콘티에서 <b>${esc(me)}</b>님을 이 색으로 보여 줘요.</p>
+  const close=()=>{o.remove();document.removeEventListener('keydown',onKey)},onKey=e=>{if(e.key==='Escape'&&!first)close()};document.addEventListener('keydown',onKey);o.onclick=e=>{if(e.target===o&&!first)close()};/* 처음엔 꼭 골라야 함 (닫기 · 나중에 없음) */if(first)o.dataset.must='1';
+  const paint=()=>{const show=cur||(first?'#cbbfb2':colorOf(me));box.innerHTML=`<div class="lrt-h"><b>${first?'인도자가 되신 걸 환영해요!':'내 인도자 색'}</b>${first?'':'<button type="button" class="lrt-x" aria-label="닫기">✕</button>'}</div>
+   <div class="lrt-b"><p class="lcol-d">${first?'시작하기 전에 내 색을 골라 주세요. ':''}달력 · 인도자 일정 · 콘티에서 <b>${esc(me)}</b>님을 이 색으로 보여 줘요.</p>
     <div class="lcol-prev" style="--c:${show}"><i></i><b>${esc(me)}</b><span>${new Date().getMonth()+1}월 인도</span></div>
     <div class="lcol-pal">${PAL.map(c=>{const t=taken.get(c);return `<button type="button" data-c="${c}" style="--c:${c}" class="${show===c?'on':''}" ${t?'disabled':''} aria-label="${t?esc(t)+'님이 쓰는 색':'색 '+c}">${t?`<small>${esc(t)}</small>`:''}</button>`}).join('')}</div>
     <p class="lcol-n">다른 인도자가 쓰는 색은 고를 수 없어요 · 나중에 인도자 일정에서 바꿀 수 있어요</p></div>
-   <div class="lrt-f">${first?'<button type="button" class="sm" data-later>나중에</button>':'<button type="button" class="sm" data-later>취소</button>'}<button type="button" class="btn" data-save>이 색으로 할게요</button></div>`;
-   box.querySelector('.lrt-x').onclick=close;box.querySelector('[data-later]').onclick=()=>{try{sessionStorage.setItem('kzLdrColAsk','1')}catch(e){}close()};
+   <div class="lrt-f">${first?'':'<button type="button" class="sm" data-later>취소</button>'}<button type="button" class="btn" data-save>이 색으로 할게요</button></div>`;
+   box.querySelector('.lrt-x')?.addEventListener('click',close);box.querySelector('[data-later]')?.addEventListener('click',close);
    box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cur=b.dataset.c;paint()});
-   box.querySelector('[data-save]').onclick=async e=>{const b=e.currentTarget,c=cur||colorOf(me);b.disabled=true;try{try{await db.doc('settings/leaderColors').set({map:{[me]:c}},{merge:true})}catch(e1){/* 바로 저장이 막혀 있으면 서버로 */if(!window.kzAdm)throw e1;const r=await kzAdm({action:'leaderColor',color:c});if(r&&r.map)MAP={...r.map}}MAP={...MAP,[me]:c};apply();close();toast('내 색을 정했어요')}catch(err){b.disabled=false;toast(err&&err.message&&/색|인도자/.test(err.message)?err.message:'저장하지 못했어요')}}};
+   box.querySelector('[data-save]').onclick=async e=>{const b=e.currentTarget,c=cur||(first?'':colorOf(me));if(!c)return toast('색을 하나 골라 주세요');b.disabled=true;try{try{await db.doc('settings/leaderColors').set({map:{[me]:c}},{merge:true})}catch(e1){/* 바로 저장이 막혀 있으면 서버로 */if(!window.kzAdm)throw e1;const r=await kzAdm({action:'leaderColor',color:c});if(r&&r.map)MAP={...r.map}}MAP={...MAP,[me]:c};apply();close();toast('내 색을 정했어요')}catch(err){b.disabled=false;toast(err&&err.message&&/색|인도자/.test(err.message)?err.message:'저장하지 못했어요')}}};
   paint()}
- function maybeAsk(){if(asked||!loaded)return;if(!isLeaderMe())return;const me=myName();if(!me||MAP[me])return;try{if(sessionStorage.getItem('kzLdrColAsk'))return}catch(e){}if(document.querySelector('.lrt-ov,.kf-ov,#kzTour,#kzLoginLock'))return;asked=true;setTimeout(()=>pick(true),600)}
+ function maybeAsk(){if(!loaded)return;if(!isLeaderMe())return;const me=myName();if(!me||MAP[me])return;if(document.querySelector('.lrt-ov,.kf-ov,#kzTour,#kzLoginLock'))return;asked=true;setTimeout(()=>{if(!MAP[myName()]&&!document.querySelector('.lrt-ov'))pick(true)},600)}
  /* 바로 읽기가 막혀 있으면 서버로 읽고 1분마다 새로 */
  let apiT=0;async function viaApi(){clearTimeout(apiT);try{if(!window.kzAdm||!(window.KZ_FIREBASE_AUTH||{}).currentUser)throw 0;const r=await kzAdm({action:'leaderColorGet'});MAP=r&&r.map&&typeof r.map==='object'?{...r.map}:{};loaded=true;apply();maybeAsk()}catch(e){}apiT=setTimeout(viaApi,60000)}
  function start(){if(typeof db==='undefined'||!db||!db.doc)return setTimeout(start,800);try{db.doc('settings/leaderColors').onSnapshot(x=>{MAP=x.exists&&x.data()&&typeof x.data().map==='object'?{...x.data().map}:{};loaded=true;apply();maybeAsk()},()=>viaApi())}catch(e){setTimeout(start,1500)}}
@@ -10832,7 +10832,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=30').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=31').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
