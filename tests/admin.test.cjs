@@ -245,6 +245,15 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
+t('인도자 색: 인도자만, 남이 쓰는 색은 안 됨', async () => {
+  const db = fakeDb({...seed(), 'settings/leaderColors': {map: {'김태양': '#2d68dc'}}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  const L = {id: 'u3', name: '김예음', rank: '인도자', status: 'approved'}, T = {id: 'u4', name: '민원준', rank: '팀원', status: 'approved'};
+  await assert.rejects(s.run(T, {action: 'leaderColor', color: '#cf3f75'}), {status: 403});
+  await assert.rejects(s.run(L, {action: 'leaderColor', color: '#2D68DC'}), {status: 409});
+  const r = await s.run(L, {action: 'leaderColor', color: '#cf3f75'});
+  assert.deepEqual(r.map, {'김태양': '#2d68dc', '김예음': '#cf3f75'});
+});
+
 t('탈퇴: removes account and personal data by name, keeps team records', async () => {
   const db = fakeDb({...seed(), 'settings/members': {list: [{name: '김태양', accountId: 'u1'}, {name: '이찬양'}]}, 'settings/leaderRotation': {periods: [{from: '2026-10-04', order: ['김태양', '이찬양']}]}, 'settings/markerPresets': {'김태양': [1], '이찬양': [2]},
     'attendance/a1': {list: [{n: '김태양'}, {n: '이찬양'}], recs: {'김태양': {s: '출석'}, '이찬양': {s: '출석'}}}, 'care/c1': {name: '김태양'}, 'care/c2': {name: '이찬양'},
