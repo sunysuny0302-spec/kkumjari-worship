@@ -10511,7 +10511,9 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
    box.querySelector('[data-save]').onclick=async e=>{const b=e.currentTarget,c=cur||colorOf(me);b.disabled=true;try{try{await db.doc('settings/leaderColors').set({map:{[me]:c}},{merge:true})}catch(e1){/* 바로 저장이 막혀 있으면 서버로 */if(!window.kzAdm)throw e1;const r=await kzAdm({action:'leaderColor',color:c});if(r&&r.map)MAP={...r.map}}MAP={...MAP,[me]:c};apply();close();toast('내 색을 정했어요')}catch(err){b.disabled=false;toast(err&&err.message&&/색|인도자/.test(err.message)?err.message:'저장하지 못했어요')}}};
   paint()}
  function maybeAsk(){if(asked||!loaded)return;if(!isLeaderMe())return;const me=myName();if(!me||MAP[me])return;try{if(sessionStorage.getItem('kzLdrColAsk'))return}catch(e){}if(document.querySelector('.lrt-ov,.kf-ov,#kzTour,#kzLoginLock'))return;asked=true;setTimeout(()=>pick(true),600)}
- function start(){if(typeof db==='undefined'||!db||!db.doc)return setTimeout(start,800);try{db.doc('settings/leaderColors').onSnapshot(x=>{MAP=x.exists&&x.data()&&typeof x.data().map==='object'?{...x.data().map}:{};loaded=true;apply();maybeAsk()},()=>{})}catch(e){setTimeout(start,1500)}}
+ /* 바로 읽기가 막혀 있으면 서버로 읽고 1분마다 새로 */
+ let apiT=0;async function viaApi(){clearTimeout(apiT);try{if(!window.kzAdm||!(window.KZ_FIREBASE_AUTH||{}).currentUser)throw 0;const r=await kzAdm({action:'leaderColorGet'});MAP=r&&r.map&&typeof r.map==='object'?{...r.map}:{};loaded=true;apply();maybeAsk()}catch(e){}apiT=setTimeout(viaApi,60000)}
+ function start(){if(typeof db==='undefined'||!db||!db.doc)return setTimeout(start,800);try{db.doc('settings/leaderColors').onSnapshot(x=>{MAP=x.exists&&x.data()&&typeof x.data().map==='object'?{...x.data().map}:{};loaded=true;apply();maybeAsk()},()=>viaApi())}catch(e){setTimeout(start,1500)}}
  start();setInterval(()=>{apply();maybeAsk()},4000);
  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#lcolbtn'))pick(false)});
  window.kzLeaderColor={pick,apply,colorOf};

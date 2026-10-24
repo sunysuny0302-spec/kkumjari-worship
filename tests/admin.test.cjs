@@ -252,6 +252,7 @@ t('인도자 색: 인도자만, 남이 쓰는 색은 안 됨', async () => {
   await assert.rejects(s.run(L, {action: 'leaderColor', color: '#2D68DC'}), {status: 409});
   const r = await s.run(L, {action: 'leaderColor', color: '#cf3f75'});
   assert.deepEqual(r.map, {'김태양': '#2d68dc', '김예음': '#cf3f75'});
+  assert.deepEqual((await s.run(T, {action: 'leaderColorGet'})).map, r.map);
 });
 
 t('탈퇴: removes account and personal data by name, keeps team records', async () => {
