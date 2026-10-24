@@ -4986,7 +4986,7 @@ function openAccountPicker(){if(window.kzOpenAccountPanel)return window.kzOpenAc
 
 function myWeeks(n){const sr=sessRoster().find(x=>x.n===n);return sundays().slice(0,6).map(d=>{const r=[];if(ldrOf(d)===n)r.push(['인도','on']);
 const se=singEff(d),on=se.find(x=>!x.abs&&x.n===n),ab=se.find(x=>x.abs&&x.from===n);if(on)r.push([on.rp?'싱어 (대신)':'싱어','on']);else if(ab)r.push(['싱어 불참','off']);
-if(sr){if(sessAbs.some(a=>a.date===d&&a.name===n))r.push(['세션 불참','off']);else r.push([sr.tag||'세션','on'])}
+/* 세션은 배정 규칙 · 불참 · 대타가 반영된 실제 배정(sessFill)으로 */{let sf={};try{sf=sessFill(d)||{}}catch(e){}const sl=Object.keys(sf).filter(k=>sf[k]===n).map(k=>k==='메인'||k==='세컨'?'건반 '+k:k);if(sl.length)r.push([sl.join(' · '),'on']);else if(sr&&sessAbs.some(a=>a.date===d&&a.name===n))r.push(['세션 불참','off'])}
 return{d,r}})}
 
 const kzURL=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
@@ -7562,7 +7562,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  const shortDate=d=>{const dt=new Date(d+'T12:00:00');return `${dt.getMonth()+1}.${String(dt.getDate()).padStart(2,'0')}`;};
  return `<section class="km-page km-my-compact"><div class="km-my-heading"><h1>${esc(name||'나')}님의 순서</h1><span>앞으로 6주</span></div>${next?`<button type="button" class="km-next-duty" data-mobile-date="${next.d}"><span class="km-next-label">가장 가까운 순서 <b>${daysTo(next.d)===0?'오늘':'D-'+daysTo(next.d)}</b></span><span class="km-next-line"><strong>${shortDate(next.d)} <small>일요일</small></strong><span>${chips(next)}</span><i aria-hidden="true">›</i></span></button>`:''}
  ${weeks.length?`<div class="km-list-heading"><b>주별 일정</b><span>배정 ${assigned.length}주</span></div><div class="km-duty-list">${weeks.map(w=>`<button type="button" class="km-duty-row ${w.r.some(r=>r[1]==='on')?'has-duty':''}" data-mobile-date="${w.d}"><span class="km-duty-date"><b>${shortDate(w.d)}</b><small>${esc(lbl(w.d)||'일요일')}</small></span><span class="km-duty-roles">${chips(w)}</span><span class="km-duty-arrow" aria-hidden="true">›</span></button>`).join('')}</div><p class="km-my-hint">날짜를 누르면 해당 주의 예배 정보를 볼 수 있어요.</p>`:'<div class="km-empty">'+(name==='관리계정'?'팀원 계정으로 접속하면 내 순서를 볼 수 있어요.':'표시할 개인 일정이 없어요.')+'</div>'}
- <p class="km-section">일정 변경</p><div class="km-menu">${menuRow('swap','swap','싱어 불참 · 대타','내 일정 변경하기')}${menuRow('abs','swap','세션 불참','참석하기 어려운 날짜 알리기')}</div></section>`;
+ <p class="km-section">일정 변경</p><div class="km-menu">${(()=>{/* 내 파트에 맞는 것만 (둘 다 아니면 둘 다) */const pt=(()=>{try{const x=authAccount()||{};return [x.rank,...(x.parts||[])]}catch(e){return []}})(),sg=pt.includes('싱어')||pt.includes('선임싱어'),se=pt.includes('세션')||pt.includes('선임세션');return (sg||!se?menuRow('swap','swap','싱어 불참 · 대타','내 일정 변경하기'):'')+(se||!sg?menuRow('abs','swap','세션 불참','참석하기 어려운 날짜 알리기'):'')})()}</div></section>`;
  }
 
  function morePage(){
