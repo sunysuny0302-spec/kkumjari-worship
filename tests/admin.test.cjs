@@ -245,6 +245,12 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
+t('가입 전 이름 확인: 서버에 실제로 있는 계정만', async () => {
+  const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  assert.deepEqual(await s.publicRun({action: 'signupCheck', name: '박용범'}), {approved: false, pending: false});
+  assert.deepEqual(await s.publicRun({action: 'signupCheck', name: '이하늘'}), {approved: false, pending: true});
+});
+
 t('승인 대기 목록에 생년월일', async () => {
   const db = fakeDb({...seed(), '_kzCommunity/birthdays': {m: {u2: {y: 2001, md: '03-07'}}}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
   const r = await s.run(ADMIN, {action: 'pending'});
