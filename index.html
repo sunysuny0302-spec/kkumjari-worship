@@ -8700,7 +8700,7 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
    콘티가 올라온 주에, 그 주에 서는 사람이 앱을 열면 한 번 뜸. 참석 / 어려워요(사유 필수).
    응답은 서버 rsvp(이번 주 참석 확인)를 그대로 사용. 인도자·단장·관리계정은 '이번 주 준비'의 [토요 연습]에서 확인. */
 /* 마감 글자: 10월 30일(금) 저녁 7시 */
-window.kzDeadline=(day,hm)=>{const x=new Date(day+'T12:00:00');let h=+String(hm||'23:59').slice(0,2),mi=+String(hm||'23:59').slice(3,5);const ap=h<12?(h<6?'새벽':'오전'):(h<18?'오후':'저녁');const h12=h%12||12;return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]}) ${ap} ${h12}시${mi?' '+mi+'분':''}`};
+window.kzDeadline=(day,hm)=>{const x=new Date(day+'T12:00:00');if(!hm||hm==='23:59')return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]}) 밤 12시`;let h=+String(hm||'23:59').slice(0,2),mi=+String(hm||'23:59').slice(3,5);const ap=h<12?(h<6?'새벽':'오전'):(h<18?'오후':'저녁');const h12=h%12||12;return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]}) ${ap} ${h12}시${mi?' '+mi+'분':''}`};
 window.kzPrac=(function(){
  const R=()=>window.kzRsvp||{};
  const myName=()=>{try{const a=authAccount();return (a&&a.name)||''}catch(e){return ''}};
