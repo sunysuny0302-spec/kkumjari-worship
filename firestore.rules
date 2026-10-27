@@ -1,6 +1,6 @@
 rules_version = '2';
 // =====================================================================
-// 꿈자리 찬양팀 — Firestore 보안 규칙 (권장안, 2026-10-09)
+// 꿈자리 찬양팀 — Firestore 보안 규칙 (권장안, 2026-10-28)
 //
 // 이 파일은 Vercel이 아니라 Firebase에 적용해야 해요.
 //   Firebase 콘솔 → Firestore Database → 규칙 탭에 붙여넣기 → 게시
@@ -74,20 +74,25 @@ service cloud.firestore {
     }
 
     // ---------- 콘티 · 악보 · 사진 ----------
+    // 콘티 · 송폼 · 악보 파일은 인도자 · 단장만 (선임은 송폼 작업 안 함)
+    function songWork() { return leader() || chief(); }
     match /weeks/{date} {
       allow read: if approved();
-      allow write: if staff();
+      allow write: if songWork();
+      // 선임싱어 · 선임세션은 토요 연습(prac)만 정할 수 있음
+      allow create: if staff() && request.resource.data.keys().hasOnly(['prac']);
+      allow update: if staff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['prac']);
     }
     match /library/{id} {
       allow read: if approved();
-      allow write: if staff();
+      allow write: if songWork();
     }
     match /_assets/{id} {
       allow read: if approved();
-      allow write: if staff();
+      allow write: if songWork();
       match /c/{chunk} {
         allow read: if approved();
-        allow write: if staff();
+        allow write: if songWork();
       }
     }
 

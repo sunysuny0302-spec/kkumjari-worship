@@ -4977,8 +4977,8 @@ function editForView(v=view){
   if(['sched_e','rule_e'].includes(v)) return canSessionManage();
   /* 직책 변경(멤버 명단 편집)은 단장 · 관리계정만 */
   if(v==='members') return currentRank()==='단장';
-  /* 악보 모음집 정리(추가·이름·키·장 관리·삭제)는 단장 · 인도자만 */
-  if(v==='library') return currentRank()==='단장'||hasRole('인도자');
+    /* 악보 모음집 정리 · 저장 공간 정리(콘티 완성본 · 악보 파일)는 단장 · 인도자만 */
+  if(v==='library'||v==='storage') return currentRank()==='단장'||hasRole('인도자');
   if(['members','notice','minutes','library','trash','storage','attend'].includes(v)) return canTeamManage();
   return false;
 }
@@ -6086,7 +6086,7 @@ async function toTrash(kind,ref,col){const sn=await db.doc(col+'/'+ref).get();if
 const trashPurging=new Set();
 async function removeTrashRecord(id){const ref=db.doc('trash/'+id),sn=await ref.get();if(!sn.exists)return;const t=sn.data();if(t.kind==='conti')await retainScoreOriginals(t.data?.scores||[]);await ref.delete()}
 function purgeTrash(){if(!canEdit||!db)return;const lim=Date.now()-TRASH_DAYS*864e5;trash.filter(t=>(t.deletedAt||0)<lim).forEach(t=>{if(trashPurging.has(t._id))return;trashPurging.add(t._id);removeTrashRecord(t._id).catch(console.error).finally(()=>trashPurging.delete(t._id))})}
-function trashView(){const E=canEdit,now=Date.now(),cnt=k=>trash.filter(t=>t.kind===k).length,l=trash.filter(t=>t.kind===trTab),nm=TRASH_TYPES[trTab]?.[0]||'항목';
+function trashView(){/* 콘티 · 악보 휴지통은 단장 · 인도자만 복원 · 영구 삭제 */const E=canEdit&&(!['conti','score'].includes(trTab)||isManagementAccount()||currentRank()==='단장'||hasRole('인도자')),now=Date.now(),cnt=k=>trash.filter(t=>t.kind===k).length,l=trash.filter(t=>t.kind===trTab),nm=TRASH_TYPES[trTab]?.[0]||'항목';
 const left=t=>Math.max(0,TRASH_DAYS-Math.floor((now-(t.deletedAt||now))/864e5)),dd2=t=>{const d=new Date(t.deletedAt||now);return `${d.getMonth()+1}월 ${d.getDate()}일 삭제`};
 const title=t=>t.kind==='conti'?`${t.ref} (${wd(t.ref)}) 콘티`:esc((t.data||{}).title||(t.data||{}).name||TRASH_TYPES[t.kind]?.[0]||'항목'),sub=t=>{const d=t.data||{};return t.kind==='conti'?`악보 ${(d.scores||[]).length}장${(d.scores||[]).length?' · '+esc(scoreSongNames(d.scores).join(' · ')):''}`:t.kind==='min'?`${d.date||''} · 참석 ${(d.attendees||[]).length}명`:esc([d.date,d.time,d.place].filter(Boolean).join(' · ')||TRASH_TYPES[t.kind]?.[0]||'')};
 $('#body').innerHTML=`<div class="wk mnw"><div class="ro-h"><div><h1 class="ht2">휴지통</h1><div class="mu">삭제한 항목은 ${TRASH_DAYS}일 동안 보관되고, 이후 자동으로 비워져요.</div></div><span class="sp"></span>${E&&l.length?`<button class="sm" id="tem">${nm} 비우기</button>`:''}</div>
@@ -10855,7 +10855,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=40').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=41').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
