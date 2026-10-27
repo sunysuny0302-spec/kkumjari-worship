@@ -7462,14 +7462,14 @@ function eventPush(e){let w='';try{w=wd(e.date)}catch(x){}return notify({type:'e
 /* ---------- 계정 창 안 "휴대폰 알림" 칸 ---------- */
 function secHTML(){const s=state(),T=st().types||{conti:true,notice:true,event:true,sched:true},on=s==='on',can=on||s==='off'||s==='denied';
  const sub={on:'이 기기로 알림이 와요',off:'꺼져 있어요',denied:'휴대폰 설정에서 막혀 있어요','ios-home':'홈 화면에 추가한 앱에서 켤 수 있어요',unsupported:'이 브라우저는 알림을 받을 수 없어요',local:'팀 공유 모드에서만 쓸 수 있어요'}[s]||'';
- const TY=[['conti','콘티 업로드','이번 주 콘티가 올라오면'],['notice','새 공지','공지가 새로 올라오면'],['event','새 일정','팀 일정이 등록되면 (참석 요청 · 마감 임박 알림은 끌 수 없어요)'],['sched','일정 변경','내 순서·대타·불참이 바뀌면'],['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','꿈마당','내 게시물에 댓글·태그가 오면 (생일·감사 카드 알림은 끌 수 없어요)']];
+ const TY=[['song','신청곡','신청곡이 들어오면'],['chat','채팅 메시지','전체 채팅에 새 글이 오면'],['feed','꿈마당','내 게시물에 댓글·태그가 오면 (생일·감사 카드 알림은 와요)']];
  let body='';
  if(s==='ios-home')body=`<div class="kzp-note">아이폰은 <b>홈 화면에 추가한 앱</b>에서만 알림을 받을 수 있어요.<br>① Safari 아래 <b>공유(□↑)</b> → ② <b>홈 화면에 추가</b> → ③ 홈 화면의 <b>꿈자리</b> 앱에서 로그인 → ④ 여기서 알림 켜기</div>`;
  else if(s==='denied')body=`<div class="kzp-note">휴대폰 <b>설정 → 알림</b>(또는 브라우저 사이트 설정)에서 꿈자리 알림을 허용한 뒤 스위치를 다시 켜 주세요.</div>`;
  else if(s==='unsupported')body=`<div class="kzp-note">안드로이드는 <b>크롬</b>, 아이폰은 <b>Safari에서 홈 화면에 추가</b>한 앱에서 받을 수 있어요.</div>`;
- else if(on)body=`<div class="kzp-types">${TY.map(([k,l,d])=>`<label class="kzp-row kzp-t"><span class="kzp-rl"><b>${l}</b><small>${d}</small></span><input type="checkbox" class="kzp-cb" data-kzp-t="${k}" ${T[k]!==false?'checked':''}><i class="kzp-sw2" aria-hidden="true"></i></label>`).join('')}</div><div class="kzp-tools"><button type="button" class="kzp-link" data-kzp-test>테스트 알림 보내기</button><small>다른 기기에서도 받으려면 그 기기에서도 켜 주세요</small></div>`;
+ else if(on)body=`<div class="kzp-note soft kzp-must"><b>항상 오는 알림</b><br>콘티 · 공지 · 일정(공지·일정 메뉴의 달력) 등록 · 내 순서 변경 · 참석 요청 · PPT 담당 · 생일은 팀 운영에 꼭 필요해서 끌 수 없어요.</div><div class="kzp-types">${TY.map(([k,l,d])=>`<label class="kzp-row kzp-t"><span class="kzp-rl"><b>${l}</b><small>${d}</small></span><input type="checkbox" class="kzp-cb" data-kzp-t="${k}" ${T[k]!==false?'checked':''}><i class="kzp-sw2" aria-hidden="true"></i></label>`).join('')}</div><div class="kzp-tools"><button type="button" class="kzp-link" data-kzp-test>테스트 알림 보내기</button><small>다른 기기에서도 받으려면 그 기기에서도 켜 주세요</small></div>`;
  else if(s==='off')body=`<div class="kzp-note soft">켜 두면 새 콘티·공지·일정, 내 순서 변경을 바로 알려 드려요.</div>`;
- return `<section class="kz-push-sec kzp-sec" id="kzPushSec"><h3 class="kzp-h">알림</h3><div class="kzp-group"><div class="kzp-row kzp-main"><span class="kzp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="kzp-rl"><b>휴대폰 알림</b><small class="kzp-st ${on?'on':''}">${sub}</small></span>${can?`<button type="button" class="kzp-sw ${on?'on':''}" role="switch" aria-checked="${on}" aria-label="휴대폰 알림 ${on?'끄기':'켜기'}" data-kzp="${on?'off':'on'}"><i></i></button>`:''}</div>${body}</div></section>`}
+ return `<section class="kz-push-sec kzp-sec" id="kzPushSec"><h3 class="kzp-h">알림</h3><div class="kzp-group"><div class="kzp-row kzp-main"><span class="kzp-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="kzp-rl"><b>휴대폰 알림</b><small class="kzp-st ${on?'on':''}">${sub}</small></span>${can&&!on?`<button type="button" class="kzp-sw ${on?'on':''}" role="switch" aria-checked="${on}" aria-label="휴대폰 알림 ${on?'끄기':'켜기'}" data-kzp="${on?'off':'on'}"><i></i></button>`:''}</div>${body}</div></section>`}
 function bindSec(root){const tb=root.querySelector('[data-kzp-test]');if(tb)tb.onclick=async()=>{tb.disabled=true;try{const r=swReg||await navigator.serviceWorker.ready;await r.showNotification('꿈자리 찬양팀',{body:'알림이 이 기기에 잘 도착해요 ✓',icon:'/icon-192.png',badge:'/icon-192.png',tag:'kz-test'});toast('테스트 알림을 보냈어요')}catch(e){console.warn(e);toast('테스트 알림을 띄우지 못했어요. 휴대폰 알림 설정을 확인해 주세요')}tb.disabled=false};root.querySelectorAll('[data-kzp]').forEach(b=>b.onclick=async()=>{b.disabled=true;const t0=b.textContent;b.textContent='잠시만요…';
   try{if(b.dataset.kzp==='on'){await register();toast('이 기기에서 알림을 켰어요 ✓')}else{await unregister();toast('이 기기 알림을 껐어요')}}catch(e){console.error(e);toast(e.message||'알림을 켜지 못했어요')}
   paint();b.disabled=false;b.textContent=t0});
@@ -7479,7 +7479,7 @@ function paint(){const card=document.querySelector('#kzAdminPanel .kz-admin-card
 
 /* ---------- 모바일 화면 아래 "알림 받기" 안내 ---------- */
 function paintBar(){const M=document.getElementById('kzM'),old=document.getElementById('kzPushBar');const s=state(),dismissed=(st().dismiss||0)>Date.now();
- const show=M&&!M.hidden&&authUser()&&((s==='off'&&!st().userOff)||s==='ios-home')&&!dismissed;if(!show){if(old)old.remove();return}if(old)return;
+ const show=M&&!M.hidden&&authUser()&&((s==='off')||s==='ios-home')&&!dismissed;if(!show){if(old)old.remove();return}if(old)return;
  const b=document.createElement('div');b.id='kzPushBar';
  b.innerHTML=s==='ios-home'?`<span><b>📱 새 콘티 알림 받기</b><small>Safari 공유(□↑) → 홈 화면에 추가 → 앱에서 켜기</small></span><button type="button" class="x" aria-label="닫기">✕</button>`:`<span><b>📱 새 콘티·공지 알림 받기</b><small>올라오면 휴대폰으로 바로 알려 드려요</small></span><button type="button" class="go">켜기</button><button type="button" class="x" aria-label="닫기">✕</button>`;
  M.appendChild(b);b.querySelector('.x').onclick=()=>{const v=st();v.dismiss=Date.now()+14*864e5;save(v);b.remove()};
@@ -10844,7 +10844,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=37').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=38').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
