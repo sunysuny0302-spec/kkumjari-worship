@@ -80,7 +80,7 @@ module.exports = async function handler(req, res) {
       if (cur) { if (cur.rank) x.rank = cur.rank; if (cur.name) x.name = cur.name; }
       if (!x.token) return;
       if (x.uid === user.uid && b.includeSelf !== true) return;   // 보낸 사람 본인 기기는 제외
-      if (x.types && x.types[type] === false) return;             // 이 종류 알림을 끈 사람 제외
+      if (x.types && x.types[type] === false && b.force !== true) return;   // 이 종류 알림을 끈 사람 제외 (참석 요청은 끌 수 없음)
       if (targeted && !ADMIN_RANKS.includes(String(x.rank || '')) && !toNames.includes(String(x.name || '')) && !toRanks.includes(String(x.rank || ''))) return;
       targets.push({ id: d.id, token: x.token });
     });

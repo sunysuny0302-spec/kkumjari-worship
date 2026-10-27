@@ -142,6 +142,20 @@ test('rsvp deadline: report non-responders to staff once after deadline; late an
  f.advance(2*60000);assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).skipped,true);
  f.advance(5*60000);assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).prac.wait,1);
 });
+test('rsvp due: one extra reminder to non-responders shortly before the deadline',async()=>{
+ const f=fixture(),d='2033-05-22';
+ f.data.set('weeks/'+d,{prac:{on:true,untilAt:'2033-05-19T21:30'}});
+ f.data.set('_kzCommunity/rsvp_'+d,{date:d,targets:[{n:'팀원',r:[]},{n:'다른 팀원',r:[]}],answers:{'팀원':{s:'yes'}}});
+ f.advance(Date.parse('2033-05-19T08:00:00Z')-f.clock());/* 17:00 KST: 아직 4시간 반 전 */
+ assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).due.prac,0);
+ f.advance(100*60000);/* 18:40 KST */
+ const r=await f.run(f.user,{action:'rsvpReportCheck'});assert.equal(r.due.prac,1);
+ const n=f.pushed.at(-1);assert.deepEqual(n.recipients.map(x=>x.name),['다른 팀원']);assert.equal(n.note.force,true);assert.match(n.note.body,/5\/19 오후 9시 30분까지/);
+ f.advance(6*60000);assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).due.prac,0);
+ /* 정기 확인(크론)은 다음 확인 전에 마감이면 미리 */
+ f.data.set('events/e2',{title:'MT',date:'2033-05-30',rsvp:true,rsvpUntil:'2033-05-20',rsvpUntilTime:'06:00',createdAt:'9999'});
+ const c=await f.run({system:true},{action:'rsvpReport'});assert.equal(c.due.events,2);
+});
 test('mention: muted member still gets a mention notice; @모두 reaches everyone in the room',async()=>{const f=fixture();await f.run(f.outsider,{action:'chatPreference',room:'all',enabled:false});
  await f.run(f.user,{action:'send',room:'all',id:'mention_req1',text:'@'+f.outsider.name+' 확인 부탁해요'});
  const ids=f.pushed.flatMap(p=>p.recipients.map(a=>a.id));assert.ok(ids.includes(f.outsider.id));assert.ok(ids.includes(f.admin.id));
