@@ -136,6 +136,11 @@ test('rsvp deadline: report non-responders to staff once after deadline; late an
  assert.equal((await f.run({system:true},{action:'rsvpReport'})).events,0);
  f.advance(2*86400000);
  assert.equal((await f.run({system:true},{action:'rsvpReport'})).events,1);assert.match(f.pushed.at(-1).note.body,/수련회 · 5\/20 마감 지남 · 팀원, 다른 팀원/);
+ /* 시간까지 정한 마감: 앱을 연 사람이 확인을 부르면 보냄 (5분에 한 번만) */
+ f.data.set('weeks/2033-05-29',{prac:{on:true,untilAt:'2033-05-27T21:30'}});f.data.set('_kzCommunity/rsvp_2033-05-29',{date:'2033-05-29',targets:[{n:'팀원',r:[]}],answers:{}});
+ f.advance(Date.parse('2033-05-27T12:29:00Z')-f.clock());assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).prac,null);
+ f.advance(2*60000);assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).skipped,true);
+ f.advance(5*60000);assert.equal((await f.run(f.user,{action:'rsvpReportCheck'})).prac.wait,1);
 });
 test('mention: muted member still gets a mention notice; @모두 reaches everyone in the room',async()=>{const f=fixture();await f.run(f.outsider,{action:'chatPreference',room:'all',enabled:false});
  await f.run(f.user,{action:'send',room:'all',id:'mention_req1',text:'@'+f.outsider.name+' 확인 부탁해요'});

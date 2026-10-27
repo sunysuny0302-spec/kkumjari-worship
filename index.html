@@ -6049,7 +6049,7 @@ function eventBody(){if(ntFocus){const focus=events.find(e=>e._id===ntFocus);if(
  const dd=new Date(evCalendarDay+'T12:00:00'),dayTitle=`${dd.getMonth()+1}월 ${dd.getDate()}일 (${wd(evCalendarDay)})`;
  const upcoming=evSort().filter(e=>e.date>=td).slice(0,8);
  const row=e=>{const d=new Date(e.date+'T12:00:00');return `<button type="button" class="ev-up ${e.date===evCalendarDay?'on':''}" data-ev-go="${e.date}"><span class="ev-up-d"><b>${d.getDate()}</b><small>${d.getMonth()+1}월 ${wd(e.date)}</small></span><span class="ev-up-t"><b>${esc(e.title)}${e.rsvp?'<i class="ev-rsvp-tag">참석 확인</i>':''}</b>${meta(e)?`<small>${esc(meta(e))}</small>`:''}</span><span class="ev-up-dd ${e.date===td?'now':''}">${dday(e.date)}</span></button>`};
- const side=`<section class="ev-side"><div class="ev-day-h"><h3>${dayTitle}</h3>${E&&!ed?'<button type="button" class="btn ev-add" id="ecAdd">＋ 일정 등록</button>':''}</div>${ed?`<section class="card ev-form kw-form kw-ev"><div class="kw-fh"><button type="button" class="kw-cancel" id="evc">취소</button><h2>${cur?'일정 수정':'새 일정'}</h2><button class="btn kw-save" id="evs">저장</button></div><input id="ev0" class="kw-title" value="${esc(cur?cur.title:'')}" placeholder="일정 이름 (예: 가을 수련회)"><div class="kw-fields"><div class="kw-f"><span class="kw-l">날짜</span>${dpick('ev1',pk.ev1.v,true)}</div><label class="kw-f"><span class="kw-l">시간</span><input id="ev2" value="${esc(cur?cur.time||'':'')}" placeholder="예: 오후 2시" autocomplete="off"></label><label class="kw-f kw-wide"><span class="kw-l">장소 · 메모</span><input id="ev3" value="${esc(cur?cur.place||'':'')}" placeholder="예: 본당" autocomplete="off"></label><div class="kw-f kw-wide"><span class="kw-l">홈에 미리 보여주기 <small>지난 일정은 달력에 남아요</small></span>${ssel('ev4',SHOWS,String(cur?cur.show||14:14))}</div><label class="kw-f kw-wide ev-rsvp"><span class="ev-rsvp-r"><input type="checkbox" id="evR" ${cur&&cur.rsvp?'checked':''}><b>참석 여부 받기</b></span><small>체크하면 팀원 모두에게 알림이 가고, 위쪽 '참석 확인'에서 참석·불참을 눌러요</small></label><label class="kw-f ev-rsvp-u" ${cur&&cur.rsvp?'':'hidden'}><span class="kw-l">응답 마감 <small>비우면 일정 전날까지 · 마감 다음 날 아침 관리자급에게 미응답 명단 알림</small></span><input type="date" id="evRU" value="${esc(cur&&cur.rsvpUntil||'')}"></label></div><div id="kzEventImages"></div></section>`:''}${dayItems.length?`<div class="ev-items">${dayItems.map(item).join('')}</div>`:(ed?'':`<p class="ev-none">이 날은 일정이 없어요.</p>`)}
+ const side=`<section class="ev-side"><div class="ev-day-h"><h3>${dayTitle}</h3>${E&&!ed?'<button type="button" class="btn ev-add" id="ecAdd">＋ 일정 등록</button>':''}</div>${ed?`<section class="card ev-form kw-form kw-ev"><div class="kw-fh"><button type="button" class="kw-cancel" id="evc">취소</button><h2>${cur?'일정 수정':'새 일정'}</h2><button class="btn kw-save" id="evs">저장</button></div><input id="ev0" class="kw-title" value="${esc(cur?cur.title:'')}" placeholder="일정 이름 (예: 가을 수련회)"><div class="kw-fields"><div class="kw-f"><span class="kw-l">날짜</span>${dpick('ev1',pk.ev1.v,true)}</div><label class="kw-f"><span class="kw-l">시간</span><input id="ev2" value="${esc(cur?cur.time||'':'')}" placeholder="예: 오후 2시" autocomplete="off"></label><label class="kw-f kw-wide"><span class="kw-l">장소 · 메모</span><input id="ev3" value="${esc(cur?cur.place||'':'')}" placeholder="예: 본당" autocomplete="off"></label><div class="kw-f kw-wide"><span class="kw-l">홈에 미리 보여주기 <small>지난 일정은 달력에 남아요</small></span>${ssel('ev4',SHOWS,String(cur?cur.show||14:14))}</div><label class="kw-f kw-wide ev-rsvp"><span class="ev-rsvp-r"><input type="checkbox" id="evR" ${cur&&cur.rsvp?'checked':''}><b>참석 여부 받기</b></span><small>체크하면 팀원 모두에게 알림이 가고, 위쪽 '참석 확인'에서 참석·불참을 눌러요</small></label><label class="kw-f ev-rsvp-u" ${cur&&cur.rsvp?'':'hidden'}><span class="kw-l">응답 마감 <small>날짜 · 시간 (비우면 일정 전날 밤 12시) · 마감이 지나면 관리자급에게 미응답 명단 알림</small></span><span class="ev-ru2"><input type="date" id="evRU" value="${esc(cur&&cur.rsvpUntil||'')}"><input type="time" lang="ko" step="300" id="evRUT" value="${esc(cur&&cur.rsvpUntilTime||'')}" placeholder="23:59"></span></label></div><div id="kzEventImages"></div></section>`:''}${dayItems.length?`<div class="ev-items">${dayItems.map(item).join('')}</div>`:(ed?'':`<p class="ev-none">이 날은 일정이 없어요.</p>`)}
   <div class="ev-up-h"><h3>다가오는 일정</h3><span>${upcoming.length?'':'없음'}</span></div><div class="ev-ups">${upcoming.map(row).join('')||'<p class="ev-none">예정된 일정이 없어요.</p>'}</div></section>`;
  return `<div class="ev-wrap">${cal}${side}</div>`}
 function bindEvent(){
@@ -6064,7 +6064,7 @@ function bindEvent(){
 if(evEdit&&evImageDraft?.id!==evEdit)evImageDraft={id:evEdit,images:cur?.images||[]};KZImages.mount($('#kzEventImages'),evImageDraft?.images||[],a=>evImageDraft={id:evEdit,images:a});dpBind('ev1');ssBind('ev4');if($('#evs'))kwSaveKey(()=>$('#evs')?.click());if(evEdit==='new'&&!ntMob())setTimeout(()=>$('#ev0')?.focus(),0);
 if($('#evc'))$('#evc').onclick=()=>{evEdit=null;evImageDraft=null;noticeView()};
 if($('#evs'))$('#evs').onclick=async()=>{if(KZImages.busy($('#kzEventImages')))return toast('사진을 준비하고 있어요.');const t=$('#ev0').value.trim();if(!t)return toast('일정 이름을 입력하세요');{const R=kzCalRange(),dm=String(pk.ev1&&pk.ev1.v||'').slice(0,7);if(dm&&(dm<R.min||dm>R.max))return toast(`일정은 ${R.min.slice(0,4)}년 ${+R.min.slice(5)}월 ~ ${R.max.slice(0,4)}년 12월 사이 날짜로 등록할 수 있어요`)}
-const _rsvp=!!($('#evR')&&$('#evR').checked),_ru=_rsvp&&$('#evRU')&&/^\d{4}-\d{2}-\d{2}$/.test($('#evRU').value)?$('#evRU').value:'';const _ev={title:t,date:pk.ev1.v,time:$('#ev2').value.trim(),place:$('#ev3').value.trim(),rsvp:_rsvp,rsvpUntil:_ru};const _eid=cur?cur._id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);try{await db.doc('events/'+_eid).set({...kzByFields(cur),..._ev,images:KZImages.get($('#kzEventImages')),show:+(SS.ev4||14),at:cur?(cur.at||Date.now()):Date.now()});evCalendarDay=_ev.date;evCalendarMonth=_ev.date.slice(0,7);evEdit=null;evImageDraft=null;noticeView();toast(_rsvp&&!(cur&&cur.rsvp)?'일정을 저장했어요 · 팀원들에게 참석 여부를 물어볼게요':'일정을 저장했어요');if(_rsvp&&!(cur&&cur.rsvp)&&window.kzRsvp&&kzRsvp.api)kzRsvp.api({action:'evRsvpNotify',id:_eid}).catch(e=>console.warn('[꿈자리] 참석 확인 알림',e));if(!cur&&!_rsvp&&window.kzPush)kzPush.eventPush(_ev);if(!cur&&window.kzShare)setTimeout(()=>kzShare.ask('단톡방에 새 일정을 알릴까요?',kzShare.eventMsg(_ev)),400)}catch(e){console.error(e);toast('저장하지 못했어요. 편집 권한이 필요해요')}};
+const _rsvp=!!($('#evR')&&$('#evR').checked),_ru=_rsvp&&$('#evRU')&&/^\d{4}-\d{2}-\d{2}$/.test($('#evRU').value)?$('#evRU').value:'';const _ev={title:t,date:pk.ev1.v,time:$('#ev2').value.trim(),place:$('#ev3').value.trim(),rsvp:_rsvp,rsvpUntil:_ru,rsvpUntilTime:_rsvp&&$('#evRUT')&&/^\d{2}:\d{2}$/.test($('#evRUT').value)?$('#evRUT').value:''};const _eid=cur?cur._id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);try{await db.doc('events/'+_eid).set({...kzByFields(cur),..._ev,images:KZImages.get($('#kzEventImages')),show:+(SS.ev4||14),at:cur?(cur.at||Date.now()):Date.now()});evCalendarDay=_ev.date;evCalendarMonth=_ev.date.slice(0,7);evEdit=null;evImageDraft=null;noticeView();toast(_rsvp&&!(cur&&cur.rsvp)?'일정을 저장했어요 · 팀원들에게 참석 여부를 물어볼게요':'일정을 저장했어요');if(_rsvp&&!(cur&&cur.rsvp)&&window.kzRsvp&&kzRsvp.api)kzRsvp.api({action:'evRsvpNotify',id:_eid}).catch(e=>console.warn('[꿈자리] 참석 확인 알림',e));if(!cur&&!_rsvp&&window.kzPush)kzPush.eventPush(_ev);if(!cur&&window.kzShare)setTimeout(()=>kzShare.ask('단톡방에 새 일정을 알릴까요?',kzShare.eventMsg(_ev)),400)}catch(e){console.error(e);toast('저장하지 못했어요. 편집 권한이 필요해요')}};
 $$('[data-ee]').forEach(b=>b.onclick=()=>{evEdit=b.dataset.ee;noticeView()});
 $$('[data-ex]').forEach(b=>b.onclick=()=>arm2(b,()=>toTrash('event',b.dataset.ex,'events').then(()=>toast('삭제했어요')).catch(()=>toast('삭제하지 못했어요')),''))}
 
@@ -8699,6 +8699,8 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
 /* ===== 새 콘티 → 토요 연습 참석 확인 팝업 =====
    콘티가 올라온 주에, 그 주에 서는 사람이 앱을 열면 한 번 뜸. 참석 / 어려워요(사유 필수).
    응답은 서버 rsvp(이번 주 참석 확인)를 그대로 사용. 인도자·단장·관리계정은 '이번 주 준비'의 [토요 연습]에서 확인. */
+/* 마감 글자: 10월 30일(금) 저녁 7시 */
+window.kzDeadline=(day,hm)=>{const x=new Date(day+'T12:00:00');let h=+String(hm||'23:59').slice(0,2),mi=+String(hm||'23:59').slice(3,5);const ap=h<12?(h<6?'새벽':'오전'):(h<18?'오후':'저녁');const h12=h%12||12;return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]}) ${ap} ${h12}시${mi?' '+mi+'분':''}`};
 window.kzPrac=(function(){
  const R=()=>window.kzRsvp||{};
  const myName=()=>{try{const a=authAccount();return (a&&a.name)||''}catch(e){return ''}};
@@ -8709,8 +8711,8 @@ window.kzPrac=(function(){
  const dis=d=>{try{return sessionStorage.getItem('kzPracLater:'+d)==='1'}catch(e){return false}};
  const later=d=>{try{sessionStorage.setItem('kzPracLater:'+d,'1')}catch(e){}};
  /* 응답 마감: 토요 연습 정할 때 고른 날(없으면 금요일) 저녁 7시 */
- const until=d=>{let u='';try{const p=(d===date&&data&&data.prac)||((archive||[]).find(a=>a.id===d)||{}).prac;u=p&&/^\d{4}-\d{2}-\d{2}$/.test(p.until||'')?p.until:''}catch(e){}u=u||shiftDate(d,-2);return{day:u,at:new Date(u+'T19:00:00+09:00').getTime()}};
- const dl=d=>{const u=until(d),x=new Date(u.day+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]}) 저녁 7시`};
+ const until=d=>{let a='';try{const p=(d===date&&data&&data.prac)||((archive||[]).find(x=>x.id===d)||{}).prac;if(p&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(p.untilAt||''))a=p.untilAt;else if(p&&/^\d{4}-\d{2}-\d{2}$/.test(p.until||''))a=p.until+'T19:00'}catch(e){}a=a||shiftDate(d,-2)+'T19:00';return{day:a.slice(0,10),hm:a.slice(11,16),at:new Date(a+':00+09:00').getTime()}};
+ const dl=d=>window.kzDeadline(until(d).day,until(d).hm);
  let checking=false;
  async function answers(d,force){const r=R();if(!r.api)return {};if(!force&&r.RS&&r.RS[d])return r.RS[d];try{const j=await r.api({action:'rsvpGet',date:d});if(r.RS)r.RS[d]=j.answers||{};return j.answers||{}}catch(e){return null}}
  async function check(){if(checking||document.getElementById('kzPrac')||document.getElementById('kzLoginLock')||document.getElementById('kzTour')||document.getElementById('kzLiveWelcome'))return;
@@ -9388,8 +9390,9 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  function pracItem(){try{const d=nextSun();if(typeof isNoSvc==='function'&&isNoSvc(d))return null;try{const p=window.kzSatPrac&&kzSatPrac.of(d);if(p&&p.on===false)return null}catch(_){}const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const mine=list.find(o=>o.n===myName());return{kind:'prac',key:'prac',d,sat:shiftDate(d,-1),list,mine}}catch(e){return null}}
  function evItems(){try{return (typeof events!=='undefined'?events:[]).filter(e=>e&&e.rsvp&&e.date>=today()).sort((a,b)=>a.date<b.date?-1:1).slice(0,20)}catch(e){return []}}
  const until=e=>/^\d{4}-\d{2}-\d{2}$/.test(e.rsvpUntil||'')?e.rsvpUntil:shiftDate(e.date,-1);
+ const uhm=e=>/^\d{2}:\d{2}$/.test(e.rsvpUntilTime||'')?e.rsvpUntilTime:'23:59',uat=e=>new Date(until(e)+'T'+uhm(e)+':00+09:00').getTime();
  const roster=()=>{try{return (members||[]).map(m=>m.name).filter(Boolean)}catch(e){return []}};
- function pending(){if(!me()||me().id==='management')return 0;let n=0;const p=pracItem(),nm=myName();if(p&&p.mine&&!(PR[p.d]||{})[nm])n++;evItems().forEach(e=>{if(today()<=until(e)&&!(EV[e._id]||{})[nm])n++});return n+SR.length}
+ function pending(){if(!me()||me().id==='management')return 0;let n=0;const p=pracItem(),nm=myName();if(p&&p.mine&&!(PR[p.d]||{})[nm]&&!(()=>{try{return Date.now()>=kzPrac.until(p.d).at}catch(e){return false}})())n++;evItems().forEach(e=>{if(Date.now()<uat(e)&&!(EV[e._id]||{})[nm])n++});return n+SR.length}
  async function load(force){if(!R().api||!me())return;if(!force&&Date.now()-lastLoad<45000)return;lastLoad=Date.now();
   const p=pracItem(),ids=evItems().map(e=>e._id);
   try{if(p){const j=await R().api({action:'rsvpGet',date:p.d});PR[p.d]=j.answers||{};if(R().RS)R().RS[p.d]=PR[p.d]}}catch(e){}
@@ -9405,12 +9408,12 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const row=(k,l,c)=>g[k].length?`<div><em style="color:${c}">${l} ${g[k].length}</em>${g[k].map(x=>`<span class="${x.nw?'kzh-isnew':''}">${E(x.n)}${x.nw?'<i class="kzh-nw">N</i>':''}${x.note?`<small>${E(x.note)}</small>`:''}</span>`).join('')}</div>`:'';
   return{g,html:row('yes','참석','#2f7a49')+row('no','불참','#b54a3a')+row('maybe','미정','#8a7764')+row('none','미응답','#8a7764')}}
  function card(it){const nm=myName(),isMgr=me()&&me().id==='management';
-  if(it.kind==='prac'){const ans=PR[it.d]||{},mine=ans[nm],nl=names(it.list.map(o=>o.n),ans),can=!!it.mine&&!isMgr;
-   return `<section class="kzh-c ${can&&!mine?'todo':''}" data-k="prac"><span class="kzh-k">토요 연습</span><div class="kzh-t">${md(it.sat)} 연습${(()=>{try{const p=window.kzSatPrac&&kzSatPrac.of(it.d);return p&&p.on?' · '+E(kzSatPrac.summary(p)):''}catch(e){return ''}})()}</div><div class="kzh-m">${md(it.d)} 주일 예배 준비${it.mine?` · 내 자리: ${E(it.mine.r.map(r=>(r==='메인'||r==='세컨')?'건반':r).join(' · '))}`:' · 이번 주 순서가 아니에요'}</div>
+  if(it.kind==='prac'){const ans=PR[it.d]||{},mine=ans[nm],nl=names(it.list.map(o=>o.n),ans),pu=(()=>{try{return kzPrac.until(it.d)}catch(e){return null}})(),pclosed=!!pu&&Date.now()>=pu.at,can=!!it.mine&&!isMgr&&!pclosed;
+   return `<section class="kzh-c ${can&&!mine?'todo':''}" data-k="prac"><span class="kzh-k">토요 연습</span><div class="kzh-t">${md(it.sat)} 연습${(()=>{try{const p=window.kzSatPrac&&kzSatPrac.of(it.d);return p&&p.on?' · '+E(kzSatPrac.summary(p)):''}catch(e){return ''}})()}</div><div class="kzh-m">${md(it.d)} 주일 예배 준비${it.mine?` · 내 자리: ${E(it.mine.r.map(r=>(r==='메인'||r==='세컨')?'건반':r).join(' · '))}`:' · 이번 주 순서가 아니에요'}${pu?`<br>${kzDeadline(pu.day,pu.hm)}까지 응답${pclosed?' (마감)':''}`:''}${pclosed&&it.mine&&!isMgr?`<br><b class="kzh-cl">응답 마감이 지났어요${mine?' · 내 응답: '+(ansTxt[mine.s]||''):''}</b>`:''}</div>
     ${can?`<div class="kzh-bs"><button type="button" class="yes ${mine&&mine.s==='yes'?'on':''}" data-a="yes">참석할게요</button><button type="button" class="no ${mine&&mine.s==='no'?'on':''}" data-a="no">어려워요</button></div><div class="kzh-why" hidden><textarea maxlength="200" placeholder="어려운 이유를 짧게 적어 주세요">${E(mine&&mine.note||'')}</textarea><button type="button" data-send>보내기</button></div>`:''}
     <div class="kzh-s"><span>참석 <b>${nl.g.yes.length}</b></span><span>불참 <b>${nl.g.no.length}</b></span><span>미응답 <b>${nl.g.none.length}</b></span><span>/ ${it.list.length}명</span></div><button type="button" class="kzh-more">명단 보기</button><div class="kzh-names" hidden>${nl.html||'<span class="mu">이번 주 순서가 아직 없어요</span>'}</div></section>`}
-  const e=it,ans=EV[e._id]||{},mine=ans[nm],closed=today()>until(e),nl=names(roster().filter(n=>n!=='관리계정'),ans);
-  return `<section class="kzh-c ${!closed&&!mine&&!isMgr?'todo':''}" data-k="ev" data-id="${E(e._id)}"><span class="kzh-k">일정</span><div class="kzh-t">${E(e.title)}</div><div class="kzh-m">${md(e.date)}${e.time?' · '+E(e.time):''}${e.place?' · '+E(e.place):''}<br>${md(until(e))}까지 응답${e.by?` · ${E(e.by)} 등록`:''}</div>
+  const e=it,ans=EV[e._id]||{},mine=ans[nm],closed=Date.now()>=uat(e),nl=names(roster().filter(n=>n!=='관리계정'),ans);
+  return `<section class="kzh-c ${!closed&&!mine&&!isMgr?'todo':''}" data-k="ev" data-id="${E(e._id)}"><span class="kzh-k">일정</span><div class="kzh-t">${E(e.title)}</div><div class="kzh-m">${md(e.date)}${e.time?' · '+E(e.time):''}${e.place?' · '+E(e.place):''}<br>${kzDeadline(until(e),uhm(e))}까지 응답${e.by?` · ${E(e.by)} 등록`:''}</div>
    ${isMgr?'':closed?`<div class="kzh-closed">응답 마감이 지났어요${mine?` · 내 응답: ${ansTxt[mine.s]||''}`:''}</div>`:`<div class="kzh-bs"><button type="button" class="yes ${mine&&mine.s==='yes'?'on':''}" data-a="yes">참석</button><button type="button" class="maybe ${mine&&mine.s==='maybe'?'on':''}" data-a="maybe">미정</button><button type="button" class="no ${mine&&mine.s==='no'?'on':''}" data-a="no">불참</button></div><div class="kzh-why" hidden><textarea maxlength="200" placeholder="사유나 메모 (선택)">${E(mine&&mine.note||'')}</textarea><button type="button" data-send>보내기</button></div>`}
    <div class="kzh-s"><span>참석 <b>${nl.g.yes.length}</b></span><span>미정 <b>${nl.g.maybe.length}</b></span><span>불참 <b>${nl.g.no.length}</b></span><span>미응답 <b>${nl.g.none.length}</b></span></div><button type="button" class="kzh-more">명단 보기</button><div class="kzh-names" hidden>${nl.html}</div></section>`}
  function paint(){if(!openEl)return;const b=openEl.querySelector('.kzh-b'),p=pracItem(),ev=evItems(),items=[];if(p&&(p.list.length||p.mine))items.push(p);ev.forEach(e=>items.push(e));
@@ -9442,6 +9445,8 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
   const close=()=>{o.remove();openEl=null;document.removeEventListener('keydown',kd);markSeen();badge()};const kd=e=>{if(e.key==='Escape')close()};
   o.onclick=e=>{if(e.target===o)close()};o.querySelector('.kzh-x').onclick=close;document.addEventListener('keydown',kd);document.body.append(o);openEl=o;paint();load(true)}
  window.kzRsvpHub={open,load,badge};
+ /* 마감이 지난 참석 응답이 있으면 서버가 관리자급에게 미응답 명단을 보냄 (한 번만 · 크론 보조) */
+ let repAt=0;setInterval(()=>{try{if(!me()||document.hidden||!R().api||Date.now()-repAt<600000)return;repAt=Date.now();R().api({action:'rsvpReportCheck'}).catch(()=>{})}catch(e){}},30000);
  setInterval(()=>{try{topBtn();if(me())load(false)}catch(e){}},5000);setTimeout(()=>{try{topBtn();load(true)}catch(e){}},2500);
  new MutationObserver(()=>{const m=document.getElementById('kcMail'),b=document.getElementById('kzRsvpBtn');if(m&&(!b||b.previousElementSibling!==m))try{topBtn()}catch(e){}}).observe(document.documentElement,{childList:true,subtree:true});
  /* 알림의 '참석 확인' 링크 */
@@ -10839,7 +10844,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=35').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=36').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11258,7 +11263,7 @@ window.kzSatPrac=(function(){
  /* 정하기 창 → {on,singer,session,place} 또는 null(취소)
     폰은 아래에서 올라오는 시트, 컴퓨터는 가운데 카드. 시간은 칩 한 번 터치(시) + 정각/30분 */
  const recentPlaces=()=>{const out=[];try{(archive||[]).filter(a=>a&&a.prac&&a.prac.place).sort((a,b)=>b.id.localeCompare(a.id)).forEach(a=>{if(!out.includes(a.prac.place))out.push(a.prac.place)})}catch(e){}return out.slice(0,4)};
- function ask(d,opt){return new Promise(res=>{opt=opt||{};const cur=of(d),df=defaults(),v={on:cur?cur.on!==false:true,singer:(cur&&cur.singer)||df.singer,session:(cur&&cur.session)||df.session,place:(cur&&cur.place)||df.place,until:(cur&&/^\d{4}-\d{2}-\d{2}$/.test(cur.until||'')&&[shiftDate(d,-3),shiftDate(d,-2)].includes(cur.until))?cur.until:shiftDate(d,-2)};
+ function ask(d,opt){return new Promise(res=>{opt=opt||{};const cur=of(d),df=defaults(),v={on:cur?cur.on!==false:true,singer:(cur&&cur.singer)||df.singer,session:(cur&&cur.session)||df.session,place:(cur&&cur.place)||df.place,untilAt:(cur&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(cur.untilAt||''))?cur.untilAt:((cur&&/^\d{4}-\d{2}-\d{2}$/.test(cur.until||'')?cur.until:shiftDate(d,-2))+'T19:00')};
   v.same=v.singer===v.session;const places=[...new Set([...(v.place?[v.place]:[]),'벧엘채플',...recentPlaces()])].slice(0,4);
   const w=document.createElement('div');w.className='sp-ov';w.id='kzSatPracAsk';
   /* 시간은 직접 입력 (폰은 기본 시간 선택기가 떠요) */
@@ -11269,20 +11274,20 @@ window.kzSatPrac=(function(){
    <div class="sp-sw"><button type="button" class="${v.on?'on':''}" data-sp="on">있어요</button><button type="button" class="${!v.on?'on':''}" data-sp="off">없어요</button></div>
    ${v.on?`<div class="sp-trs">${picker('singer',v.same?'싱어 · 세션':'싱어','🎤')}${v.same?'':picker('session','세션','🎸')}</div>
     <label class="sp-same"><input type="checkbox" ${v.same?'checked':''} data-same> 세션도 같은 시간</label>
-    <div class="sp-pl"><span>⏰ 참석 응답 마감 <small>(그날 저녁 7시)</small></span><div class="sp-plc">${[[shiftDate(d,-3),'목요일'],[shiftDate(d,-2),'금요일']].map(([x,l])=>`<button type="button" class="${x===v.until?'on':''}" data-until="${x}">${l} ${md(x)}</button>`).join('')}</div><small class="sp-unote">마감이 지나면 관리자급에게 아직 응답 안 한 사람 명단이 알림으로 가요</small></div>
+    <div class="sp-pl"><span>⏰ 참석 응답 마감</span><div class="sp-dl"><input type="date" data-ud value="${E(v.untilAt.slice(0,10))}" max="${sat(d)}"><input type="time" lang="ko" step="300" data-ut value="${E(v.untilAt.slice(11,16))}"></div><small class="sp-unote">이 시간까지 참석 여부를 받아요. 지나면 관리자급에게 아직 응답 안 한 사람 명단이 알림으로 가요</small></div>
     <div class="sp-pl"><span>📍 장소 <small>(선택)</small></span><div class="sp-plc">${places.map(x=>`<button type="button" class="${x===v.place?'on':''}" data-pl="${E(x)}">${E(x)}</button>`).join('')}<input type="text" maxlength="30" value="${E(places.includes(v.place)?'':v.place)}" placeholder="직접 입력" data-plin></div></div>`
    :`<div class="sp-offnote">이번 주는 연습을 쉬어요.<br><small>팀원들에게 참석 확인 창과 저녁 알림이 가지 않아요.</small></div>`}</div>
    <div class="sp-bs"><button type="button" class="sp-x" data-sp="cancel">취소</button><button type="button" class="sp-ok" data-sp="ok">${opt.upload?'확인하고 홈에 올리기':'저장'}</button></div></div>`;
    const b=w.querySelector('.sp-body');if(b)b.scrollTop=sc;
    const pin=w.querySelector('[data-plin]');if(pin)pin.oninput=()=>{v.place=pin.value;w.querySelectorAll('[data-pl]').forEach(x=>x.classList.remove('on'))};
-   w.querySelectorAll('[data-t]').forEach(x=>x.oninput=x.onchange=()=>{v[x.dataset.t]=x.value;if(v.same&&x.dataset.t==='singer')v.session=x.value});const sm=w.querySelector('[data-same]');if(sm)sm.onchange=()=>{v.same=sm.checked;if(v.same)v.session=v.singer;paint()}};
+   {const ud=w.querySelector('[data-ud]'),ut=w.querySelector('[data-ut]');if(ud&&ut){const up=()=>{if(/^\d{4}-\d{2}-\d{2}$/.test(ud.value)&&/^\d{2}:\d{2}$/.test(ut.value))v.untilAt=ud.value+'T'+ut.value};ud.onchange=ud.oninput=up;ut.onchange=ut.oninput=up}}w.querySelectorAll('[data-t]').forEach(x=>x.oninput=x.onchange=()=>{v[x.dataset.t]=x.value;if(v.same&&x.dataset.t==='singer')v.session=x.value});const sm=w.querySelector('[data-same]');if(sm)sm.onchange=()=>{v.same=sm.checked;if(v.same)v.session=v.singer;paint()}};
   paint();document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));
   const close=r=>{w.classList.remove('in');setTimeout(()=>w.remove(),180);res(r)};
-  w.addEventListener('click',e=>{if(e.target===w)return close(null);const uu=e.target.closest('[data-until]');if(uu){v.until=uu.dataset.until;return paint()}const t=e.target.closest('[data-sp],[data-pl]');if(!t)return;
+  w.addEventListener('click',e=>{if(e.target===w)return close(null);const t=e.target.closest('[data-sp],[data-pl]');if(!t)return;
    if(t.dataset.pl!=null){v.place=v.place===t.dataset.pl?'':t.dataset.pl;return paint()}
    const k=t.dataset.sp;if(k==='on'||k==='off'){v.on=k==='on';return paint()}
    if(k==='cancel')return close(null);
-   if(k==='ok'){if(v.on&&!v.singer&&!v.session){toast('시간을 입력해 주세요');return}if(v.same)v.session=v.singer;const out=v.on?{on:true,singer:v.singer||'',session:v.session||'',place:String(v.place||'').trim().slice(0,30),until:v.until}:{on:false};
+   if(k==='ok'){if(v.on&&!v.singer&&!v.session){toast('시간을 입력해 주세요');return}if(v.on&&v.untilAt.slice(0,10)>sat(d)){toast('응답 마감은 연습 날까지로 정해 주세요');return}if(v.same)v.session=v.singer;const out=v.on?{on:true,singer:v.singer||'',session:v.session||'',place:String(v.place||'').trim().slice(0,30),untilAt:v.untilAt,until:v.untilAt.slice(0,10)}:{on:false};
     if(v.on)try{localStorage.setItem(DK,JSON.stringify(out))}catch(e){}close(out)}})})}
  async function save(d,v){const a=(()=>{try{return authAccount()||{}}catch(e){return{}}})();const p={...v,by:a.name||'',at:Date.now()};
   await db.doc('weeks/'+d).set({prac:p},{merge:true});const w=weekObj(d);if(w)w.prac=p;try{if(d===date&&data)data.prac=p}catch(e){}
@@ -11857,6 +11862,8 @@ window.kzHoliday=(function(){
 })();
 </script>
 <style id="kz-setup-hint-css">
+.ev-ru2{display:flex;gap:8px;flex-wrap:wrap}.ev-ru2 input{flex:1 1 130px;min-width:0}.kzh-cl{color:#b54a3a;font-size:12.5px}
+.sp-dl{display:flex;gap:8px;flex-wrap:wrap}.sp-dl input{flex:1 1 140px;min-width:0;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--card,#fff);color:inherit}
 .pr-dl{margin:8px 0 0;font-size:12.5px;font-weight:700;color:var(--sAcd,#94491a);text-align:center}.sp-unote{display:block;margin-top:6px;font-size:11.5px;color:var(--mu);line-height:1.45}
 .kz-start{margin:12px 14px 14px;padding:14px 16px;border:1px solid var(--sLine,rgba(180,97,44,.3));border-radius:18px;background:linear-gradient(180deg,var(--sSoft,#fbf3ea),var(--card,#fff))}
 .kz-start-h{display:flex;align-items:center;gap:10px}.kz-start-h b{font-size:15px}.kz-start-n{font-size:12.5px;font-weight:800;color:var(--sAcd,#94491a)}
