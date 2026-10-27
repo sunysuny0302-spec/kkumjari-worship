@@ -4977,6 +4977,8 @@ function editForView(v=view){
   if(['sched_e','rule_e'].includes(v)) return canSessionManage();
   /* 직책 변경(멤버 명단 편집)은 단장 · 관리계정만 */
   if(v==='members') return currentRank()==='단장';
+  /* 악보 모음집 정리(추가·이름·키·장 관리·삭제)는 단장 · 인도자만 */
+  if(v==='library') return currentRank()==='단장'||hasRole('인도자');
   if(['members','notice','minutes','library','trash','storage','attend'].includes(v)) return canTeamManage();
   return false;
 }
@@ -10853,7 +10855,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=39').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=40').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
