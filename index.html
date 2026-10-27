@@ -11941,6 +11941,16 @@ window.kzHoliday=(function(){
 .bk-l{display:grid;gap:6px;margin:8px 0}.bk-r{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--bd);border-radius:12px;background:var(--card,#fff)}
 .bk-r>div{flex:1;min-width:0;display:grid}.bk-r b{font-size:13.5px}.bk-r small{font-size:11.5px;color:var(--mu)}.bk-a{display:flex;gap:8px}
 </style>
+<script id="kz-req-birth">
+/* 가입 승인 카드에 생년월일 (승인 대기 목록이 화면에서 바로 읽혀 생년월일이 없을 때 서버에서 받아 붙임) */
+(function(){let cache=null,at=0,busy=false;
+ async function births(){if(cache&&Date.now()-at<60000)return cache;if(busy||!window.kzAdm)return cache||{};busy=true;try{const r=await kzAdm({action:'pending'});cache={};(r.accounts||[]).forEach(x=>{if(x.birth)cache[x.id]=x.birth});at=Date.now()}catch(e){cache=cache||{}}busy=false;return cache}
+ async function run(){const rows=[...document.querySelectorAll('.kz-request[data-id]')].filter(r=>!r.querySelector('.kz-req-birth')&&!r.dataset.bd);if(!rows.length)return;const m=await births();
+  rows.forEach(r=>{r.dataset.bd='1';const b=m[r.dataset.id];if(!b||r.querySelector('.kz-req-birth'))return;const sm=r.querySelector('.kz-request-head small');if(!sm)return;const e=document.createElement('small');e.className='kz-req-birth';e.textContent=`🎂 ${b.slice(0,4)}년 ${+b.slice(5,7)}월 ${+b.slice(8,10)}일생`;sm.after(e)})}
+ let t=0;new MutationObserver(()=>{if(t)return;t=setTimeout(()=>{t=0;run().catch(()=>{})},300)}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<style id="kz-req-birth-css">.kz-request-head .kz-req-birth{display:block;font-size:12px;color:var(--sAcd,#94491a);font-weight:700;margin-top:2px}.kz-request-head>span{display:flex;flex-direction:column}</style>
 <style id="mb-out-css">.mrow3 .mb-out{color:#b23b3b!important;font-weight:700}</style>
 </html>
 
