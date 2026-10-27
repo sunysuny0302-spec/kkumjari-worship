@@ -24,6 +24,8 @@ module.exports=async function handler(req,res){
   let inbox=null;try{inbox=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'inboxClean'});}catch(e){console.error('[inbox-clean]',e.code||e.name||e.message);inbox={error:true};}
   /* 아침 생일 알림이 빠졌을 때를 대비한 보조 (이미 보냈으면 건너뜀) */
   let bday=null;try{bday=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'bdayRemind'});}catch(e){console.error('[bday-remind]',e.code||e.name||e.message);bday={error:true};}
-  return res.json({deleted,remind,ppt,serve,ev,bday,inbox,report});
+  /* 일주일에 한 번 자동 백업 (최근 6개만 보관) */
+  let backup=null;try{backup=await require('../lib/admin-service.cjs').createAdminService({db,auth:admin.auth()}).autoBackup();}catch(e){console.error('[auto-backup]',e.code||e.name||e.message);backup={error:true};}
+  return res.json({deleted,remind,ppt,serve,ev,bday,inbox,report,backup:backup&&{id:backup.id,skipped:backup.skipped,error:backup.error}});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };

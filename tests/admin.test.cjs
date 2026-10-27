@@ -245,6 +245,27 @@ t('새로 시작: management only, keeps 일정·콘티·공지·악보·가사�
   assert.ok(auth.calls.some(c => c[0] === 'delete' && c[1] === 'u1'));
 });
 
+t('백업: 관리계정만, 비밀값 빼고 저장, 조각으로 받기, 최근 6개만, 자동은 일주일에 한 번', async () => {
+  let clock = Date.UTC(2026, 9, 25, 10);
+  const db = fakeDb({...seed(), 'accounts/u9': {name: '가나', rank: '팀원', status: 'approved', pinHash: 'secret', salt: 'x'}, 'notices/n1': {title: '공지', images: ['big']}}), s = createAdminService({db, auth: fakeAuth(), now: () => clock});
+  await assert.rejects(s.run(ME, {action: 'backupNow'}), {status: 403});
+  const b = await s.run(ADMIN, {action: 'backupNow'});
+  const list = await s.run(ADMIN, {action: 'backupList'}); assert.equal(list.items.length, 1); assert.equal(list.items[0].id, b.id);
+  let json = ''; for (let i = 0; i < b.chunks; i++) json += (await s.run(ADMIN, {action: 'backupChunk', id: b.id, i})).s;
+  const d = JSON.parse(json).data; assert.equal(d.accounts.find(x => x.id === 'u9').data.pinHash, undefined); assert.equal(d.notices[0].data.images, undefined); assert.equal(d.notices[0].data.title, '공지');
+  assert.equal((await s.autoBackup()).skipped, true);
+  for (let k = 0; k < 7; k++) { clock += 7 * 86400000; await s.autoBackup(); }
+  assert.equal((await s.run(ADMIN, {action: 'backupList'})).items.length, 6);
+  assert.ok(![...db.store.keys()].some(k => k.startsWith('_kzBackupChunks/' + b.id)));
+});
+
+t('알림 켠 팀원 현황: 관리계정만, 안 켠 사람이 먼저', async () => {
+  const db = fakeDb({...seed(), 'accounts/u5': {id: 'u5', name: '가나', rank: '팀원', status: 'approved'}, 'pushTokens/t1': {uid: 'u1', at: 5}, 'pushTokens/t2': {uid: 'u1', at: 7}}), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
+  await assert.rejects(s.run(ME, {action: 'pushStatus'}), {status: 403});
+  const r = await s.run(ADMIN, {action: 'pushStatus'});
+  assert.equal(r.people[0].devices, 0); const u1 = r.people.find(x => x.devices); assert.equal(u1.devices, 2); assert.equal(u1.at, 7);
+});
+
 t('가입 전 이름 확인: 서버에 실제로 있는 계정만', async () => {
   const db = fakeDb(seed()), s = createAdminService({db, auth: fakeAuth(), now: () => 9});
   assert.deepEqual(await s.publicRun({action: 'signupCheck', name: '박용범'}), {approved: false, pending: false});
