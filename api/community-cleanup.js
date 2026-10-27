@@ -19,9 +19,11 @@ module.exports=async function handler(req,res){
   let ppt=null;try{ppt=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'pptRemind'});}catch(e){console.error('[ppt-remind]',e.code||e.name||e.message);ppt={error:true};}
   let serve=null;try{serve=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'serveRemind'});}catch(e){console.error('[serve-remind]',e.code||e.name||e.message);serve={error:true};}
   let ev=null;try{ev=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'eventRemind'});}catch(e){console.error('[event-remind]',e.code||e.name||e.message);ev={error:true};}
+  /* 참석 응답 마감이 지났으면 관리자급에게 미응답 명단 (토요 연습: 마감일 저녁 7시) */
+  let report=null;try{report=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpReport'});}catch(e){console.error('[rsvp-report]',e.code||e.name||e.message);report={error:true};}
   let inbox=null;try{inbox=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'inboxClean'});}catch(e){console.error('[inbox-clean]',e.code||e.name||e.message);inbox={error:true};}
   /* 아침 생일 알림이 빠졌을 때를 대비한 보조 (이미 보냈으면 건너뜀) */
   let bday=null;try{bday=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'bdayRemind'});}catch(e){console.error('[bday-remind]',e.code||e.name||e.message);bday={error:true};}
-  return res.json({deleted,remind,ppt,serve,ev,bday,inbox});
+  return res.json({deleted,remind,ppt,serve,ev,bday,inbox,report});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };

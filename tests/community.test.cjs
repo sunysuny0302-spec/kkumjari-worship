@@ -121,6 +121,22 @@ test('rsvp: everyone reads, each person sets only own answer, date window enforc
  await assert.rejects(f.run(f.user,{action:'rsvpGet',date:'2020-01-05'}),{status:400});
  await assert.rejects(f.run(f.user,{action:'rsvpGet',date:'../x'}),{status:400});
 });
+test('rsvp deadline: report non-responders to staff once after deadline; late answers blocked',async()=>{
+ const f=fixture(),d='2033-05-22';/* 2033-05-18(수) 12:33 KST */
+ f.data.set('weeks/'+d,{prac:{on:true,until:'2033-05-19'}});
+ f.data.set('_kzCommunity/rsvp_'+d,{date:d,targets:[{n:'팀원',r:['싱어']},{n:'다른 팀원',r:['싱어']}],answers:{}});
+ await f.run(f.user,{action:'rsvpSet',date:d,s:'yes'});
+ assert.equal((await f.run({system:true},{action:'rsvpReport'})).prac,null);
+ f.advance(Date.parse('2033-05-19T10:00:00Z')-f.clock());/* 목요일 저녁 7시 */
+ const r=await f.run({system:true},{action:'rsvpReport'});assert.equal(r.prac.wait,1);
+ const n=f.pushed.at(-1);assert.match(n.note.title,/미응답 1명/);assert.match(n.note.body,/다른 팀원/);assert.deepEqual(n.recipients.map(x=>x.id),['management']);
+ assert.equal((await f.run({system:true},{action:'rsvpReport'})).prac,null);
+ await assert.rejects(f.run(f.outsider,{action:'rsvpSet',date:d,s:'no',note:'늦게'}),{status:400});
+ f.data.set('events/e1',{title:'수련회',date:'2033-05-28',rsvp:true,rsvpUntil:'2033-05-20',createdAt:'9999'});
+ assert.equal((await f.run({system:true},{action:'rsvpReport'})).events,0);
+ f.advance(2*86400000);
+ assert.equal((await f.run({system:true},{action:'rsvpReport'})).events,1);assert.match(f.pushed.at(-1).note.body,/수련회 · 5\/20 마감 지남 · 팀원, 다른 팀원/);
+});
 test('mention: muted member still gets a mention notice; @모두 reaches everyone in the room',async()=>{const f=fixture();await f.run(f.outsider,{action:'chatPreference',room:'all',enabled:false});
  await f.run(f.user,{action:'send',room:'all',id:'mention_req1',text:'@'+f.outsider.name+' 확인 부탁해요'});
  const ids=f.pushed.flatMap(p=>p.recipients.map(a=>a.id));assert.ok(ids.includes(f.outsider.id));assert.ok(ids.includes(f.admin.id));
