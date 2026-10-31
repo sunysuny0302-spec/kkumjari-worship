@@ -9171,7 +9171,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   try{if(!canEdit)return toast('편집 권한이 없어요')}catch(_){}const p=P();if(!p)return toast('악보를 먼저 넣어 주세요');const a=selAdd(),tgt=a||p;
   if(!a&&p.blank){if((p.adds||[]).length===1){sel={k:'i',j:0};return kzEditPageImg()}return toast('고칠 악보를 먼저 눌러서 골라 주세요')}
   if(!tgt.src)return toast('악보를 불러오는 중이에요 · 잠시 뒤 다시 눌러 주세요');
-  kzImgEdit({src:tgt.src,title:'악보 고치기',sub:(scoreLabel?scoreLabel(p):p.name||'')+' · 저장하면 이 장에 바로 들어가요',onSave:async(blob,sw,sh,cvs)=>{
+  kzImgEdit({src:tgt.src,title:'악보 원본 고치기',sub:(scoreLabel?scoreLabel(p):p.name||'')+' · 저장하면 이 장에 바로 들어가요',onSave:async(blob,sw,sh,cvs)=>{
    const url=cvs.toDataURL('image/jpeg',.92);
    if(a){const L=a.lay;a.src=url;a.oaid=null;a.nw=sw;a.nh=sh;if(L){const keepW=L.w;a.lay={x:L.x,y:L.y,w:keepW,h:keepW*sh/sw,cl:0,ct:0,cr:0,cb:0}}try{ASRC.set(a.k,url);AOID.delete(a.k)}catch(_){}}
    else{if(p.oaid&&!p.replacesOaid)p.replacesOaid=p.oaid;p.src=url;p.oaid=null;p.aid=null;p.lay=null;ensureLay(p,sw,sh)}
@@ -11048,7 +11048,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=54').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=55').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12176,7 +12176,7 @@ function bindScoreEditor(){
  const blank=document.createElement('button');blank.className='btn kz-new-song kz-blank-sheet';blank.type='button';blank.textContent='＋ 시트 추가';blank.title='빈 시트를 먼저 만들고, 안에 악보를 넣어요';blank.disabled=!canEdit;blank.onclick=addBlankSheet;host.append(blank);
  const add=document.createElement('button');add.className='btn kz-new-song';add.type='button';add.textContent='＋ 새 곡';add.title='사진을 고르면 그대로 한 곡이 돼요 (여러 장이면 1장·2장·3장)';add.disabled=!canEdit;add.onclick=()=>pickImages(editorAddSong);host.append(add);
  const b=document.createElement('button');b.id='kzScoreGroup';b.className='sm';b.type='button';b.textContent='장 설정';b.disabled=!canEdit;b.onclick=()=>{if(P())scorePageDialog(P(),'editor');else toast('악보를 먼저 추가하세요')};host.append(b);
- const fix=document.createElement('button');fix.className='sm';fix.type='button';fix.textContent='✎ 악보 고치기';fix.title='자르기 · 돌리기 · 흰 상자로 가리기 · 코드 글자 넣기';fix.disabled=!canEdit;fix.onclick=()=>kzEditPageImg();host.append(fix);
+ const fix=document.createElement('button');fix.className='sm';fix.type='button';fix.textContent='✎ 악보 원본 고치기';fix.title='자르기 · 돌리기 · 흰 상자로 가리기 · 코드 글자 넣기';fix.disabled=!canEdit;fix.onclick=()=>kzEditPageImg();host.append(fix);
 
  const append=document.createElement('button');append.className='sm';append.textContent='＋ 장 추가';append.title='지금 곡 뒤에 장을 붙여요';append.disabled=!canEdit;append.onclick=()=>{if(P())pickImages(fs=>editorAppendPages(P(),fs));else pickImages(editorAddSong)};host.insertBefore(append,b);const stick=document.createElement('button');stick.className='sm';stick.id='kzStick';stick.textContent='＋ 이 장에 붙이기';stick.title='지금 보고 있는 장 안에 악보를 더 붙여요 (위아래로 배치돼요)';stick.disabled=!canEdit;stick.onclick=()=>{if(!P())return toast('먼저 곡을 넣어 주세요');pickImages(fs=>addAdds(P(),fs))};host.insertBefore(stick,b);
  const nav=document.createElement('div');nav.id='kzScorePage';nav.className='kz-score-page-field';nav.setAttribute('aria-label','곡 안에서 페이지 이동');host.append(nav);syncScorePageField();
