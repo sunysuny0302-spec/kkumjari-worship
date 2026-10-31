@@ -5640,7 +5640,7 @@ step='홈에 저장';setUp('홈에 저장하는 중');
 const ment=wm!=null?wm:(data.ment!=null?data.ment:defMent(date));
 const nd={ment,by:ldr,up:Date.now(),scores:orderedScores(ok).map(p=>({...scoreMeta(p),name:p.name,aid:p.aid,oaid:p.oaid,seq:p.seq.map(q=>({t:q.t,c:q.c,bc:q.bc||q.c,b:q.b!==false,free:!!q.free,...(q.n?{n:q.n}:{})})),marks:p.marks.map(m=>({...m})),lay:p.lay?{...p.lay}:null,nw:p.nw||0,nh:p.nh||0,...(p.blank?{blank:true}:{}),...(addsOut(p).length?{adds:addsOut(p)}:{})}))};
 step='악보 원본 보관';await retainScoreOriginals([...(data.scores||[]),...ok]);
-clearTimeout(saveT);await TO(db.doc('weeks/'+date).set(nd),45000,step);
+clearTimeout(saveT);/* merge: 토요 연습(prac) 같은 다른 정보는 그대로 두고 콘티만 바꿈 */await TO(db.doc('weeks/'+date).set(nd,{merge:true}),45000,step);
 data=nd;wm=ment;lastKey=JSON.stringify([nd.scores,nd.ment]);setTimeout(()=>refreshStorage(true),1500);
 try{const groupDups=new Map();for(const e of libItems())for(const id of e.dups||[e.oaid])groupDups.set(id,e.dups||[e.oaid]);
  /* 키업으로 한 곡에 키가 여러 개면 모음집에는 키별 버전으로 따로 저장 */
@@ -11498,7 +11498,7 @@ window.kzSatPrac=(function(){
   try{window.kzPrac&&kzPrac.syncTargets&&kzPrac.syncTargets(d)}catch(e){}return p}
  async function edit(d){const v=await ask(d,{});if(!v)return;try{await save(d,v);toast(v.on?'토요 연습 시간을 저장했어요 ✓':'이번 주 토요 연습 없음으로 저장했어요');if(view==='home')body()}catch(e){toast('저장하지 못했어요: '+(e.message||e))}}
  /* 홈에 업로드 전에 묻기 */
- if(typeof uploadNow==='function'){const base=uploadNow;uploadNow=async function(){try{if(!canEdit||saving||!dirty()||(typeof isNoSvc==='function'&&isNoSvc(date)))return base.apply(this,arguments)}catch(e){return base.apply(this,arguments)}
+ if(typeof uploadNow==='function'){const base=uploadNow;uploadNow=async function(){try{if(!canEdit||saving||!dirty()||(typeof isNoSvc==='function'&&isNoSvc(date))||of(date))return base.apply(this,arguments)/* 이미 정해 둔 토요 연습이 있으면 다시 묻지 않음 (바꾸려면 홈의 '바꾸기') */}catch(e){return base.apply(this,arguments)}
   const d=date,v=await ask(d,{upload:true});if(!v)return;const before=data&&data.up;const r=await base.apply(this,arguments);
   try{if(data&&data.up&&data.up!==before&&date===d){await save(d,v);if(view==='home')body()}}catch(e){toast('토요 연습 정보를 저장하지 못했어요: '+(e.message||e))}return r}}
  /* 컴퓨터 홈: '이번 주 준비' 자리에 토요 연습 카드 */
