@@ -5645,10 +5645,10 @@ data=nd;wm=ment;lastKey=JSON.stringify([nd.scores,nd.ment]);setTimeout(()=>refre
 try{const groupDups=new Map();for(const e of libItems())for(const id of e.dups||[e.oaid])groupDups.set(id,e.dups||[e.oaid]);
  /* 키업으로 한 곡에 키가 여러 개면 모음집에는 키별 버전으로 따로 저장 */
  const libSid=new Map();{const g=new Map();ok.forEach(p=>{if(!p.songId)return;if(!g.has(p.songId))g.set(p.songId,[]);g.get(p.songId).push(p)});g.forEach((arr,sid)=>{const keys=[...new Set(arr.map(p=>kzKey(p.key)))];if(keys.length<2)return;const base=String(sid).split('@')[0];keys.forEach(k=>arr.filter(p=>kzKey(p.key)===k).sort((a,b)=>scoreMeta(a).pageNo-scoreMeta(b).pageNo).forEach((p,i)=>libSid.set(p,{songId:base+'@'+(k||'0'),pageNo:i+1})))})}
- for(const p of ok){if(p.blank){/* 빈 시트에 붙인 악보는 그 원본을 모음집에 (이미 있으면 건너뜀) */for(const a of (p.adds||[])){if(!a.oaid||library.some(l=>l._id===a.oaid||l.oaid===a.oaid))continue;const patch={...scoreMeta(p),name:p.name||'제목 없음',oaid:a.oaid,nw:a.nw||0,nh:a.nh||0,at:Date.now(),by:ldr||''};delete patch.songId;delete patch.pageNo;await db.doc('library/'+a.oaid).set(patch,{merge:true});library.push({...patch,_id:a.oaid})}continue}const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid),ls=libSid.get(p);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty&&!(ls&&(ex.songId!==ls.songId||scoreMeta(ex).pageNo!==ls.pageNo||kzKey(ex.key)!==kzKey(p.key))))continue;
+ const dropOld=[];for(const p of ok){if(p.blank){/* 빈 시트에 붙인 악보는 그 원본을 모음집에 (이미 있으면 건너뜀) */for(const a of (p.adds||[])){if(!a.oaid||library.some(l=>l._id===a.oaid||l.oaid===a.oaid))continue;const patch={...scoreMeta(p),name:p.name||'제목 없음',oaid:a.oaid,nw:a.nw||0,nh:a.nh||0,at:Date.now(),by:ldr||''};delete patch.songId;delete patch.pageNo;await db.doc('library/'+a.oaid).set(patch,{merge:true});library.push({...patch,_id:a.oaid})}continue}const ex=library.find(l=>l._id===p.oaid||l.oaid===p.oaid),ls=libSid.get(p);if(ex&&!ex.hidden&&!p.titleRenamed&&!p.pageMetaDirty&&!(ls&&(ex.songId!==ls.songId||scoreMeta(ex).pageNo!==ls.pageNo||kzKey(ex.key)!==kzKey(p.key))))continue;
 const patch={...scoreMeta(p),...(ls||{}),name:(p.titleRenamed?p.name:ex?.name||p.name)||'제목 없음',oaid:p.oaid,nw:p.nw||0,nh:p.nh||0,at:ex?.at||Date.now(),by:ldr||''};
-await db.doc('library/'+p.oaid).set(patch,{merge:true});if(ex)Object.assign(ex,patch);else library.push({...patch,_id:p.oaid});if(p.replacesOaid&&p.replacesOaid!==p.oaid){/* 편집기에서 고친 악보: 예전 원본은 모음집에서 숨기고 고친 것으로 */const old=p.replacesOaid;try{await db.doc('library/'+old).set({hidden:true,replacedBy:p.oaid},{merge:true});const lo=library.find(l=>l._id===old||l.oaid===old);if(lo)Object.assign(lo,{hidden:true,replacedBy:p.oaid})}catch(e){console.warn(e)}p.replacesOaid=null}if(p.titleRenamed&&groupDups){for(const id of groupDups.get(p.oaid)||[]){if(id===p.oaid)continue;await db.doc('library/'+id).set({name:patch.name},{merge:true});const l2=library.find(l=>l._id===id||l.oaid===id);if(l2)l2.name=patch.name}}p.titleRenamed=false;p.pageMetaDirty=false;
-}}catch(e){console.error(e);toast('콘티는 저장했지만 모음집 제목 반영에 실패했어요. 모음집에서 이름을 다시 저장해 주세요.')}
+await db.doc('library/'+p.oaid).set(patch,{merge:true});if(ex)Object.assign(ex,patch);else library.push({...patch,_id:p.oaid});if(p.replacesOaid&&p.replacesOaid!==p.oaid){/* 편집기에서 고친 악보: 예전 원본은 모음집에서 숨기고 고친 것으로 */const old=p.replacesOaid;try{await db.doc('library/'+old).set({hidden:true,replacedBy:p.oaid},{merge:true});const lo=library.find(l=>l._id===old||l.oaid===old);if(lo)Object.assign(lo,{hidden:true,replacedBy:p.oaid})}catch(e){console.warn(e)}p.replacesOaid=null;dropOld.push(old)}if(p.titleRenamed&&groupDups){for(const id of groupDups.get(p.oaid)||[]){if(id===p.oaid)continue;await db.doc('library/'+id).set({name:patch.name},{merge:true});const l2=library.find(l=>l._id===id||l.oaid===id);if(l2)l2.name=patch.name}}p.titleRenamed=false;p.pageMetaDirty=false;
+}if(dropOld.length&&window.kzDropOldOrig)kzDropOldOrig(dropOld)}catch(e){console.error(e);toast('콘티는 저장했지만 모음집 제목 반영에 실패했어요. 모음집에서 이름을 다시 저장해 주세요.')}
 
 let verify='';try{const chk=await TO(db.doc('weeks/'+date).get(),5000,'저장 확인');const cd=chk.exists&&chk.data();if(!cd||cd.up!==nd.up||(cd.scores||[]).length!==nd.scores.length||cd.ment!==nd.ment)verify='저장은 했는데 다시 읽어 보니 방금 올린 내용과 달라요'}catch(e){}
 const bad=new Set(fails.map(f=>f.p));pages.forEach(p=>{if(!bad.has(p))p.dirty=false});od=bad.size>0;wmDirty=false;LS('wm:'+ldr,null);
@@ -9145,6 +9145,15 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
    else if(k==='cancel')close();else if(k==='save')save()});
   drawBase();cvw.dataset.tool='crop';requestAnimationFrame(()=>{fitZ();paint()})};
  const who=()=>{try{return (authAccount()||{}).name||''}catch(_){return ''}};
+ /* 고치기 전 원본 정리: 어느 콘티(지난 콘티 · 휴지통 포함)도 안 쓰면 파일과 모음집 기록을 지워 저장 공간을 비움. 쓰는 콘티가 있으면 숨긴 채로 둠 */
+ window.kzDropOldOrig=async function(ids){ids=[...new Set((ids||[]).filter(Boolean))];if(!ids.length)return 0;let n=0;
+  try{const used=new Set(),add=x=>{if(!x)return;used.add(x.oaid);used.add(x.aid);(x.adds||[]).forEach(q=>used.add(q.oaid))};
+   const ws=await db.collection('weeks').get();ws.docs.forEach(d=>((d.data()||{}).scores||[]).forEach(add));
+   try{const tr=await db.collection('trash').get();tr.docs.forEach(d=>{const t=d.data()||{};if(t.kind==='score')used.add((t.data||{}).oaid||t.ref);((t.data||{}).scores||[]).forEach(add)})}catch(_){}
+   try{(pages||[]).forEach(add)}catch(_){}
+   const as=await claude.use('assets');
+   for(const id of ids){if(used.has(id))continue;try{if(as&&as.delete)await as.delete(id)}catch(_){}try{await db.doc('library/'+id).delete()}catch(_){}try{const i=library.findIndex(l=>l._id===id||l.oaid===id);if(i>=0)library.splice(i,1)}catch(_){}n++}
+  }catch(e){console.warn('[꿈자리] 예전 원본 정리',e)}return n};
  /* 모음집에서: 새 원본으로 바꾸고 예전 것은 숨김 */
  window.kzOrigEdit=async function(e){
   try{if(typeof canEdit!=='undefined'&&!canEdit)return toast('원본 편집은 단장 · 인도자만 할 수 있어요')}catch(_){}
@@ -9155,7 +9164,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
    const doc={...base,...scoreMeta(base.oaid?base:e),name:base.name||e.name||'악보',oaid:nid,nw:sw,nh:sh,at:base.at||e.at||Date.now(),by:who(),editedFrom:oa,editedAt:Date.now()};delete doc._id;delete doc.hidden;delete doc.replacedBy;
    await db.doc('library/'+nid).set(doc);const loc=library.find(l=>l._id===nid);if(loc)Object.assign(loc,doc);else library.push({...doc,_id:nid});
    for(const id of ids){await db.doc('library/'+id).set({hidden:true,replacedBy:nid},{merge:true});const l=library.find(x=>x._id===id||x.oaid===id);if(l)Object.assign(l,{hidden:true,replacedBy:nid});else library.push({_id:id,oaid:id,hidden:true,replacedBy:nid})}
-   toast('원본을 고쳤어요 ✓ 다음에 가져올 때부터 고친 악보로 들어가요');if(view==='library')libraryView()}})};
+   const freed=await kzDropOldOrig(ids);toast('원본을 고쳤어요 ✓ 다음에 가져올 때부터 고친 악보로 들어가요'+(freed?' · 예전 원본은 지웠어요':' · 예전 원본은 지난 콘티가 쓰고 있어서 남겨 뒀어요'));if(view==='library')libraryView()}})};
  /* 송폼 편집기에서: 이 장의 악보(또는 고른 붙인 악보)를 고쳐서 바로 바꿔 넣음. 홈에 업로드하면 고친 악보가 모음집 원본이 됨 */
  window.kzEditPageImg=function(){
   try{if(!canEdit)return toast('편집 권한이 없어요')}catch(_){}const p=P();if(!p)return toast('악보를 먼저 넣어 주세요');const a=selAdd(),tgt=a||p;
@@ -11548,8 +11557,8 @@ window.kzSatPrac=(function(){
 .kz-sp .sp-big.none{background:#faf5ee;color:#8a7764;font-size:16px}
 .kz-sp .sp-rows{margin-top:10px;display:grid;gap:8px}
 .kz-sp .sp-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:12px;background:#faf3ea;border:1px solid #efe2d1}
-.kz-sp .sp-row span{font-size:14px;font-weight:700;color:#6b5a4a}.kz-sp .sp-row b{font-size:19px;font-weight:800;color:#2b211a}
-.kz-sp .sp-row.pl b{font-size:15px}
+.kz-sp .sp-row span{font-size:13.5px;font-weight:600;color:#6b5a4a;font-family:inherit}.kz-sp .sp-row b{font-size:16px;font-weight:700;color:#2b211a;font-family:inherit;letter-spacing:-.01em}
+.kz-sp .sp-row.pl b{font-size:14.5px}
 .kz-sp .sp-g{margin-top:8px;grid-template-columns:1fr!important}
 .hm-sp{display:none}
 .kz-sp .kz-h{flex-wrap:wrap;row-gap:4px}
