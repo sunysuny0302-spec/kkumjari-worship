@@ -10544,7 +10544,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  const autoOf=n=>{const used=new Set(Object.values(MAP).map(c=>String(c).toLowerCase())),free=PAL.filter(c=>!used.has(c)),rest=(typeof LEADERS!=='undefined'?LEADERS:[]).filter(x=>!MAP[x]),i=rest.indexOf(n);return i<0||!free.length?'':free[i%free.length]};
  const colorOf=n=>MAP[n]||autoOf(n)||DEF[ldrCls(n)]||'#8a7a6c';
  function apply(){let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
-   css+=`.${c}{color:${k}}.ldot.${c},.${c} .ldot{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}`});
+   css+=`.${c}{color:${k}}.ldot.${c},.${c} .ldot{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}.ar2[data-l="${c}"]::before,.gt[data-l="${c}"]::before,.cc.has[data-l="${c}"]::before{background:${k}}`});/* 보관함 목록 · 갤러리 · 달력 칸의 인도자 표시도 고른 색으로 */
   let st=document.getElementById('kzLdrColorCss');if(!st){st=document.createElement('style');st.id='kzLdrColorCss';document.head.append(st)}st.textContent=css}
  function myName(){try{return (authAccount()||{}).name||''}catch(e){return ''}}
  function isLeaderMe(){try{return typeof hasRole==='function'&&hasRole('인도자')&&!isManagementAccount()}catch(e){return false}}
