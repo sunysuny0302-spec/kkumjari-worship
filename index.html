@@ -5771,7 +5771,7 @@ function ldrPeriod(d){const ps=lrot&&Array.isArray(lrot.periods)?lrot.periods.fi
 /* 단장이 되면 원래 역할(인도자 · 선임싱어 · 선임세션)을 겸직으로 남김 */function kzChiefKeep(m){const p=Array.isArray(m&&m.parts)?m.parts:[];return [...new Set([...p,...(['인도자','선임싱어','선임세션'].includes(m&&m.rank)?[m.rank]:[])])]}
 function ldrMembers(){return (typeof members!=='undefined'&&Array.isArray(members)?members:[]).filter(m=>m.rank==='인도자'||(m.rank==='단장'&&(m.parts||[]).includes('인도자'))).map(m=>m.name)}
 function kzLeaders(){const fm=ldrMembers(),cur=ldrPeriod(todayStr()).order;/* 지금 로테이션에 있는 사람은 그대로 두고, 멤버 명단의 새 인도자를 뒤에 추가 */return [...cur,...fm.filter(n=>!cur.includes(n))]}
-function kzLeadersRefresh(){const nl=kzLeaders();if(nl.join('|')!==LEADERS.join('|')){LEADERS=nl;if(!LEADERS.includes(ldr)&&LEADERS.length){ldr=LEADERS[0]}try{renderNav()}catch(e){}}}
+function kzLeadersRefresh(){const nl=kzLeaders();if(nl.join('|')!==LEADERS.join('|')){LEADERS=nl;if(!LEADERS.includes(ldr)&&LEADERS.length){ldr=LEADERS[0]}try{renderNav()}catch(e){}try{renderDbar()}catch(e){}/* 위쪽 날짜 막대의 인도자 점도 새 명단으로 */}}
 function ldrBase(d){if(isNoSvc(d))return '';const p=ldrPeriod(d),w=Math.round((new Date(d+'T12:00:00')-new Date(p.anchor+'T12:00:00'))/6048e5)-svcShift(p.anchor,d),n=p.order.length;if(!n)return '';return p.order[((Math.floor(w/p.every)%n)+n)%n]}
 function ldrOf(d){const b=ldrBase(d),c=ovr.find(x=>x.k==='L'&&x.date===d&&x.from===b);return c&&c.to?c.to:b}
 const ldrCls=n=>{const i=LEADERS.indexOf(n);return i<0?'':(i<4?['lm','lf','l3','l4'][i]:'l'+(i+1))}/* 5번째부터는 l5, l6… (색이 겹치지 않게) */;
@@ -10554,7 +10554,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  /* 아직 색을 안 고른 인도자는 다른 사람이 고른 색과 겹치지 않는 색을 임시로 */
  const autoOf=n=>{const used=new Set(Object.values(MAP).map(c=>String(c).toLowerCase())),free=PAL.filter(c=>!used.has(c)),rest=(typeof LEADERS!=='undefined'?LEADERS:[]).filter(x=>!MAP[x]),i=rest.indexOf(n);return i<0||!free.length?'':free[i%free.length]};
  const colorOf=n=>MAP[n]||autoOf(n)||DEF[ldrCls(n)]||'#8a7a6c';
- function apply(){keep();let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
+ function apply(){keep();/* 날짜 막대 점: 명단 · 일정이 늦게 와도 그 주 인도자 색으로 */try{const dl=document.querySelector('#dbar .dnav .ldot');if(dl&&typeof ldrOf==='function'){const c=ldrCls(ldrOf(date));const want='ldot'+(c?' '+c:'');if(dl.className!==want)dl.className=want}}catch(e){}let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
    css+=`.${c}{color:${k}}.ldot.${c},.${c} .ldot{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}.ar2[data-l="${c}"]::before,.gt[data-l="${c}"]::before,.cc.has[data-l="${c}"]::before{background:${k}}.hm-v13 .home-calendar .day.ld-${c}:not(.muted):before{content:"";position:absolute;left:50%;bottom:0;width:12px;height:2px;margin-left:-6px;border-radius:2px;opacity:.75;background:${k}}`});/* 홈 달력 주일 밑줄도 *//* 보관함 목록 · 갤러리 · 달력 칸의 인도자 표시도 고른 색으로 */
   let st=document.getElementById('kzLdrColorCss');if(!st){st=document.createElement('style');st.id='kzLdrColorCss';document.head.append(st)}st.textContent=css}
  function myName(){try{return (authAccount()||{}).name||''}catch(e){return ''}}
