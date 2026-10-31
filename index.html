@@ -10547,12 +10547,15 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const PAL=['#2d68dc','#cf3f75','#2f9e6e','#e08a1e','#7b4fd6','#0f9bb5','#d64545','#8a6a3a','#d4a017','#5b6b7f'];
  const DEF={lm:'#2d68dc',lf:'#cf3f75',l3:'#2f9e6e',l4:'#e08a1e'};let MAP={},loaded=false,asked=false;
+ /* 지난번에 받은 색을 기억해 두었다가 앱을 열자마자 바로 칠함 (서버에서 받기 전에도 기본색이 잠깐 보이지 않게) */
+ const CK='kzLdrColorsV1';try{const c=JSON.parse(localStorage.getItem(CK)||'null');if(c&&typeof c==='object')MAP={...c}}catch(e){}
+ const keep=()=>{try{localStorage.setItem(CK,JSON.stringify(MAP))}catch(e){}};
  const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`};
  /* 아직 색을 안 고른 인도자는 다른 사람이 고른 색과 겹치지 않는 색을 임시로 */
  const autoOf=n=>{const used=new Set(Object.values(MAP).map(c=>String(c).toLowerCase())),free=PAL.filter(c=>!used.has(c)),rest=(typeof LEADERS!=='undefined'?LEADERS:[]).filter(x=>!MAP[x]),i=rest.indexOf(n);return i<0||!free.length?'':free[i%free.length]};
  const colorOf=n=>MAP[n]||autoOf(n)||DEF[ldrCls(n)]||'#8a7a6c';
- function apply(){let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
-   css+=`.${c}{color:${k}}.ldot.${c},.${c} .ldot{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}.ar2[data-l="${c}"]::before,.gt[data-l="${c}"]::before,.cc.has[data-l="${c}"]::before{background:${k}}`});/* 보관함 목록 · 갤러리 · 달력 칸의 인도자 표시도 고른 색으로 */
+ function apply(){keep();let css='';(typeof LEADERS!=='undefined'?LEADERS:[]).forEach(n=>{const c=ldrCls(n);if(!c)return;const k=colorOf(n),q=CSS.escape(n);
+   css+=`.${c}{color:${k}}.ldot.${c},.${c} .ldot{background:${k}!important}.lpill.${c}{background:${rgba(k,.1)};color:${k}}.lpill.${c} i{background:${k}}.leader-sheet.${c}-sheet,.leader-ment.${c}-sheet{--ls-ac:${k};--ls-bg:${rgba(k,.1)}}.lc[data-L="${q}"] b{color:${k}}.ar2[data-l="${c}"]::before,.gt[data-l="${c}"]::before,.cc.has[data-l="${c}"]::before{background:${k}}.hm-v13 .home-calendar .day.ld-${c}:not(.muted):before{content:"";position:absolute;left:50%;bottom:0;width:12px;height:2px;margin-left:-6px;border-radius:2px;opacity:.75;background:${k}}`});/* 홈 달력 주일 밑줄도 *//* 보관함 목록 · 갤러리 · 달력 칸의 인도자 표시도 고른 색으로 */
   let st=document.getElementById('kzLdrColorCss');if(!st){st=document.createElement('style');st.id='kzLdrColorCss';document.head.append(st)}st.textContent=css}
  function myName(){try{return (authAccount()||{}).name||''}catch(e){return ''}}
  function isLeaderMe(){try{return typeof hasRole==='function'&&hasRole('인도자')&&!isManagementAccount()}catch(e){return false}}
@@ -10573,7 +10576,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  /* 바로 읽기가 막혀 있으면 서버로 읽고 1분마다 새로 */
  let apiT=0;async function viaApi(){clearTimeout(apiT);try{if(!window.kzAdm||!(window.KZ_FIREBASE_AUTH||{}).currentUser)throw 0;const r=await kzAdm({action:'leaderColorGet'});MAP=r&&r.map&&typeof r.map==='object'?{...r.map}:{};loaded=true;apply();maybeAsk()}catch(e){}apiT=setTimeout(viaApi,60000)}
  function start(){if(typeof db==='undefined'||!db||!db.doc)return setTimeout(start,800);try{db.doc('settings/leaderColors').onSnapshot(x=>{MAP=x.exists&&x.data()&&typeof x.data().map==='object'?{...x.data().map}:{};loaded=true;apply();maybeAsk()},()=>viaApi())}catch(e){setTimeout(start,1500)}}
- start();setInterval(()=>{apply();maybeAsk()},4000);
+ start();setInterval(()=>{apply();maybeAsk()},4000);/* 처음 몇 초는 자주 칠해서 첫 화면부터 내 색으로 */[150,500,1000,2000].forEach(t=>setTimeout(apply,t));
  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#lcolbtn'))pick(false)});
  window.kzLeaderColor={pick,apply,colorOf,has:n=>!loaded||!!MAP[n]};
 })();
