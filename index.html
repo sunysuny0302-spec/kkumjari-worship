@@ -8721,16 +8721,17 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
   groups.forEach((list,g)=>{const byPitch=[...list].sort((a,b)=>semi(a.key)-semi(b.key)||a.at-b.at);const first=[...list].sort((a,b)=>a.at-b.at)[0];const cur=list.find(x=>x.oaid===pick.get(g))||first;
    const anchor=list[0].card;if(cur.card!==anchor)anchor.before(cur.card);list.forEach(x=>{x.card.hidden=x!==cur});if(list.length>1||kzKey(cur.key))nav(cur.card,byPitch,cur)})};
  /* 수정 메뉴: 아래에서 올라오는 시트 */
- const ICON={e:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',kk:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',nk:'<path d="M12 5v14M5 12h14"/>',ap:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',mp:'<rect x="4" y="4" width="7" height="9" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/>',d:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>'};
+ const ICON={e:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',ed:'<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',kk:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',nk:'<path d="M12 5v14M5 12h14"/>',ap:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',mp:'<rect x="4" y="4" width="7" height="9" rx="1.5"/><rect x="13" y="11" width="7" height="9" rx="1.5"/>',d:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>'};
  const ico=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
  function sheet(card){let e={};try{e=libItems().find(x=>x.oaid===card.dataset.o)||{}}catch(_){}const h=card.querySelector('.libm-h');if(!h)return;document.getElementById('libSheet')?.remove();
   const k=kzKey(e.key),bs=[...h.querySelectorAll('button')];
-  const rows=[['e',0,'이름 바꾸기',esc(e.name||'')],['kk',1,'키 바꾸기',k?'지금 '+k+'키':'아직 키가 없어요'],['nk',-1,'다른 키 악보 추가','같은 곡을 다른 키로 올려요'],['ap',2,'뒷장 추가','다음 장 악보를 붙여요'],['mp',3,bs[3]&&bs[3].textContent.trim()||'페이지 설정','장 순서 · 나누기'],['d',4,'삭제','휴지통에 30일 보관돼요']];
+  const rows=[['e',0,'이름 바꾸기',esc(e.name||'')],['kk',1,'키 바꾸기',k?'지금 '+k+'키':'아직 키가 없어요'],['nk',-1,'다른 키 악보 추가','같은 곡을 다른 키로 올려요'],['ap',2,'뒷장 추가','다음 장 악보를 붙여요'],['mp',3,bs[3]&&bs[3].textContent.trim()||'페이지 설정','장 순서 · 나누기'],['ed',-2,'원본 편집','자르기 · 돌리기 · 여백 맞추기'],['d',4,'삭제','휴지통에 30일 보관돼요']];
   const w=document.createElement('div');w.id='libSheet';w.className='ls-ov';w.innerHTML=`<div class="ls-sh" role="dialog" aria-modal="true" aria-label="악보 수정"><div class="ls-hd"><img src="${BLOB(e.oaid||card.dataset.o)}" alt=""><span><b>${esc(e.name||'악보')}</b><small>${k?k+'키 · ':''}${e.works?esc(libMeta(e)):''}</small></span><button type="button" class="ls-x" aria-label="닫기">✕</button></div><div class="ls-list">${rows.map(([ic,ix,t,sub])=>`<button type="button" class="ls-r ${ic==='d'?'danger':''}" data-ls="${ic}" data-ix="${ix}"><i>${ico(ic)}</i><span><b>${t}</b><small>${sub}</small></span></button>`).join('')}</div></div>`;
   document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));
   const kd=ev=>{if(ev.key==='Escape')close()};const close=()=>{document.removeEventListener('keydown',kd);w.classList.remove('in');setTimeout(()=>w.remove(),200)};document.addEventListener('keydown',kd);
   w.onclick=ev=>{if(ev.target===w)close()};w.querySelector('.ls-x').onclick=close;
   w.querySelectorAll('[data-ls]').forEach(r=>r.onclick=()=>{const t=r.dataset.ls;close();
+   if(t==='ed'){if(window.kzOrigEdit)kzOrigEdit(e);return}
    if(t==='nk'){const f=document.createElement('input');f.type='file';f.accept='image/*';f.multiple=true;f.onchange=()=>{const fs=[...f.files];if(!fs.length)return;scoreAddDialog('library',fs);setTimeout(()=>{const i=document.querySelector('.kz-add-dialog input[name=title]');if(i){i.value=kzStripKey(e.name||'');i.dispatchEvent(new Event('input',{bubbles:true}))}},80)};f.click();return}
    const b=bs[+r.dataset.ix];if(!b)return;
    if(t==='d'){if(!confirm(`"${e.name||'악보'}"${k?' '+k+'키':''} 악보를 휴지통으로 옮길까요?`))return;b.click();setTimeout(()=>b.click(),40);return}
@@ -9059,6 +9060,83 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 </script>
 <style>.ss-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:3px;border-radius:11px;background:rgba(120,88,56,.08)}.ss-seg button{border:0;background:none;border-radius:8px;padding:8px 0;font:inherit;font-size:13px;font-weight:700;color:#6b5442;cursor:pointer}.ss-seg button.on{background:#3a2c20;color:#fff}</style>
 <script id="kz-pre-sync">(function(){const g=window.go;if(typeof g!=='function')return;window.go=function(v,...a){const r=g.apply(this,[v,...a]);try{if(v==='edit'&&typeof pullPresets==='function')pullPresets()}catch(e){}return r}})();</script>
+<script id="kz-orig-edit">
+/* 모음집 원본 편집: 자르기 · 돌리기 · 여백 자동 맞추기 · 확대/축소/창 맞추기.
+   저장하면 새 원본으로 모음집을 바꾸고, 예전 원본은 지난 콘티가 쓰고 있으니 그대로 둠 (모음집에서만 숨김) */
+(function(){
+ const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const load=src=>new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src});
+ window.kzOrigEdit=async function(e){
+  try{if(typeof canEdit!=='undefined'&&!canEdit)return toast('원본 편집은 단장 · 인도자만 할 수 있어요')}catch(_){}
+  const oa=e&&e.oaid;if(!oa)return;let img;
+  const o=document.createElement('div');o.className='oe-ov';o.innerHTML='<div class="oe" role="dialog" aria-modal="true" aria-label="원본 편집"><div class="oe-load">원본을 불러오는 중…</div></div>';document.body.append(o);
+  try{const d=await BLOBDATA(oa);if(!d)throw 0;img=await load(d)}catch(_){o.remove();return toast('원본을 불러오지 못했어요')}
+  let rot=0,z=1,crop=null;/* crop: 돌린 뒤 이미지 기준 0~1 {l,t,r,b} (남길 영역) */
+  const W=()=>rot%180?img.naturalHeight:img.naturalWidth,H=()=>rot%180?img.naturalWidth:img.naturalHeight;
+  const full=()=>({l:0,t:0,r:1,b:1});crop=full();
+  const box=o.querySelector('.oe');
+  box.innerHTML=`<div class="oe-h"><b>원본 편집</b><span>${E(e.name||'악보')}${e.key?' · '+E(e.key)+'키':''}</span><button type="button" class="oe-x" aria-label="닫기">✕</button></div>
+   <div class="oe-tb"><button type="button" data-a="rl" title="왼쪽으로 돌리기">↺ 돌리기</button><button type="button" data-a="rr" title="오른쪽으로 돌리기">↻</button><button type="button" data-a="trim">여백 자동 자르기</button><button type="button" data-a="reset">원래대로</button><span class="sp"></span><button type="button" data-a="zo" aria-label="작게">−</button><b class="oe-zl">100%</b><button type="button" data-a="zi" aria-label="크게">＋</button><button type="button" data-a="fit">창 맞추기</button></div>
+   <div class="oe-st"><div class="oe-cv"><canvas></canvas><div class="oe-crop">${['nw','n','ne','e','se','s','sw','w'].map(h=>`<i data-h="${h}" class="oe-hd oe-${h}"></i>`).join('')}</div></div></div>
+   <div class="oe-f"><small class="oe-sz"></small><span class="sp"></span><button type="button" class="sm" data-a="cancel">취소</button><button type="button" class="btn" data-a="save">저장</button></div>`;
+  const st=box.querySelector('.oe-st'),cvw=box.querySelector('.oe-cv'),cv=box.querySelector('canvas'),cb=box.querySelector('.oe-crop'),zl=box.querySelector('.oe-zl'),sz=box.querySelector('.oe-sz');
+  /* 화면용으로 줄인 그림 (긴 변 1600px) */
+  function drawBase(){const w=W(),h=H(),k=Math.min(1,1600/Math.max(w,h));cv.width=Math.round(w*k);cv.height=Math.round(h*k);const g=cv.getContext('2d');g.save();g.translate(cv.width/2,cv.height/2);g.rotate(rot*Math.PI/180);const iw=img.naturalWidth*k,ih=img.naturalHeight*k;g.drawImage(img,-iw/2,-ih/2,iw,ih);g.restore()}
+  function fitZ(){const aw=st.clientWidth-24,ah=st.clientHeight-24;z=Math.max(.1,Math.min(aw/cv.width,ah/cv.height))}
+  function paint(){cvw.style.width=cv.width*z+'px';cvw.style.height=cv.height*z+'px';cv.style.width='100%';cv.style.height='100%';
+   cb.style.left=crop.l*100+'%';cb.style.top=crop.t*100+'%';cb.style.width=(crop.r-crop.l)*100+'%';cb.style.height=(crop.b-crop.t)*100+'%';zl.textContent=Math.round(z*100)+'%';
+   sz.textContent=`남길 크기 ${Math.round((crop.r-crop.l)*W())} × ${Math.round((crop.b-crop.t)*H())}px`}
+  function trim(){const k=Math.min(1,500/Math.max(cv.width,cv.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(cv.width*k));c.height=Math.max(1,Math.round(cv.height*k));const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(cv,0,0,c.width,c.height);const d=g.getImageData(0,0,c.width,c.height).data;
+   let x0=c.width,y0=c.height,x1=-1,y1=-1;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const i=(y*c.width+x)*4;if(d[i]*.3+d[i+1]*.59+d[i+2]*.11<200){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
+   if(x1<0)return toast('자를 여백을 찾지 못했어요');const p=.012;crop={l:Math.max(0,x0/c.width-p),t:Math.max(0,y0/c.height-p),r:Math.min(1,(x1+1)/c.width+p),b:Math.min(1,(y1+1)/c.height+p)};paint();toast('여백을 맞췄어요 · 모서리를 끌어서 더 고칠 수 있어요')}
+  function rotate(dir){/* 자르기 영역도 같이 돌림 */const c=crop;crop=dir>0?{l:1-c.b,t:c.l,r:1-c.t,b:c.r}:{l:c.t,t:1-c.r,r:c.b,b:1-c.l};rot=(rot+(dir>0?90:270))%360;drawBase();fitZ();paint()}
+  /* 끌기: 모서리 · 변은 크기, 안쪽은 옮기기 */
+  let drag=null;
+  cvw.addEventListener('pointerdown',ev=>{const h=ev.target.closest('[data-h]'),inBox=ev.target===cb;if(!h&&!inBox)return;ev.preventDefault();cvw.setPointerCapture(ev.pointerId);drag={h:h?h.dataset.h:'m',x:ev.clientX,y:ev.clientY,c:{...crop}}});
+  cvw.addEventListener('pointermove',ev=>{if(!drag)return;const dx=(ev.clientX-drag.x)/(cv.width*z),dy=(ev.clientY-drag.y)/(cv.height*z),c={...drag.c},m=.03,h=drag.h;
+   if(h==='m'){const w=c.r-c.l,hh=c.b-c.t;c.l=Math.min(1-w,Math.max(0,c.l+dx));c.t=Math.min(1-hh,Math.max(0,c.t+dy));c.r=c.l+w;c.b=c.t+hh}
+   else{if(h.includes('w'))c.l=Math.min(c.r-m,Math.max(0,c.l+dx));if(h.includes('e'))c.r=Math.max(c.l+m,Math.min(1,c.r+dx));if(h.includes('n'))c.t=Math.min(c.b-m,Math.max(0,c.t+dy));if(h.includes('s'))c.b=Math.max(c.t+m,Math.min(1,c.b+dy))}
+   crop=c;paint()});
+  const up=()=>{drag=null};cvw.addEventListener('pointerup',up);cvw.addEventListener('pointercancel',up);
+  st.addEventListener('wheel',ev=>{if(!ev.ctrlKey)return;ev.preventDefault();z=Math.max(.1,Math.min(4,z*(ev.deltaY<0?1.1:1/1.1)));paint()},{passive:false});
+  const close=()=>{document.removeEventListener('keydown',kd);o.remove()},kd=ev=>{if(ev.key==='Escape')close()};document.addEventListener('keydown',kd);
+  async function save(){const b=box.querySelector('[data-a=save]');const same=rot===0&&crop.l<.001&&crop.t<.001&&crop.r>.999&&crop.b>.999;if(same)return toast('바뀐 게 없어요');b.disabled=true;b.textContent='저장하는 중…';
+   try{const w=W(),h=H(),sx=Math.round(crop.l*w),sy=Math.round(crop.t*h),sw=Math.max(1,Math.round((crop.r-crop.l)*w)),sh=Math.max(1,Math.round((crop.b-crop.t)*h));
+    const f=document.createElement('canvas');f.width=w;f.height=h;const g=f.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.translate(w/2,h/2);g.rotate(rot*Math.PI/180);g.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);
+    const out=document.createElement('canvas');out.width=sw;out.height=sh;out.getContext('2d').drawImage(f,sx,sy,sw,sh,0,0,sw,sh);
+    const blob=await new Promise(r=>out.toBlob(r,'image/jpeg',.92));if(!blob)throw new Error('이미지를 만들지 못했어요');
+    const as=await claude.use('assets');if(!as||!as.upload)throw new Error('이미지 저장소에 접근할 수 없어요');const nid=(await as.upload(blob)).id;
+    const ids=(e.dups&&e.dups.length?e.dups:[oa]),base=(library||[]).find(l=>l._id===oa||l.oaid===oa)||{};
+    const doc={...base,...scoreMeta(base.oaid?base:e),name:base.name||e.name||'악보',oaid:nid,nw:sw,nh:sh,at:base.at||e.at||Date.now(),by:(()=>{try{return (authAccount()||{}).name||''}catch(_){return ''}})(),editedFrom:oa,editedAt:Date.now()};delete doc._id;delete doc.hidden;
+    await db.doc('library/'+nid).set(doc);const loc=library.find(l=>l._id===nid);if(loc)Object.assign(loc,doc);else library.push({...doc,_id:nid});
+    for(const id of ids){await db.doc('library/'+id).set({hidden:true,replacedBy:nid},{merge:true});const l=library.find(x=>x._id===id||x.oaid===id);if(l)Object.assign(l,{hidden:true,replacedBy:nid});else library.push({_id:id,oaid:id,hidden:true,replacedBy:nid})}
+    close();toast('원본을 고쳤어요 ✓ 다음에 가져올 때부터 고친 모양으로 들어가요');if(view==='library')libraryView()}
+   catch(err){console.error(err);b.disabled=false;b.textContent='저장';toast('저장하지 못했어요: '+((err&&err.message)||''))}}
+  box.addEventListener('click',ev=>{const a=ev.target.closest('[data-a]');if(!a&&ev.target.closest('.oe-x'))return close();if(!a)return;const k=a.dataset.a;
+   if(k==='rl')rotate(-1);else if(k==='rr')rotate(1);else if(k==='trim')trim();else if(k==='reset'){rot=0;crop=full();drawBase();fitZ();paint()}
+   else if(k==='zi'){z=Math.min(4,z*1.25);paint()}else if(k==='zo'){z=Math.max(.1,z/1.25);paint()}else if(k==='fit'){fitZ();paint()}
+   else if(k==='cancel')close();else if(k==='save')save()});
+  drawBase();requestAnimationFrame(()=>{fitZ();paint()})};
+})();
+</script>
+<style id="kz-orig-edit-css">
+.oe-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(25,18,12,.55);display:grid;place-items:center;padding:12px}
+.oe{width:min(1100px,100%);height:min(92vh,100%);background:#fffaf4!important;color:#2b211a;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.oe-load{margin:auto;color:var(--mu)}
+.oe-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd,#eadcca)}.oe-h b{font-size:16px}.oe-h span{flex:1;min-width:0;color:var(--mu);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oe-x{border:0;background:none;font-size:18px;cursor:pointer;padding:4px 8px}
+.oe-tb,.oe-f{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 14px}.oe-tb .sp,.oe-f .sp{flex:1}
+.oe-tb button{border:1px solid var(--bd,#e2d3c0);background:var(--bg,#fff);border-radius:10px;padding:7px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--tx)}
+.oe-zl{min-width:46px;text-align:center;font-size:13px}
+.oe-st{flex:1;min-height:0;overflow:auto;background:repeating-conic-gradient(#efe7dc 0 25%,#f7f1e8 0 50%) 0 0/20px 20px;display:grid;place-items:center;padding:12px}
+.oe-cv{position:relative;touch-action:none;box-shadow:0 4px 18px rgba(0,0,0,.18)}.oe-cv canvas{display:block}
+.oe-crop{position:absolute;outline:2px solid #b4612c;box-shadow:0 0 0 9999px rgba(20,14,8,.45);cursor:move}
+.oe-hd{position:absolute;width:18px;height:18px;margin:-9px;background:#fff;border:2px solid #b4612c;border-radius:5px}
+.oe-nw{left:0;top:0;cursor:nwse-resize}.oe-ne{left:100%;top:0;cursor:nesw-resize}.oe-se{left:100%;top:100%;cursor:nwse-resize}.oe-sw{left:0;top:100%;cursor:nesw-resize}
+.oe-n{left:50%;top:0;cursor:ns-resize}.oe-s{left:50%;top:100%;cursor:ns-resize}.oe-e{left:100%;top:50%;cursor:ew-resize}.oe-w{left:0;top:50%;cursor:ew-resize}
+.oe-sz{color:var(--mu);font-size:12.5px}
+@media (max-width:600px){.oe{height:100%;border-radius:14px}.oe-tb button{padding:6px 9px;font-size:12.5px}}
+</style>
 <script id="kz-lead-skip">
 /* 인도자가 싱어 · 세션도 겸할 때: 그 주에 인도하면 싱어 · 세션 배정에서는 빠짐 */
 (function(){const L=d=>{try{return d?ldrOf(d):''}catch(e){return ''}};
@@ -10899,7 +10977,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=50').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=51').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
