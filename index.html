@@ -5655,7 +5655,8 @@ const bad=new Set(fails.map(f=>f.p));pages.forEach(p=>{if(!bad.has(p))p.dirty=fa
 if(as){const keep=new Set([...scoreOriginalIds(ok),...ok.flatMap(p=>[p.aid,p.oaid]),...archive.filter(a=>a.id!==date).flatMap(a=>(a.scores||[]).flatMap(x=>[x.aid,x.oaid])),...trash.flatMap(t=>((t.data||{}).scores||[]).flatMap(x=>[x.aid,x.oaid]))].filter(Boolean));
 (async()=>{for(const id of oldIds){if(!keep.has(id)){try{await TO(as.delete(id),10000,'정리')}catch(e){}}}})()}
 if(fails.length||verify){lastFail=true;const rs=[...new Set(fails.map(f=>f.e))];if(verify)rs.push(verify);cfBox(fails.length?'콘티 글은 올렸지만 악보 '+fails.length+'장은 올리지 못했어요':'확인이 필요해요',rs.concat(fails.length?['이미지 저장은 편집(Editor) 권한이 있는 계정에서만 돼요. 권한을 확인하거나 편집자에게 요청해 주세요.']:[]),'확인',false)}
-else{loadedDate=date;if(manual){toast((hadUp?'홈의 콘티를 새 내용으로 교체했어요 ✓':'홈에 업로드했어요 ✓')+' · 시트 내용은 그대로 남아 있어요');if(window.kzPush)kzPush.contiPush(date,nd,hadUp);if(window.kzShare){const _d=date;setTimeout(()=>kzShare.ask(hadUp?'단톡방에 콘티 수정을 알릴까요?':'단톡방에 콘티 업로드를 알릴까요?',kzShare.contiMsg(_d,nd)),500)}}}}
+else{loadedDate=date;if(manual){toast((hadUp?'홈의 콘티를 새 내용으로 교체했어요 ✓':'홈에 업로드했어요 ✓')+' · 시트 내용은 그대로 남아 있어요');{/* 알림은 올린 사람이 고름: 자잘한 수정은 조용히 */const _d=date,_nd=nd;setTimeout(async()=>{const send=await cfBox(hadUp?'콘티를 고쳐서 다시 올렸어요':'콘티를 홈에 올렸어요',[hadUp?'팀원들에게 수정 알림을 보낼까요?':'팀원들에게 새 콘티 알림을 보낼까요?','자잘한 수정이면 \'조용히 두기\'를 누르세요. 홈 콘티는 이미 바뀌었어요.'],'알림 보내기','조용히 두기');
+  if(!send){try{setTimeout(()=>window.kzPrac&&kzPrac.syncTargets(_d),1500)}catch(e){}toast('알림 없이 올렸어요');return}if(window.kzPush)kzPush.contiPush(_d,_nd,hadUp);if(window.kzShare)setTimeout(()=>kzShare.ask(hadUp?'단톡방에도 콘티 수정을 알릴까요?':'단톡방에도 콘티 업로드를 알릴까요?',kzShare.contiMsg(_d,_nd)),600)},300)}}}}
 catch(e){lastFail=true;console.error(e);const c=(e&&e.code)||'',m=String((e&&e.message)||'');
 cfBox('홈에 올리지 못했어요',[c==='timeout'?m:c==='not_granted'||c==='invalid_argument'?'이 계정은 홈에 저장할 권한이 없는 것 같아요. 사이트 공유 설정에서 참여자(Contributor) 이상인지 확인해 주세요.':c==='quota_exceeded'||c==='resource_exhausted'?'저장 공간이 가득 찼어요. 보관함이나 휴지통을 정리해 주세요.':'원인: ['+step+'] '+(m||c||'알 수 없는 오류'),'다시 눌러서 올려 보세요. 계속 안 되면 이 화면 내용을 알려 주세요.'],'확인',false)}
 finally{saving=false;upMsg='';try{if(view==='edit'){editView()}else if(view==='ment')mentView()}catch(e){console.error(e)}stat();if(dirty()&&!lastFail)sched()}}
@@ -11047,7 +11048,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=53').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=54').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
