@@ -6904,9 +6904,12 @@ function atDefWeek(){const t=todayStr(),d=new Date(t+'T12:00:00').getDay();retur
 let atWeek=atDefWeek();
 
 /* ---------- 데이터 구독 (로그인한 사람이 바뀌면 다시 연결) ---------- */
+/* 가입일: 출결은 가입(승인)한 날부터 셈. 그 전 기록은 화면 · 통계에서 빼고 봄 */
+window.kzJoinDay=n=>{try{const nk=String(n||'').replace(/\s+/g,'');const a=JSON.parse(localStorage.getItem('kzAuthAccountsV92')||'[]').find(x=>x&&x.status==='approved'&&String(x.name||'').replace(/\s+/g,'')===nk);const t=a&&(Number(a.approvedAt)||Number(a.requestedAt)||Date.parse(a.approvedAt||'')||0);return t?new Date(t+9*36e5).toISOString().slice(0,10):''}catch(e){return ''}};
+const atFromJoin=a=>{const l=(a.list||[]).filter(x=>{const j=x&&kzJoinDay(x.n);return !j||String(a.date)>=j});return l.length===(a.list||[]).length?a:{...a,list:l}};
 function atSub(){if(!db)return;const uid=atAuthUid()||'local';if(atUid===uid)return;
  atUnsubs.forEach(f=>{try{f()}catch(e){}});atUnsubs=[];ATT=[];STATUS=[];CARE=[];MEMO=[];atDraft={};atErr='';memoErr='';atUid=uid;atMemoOpen=null;
- if(kzAttOK())atUnsubs.push(db.collection('attendance').onSnapshot(s=>{const all=s.docs.map(d=>({...d.data(),_id:d.id})),sd=all.find(a=>a._id==='_status');STATUS=sd&&Array.isArray(sd.list)?sd.list:[];ATT=all.filter(a=>a&&a.date);atErr='';atRefresh()},e=>{console.error(e);atErr='출결 기록을 불러오지 못했어요. Firestore 규칙에 출결 권한이 있는지 확인해 주세요.';atRefresh()}));
+ if(kzAttOK())atUnsubs.push(db.collection('attendance').onSnapshot(s=>{const all=s.docs.map(d=>({...d.data(),_id:d.id})),sd=all.find(a=>a._id==='_status');STATUS=sd&&Array.isArray(sd.list)?sd.list:[];ATT=all.filter(a=>a&&a.date).map(atFromJoin);atErr='';atRefresh()},e=>{console.error(e);atErr='출결 기록을 불러오지 못했어요. Firestore 규칙에 출결 권한이 있는지 확인해 주세요.';atRefresh()}));
  if(kzCareOK())atUnsubs.push(db.collection('care').onSnapshot(s=>{CARE=s.docs.map(d=>({...d.data(),_id:d.id}));atRefresh()},e=>console.error(e)));
  if(kzCareOK()&&uid!=='local')atUnsubs.push(db.collection('privateMemos/'+uid+'/items').onSnapshot(s=>{MEMO=s.docs.map(d=>({...d.data(),_id:d.id}));memoErr='';atRefresh()},e=>{console.error(e);memoErr='개인 메모를 불러오지 못했어요. Firestore 규칙에 개인 메모 권한이 있는지 확인해 주세요.';atRefresh()}));
  else if(kzCareOK())memoErr='개인 메모는 팀 공유 모드(로그인)에서만 쓸 수 있어요.'}
@@ -7083,6 +7086,12 @@ function atStatusBind(B,re){const q=s=>B.querySelector(s);
   const list=r.from>=t?STATUS.filter(x=>x.id!==r.id):STATUS.map(x=>x.id===r.id?{...x,to:shiftDate(t,-1),at:Date.now()}:x);await atStatusWrite(list,`${r.name}님이 오늘부터 활동으로 바뀌었어요`);re()});
  B.querySelectorAll('[data-st-del]').forEach(b=>b.onclick=async()=>{const r=STATUS.find(x=>x.id===b.dataset.stDel);if(!r)return;if(!await cfBox('이 기록을 삭제할까요?',[`${r.name} · ${r.state} ${r.from} ~ ${r.to||'미정'}`,'삭제하면 그 기간도 활동으로 계산돼요.'],'삭제','취소'))return;await atStatusWrite(STATUS.filter(x=>x.id!==r.id),'기록을 삭제했어요');re()})}
 
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#atSync,#atReset');if(!b||!window.kzAdm)return;
+ if(b.id==='atSync'){if(!await cfBox('명단을 정리할까요?',['가입하지 않았거나 계정이 지워진 사람을 멤버 명단 · 싱어/세션 배정 · 인도자 순서 · 출결에서 빼요.','계정이 있는 사람은 그대로예요.'],'정리하기','취소'))return;b.disabled=true;try{const r=await kzAdm({action:'membersSync'});toast(r.removed&&r.removed.length?`${r.removed.join(', ')}님을 명단에서 뺐어요`:'뺄 사람이 없어요 · 명단이 깔끔해요')}catch(x){toast(x.message||'정리하지 못했어요')}b.disabled=false;return}
+ if(!await cfBox('출결을 새로 시작할까요?',['지금까지의 출결 기록(출석 · 지각 · 결석)과 휴식 · 비활동 기록을 모두 지워요.','지우기 전에 자동으로 백업을 하나 만들어 둬요 (관리계정 → 사이트 → 자동 백업).','되돌릴 수 없어요.'],'모두 지우고 새로 시작','취소'))return;
+ b.disabled=true;try{const r=await kzAdm({action:'attendReset'});toast(`출결 기록 ${r.deleted||0}개를 지웠어요 · 백업해 뒀어요`)}catch(x){toast(x.message||'지우지 못했어요')}b.disabled=false});
+/* 관리계정 · 단장이 앱을 열면 하루에 한 번 명단을 조용히 정리 (계정 없는 사람 빼기) */
+setTimeout(function syncOnce(){try{const a=authAccount&&authAccount();if(!a||!window.kzAdm){return setTimeout(syncOnce,15000)}if(!(a.id==='management'||a.rank==='단장'))return;const k='kzMemSyncV1',d=new Date().toISOString().slice(0,10);if(localStorage.getItem(k)===d)return;localStorage.setItem(k,d);kzAdm({action:'membersSync'}).then(r=>{if(r&&r.removed&&r.removed.length)console.info('[꿈자리] 명단 정리',r.removed)}).catch(()=>{})}catch(e){}},20000);
 /* ---------- PC 화면 ---------- */
 function attendView(){
  if(!kzAttOK()){$('#body').innerHTML=`<div class="wk mnw at"><div class="ro-h"><div><h1 class="ht2">출결</h1><div class="mu">팀원 모두의 출결을 참여율 순으로 보여 줘요</div></div></div><div class="at-card" id="atRank"><div class="mu">불러오는 중…</div></div></div>`;kzRankInto(document.getElementById('atRank'));return}
@@ -7102,7 +7111,7 @@ function attendView(){
  else if(atTab==='status')main=atStatusHTML();
  else main=care?memoHTML(false):kzLockHTML('개인 메모',CARE_WHO,false,true);
  const rc=atErr?0:atReviewList().length;
- $('#body').innerHTML=`<div class="wk mnw at"><div class="ro-h"><div><h1 class="ht2">출결 관리</h1><div class="mu">주일 라인업이 그대로 출결 명단이 되고, 누르는 즉시 저장돼요${care?' · 팀원을 누르면 메모와 상담 기록을 남길 수 있어요':''}</div></div></div><div class="seg at-tabs">${tabs.map(([k,l])=>`<button class="${atTab===k?'on':''}" data-at-tab="${k}">${l}${k==='review'&&rc?`<span class="mu">${rc}</span>`:''}</button>`).join('')}</div>${main}</div>`;
+ $('#body').innerHTML=`<div class="wk mnw at"><div class="ro-h"><div><h1 class="ht2">출결 관리</h1><div class="mu">주일 라인업이 그대로 출결 명단이 되고, 누르는 즉시 저장돼요 · 각자 가입한 날부터 세요${care?' · 팀원을 누르면 메모와 상담 기록을 남길 수 있어요':''}</div></div>${(()=>{try{const a=authAccount()||{};return a.id==='management'||a.rank==='단장'}catch(e){return false}})()?'<span class="sp"></span><button type="button" class="sm" id="atSync" title="가입하지 않았거나 계정이 지워진 사람을 명단 · 배정 · 출결에서 빼요">명단 정리</button><button type="button" class="sm" id="atReset" style="color:#c0392b" title="백업한 뒤 지난 출결 기록을 모두 지워요">출결 새로 시작</button>':''}</div><div class="seg at-tabs">${tabs.map(([k,l])=>`<button class="${atTab===k?'on':''}" data-at-tab="${k}">${l}${k==='review'&&rc?`<span class="mu">${rc}</span>`:''}</button>`).join('')}</div>${main}</div>`;
  atBind($('#body'),attendView);if(atTab==='rank')kzRankInto(document.getElementById('atRank'));if(atTab==='prac')setTimeout(()=>{try{window.kzPrac&&kzPrac.fill(document.getElementById('atPrac'))}catch(e){console.error(e)}},0)}
 
 /* ---------- 모바일 화면 (꿈자리 모바일 탭 '출결') ---------- */
@@ -11048,7 +11057,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=57').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=58').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
