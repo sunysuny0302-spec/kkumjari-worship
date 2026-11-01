@@ -12599,7 +12599,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
   if(best<=0){const w=Math.floor((Date.parse((typeof lyWeek!=='undefined'&&lyWeek)||'2026-01-04')||0)/6048e5);bi=((w%V.length)+V.length)%V.length}return bi}
  /* 기본은 이사야 43:21 (팀이 정한 말씀) · 주일마다 다른 말씀으로 바꾸거나 뺄 수 있음 */const DEF=Math.max(0,V.findIndex(x=>x[0]==='이사야 43:21'));
  function chosen(songs){const v=g();if(v==='off')return null;const i=v!=null&&v!==''&&V[+v]?+v:DEF;return V[i]}
- const base=lySlides;lySlides=function(songs){const out=base.apply(this,arguments);try{if(!out.length)return out;const v=chosen(songs);if(v)out.push({kind:'end',text:v[1],ref:v[0]+' (개역한글)',song:'마지막 장',label:'말씀'})}catch(e){}return out};
+ const base=lySlides;lySlides=function(songs){const out=base.apply(this,arguments);try{if(!out.length)return out;const v=chosen(songs);if(v)out.push({kind:'end',text:v[1],ref:v[0],song:'마지막 장',label:'말씀'})}catch(e){}return out};
  const ov=lyricsView;lyricsView=function(){const r=ov.apply(this,arguments);try{const B=document.getElementById('body'),top=B&&B.querySelector('.ly2 .ly-top');if(!top||!top.querySelector('#lyGo')||top.querySelector('#lyEndV'))return r;
    const{songs}=lySongs(lyWeek);if(!songs.length)return r;const a=auto(songs),v=g();
    const lab=document.createElement('label');lab.className='ly-apadd ly-endv';lab.title='PPT 마지막 장: 십자가 배경 위에 말씀';
