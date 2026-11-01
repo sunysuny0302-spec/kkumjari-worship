@@ -6906,7 +6906,9 @@ let atWeek=atDefWeek();
 /* ---------- 데이터 구독 (로그인한 사람이 바뀌면 다시 연결) ---------- */
 /* 가입일: 출결은 가입(승인)한 날부터 셈. 그 전 기록은 화면 · 통계에서 빼고 봄 */
 window.kzJoinDay=n=>{try{const nk=String(n||'').replace(/\s+/g,'');const a=JSON.parse(localStorage.getItem('kzAuthAccountsV92')||'[]').find(x=>x&&x.status==='approved'&&String(x.name||'').replace(/\s+/g,'')===nk);const t=a&&(Number(a.approvedAt)||Number(a.requestedAt)||Date.parse(a.approvedAt||'')||0);return t?new Date(t+9*36e5).toISOString().slice(0,10):''}catch(e){return ''}};
-const atFromJoin=a=>{const l=(a.list||[]).filter(x=>{const j=x&&kzJoinDay(x.n);return !j||String(a.date)>=j});return l.length===(a.list||[]).length?a:{...a,list:l}};
+/* 가입한(승인된) 계정이 있는 사람만 출결에 — 콘티 라인업에 이름만 적힌 사람은 빼요 */
+window.kzIsMember=n=>{try{const acc=JSON.parse(localStorage.getItem('kzAuthAccountsV92')||'[]').filter(x=>x&&x.status==='approved'&&x.id!=='management');if(acc.length<2)return true;const nk=String(n||'').replace(/\s+/g,'');return acc.some(x=>String(x.name||'').replace(/\s+/g,'')===nk)}catch(e){return true}};
+const atFromJoin=a=>{const l=(a.list||[]).filter(x=>{if(!x||!kzIsMember(x.n))return false;const j=kzJoinDay(x.n);return !j||String(a.date)>=j});return l.length===(a.list||[]).length?a:{...a,list:l}};
 function atSub(){if(!db)return;const uid=atAuthUid()||'local';if(atUid===uid)return;
  atUnsubs.forEach(f=>{try{f()}catch(e){}});atUnsubs=[];ATT=[];STATUS=[];CARE=[];MEMO=[];atDraft={};atErr='';memoErr='';atUid=uid;atMemoOpen=null;
  if(kzAttOK())atUnsubs.push(db.collection('attendance').onSnapshot(s=>{const all=s.docs.map(d=>({...d.data(),_id:d.id})),sd=all.find(a=>a._id==='_status');STATUS=sd&&Array.isArray(sd.list)?sd.list:[];ATT=all.filter(a=>a&&a.date).map(atFromJoin);atErr='';atRefresh()},e=>{console.error(e);atErr='출결 기록을 불러오지 못했어요. Firestore 규칙에 출결 권한이 있는지 확인해 주세요.';atRefresh()}));
@@ -6922,7 +6924,7 @@ function atSig(){return JSON.stringify([STATUS.length+':'+STATUS.map(r=>r.at||0)
 
 /* ---------- 명단 ---------- */
 function atLineup(d){
- const out=new Map(),add=(n,r)=>{n=String(n||'').trim();if(!n||n==='-')return;const a=out.get(n)||[];if(!a.includes(r))a.push(r);out.set(n,a)};
+ const out=new Map(),add=(n,r)=>{n=String(n||'').trim();if(!n||n==='-'||!kzIsMember(n))return;const a=out.get(n)||[];if(!a.includes(r))a.push(r);out.set(n,a)};
  const w=(archive||[]).find(x=>x.id===d);let src='자동 배정 기준';
  if(w&&w.up&&w.ment){String(w.ment).split(/\r?\n/).map(v=>v.trim()).forEach(v=>{if(/^::/.test(v)||/https?:\/\/|www\./i.test(v)||/^\d+\s*[.)]/.test(v))return;const m=/^([^:：\d]{1,6})\s*[:：]\s*(.*)$/.exec(v);if(!m)return;const k=m[1].trim();m[2].split(/[,，、\/]+/).forEach(n=>add(n,/^싱어/.test(k)?'싱어':k))});if(out.size)src='업로드된 콘티 기준'}
  if(!out.size){try{add(ldrOf(d),'인도')}catch(e){}try{singEff(d).filter(x=>!x.abs).forEach(x=>add(x.n,'싱어'))}catch(e){}try{const f=sessFill(d)||{};Object.keys(f).forEach(k=>add(f[k],slotLbl(k)))}catch(e){}}
@@ -6937,7 +6939,7 @@ const atStLbl=r=>r?`${r.state} ${atMD(r.from)}~${r.to?atMD(r.to):'미정'}`:'';
 function atFresh(sun,sat){const L=atLineup(sun),list=L.list.filter(p=>!atStatusAt(p.n,sun)),recs={};if(false)atAbsent(sun).forEach((r,n)=>{if(atStatusAt(n,sun))return;if(!list.some(p=>p.n===n))list.push({n,r});recs[n]={s:'인정 결석',n:'사전 불참 신청'}});list.sort((a,b)=>a.n.localeCompare(b.n,'ko'));return{list,recs,src:L.src}}
 function atOffWarn(sun){return atLineup(sun).list.map(p=>({n:p.n,r:atStatusAt(p.n,sun)})).filter(x=>x.r)}
 const atRoleOf=n=>{const m=(members||[]).find(x=>x.name===n);return m?[m.rank&&m.rank!=='팀원'?m.rank:'',...(m.roles||m.parts||[]),...(m.slots||[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', '):''};
-const atAllNames=()=>[...new Set((members||[]).map(m=>m.name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+const atAllNames=()=>[...new Set((members||[]).map(m=>m.name).filter(n=>n&&kzIsMember(n)))].sort((a,b)=>a.localeCompare(b,'ko'));
 const atNames=()=>atAllNames().filter(n=>{const r=atStatusNow(n);return !(r&&r.state==='비활동')});
 
 /* ---------- 카드 · 자동 저장 ---------- */
