@@ -7363,7 +7363,7 @@ function lyPaste(sg){const vocal=sg.uniq.filter(l=>!lyInst(l));const targets=voc
 /* ---------- 전체 미리보기 ---------- */
 function lyPreview(){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!sl.length)return toast('만들 슬라이드가 없어요');const base=LY_BASE[lySize]||48;
  const o=document.createElement('div');o.id='lyPrev';
- o.innerHTML=`<div class="lp-c" role="dialog" aria-modal="true" aria-label="PPT 미리보기"><div class="lp-h"><b>전체 미리보기 · 슬라이드 ${sl.length}장</b><span></span><button type="button" class="btn" id="lpGo">PPT 만들기</button><button type="button" class="sm" id="lpX">닫기</button></div><div class="lp-g">${sl.map((s,i)=>{const fs=lyFont(s.text,base);return `<figure><div class="lp-s ${s.kind==='title'?'ti':''}" data-fs="${fs}" style="${(s.kind==='title'||s.kind==='lyric'||s.kind==='gap')?`background:#000 url(${LY_PPT_BG}) center/cover no-repeat`: 'background:#000'}"><div class="tx" style="text-align:${lyAlign}">${esc(s.text)}</div></div><figcaption>${i+1}. ${s.kind==='gap'?'곡 사이 (십자가 배경)':esc(s.song)+(s.label?' · '+esc(s.label):' · 제목')+(s.kind==='blank'?' (검은 화면)':'')}</figcaption></figure>`}).join('')}</div></div>`;
+ o.innerHTML=`<div class="lp-c" role="dialog" aria-modal="true" aria-label="PPT 미리보기"><div class="lp-h"><b>전체 미리보기 · 슬라이드 ${sl.length}장</b><span></span><button type="button" class="btn" id="lpGo">PPT 만들기</button><button type="button" class="sm" id="lpX">닫기</button></div><div class="lp-g">${sl.map((s,i)=>{const fs=lyFont(s.text,base);return `<figure><div class="lp-s ${s.kind==='title'?'ti':''}" data-fs="${fs}" style="${(s.kind==='title'||s.kind==='lyric'||s.kind==='gap'||s.kind==='end')?`background:#000 url(${LY_PPT_BG}) center/cover no-repeat`: 'background:#000'}">${s.kind==='end'?`<div class="tx lp-end"><span>${esc(s.text)}</span><small>${esc(s.ref||'')}</small></div>`:`<div class="tx" style="text-align:${lyAlign}">${esc(s.text)}</div>`}</div><figcaption>${i+1}. ${s.kind==='end'?'마지막 장 · 말씀 (십자가 배경)':s.kind==='gap'?'곡 사이 (십자가 배경)':esc(s.song)+(s.label?' · '+esc(s.label):' · 제목')+(s.kind==='blank'?' (검은 화면)':'')}</figcaption></figure>`}).join('')}</div></div>`;
  document.body.appendChild(o);
  const fit=()=>o.querySelectorAll('.lp-s').forEach(el=>{const w=el.clientWidth;el.style.fontSize=(+el.dataset.fs*w/(13.333*72))+'px'});fit();setTimeout(fit,50);
  const close=()=>{o.remove();document.removeEventListener('keydown',kd)},kd=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',kd);
@@ -7385,10 +7385,12 @@ async function lyMake(btn){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!s
   const base=LY_BASE[lySize]||48,FONT='Malgun Gothic';
   sl.forEach(s=>{const sd=pres.addSlide();sd.background={color:'000000'};
    /* 가사·제목·곡 사이(gap)는 십자가 배경, 가사 빈 구간만 검정 */
-   if(bg&&(s.kind==='title'||s.kind==='lyric'||s.kind==='gap'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
+   if(bg&&(s.kind==='title'||s.kind==='lyric'||s.kind==='gap'||s.kind==='end'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
+   /* 마지막 장: 십자가 배경 위에 찬양과 어울리는 말씀 */
+   if(s.kind==='end'){const L=[...String(s.text)].length,fs=L>90?28:L>60?32:36;sd.addText([{text:s.text,options:{fontSize:fs,bold:true,color:'FFFFFF',breakLine:true}},{text:' ',options:{fontSize:12,breakLine:true}},{text:s.ref||'',options:{fontSize:22,bold:false,color:'E8D9C4'}}],{x:1.2,y:1.4,w:10.9,h:4.2,align:'center',valign:'middle',fontFace:FONT,lineSpacingMultiple:1.25,isTextBox:true,margin:0.05})}
    /* 제목도 가사와 똑같이 화면 윗줄에 배치 */
    if(s.kind==='title'||s.kind==='lyric')sd.addText(s.text,{x:0.5,y:0.35,w:12.33,h:4.75,align:lyAlign,valign:'top',fontFace:FONT,fontSize:lyFont(s.text,base),bold:true,color:'FFFFFF',lineSpacingMultiple:1.1,isTextBox:true,margin:0.05});
-   sd.addNotes(s.kind==='gap'?`곡 사이 십자가 배경 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (검은 화면)':'')}`)});
+   sd.addNotes(s.kind==='end'?`마지막 장 말씀 · ${s.ref||''}`:s.kind==='gap'?`곡 사이 십자가 배경 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (검은 화면)':'')}`)});
   const blob=await pres.write({outputType:'blob'}),name=`${lyWeek.replace(/-/g,'').slice(2)}_꿈자리_가사.pptx`,d=await claude.use('downloads');
   if(d&&d.save)await d.save({filename:name,data:blob});else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
   toast(`PPT를 저장했어요 (슬라이드 ${sl.length}장)`)}
@@ -11059,7 +11061,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=59').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=60').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12559,3 +12561,55 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
  window.kzDraft={save,restore};
 })();
 </script>
+<script id="kz-ly-endverse">
+/* 콘티 가사 PPT 마지막 장: 십자가 배경 + 이번 주 찬양과 어울리는 말씀 (개역한글).
+   곡 제목 · 가사의 낱말로 가장 잘 맞는 말씀을 고르고, 가사 PPT 화면에서 다른 말씀으로 바꾸거나 빼기 */
+(function(){if(typeof lySlides!=='function')return;
+ const V=[
+  ['시편 150:6','호흡이 있는 자마다 여호와를 찬양할지어다 할렐루야',['찬양','호흡','할렐루야','노래']],
+  ['시편 100:4','감사함으로 그 문에 들어가며 찬송함으로 그 궁정에 들어가서 그에게 감사하며 그 이름을 송축할지어다',['감사','찬송','이름','송축']],
+  ['시편 34:1','내가 여호와를 항상 송축함이여 내 입술로 항상 주를 찬양하리이다',['찬양','송축','항상','입술']],
+  ['요한복음 4:24','하나님은 영이시니 예배하는 자가 신령과 진정으로 예배할지니라',['예배','영','진정']],
+  ['이사야 43:21','이 백성은 내가 나를 위하여 지었나니 나의 찬송을 부르게 하려 함이니라',['찬송','백성','부르']],
+  ['시편 103:1','내 영혼아 여호와를 송축하라 내 속에 있는 것들아 다 그 성호를 송축하라',['영혼','송축','이름','성호']],
+  ['시편 27:4','내가 여호와께 청하였던 한 가지 일 곧 그것을 구하리니 곧 나로 내 생전에 여호와의 집에 거하여 여호와의 아름다움을 앙망하며 그 전에서 사모하는 그것이라',['보기','사모','아름다','원하','바라','앙망','집']],
+  ['요한일서 4:19','우리가 사랑함은 그가 먼저 우리를 사랑하셨음이라',['사랑']],
+  ['로마서 5:8','우리가 아직 죄인 되었을 때에 그리스도께서 우리를 위하여 죽으심으로 하나님께서 우리에게 대한 자기의 사랑을 확증하셨느니라',['사랑','십자가','죄','죽으']],
+  ['갈라디아서 2:20','내가 그리스도와 함께 십자가에 못 박혔나니 그런즉 이제는 내가 사는 것이 아니요 오직 내 안에 그리스도께서 사시는 것이라',['십자가','사는','못 박']],
+  ['고린도후서 12:9','내게 이르시기를 내 은혜가 네게 족하도다 이는 내 능력이 약한 데서 온전하여짐이라',['은혜','능력','약한','족']],
+  ['에베소서 2:8','너희가 그 은혜를 인하여 믿음으로 말미암아 구원을 얻었나니 이것이 너희에게서 난 것이 아니요 하나님의 선물이라',['은혜','구원','믿음','선물']],
+  ['마태복음 6:33','너희는 먼저 그의 나라와 그의 의를 구하라 그리하면 이 모든 것을 너희에게 더하시리라',['나라','의','구하']],
+  ['요한계시록 22:20','이것들을 증거하신 이가 가라사대 내가 진실로 속히 오리라 하시거늘 아멘 주 예수여 오시옵소서',['오실','오시','다시','재림','아멘','오소서']],
+  ['이사야 40:31','오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달음박질하여도 곤비치 아니하겠고 걸어가도 피곤치 아니하리로다',['힘','독수리','날개','앙망','새 힘']],
+  ['시편 23:1','여호와는 나의 목자시니 내가 부족함이 없으리로다',['목자','인도','부족']],
+  ['시편 46:10','이르시기를 너희는 가만히 있어 내가 하나님 됨을 알지어다 내가 열방 중에서 높임을 받으리라 내가 세계 중에서 높임을 받으리라 하시도다',['높이','높임','열방','잠잠','가만히']],
+  ['시편 113:3','해 돋는 데에서부터 해 지는 데에까지 여호와의 이름이 찬양을 받으리로다',['이름','높이','해','찬양']],
+  ['예레미야애가 3:22-23','여호와의 자비와 긍휼이 무궁하시므로 우리가 진멸되지 아니함이니이다 이것들이 아침마다 새로우니 주의 성실이 크도소이다',['신실','성실','아침','긍휼','자비']],
+  ['요한복음 14:6','예수께서 가라사대 내가 곧 길이요 진리요 생명이니 나로 말미암지 않고는 아버지께로 올 자가 없느니라',['길','진리','생명']],
+  ['시편 121:1-2','내가 산을 향하여 눈을 들리라 나의 도움이 어디서 올꼬 나의 도움이 천지를 지으신 여호와에게서로다',['도움','산','눈을 들']],
+  ['이사야 41:10','두려워 말라 내가 너와 함께 함이니라 놀라지 말라 나는 네 하나님이 됨이니라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라',['함께','두려','붙들','굳세']],
+  ['시편 91:1','지존자의 은밀한 곳에 거하는 자는 전능자의 그늘 아래 거하리로다',['능력','그늘','보호','피난','선한']],
+  ['시편 96:1','새 노래로 여호와께 노래하라 온 땅이여 여호와께 노래할지어다',['새 노래','노래','온 땅']],
+  ['에베소서 5:19','시와 찬미와 신령한 노래들로 서로 화답하며 너희의 마음으로 주께 노래하며 찬송하며',['찬미','노래','마음','찬송']]];
+ const K=()=>'lyEndV:'+(typeof lyWeek!=='undefined'&&lyWeek||'');
+ const g=()=>{try{return LS(K())}catch(e){return null}};
+ /* 이번 주 곡 제목 · 가사로 점수를 매겨 가장 어울리는 말씀 */
+ function auto(songs){const txt=(songs||[]).map(sg=>[sg.title,...Object.values(sg.parts||{})].join(' ')).join(' ').replace(/\s+/g,' ');let best=-1,bi=0;
+  V.forEach((v,i)=>{let sc=0;v[2].forEach(k=>{const n=txt.split(k).length-1;if(n)sc+=Math.min(3,n)+(String((songs||[]).map(x=>x.title).join(' ')).includes(k)?3:0)});if(sc>best){best=sc;bi=i}});
+  if(best<=0){const w=Math.floor((Date.parse((typeof lyWeek!=='undefined'&&lyWeek)||'2026-01-04')||0)/6048e5);bi=((w%V.length)+V.length)%V.length}return bi}
+ function chosen(songs){const v=g();if(v==='off')return null;const i=v!=null&&v!==''&&V[+v]?+v:auto(songs);return V[i]}
+ const base=lySlides;lySlides=function(songs){const out=base.apply(this,arguments);try{if(!out.length)return out;const v=chosen(songs);if(v)out.push({kind:'end',text:v[1],ref:v[0]+' (개역한글)',song:'마지막 장',label:'말씀'})}catch(e){}return out};
+ const ov=lyricsView;lyricsView=function(){const r=ov.apply(this,arguments);try{const B=document.getElementById('body'),top=B&&B.querySelector('.ly2 .ly-top');if(!top||!top.querySelector('#lyGo')||top.querySelector('#lyEndV'))return r;
+   const{songs}=lySongs(lyWeek);if(!songs.length)return r;const a=auto(songs),v=g();
+   const lab=document.createElement('label');lab.className='ly-apadd ly-endv';lab.title='PPT 마지막 장: 십자가 배경 위에 말씀';
+   lab.innerHTML=`<span>마지막 장 말씀</span><select id="lyEndV" aria-label="PPT 마지막 장 말씀"><option value="">자동 · ${V[a][0]}</option>${V.map((x,i)=>`<option value="${i}" ${String(v)===String(i)?'selected':''}>${x[0]}</option>`).join('')}<option value="off" ${v==='off'?'selected':''}>넣지 않기</option></select>`;
+   const ref=top.querySelector('#lyPv')||top.querySelector('.ly-sp');if(ref)ref.before(lab);else top.append(lab);
+   lab.querySelector('select').onchange=e=>{try{LS(K(),e.target.value||null)}catch(_){}const x=chosen(songs);toast(x?`마지막 장: ${x[0]}`:'마지막 장 말씀을 넣지 않아요')}}catch(e){console.warn('[꿈자리] 마지막 장 말씀',e)}return r};
+ window.kzLyEndVerses=V;
+})();
+</script>
+<style id="kz-ly-endverse-css">
+#lyPrev .lp-s .tx.lp-end{position:absolute;inset:12% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;text-align:center;font-weight:700;line-height:1.35}
+#lyPrev .lp-s .lp-end small{font-size:.62em;font-weight:500;color:#e8d9c4}
+.ly-endv select{max-width:170px}
+</style>
