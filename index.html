@@ -7387,7 +7387,7 @@ async function lyMake(btn){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!s
    /* 가사·제목·곡 사이(gap)는 십자가 배경, 가사 빈 구간만 검정 */
    if(bg&&(s.kind==='title'||s.kind==='lyric'||s.kind==='gap'||s.kind==='end'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
    /* 마지막 장: 십자가 배경 위에 찬양과 어울리는 말씀 */
-   if(s.kind==='end'){const L=[...String(s.text)].length,fs=L>90?28:L>60?32:36;sd.addText([...String(s.text).split('\n').map(t=>({text:t,options:{fontSize:fs,bold:true,color:'FFFFFF',breakLine:true}})),{text:' ',options:{fontSize:12,breakLine:true}},{text:s.ref||'',options:{fontSize:22,bold:false,color:'E8D9C4'}}],{x:1.2,y:1.4,w:10.9,h:4.2,align:'center',valign:'middle',fontFace:FONT,lineSpacingMultiple:1.25,isTextBox:true,margin:0.05})}
+   if(s.kind==='end'){const L=[...String(s.text)].length,fs=L>90?28:L>60?32:36;sd.addText([...String(s.text).split('\n').map(t=>({text:t,options:{fontSize:fs,bold:true,color:'FFFFFF',breakLine:true}})),{text:' ',options:{fontSize:12,breakLine:true}},{text:s.ref||'',options:{fontSize:22,bold:false,color:'E8D9C4'}}],{x:1.2,y:1.4,w:10.9,h:4.2,align:'center',valign:'middle',fontFace:FONT,lineSpacingMultiple:1.45,isTextBox:true,margin:0.05})}
    /* 제목도 가사와 똑같이 화면 윗줄에 배치 */
    if(s.kind==='title'||s.kind==='lyric')sd.addText(s.text,{x:0.5,y:0.35,w:12.33,h:4.75,align:lyAlign,valign:'top',fontFace:FONT,fontSize:lyFont(s.text,base),bold:true,color:'FFFFFF',lineSpacingMultiple:1.1,isTextBox:true,margin:0.05});
    sd.addNotes(s.kind==='end'?`마지막 장 말씀 · ${s.ref||''}`:s.kind==='gap'?`곡 사이 십자가 배경 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (검은 화면)':'')}`)});
@@ -12610,7 +12610,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 })();
 </script>
 <style id="kz-ly-endverse-css">
-#lyPrev .lp-s .tx.lp-end{position:absolute;inset:12% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;text-align:center;font-weight:700;line-height:1.35}
+#lyPrev .lp-s .tx.lp-end{position:absolute;inset:12% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;text-align:center;font-weight:700;line-height:1.55}
 #lyPrev .lp-s .lp-end small{font-size:.62em;font-weight:500;color:#e8d9c4}
 .ly-endv select{max-width:170px}
 </style>
