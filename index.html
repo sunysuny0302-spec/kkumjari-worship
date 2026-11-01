@@ -7387,7 +7387,7 @@ async function lyMake(btn){const{songs}=lySongs(lyWeek),sl=lySlides(songs);if(!s
    /* 가사·제목·곡 사이(gap)는 십자가 배경, 가사 빈 구간만 검정 */
    if(bg&&(s.kind==='title'||s.kind==='lyric'||s.kind==='gap'||s.kind==='end'))sd.addImage({data:bg,x:0,y:0,w:13.333,h:7.5});
    /* 마지막 장: 십자가 배경 위에 찬양과 어울리는 말씀 */
-   if(s.kind==='end'){const L=[...String(s.text)].length,fs=L>90?28:L>60?32:36;sd.addText([{text:s.text,options:{fontSize:fs,bold:true,color:'FFFFFF',breakLine:true}},{text:' ',options:{fontSize:12,breakLine:true}},{text:s.ref||'',options:{fontSize:22,bold:false,color:'E8D9C4'}}],{x:1.2,y:1.4,w:10.9,h:4.2,align:'center',valign:'middle',fontFace:FONT,lineSpacingMultiple:1.25,isTextBox:true,margin:0.05})}
+   if(s.kind==='end'){const L=[...String(s.text)].length,fs=L>90?28:L>60?32:36;sd.addText([...String(s.text).split('\n').map(t=>({text:t,options:{fontSize:fs,bold:true,color:'FFFFFF',breakLine:true}})),{text:' ',options:{fontSize:12,breakLine:true}},{text:s.ref||'',options:{fontSize:22,bold:false,color:'E8D9C4'}}],{x:1.2,y:1.4,w:10.9,h:4.2,align:'center',valign:'middle',fontFace:FONT,lineSpacingMultiple:1.25,isTextBox:true,margin:0.05})}
    /* 제목도 가사와 똑같이 화면 윗줄에 배치 */
    if(s.kind==='title'||s.kind==='lyric')sd.addText(s.text,{x:0.5,y:0.35,w:12.33,h:4.75,align:lyAlign,valign:'top',fontFace:FONT,fontSize:lyFont(s.text,base),bold:true,color:'FFFFFF',lineSpacingMultiple:1.1,isTextBox:true,margin:0.05});
    sd.addNotes(s.kind==='end'?`마지막 장 말씀 · ${s.ref||''}`:s.kind==='gap'?`곡 사이 십자가 배경 · 다음 곡: ${s.song}`:`${s.song} · ${s.kind==='title'?'제목':s.label+(s.kind==='blank'?' (검은 화면)':'')}`)});
@@ -12570,7 +12570,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
   ['시편 100:4','감사함으로 그 문에 들어가며 찬송함으로 그 궁정에 들어가서 그에게 감사하며 그 이름을 송축할지어다',['감사','찬송','이름','송축']],
   ['시편 34:1','내가 여호와를 항상 송축함이여 내 입술로 항상 주를 찬양하리이다',['찬양','송축','항상','입술']],
   ['요한복음 4:24','하나님은 영이시니 예배하는 자가 신령과 진정으로 예배할지니라',['예배','영','진정']],
-  ['이사야 43:21','이 백성은 내가 나를 위하여 지었나니 나의 찬송을 부르게 하려 함이니라',['찬송','백성','부르']],
+  ['이사야 43:21','이 백성은 내가 나를 위하여 지었나니\n나의 찬송을 부르게 하려 함이니라',['찬송','백성','부르']],
   ['시편 103:1','내 영혼아 여호와를 송축하라 내 속에 있는 것들아 다 그 성호를 송축하라',['영혼','송축','이름','성호']],
   ['시편 27:4','내가 여호와께 청하였던 한 가지 일 곧 그것을 구하리니 곧 나로 내 생전에 여호와의 집에 거하여 여호와의 아름다움을 앙망하며 그 전에서 사모하는 그것이라',['보기','사모','아름다','원하','바라','앙망','집']],
   ['요한일서 4:19','우리가 사랑함은 그가 먼저 우리를 사랑하셨음이라',['사랑']],
