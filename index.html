@@ -11383,7 +11383,7 @@ body.kc-crop-open{overflow:hidden}
   const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),220)};
   w.querySelector('.ns-ok').onclick=close;w.addEventListener('click',e=>{if(e.target===w)close()});
   const ev=w.querySelector('[data-ns-ev]');if(ev)ev.onclick=()=>{close();try{ntTab='e';go('notice')}catch(_){}}
-  try{localStorage.setItem(seenK(d),'1')}catch(e){}if(d===nextSun())window.__kzNsShown=1}
+  try{localStorage.setItem(seenK(d),'1');localStorage.setItem('kzNsShownAt:'+d,String(Date.now()))}catch(e){}if(d===nextSun())window.__kzNsShown=1}
  window.kzNoSvcPop=open;
  document.addEventListener('kzseason',()=>{try{if(view==='home'&&(isNoSvc(date)||isNoSvc(shiftDate(date,7))))body()}catch(e){}});
  /* 예배 없는 주(이번 주)는 들어올 때마다 안내: 새로 열 때 + 앱을 10분 넘게 나갔다 돌아올 때 */
@@ -11411,7 +11411,7 @@ body.kc-crop-open{overflow:hidden}
    document.querySelectorAll('#body .kz-ns-art').forEach(b=>b.onclick=()=>open(b.dataset.nsvOpen));
    }catch(e){console.warn('[꿈자리] 예배 없음 그림',e)}};nsApply();setTimeout(nsApply,0);setTimeout(nsApply,600);
    /* 지금 보는 주(또는 이번 주 화면에서 보이는 다음 주)가 예배 없는 주면, 그 날짜마다 한 번 안내 창 */
-   const d0=date,n0=shiftDate(nextSun(),7),ns=isNoSvc(d0)?d0:(d0===nextSun()&&isNoSvc(n0))?n0:null;let seen=true;try{seen=!ns||(ns===nextSun()?!!window.__kzNsShown:!!localStorage.getItem(seenK(ns)))}catch(e){}
+   const d0=date,n0=shiftDate(nextSun(),7),ns=isNoSvc(d0)?d0:(d0===nextSun()&&isNoSvc(n0))?n0:null;let seen=true;try{seen=!ns||(ns===nextSun()?(!!window.__kzNsShown||Date.now()-(+localStorage.getItem('kzNsShownAt:'+ns)||0)<3*36e5)/* 채팅 등 다녀와도 다시 안 뜨게: 3시간 안에 본 적 있으면 건너뜀 */:!!localStorage.getItem(seenK(ns)))}catch(e){}
    if(ns&&!seen&&!document.getElementById('kzLoginLock')&&!document.getElementById('kzLiveWelcome'))setTimeout(()=>{if(view==='home'&&!document.getElementById('kzLoginLock')&&(date===ns||date===nextSun()))open(ns)},500)}catch(e){}return r}}
 })();
 </script>
