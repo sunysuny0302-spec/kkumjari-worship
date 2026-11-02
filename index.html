@@ -4844,7 +4844,7 @@ const defMent=d=>{const f=autoFill?sessFill(d):{},g=k=>f[k]||'';return `:: ${sho
 let sing={fixed:[],rot:[],every:2,anchor:nextSun()};
 function singEff(d,o){const use=!o,[f,p]=singParts(d,o),ch=use?ovr.filter(x=>x.date===d&&!x.k):[];return[...f,...(p?[p]:[])].map(n=>{const c=ch.find(x=>x.from===n);return c?{n:c.to||n,from:n,abs:!c.to,rp:!!c.to}:{n,from:n,rot:n===p}})}
 function singersFor(d,o){return singEff(d,o).filter(x=>!x.abs).map(x=>x.n).sort((a,b)=>String(a).localeCompare(String(b),'ko')).join(', ')}
-/* 싱어 파트도 정한 인도자는 싱어 배정에 포함 (인도하는 주는 자동으로 빠짐) */function singerMemberNames(){return new Set(members.filter(m=>m.roles.includes('싱어')).map(m=>m.name))}
+/* 싱어 파트도 정한 인도자는 싱어 배정에 포함 (인도하는 주는 자동으로 빠짐) */function singerMemberNames(){return new Set(members.filter(m=>m.roles.includes('싱어')||m.roles.includes('인도자')).map(m=>m.name))}/* 인도자는 인도 안 하는 주에 싱어도 섬 (인도하는 주는 자동으로 빠짐) */
 function cleanSing(o){o=o||sing;const ok=singerMemberNames();return{fixed:(o.fixed||[]).filter(n=>ok.has(n)),rot:(o.rot||[]).filter(n=>ok.has(n)),every:Math.max(1,+o.every||2),anchor:o.anchor||nextSun()}}
 /* 예배 없는 주일: settings/noService {days:{날짜:사유}}. 그 주는 아무도 배정하지 않고, 로테이션은 그 주를 건너뛰어 한 주씩 밀림 */
 /* 예배 없는 주일: 지난번 값을 기기에 기억해 두고 바로 그려요 (처음 화면이 두 번 바뀌어 보이지 않게) */
@@ -11071,7 +11071,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=62').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=63').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
