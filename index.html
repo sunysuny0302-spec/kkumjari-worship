@@ -41,7 +41,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('.kz-image-open')
  /* 같은 메시지(갤러리)의 사진들을 좌우로 넘겨 보기 · 스와이프 · 방향키 */
  const g=b.closest('.kz-image-gallery'),list=(g?[...g.querySelectorAll('.kz-image-open img')].map(i=>i.src):[src]).filter(valid);let k=Math.max(0,list.indexOf(src));
  const d=document.createElement('dialog');d.className='kz-image-viewer kz-iv2';d.setAttribute('aria-label','첨부 사진');
- d.innerHTML='<div class="kz-iv-top"><span class="kz-iv-n"></span><button type="button" class="kz-iv-save" aria-label="사진 저장">⬇ 저장</button><button type="button" class="kz-iv-x" aria-label="사진 닫기">✕ 닫기</button></div><div class="kz-iv-stage"><button type="button" class="kz-iv-nav prev" aria-label="이전 사진">‹</button><img alt="첨부 사진 확대"><button type="button" class="kz-iv-nav next" aria-label="다음 사진">›</button></div>';
+ d.innerHTML='<div class="kz-iv-top"><span class="kz-iv-n"></span><button type="button" class="kz-iv-save" aria-label="사진 저장"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg><span>저장</span></button><button type="button" class="kz-iv-x" aria-label="사진 닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="kz-iv-stage"><button type="button" class="kz-iv-nav prev" aria-label="이전 사진"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><img alt="첨부 사진 확대"><button type="button" class="kz-iv-nav next" aria-label="다음 사진"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>';
  const im=d.querySelector('img'),n=d.querySelector('.kz-iv-n'),pv=d.querySelector('.prev'),nx=d.querySelector('.next');
  const show=()=>{im.src=list[k];n.textContent=list.length>1?(k+1)+' / '+list.length:'';pv.hidden=nx.hidden=list.length<2;pv.disabled=k===0;nx.disabled=k===list.length-1};
  const step=s=>{const j=k+s;if(j<0||j>=list.length)return;k=j;show()};
@@ -3067,12 +3067,20 @@ body.kc-panel-open{overflow:hidden}
 #kcPanel .kc-bubble.photo .kc-message-images{margin-top:0}
 #kcPanel .kc-message-images>button{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid var(--c-line);border-radius:12px;background:var(--c-paper);color:var(--c-ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 #kcPanel .kc-message.mine .kc-message-images>button{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff;-webkit-text-fill-color:#fff}
+/* 글 없이 사진만 보낸 말풍선은 배경이 없어서 버튼을 진하게 */#kcPanel .kc-bubble.photo .kc-message-images>button,#kcPanel .kc-message.mine .kc-bubble.photo .kc-message-images>button{background:var(--c-paper,#fff)!important;border:1px solid var(--c-line,#e6d8c6)!important;color:var(--c-ink,#2b211a)!important;-webkit-text-fill-color:var(--c-ink,#2b211a)!important;box-shadow:0 1px 4px rgba(60,40,20,.08)}
+#kcPanel .kc-message.mine .kc-bubble.photo .kc-message-images>button{background:var(--c-brand)!important;border-color:var(--c-brand)!important;color:var(--c-brand-ink,#fff)!important;-webkit-text-fill-color:var(--c-brand-ink,#fff)!important}
 #kcPanel .kc-message-images>button svg{width:17px;height:17px}
 #kcPanel .kc-message-images .kz-image-gallery{display:flex;flex-wrap:wrap;gap:4px}
 #kcPanel .kc-message-images .kz-image-open{width:150px;max-width:100%;padding:0;border:0;border-radius:12px;overflow:hidden;background:none;cursor:zoom-in}
 #kcPanel .kc-bubble.photo{padding:4px;background:none;border:0}
 #kcPanel .kc-message.mine .kc-bubble.photo{background:none}
 #kcPanel .kc-message-images img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+/* 사진 묶음: 한 장은 크게, 여러 장은 두 칸씩 나란히 · 내 사진은 오른쪽으로 붙임 */
+#kcPanel .kc-message-images .kz-image-gallery{display:grid;grid-template-columns:minmax(0,200px);gap:4px;margin:0}
+#kcPanel .kc-message-images .kz-image-gallery:has(>:nth-child(2)){grid-template-columns:repeat(2,minmax(0,124px))}
+#kcPanel .kc-message-images .kz-image-gallery .kz-image-open{width:100%}
+#kcPanel .kc-message.mine .kc-message-images .kz-image-gallery{justify-content:end}
+#kcPanel .kc-bubble.photo{max-width:100%}
 #kcPanel .kc-new{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);padding:8px 14px;border:0;border-radius:999px;background:var(--c-ink);color:#fff;font-size:13px;font-weight:700;box-shadow:0 6px 16px rgba(47,38,29,.25);cursor:pointer}
 #kcPanel .kc-new[hidden]{display:none}
 
@@ -11806,6 +11814,17 @@ window.kzSatPrac=(function(){
 .kc-menu{min-width:150px}
 .kz-iv2 img{-webkit-touch-callout:default!important;-webkit-user-select:auto!important;user-select:auto!important}
 .kz-iv-save{border:0;border-radius:999px;padding:8px 14px;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;margin-left:auto;margin-right:8px}
+/* 사진 보기 새 디자인: 선 아이콘 · 또렷한 버튼 */
+.kz-iv2{background:#141210!important;border-radius:20px}
+.kz-iv2 .kz-iv-top{gap:6px;margin-bottom:10px;padding:2px 2px 0 6px}
+.kz-iv2 .kz-iv-n{font-size:14px;font-weight:700;color:#fff;opacity:.85;letter-spacing:.02em}
+.kz-iv-save{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 15px 0 12px!important;margin-right:4px!important;background:#fff!important;color:#1d1915!important;border-radius:999px!important;font-size:14px!important}
+.kz-iv-save svg{width:17px;height:17px}
+.kz-iv2 .kz-iv-x{width:38px;height:38px;padding:0!important;border-radius:50%!important;background:rgba(255,255,255,.14)!important;display:grid;place-items:center}
+.kz-iv2 .kz-iv-x:hover,.kz-iv-save:hover{filter:brightness(.95)}
+.kz-iv2 button:focus{outline:none}.kz-iv2 button:focus-visible{outline:2px solid rgba(255,255,255,.7);outline-offset:2px}
+.kz-iv2 .kz-iv-nav{width:44px;height:44px;background:rgba(20,18,16,.55)!important;border:1px solid rgba(255,255,255,.22)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.kz-iv2 .kz-iv-nav svg{display:block}
 .kc-search{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;background:var(--page,#f7f2eb)}
 .kc-search-bar{display:flex;align-items:center;gap:8px;margin:10px 12px 6px;padding:6px 6px 6px 12px;border-radius:14px;background:#fff;border:1px solid rgba(120,88,56,.2);color:#8a7764}
 .kc-search-bar input{flex:1;min-width:0;border:0!important;outline:0;background:transparent!important;font:inherit;font-size:16px;padding:6px 0!important;box-shadow:none!important}
