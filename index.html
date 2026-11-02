@@ -4235,6 +4235,17 @@ function kzKeyPick(title,cur){return new Promise(res=>{cur=kzKey(cur);const d=do
 .r2-det input,.r2-det select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid rgba(120,88,56,.18);background:#fff;color:var(--tx,#2b2118)}
 .r2-det input[type=number]{width:56px}.r2-det input[list]{width:120px}
 .r2-wk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mu);font-weight:600}
+/* 배정 규칙 세부 칸: 글자 · 입력칸 크기 맞추기 (폰은 확대 방지용 16px 유지하되 높이 낮게) */
+:root .r2-det{gap:10px 16px;padding:10px 12px}
+:root .r2-det label{gap:8px;font-size:13.5px;font-weight:700;color:#6b5442;white-space:nowrap}
+:root .r2-det input,:root .r2-det select{height:36px;min-height:0!important;padding:0 10px!important;font-size:15px!important;font-weight:700;border-radius:10px!important;line-height:34px;box-sizing:border-box}
+:root .r2-det input[type=number]{width:62px!important;text-align:center}
+:root .r2-det input[list]{width:140px!important}
+@media (max-width:700px){:root .r2-det{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+ :root .r2-det label{display:contents}
+ :root .r2-det input,:root .r2-det select{font-size:16px!important;height:38px}
+ :root .r2-det input[list]{width:100%!important;max-width:220px}
+ :root .r2-det input[type=number]{width:72px!important}}
 :root .r2-wk button{border:1px solid rgba(120,88,56,.18);background:#fff;border-radius:8px;padding:5px 9px;font:inherit;font-size:12.5px;font-weight:600;color:#6b5442!important;cursor:pointer}
 :root .r2-wk button.on{background:#3a2c20!important;border-color:#3a2c20!important;color:#fff!important}
 .r2-empty{padding:24px;text-align:center;color:var(--mu)}
