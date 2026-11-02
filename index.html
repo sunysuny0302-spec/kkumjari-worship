@@ -6753,7 +6753,7 @@ singerRuleView=function(){arPage('singer')};sessionRuleView=function(){arPage('s
    if(mode==='rotation')det=`<label>그룹<input data-r2-group="${e}" list="r2Groups" value="${esc(r.group||'기본 로테이션')}" placeholder="예: A조"></label><label>순서<input data-r2-order="${e}" type="number" min="0" max="99" value="${+r.order||0}"></label><label>몇 주씩<input data-r2-every="${e}" type="number" min="1" max="12" value="${+r.every||1}"></label>`;
    else if(mode==='interval'){const ev=r.mode==='odd'?2:Math.max(2,+r.every||2),off=((+r.offset||0)%ev+ev)%ev;det=`<label>몇 주에 한 번<input data-r2-every="${e}" type="number" min="2" max="12" value="${ev}"></label><label>첫 순서<select data-r2-offset="${e}">${Array.from({length:ev},(_,k)=>{const d=W.find(dd=>(((arWeek(dd,r.anchor||nextSun())-k)%ev)+ev)%ev===0)||'';return `<option value="${k}" ${k===off?'selected':''}>${d?md(d)+' 부터':(k+1)+'번째 주'}</option>`}).join('')}</select></label>`}
    else if(mode==='monthly')det=`<div class="r2-wk"><span>매월</span>${[1,2,3,4,5].map(w=>`<button type="button" data-r2-mw="${e}" data-w="${w}" class="${(r.monthWeeks||[]).includes(w)?'on':''}" aria-pressed="${(r.monthWeeks||[]).includes(w)}">${w}째</button>`).join('')}<span>주</span></div>`;
-   return `<div class="r2-row m-${mode}" data-r2-row="${e}"><div class="r2-who"><i>${e.slice(0,1)}</i><span><b>${e}</b><small>${isS?'':esc(m.tag||'세션')+' · '}${esc(desc(r))}</small></span></div>
+   return `<div class="r2-row m-${mode}" data-r2-row="${e}"><div class="r2-who"><i>${e.slice(0,1)}</i><span><b>${e}</b><small>${isS?'':esc(m.tag||'세션')+' · '}${esc(desc(r))}</small>${!isS&&(()=>{try{return ldrMembers().includes(n)}catch(_){return false}})()?`<label class="r2-lp"><input type="checkbox" data-r2-lp="${e}" ${r.leadPlay?'checked':''}> 인도할 때도 악기 맡음</label>`:''}</span></div>
     <div class="r2-seg" role="radiogroup" aria-label="${e} 배정 방식">${MODES.map(([v,l])=>`<button type="button" role="radio" aria-checked="${mode===v}" data-r2-mode="${e}" data-v="${v}" class="${mode===v?'on':''}">${l}</button>`).join('')}</div>
     <div class="r2-dots" aria-label="앞으로 6주">${W.map((d,i)=>`<i class="${maps[i][n]?'on':''}" title="${md(d)} ${maps[i][n]?'배정':'쉼'}"></i>`).join('')}</div>
     ${det?`<div class="r2-det">${det}</div>`:''}</div>`};
@@ -6771,6 +6771,7 @@ singerRuleView=function(){arPage('singer')};sessionRuleView=function(){arPage('s
    document.querySelectorAll('.r2-dates em b').forEach((el,i)=>el.textContent=roster.filter(x=>mp[i][x.n]).length+'명');
    const dt=saved!==kind+'|'+JSON.stringify(assignCfg[kind]),bar=document.querySelector('.r2-bar');if(bar){bar.classList.toggle('show',dt);bar.querySelector('span').textContent=dt?'저장하지 않은 변경이 있어요':'모두 저장됐어요';bar.querySelector('.r2-undo').disabled=!dt;bar.querySelector('.r2-save').disabled=!dt}};
   $$('[data-r2-mode]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mode,v=b.dataset.v,r=arGet(kind,n);const p={mode:v};if(v==='interval')p.every=Math.max(2,r.mode==='odd'?2:+r.every||2);if(v==='rotation'){p.group=r.group&&r.group!=='기본'?r.group:(groups[0]||(isS?'싱어 로테이션':'세션 로테이션'));p.every=Math.max(1,+r.every||1);p.anchor=r.anchor||nextSun()}if(v==='monthly'&&!(r.monthWeeks||[]).length)p.monthWeeks=[1,3];set(n,p)});
+  $$('[data-r2-lp]').forEach(i=>i.onchange=()=>set(i.dataset.r2Lp,{leadPlay:i.checked}));/* 인도하면서 기타 등 악기를 같이 맡는 인도자 */
   $$('[data-r2-mw]').forEach(b=>b.onclick=()=>{const n=b.dataset.r2Mw,r=arGet(kind,n),w=+b.dataset.w;let a=[...(r.monthWeeks||[])];a=a.includes(w)?a.filter(x=>x!==w):[...a,w].sort((x,y)=>x-y);set(n,{monthWeeks:a})});
   const num=(sel,key,min,full)=>$$(`[${sel}]`).forEach(i=>{const go=hard=>{const v=Math.round(+i.value);if(i.value===''||!Number.isFinite(v))return;(hard&&full?set:soft)(i.getAttribute(sel),{[key]:Math.max(min,v)})};i.oninput=()=>go(false);i.onchange=()=>{const n=i.getAttribute(sel),r=arGet(kind,n);if(i.value===''){i.value=r[key]??min}if(full&&norm(r.mode)==='interval')setTimeout(()=>{if(!document.querySelector('.r2-save:active'))set(n,{[key]:Math.max(min,Math.round(+i.value)||min)})},250);else go(false)}});
   num('data-r2-order','order',0);num('data-r2-every','every',1,true);
@@ -9224,9 +9225,10 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 <script id="kz-lead-skip">
 /* 인도자가 싱어 · 세션도 겸할 때: 그 주에 인도하면 싱어 · 세션 배정에서는 빠짐 */
 (function(){const L=d=>{try{return d?ldrOf(d):''}catch(e){return ''}};
- if(typeof arActiveMap==='function'){const o=arActiveMap;arActiveMap=function(kind,d,names){const r=o.apply(this,arguments),l=L(d);if(l&&r&&Object.prototype.hasOwnProperty.call(r,l))r[l]=false;return r}}
+ const LP=n=>{try{return !!arGet('session',n).leadPlay}catch(e){return false}};/* '인도할 때도 악기 맡음' 켠 인도자는 세션에서 안 빠짐 */
+ if(typeof arActiveMap==='function'){const o=arActiveMap;arActiveMap=function(kind,d,names){const r=o.apply(this,arguments),l=L(d);if(l&&r&&Object.prototype.hasOwnProperty.call(r,l)&&!(kind==='session'&&LP(l)))r[l]=false;return r}}
  if(typeof singParts==='function'){const o=singParts;singParts=function(d){const r=o.apply(this,arguments),l=L(d);if(!l||!Array.isArray(r))return r;return[(r[0]||[]).filter(n=>n!==l),r[1]===l?null:r[1]]}}
- if(typeof sessFill==='function'){const o=sessFill;sessFill=function(d){const r=o.apply(this,arguments),l=L(d);if(l&&r)for(const k of Object.keys(r))if(r[k]===l)r[k]='';return r}}
+ if(typeof sessFill==='function'){const o=sessFill;sessFill=function(d){const r=o.apply(this,arguments),l=L(d);if(l&&r&&!LP(l))for(const k of Object.keys(r))if(r[k]===l)r[k]='';return r}}
 })();
 </script>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
@@ -11061,7 +11063,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=61').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=62').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12613,4 +12615,5 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #lyPrev .lp-s .tx.lp-end{position:absolute;inset:12% 10%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;text-align:center;font-weight:700;line-height:1.55}
 #lyPrev .lp-s .lp-end small{font-size:.62em;font-weight:500;color:#e8d9c4}
 .ly-endv select{max-width:170px}
+.r2-lp{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:700;color:#9a4f1f;cursor:pointer}.r2-lp input{width:15px;height:15px;accent-color:#b4612c}
 </style>
