@@ -11083,7 +11083,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=65').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=66').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12647,4 +12647,47 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #lyPrev .lp-s .lp-end small{font-size:.62em;font-weight:500;color:#e8d9c4}
 .ly-endv select{max-width:170px}
 .r2-lp{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:700;color:#9a4f1f;cursor:pointer}.r2-lp input{width:15px;height:15px;accent-color:#b4612c}
+</style>
+<script id="kz-abs-multi">
+/* 겸직(인도자 = 인도 · 싱어 · 세션) 불참을 한 번에 — 싱어/세션 일정 변경의 '불참'에서 같이 빠질 역할을 고름
+   예: 교회를 못 오면 전부 체크, 목이 아파 노래만 못 하면 세션은 체크 해제 */
+(function(){
+ const G=f=>{try{return f()}catch(e){return null}};
+ const X={n:'',s:true,e:true,l:true};
+ function rolesOf(n){return{s:!!G(()=>singRoster().some(x=>x.n===n)),e:!!G(()=>sessRoster().some(x=>x.n===n)),l:!!G(()=>ldrMembers().includes(n))}}
+ const LB={s:'싱어',e:'세션',l:'인도'};
+ function inject(kind){const S=kind==='s'?G(()=>swS):G(()=>swE);if(!S||S.mode!=='abs'||!S.n)return;const R=rolesOf(S.n);R[kind]=true;const ks=['l','s','e'].filter(k=>R[k]);if(ks.length<2)return;
+  if(X.n!==S.n){X.n=S.n;X.s=X.e=X.l=true}X[kind]=true;
+  const anchor=document.querySelector('#body .wz-sum, #body .cv6-summary');if(!anchor||document.getElementById('kzAbsX'))return;
+  const leadWk=(S.ds||[]).filter(d=>G(()=>ldrOf(d))===S.n);
+  const box=document.createElement('div');box.id='kzAbsX';box.className='kz-absx';
+  box.innerHTML=`<b>같이 빠질 역할</b><div class="kz-absx-c">${ks.map(k=>`<button type="button" data-ax="${k}" class="${X[k]?'on':''}" ${k===kind?'disabled title="지금 화면의 역할"':''} aria-pressed="${!!X[k]}">${X[k]?'✓ ':''}${LB[k]}</button>`).join('')}</div><small>${S.n}님은 ${ks.map(k=>LB[k]).join(' · ')}을 같이 맡아요. 교회에 못 오면 모두 체크, ${R.e?'목이 아파 노래 · 인도만 못 하면 '+(kind==='e'?'싱어 일정 변경에서 ':'')+'세션 체크를 풀어요.':'필요한 것만 골라요.'}${R.l&&X.l&&leadWk.length?' 인도는 등록 후 인도자 일정에서 대신 인도할 사람을 정해요.':''}</small>`;
+  anchor.parentNode.insertBefore(box,anchor);
+  box.querySelectorAll('[data-ax]').forEach(b=>b.onclick=()=>{const k=b.dataset.ax;if(k===kind)return;X[k]=!X[k];box.remove();inject(kind)});
+  const sm=anchor.querySelector('div')||anchor;const extra=ks.filter(k=>k!==kind&&X[k]).map(k=>LB[k]);if(extra.length&&!anchor.querySelector('.kz-absx-sum')){const sp=document.createElement('span');sp.className='kz-absx-sum';sp.textContent=` · ${extra.join(' · ')}도 같이 빠져요`;sm.appendChild(sp)}
+  const go=document.getElementById('wzgo');if(!go)return;
+  go.onclick=async()=>{const ds=[...(S.ds||[])];if(!ds.length||!S.n)return;if(ds.some(d=>!kzChgOk(d)))return toast('변경 마감이 지난 주가 있어요 · 예배 전주 일요일까지만 바꿀 수 있어요');
+   const n=S.n,list=ds.map(d=>({date:d,from:n,to:''}));let ok=true;
+   if(X.s&&R.s)ok=await addOvr(list)&&ok;
+   if(X.e&&R.e)ok=await addOvr(list,'session')&&ok;
+   const lw=R.l&&X.l?ds.filter(d=>G(()=>ldrOf(d))===n):[];
+   if(!ok)return;
+   if(kind==='s'){swS={n:'',ds:[],mode:'abs',sub:'',x:'',xd:''};swapView()}else{swE={n:'',ds:[],mode:'abs',sub:'',x:'',xd:''};absView()}
+   const done=[R.s&&X.s?'싱어':'',R.e&&X.e?'세션':''].filter(Boolean).join(' · ');toast(`${done} 불참 등록했어요`);
+   if(lw.length&&await cfBox('인도도 바꿔야 해요',[`${lw.map(d=>wkLbl(d)).join(', ')} 주에 ${n}님이 인도 순서예요.`,'인도자 일정에서 대신 인도할 사람과 바꿔 주세요.'],'인도자 일정으로','나중에'))go('lsw')};
+ }
+ function wrap(name,kind){const o=window[name];if(typeof o!=='function'||o.__ax)return;const w=function(){const r=o.apply(this,arguments);try{inject(kind)}catch(e){console.warn(e)}return r};w.__ax=1;window[name]=w;try{if(name==='swapView')swapView=w;else absView=w}catch(e){}}
+ function boot(){wrap('swapView','s');wrap('absView','e')}
+ boot();setTimeout(boot,0);setTimeout(boot,1500);
+})();
+</script>
+<style id="kz-abs-multi-css">
+.kz-absx{margin:12px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(180,97,44,.07);border:1px solid rgba(180,97,44,.18)}
+.kz-absx>b{font-size:14px;color:#5a3d28}
+.kz-absx-c{display:flex;gap:8px;margin:8px 0 6px;flex-wrap:wrap}
+.kz-absx-c button{min-width:72px;padding:8px 14px;border-radius:999px;border:1px solid #d8c4ae;background:#fff;font:inherit;font-size:14px;font-weight:700;color:#7a6250;cursor:pointer}
+.kz-absx-c button.on{background:#3d2b1f;border-color:#3d2b1f;color:#fff}
+.kz-absx-c button:disabled{opacity:.75;cursor:default}
+.kz-absx small{display:block;font-size:12.5px;line-height:1.5;color:#8a7360}
+.kz-absx-sum{color:#b4612c;font-weight:700}
 </style>
