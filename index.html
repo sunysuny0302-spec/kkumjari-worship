@@ -3686,7 +3686,7 @@ window.kzKeep=(()=>{const D='kzKeepDaysV1',K='kzKeepSesV1';
 }
 </style>
 <style id="kz-leader-sub">
-.ls4-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;margin-bottom:10px;border:1px solid var(--bd);border-radius:14px;background:var(--bg)}
+.ls4-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;margin-bottom:10px;border:1px solid var(--bd);border-radius:14px;background:var(--bg)}
 .ls4-tabs button{display:flex;align-items:center;gap:8px;min-width:0;padding:9px 10px;border:0!important;border-radius:11px!important;background:none!important;color:var(--mu)!important;text-align:left;cursor:pointer}
 .ls4-tabs button svg{flex:none;width:18px;height:18px}
 .ls4-tabs button span{display:grid;min-width:0}
@@ -5808,6 +5808,30 @@ function lsSubBox(d,cur){const base=d?ldrBase(d):'',ms=(typeof members!=='undefi
  <div class="ls4-pk ${d?'':'empty'}">${d?`<span>${fmtD(d)}</span><b><i class="ldot ${ldrCls(cur)}"></i>${esc(cur)}</b>`:'<span>주일을 선택하세요</span>'}</div>
  ${d?`<div class="ls4-subl">누가 대신 서나요?</div><div class="ls4-cands">${names.map(n=>`<button type="button" class="ls4-cand ${lsSub===n?'on':''}" data-sub="${esc(n)}"><i class="ldot ${ldrCls(n)}"></i>${esc(n)}</button>`).join('')}<input id="lsSubIn" class="ls4-cin" placeholder="+ 직접 입력" autocomplete="off" value="${esc(lsSub&&!names.includes(lsSub)?lsSub:'')}"></div>${lsSub&&lsSub!==cur?`<div class="ls4-res"><b>${fmtD(d)}</b> · ${esc(cur)} 대신 <b>${esc(lsSub)}</b> 님이 인도해요</div>`:''}`:''}
  <div class="ls4-act"><button class="btn" id="lsSubB" ${d&&lsSub&&lsSub!==cur?'':'disabled'}>대신 서기 등록</button>${d&&cur!==base?`<button class="sm" id="lsSubR">원래대로 (${esc(base)})</button>`:''}</div>`}
+/* 불참: 인도자가 이 화면에서 인도 · 싱어 · 세션 불참을 한 번에 (역할별로 고름) */
+let lsAbsN='',lsAbsX={l:true,s:true,e:true};
+function lsAbsRoles(n){const G=f=>{try{return f()}catch(e){return false}};return{l:true,s:!!G(()=>singRoster().some(x=>x.n===n)),e:!!G(()=>sessRoster().some(x=>x.n===n))}}
+function lsAbsWho(){const ls=[...new Set(LEADERS)].filter(Boolean);let mine='';try{mine=myName()}catch(e){}if(!lsAbsN||!ls.includes(lsAbsN))lsAbsN=ls.includes(mine)?mine:(ls[0]||'');return ls}
+function lsAbsBox(eff){const ls=lsAbsWho(),n=lsAbsN,R=lsAbsRoles(n),ds=lsSel,lw=ds.filter(d=>eff(d)===n),LB={l:'인도',s:'싱어',e:'세션'},ks=['l','s','e'].filter(k=>R[k]);
+ const subs=ls.filter(x=>x!==n),need=lsAbsX.l&&lw.length,picked=ks.filter(k=>lsAbsX[k]),ready=n&&ds.length&&picked.length&&(!need||(lsSub&&lsSub!==n));
+ return `<p class="mu">못 서는 주일을 ${matchMedia('(max-width:900px)').matches?'아래':'왼쪽'} 달력에서 눌러 고르세요 (여러 주 가능). 싱어 · 세션 탭에 따로 가지 않아도 돼요.</p>
+ <div class="ls4-subl">누가 못 서나요?</div><div class="ls4-cands">${ls.map(x=>`<button type="button" class="ls4-cand ${x===n?'on':''}" data-lan="${esc(x)}"><i class="ldot ${ldrCls(x)}"></i>${esc(x)}</button>`).join('')}</div>
+ <div class="ls4-subl">고른 주일</div><div class="ls4-cands">${ds.length?ds.map(d=>`<span class="ls4-dchip ${eff(d)===n?'lead':''}">${fmtD(d)}${eff(d)===n?' · 인도':''}</span>`).join(''):'<span class="mu" style="font-size:13px">달력에서 주일을 눌러 주세요</span>'}</div>
+ <div class="ls4-subl">빠질 역할</div><div class="ls4-cands">${ks.map(k=>`<button type="button" class="ls4-cand ${lsAbsX[k]?'on':''}" data-lax="${k}" aria-pressed="${!!lsAbsX[k]}">${lsAbsX[k]?'✓ ':''}${LB[k]}</button>`).join('')}</div>
+ <small class="ls4-hint">교회에 못 오면 모두 체크${R.e?', 목이 아파 노래 · 인도만 못 하면 <b>세션</b> 체크를 풀어요':''}.</small>
+ ${need?`<div class="ls4-subl">${lw.map(fmtD).join(', ')} 인도는 누가 대신 하나요?</div><div class="ls4-cands">${subs.map(x=>`<button type="button" class="ls4-cand ${lsSub===x?'on':''}" data-sub="${esc(x)}"><i class="ldot ${ldrCls(x)}"></i>${esc(x)}</button>`).join('')}<input id="lsSubIn" class="ls4-cin" placeholder="+ 직접 입력" autocomplete="off" value="${esc(lsSub&&!subs.includes(lsSub)?lsSub:'')}"></div>`:''}
+ ${ready?`<div class="ls4-res"><b>${esc(n)}</b> · ${ds.map(fmtD).join(', ')} <b>${picked.map(k=>LB[k]).join(' · ')}</b> 불참${need?` · 인도는 <b>${esc(lsSub)}</b> 님이 대신`:''}</div>`:''}
+ <div class="ls4-act"><button class="btn" id="lsAbsB" ${ready&&canLeaderEdit()?'':'disabled'}>불참 등록</button>${ds.length?'<button class="sm" id="lc">선택 해제</button>':''}</div>`}
+function lsAbsBind(eff){if(lsKind!=='abs')return;
+ $$('[data-lan]').forEach(b=>b.onclick=()=>{lsAbsN=b.dataset.lan;lsAbsX={l:true,s:true,e:true};lsSub='';lsView()});
+ $$('[data-lax]').forEach(b=>b.onclick=()=>{const k=b.dataset.lax;lsAbsX[k]=!lsAbsX[k];lsView()});
+ const B=$('#lsAbsB');if(!B)return;B.onclick=async()=>{const n=lsAbsN,ds=[...lsSel],R=lsAbsRoles(n);if(!n||!ds.length)return;const lw=ds.filter(d=>eff(d)===n);
+  if((lsAbsX.s&&R.s||lsAbsX.e&&R.e)&&ds.some(d=>!kzChgOk(d)))return toast('변경 마감이 지난 주가 있어요 · 예배 전주 일요일까지만 바꿀 수 있어요');
+  B.disabled=true;try{const list=ds.map(d=>({date:d,from:n,to:''}));let ok=true;
+   if(lsAbsX.s&&R.s)ok=await addOvr(list)&&ok;
+   if(lsAbsX.e&&R.e)ok=await addOvr(list,'session')&&ok;
+   if(lsAbsX.l&&lw.length&&lsSub){for(const d of lw){const base=ldrBase(d);for(const x of ovr.filter(x=>x.k==='L'&&x.date===d&&x.pair))for(const y of ovr.filter(y=>y.pair===x.pair&&y.date!==d))await db.doc('overrides/'+y._id).delete();if(lsSub===base){for(const x of ovr.filter(x=>x.k==='L'&&x.date===d))await db.doc('overrides/'+x._id).delete()}else ok=await addOvr([{date:d,from:base,to:lsSub}],'L')&&ok}}
+   if(ok){toast(`${n} 님 ${ds.length}주 불참 등록했어요`);lsSel=[];lsSub='';lsView()}}catch(e){console.error(e);toast('등록하지 못했어요')}B.disabled=false}}
 function lsView(){if(!lsM)lsM=nextSun().slice(0,7);
 const eff=d=>{const b=ldrBase(d),c=ovr.find(x=>x.k==='L'&&x.date===d&&x.from===b);return c&&c.to?c.to:b},
 chg=d=>{const b=ldrBase(d);return ovr.some(x=>x.k==='L'&&x.date===d&&x.from===b)},
@@ -5824,15 +5848,15 @@ const pick=d=>d?`<div class="ls4-pk"><span>${fmtD(d)}</span><b><i class="ldot ${
 const sum=lsSel.length===2&&eff(d1)===eff(d2)?'<div class="ls4-warn">두 날짜의 인도자가 같아서 바꿀 필요가 없어요</div>':ok?`<div class="ls4-res">교환하면 <b>${fmtD(d1)}</b>은 ${esc(eff(d2))}, <b>${fmtD(d2)}</b>은 ${esc(eff(d1))}가 인도해요</div>`:'';
 $('#body').innerHTML=`<div class="wk ls4"><div class="ro-h kz-page-h"><div><h1 class="ht2">인도자 일정</h1><div class="mu">주일별 인도자를 한눈에 보고, 두 주를 맞바꾸거나 한 주만 다른 사람이 대신 설 수 있어요</div>${canLeaderEdit()?'':'<div class="kz-ro-note" style="margin:10px 0 0">🔒 <b>보기만 할 수 있어요.</b> 인도자 일정(교환 · 대신 서기 · 로테이션)은 인도자만 바꿀 수 있어요.</div>'}</div><span class="sp"></span><span class="ls4-lg">${LEADERS.map(L=>`<span><i class="ldot ${ldrCls(L)}"></i>${esc(L)}</span>`).join('')}</span>${typeof hasRole==='function'&&hasRole('인도자')?'<button type="button" class="sm" id="lcolbtn" style="margin-left:10px">내 색</button>':''}${canLeaderEdit()?'<button type="button" class="btn" id="lrot" style="margin-left:10px">로테이션 설정</button>':''}</div>
 <div class="ls4-main"><section class="ls4-cal"><div class="ls4-nav"><button type="button" class="hc-nav" id="lp" aria-label="이전">‹</button><b>${y0}년 ${m0}월 – ${last[0]!==y0?last[0]+'년 ':''}${last[1]}월</b><button type="button" class="hc-nav" id="ln" aria-label="다음">›</button><span class="sp"></span><button type="button" class="sm" id="ltd">이번 주로</button></div><div class="ls4-months">${mm.map(([y,m])=>month(y,m)).join('')}</div></section>
-<aside class="ls4-side"><div class="ls4-tabs" role="tablist" aria-label="인도 변경 방법"><button type="button" role="tab" aria-selected="${lsKind==='swap'}" class="${lsKind==='swap'?'on':''}" data-lsmode="swap">${V13I('swap')}<span><b>인도 교환</b><small>두 주를 맞바꿔요</small></span></button><button type="button" role="tab" aria-selected="${lsKind==='sub'}" class="${lsKind==='sub'?'on':''}" data-lsmode="sub">${V13I('leader')}<span><b>대신 서기</b><small>한 주만 다른 사람</small></span></button></div><section class="ls4-box">${lsKind==='sub'?lsSubBox(d1,d1?eff(d1):''):`<p class="mu">바꿀 두 주일을 달력에서 누르면 두 사람의 인도 주간이 한 번에 맞바뀌어요.</p><div class="ls4-pair">${pick(d1)}<span class="ls4-arr">⇅</span>${pick(d2)}</div>${sum}<div class="ls4-act"><button class="btn" id="lsb" ${ok?'':'disabled'}>교환 등록</button>${lsSel.length?'<button class="sm" id="lc">선택 해제</button>':''}</div>`}</section>
+<aside class="ls4-side"><div class="ls4-tabs" role="tablist" aria-label="인도 변경 방법"><button type="button" role="tab" aria-selected="${lsKind==='swap'}" class="${lsKind==='swap'?'on':''}" data-lsmode="swap">${V13I('swap')}<span><b>인도 교환</b><small>두 주를 맞바꿔요</small></span></button><button type="button" role="tab" aria-selected="${lsKind==='sub'}" class="${lsKind==='sub'?'on':''}" data-lsmode="sub">${V13I('leader')}<span><b>대신 서기</b><small>한 주만 다른 사람</small></span></button><button type="button" role="tab" aria-selected="${lsKind==='abs'}" class="${lsKind==='abs'?'on':''}" data-lsmode="abs">${V13I('calendar')}<span><b>불참</b><small>인도 · 싱어 · 세션 한 번에</small></span></button></div><section class="ls4-box">${lsKind==='abs'?lsAbsBox(eff):lsKind==='sub'?lsSubBox(d1,d1?eff(d1):''):`<p class="mu">바꿀 두 주일을 달력에서 누르면 두 사람의 인도 주간이 한 번에 맞바뀌어요.</p><div class="ls4-pair">${pick(d1)}<span class="ls4-arr">⇅</span>${pick(d2)}</div>${sum}<div class="ls4-act"><button class="btn" id="lsb" ${ok?'':'disabled'}>교환 등록</button>${lsSel.length?'<button class="sm" id="lc">선택 해제</button>':''}</div>`}</section>
 <section class="ls4-box"><div class="ls4-bh">${V13I('list')}<b>변경 내역</b><span class="mu" style="margin-left:auto;font-size:12px">${groups.length?groups.length+'건':''}</span></div>${groups.length?groups.map(g=>`<div class="ls4-row"><i class="ls4-kind ${g[0].pair?'':'sub'}">${g[0].pair?'교환':'대신'}</i><div>${g.map(x=>`<div class="ls4-ch"><span>${fmtD(x.date)}</span><span>${esc(x.from)} → ${x.to?`<b>${esc(x.to)}</b>`:'<s>미정</s>'}</span></div>`).join('')}</div>${canLeaderEdit()?`<button class="sm" data-d="${g[0]._id}">취소</button>`:'<span class="mu">열람</span>'}</div>`).join(''):'<div class="ls4-empty">아직 변경 내역이 없어요</div>'}</section></aside></div></div>`;
 $('#lp').onclick=()=>{lsM=ymd(new Date(Date.UTC(y0,m0-2,1))).slice(0,7);lsView()};$('#ln').onclick=()=>{lsM=ymd(new Date(Date.UTC(y0,m0,1))).slice(0,7);lsView()};$('#ltd').onclick=()=>{lsM=nextSun().slice(0,7);lsView()};
-$$('.ls4-d[data-c]').forEach(b=>b.onclick=()=>{const c=b.dataset.c;if(lsKind==='sub'){lsSel=lsSel[0]===c?[]:[c];lsSub='';lsView();if(lsSel.length&&matchMedia('(max-width:900px)').matches)$('.ls4-side')?.scrollIntoView({block:'start',behavior:'smooth'});return}if(lsSel.includes(c))lsSel=lsSel.filter(x=>x!==c);else{lsSel.push(c);if(lsSel.length>2)lsSel.shift()}lsView()});
+$$('.ls4-d[data-c]').forEach(b=>b.onclick=()=>{const c=b.dataset.c;if(lsKind==='abs'){if(c<ns)return toast('지난 주일은 고를 수 없어요');lsSel=lsSel.includes(c)?lsSel.filter(x=>x!==c):[...lsSel,c].sort();lsView();return}if(lsKind==='sub'){lsSel=lsSel[0]===c?[]:[c];lsSub='';lsView();if(lsSel.length&&matchMedia('(max-width:900px)').matches)$('.ls4-side')?.scrollIntoView({block:'start',behavior:'smooth'});return}if(lsSel.includes(c))lsSel=lsSel.filter(x=>x!==c);else{lsSel.push(c);if(lsSel.length>2)lsSel.shift()}lsView()});
 if($('#lc'))$('#lc').onclick=()=>{lsSel=[];lsView()};
 const apply=async(d,nl,pair)=>{const base=ldrBase(d);if(nl===base){for(const x of ovr.filter(x=>x.k==='L'&&x.date===d))await db.doc('overrides/'+x._id).delete();return true}return addOvr([{date:d,from:base,to:nl,pair}],'L')};
 if($('#lsb'))$('#lsb').onclick=async()=>{if(!ok)return;const a=eff(d1),b=eff(d2);const pr='p'+Date.now().toString(36);try{if(await apply(d1,b,pr)&&await apply(d2,a,pr)){lsSel=[];lsView()}}catch(e){console.error(e);toast('등록하지 못했어요')}};
 $$('[data-d]').forEach(b=>b.onclick=async()=>{try{const x=ovr.find(o=>o._id===b.dataset.d),ids=x&&x.pair?ovr.filter(o=>o.pair===x.pair).map(o=>o._id):[b.dataset.d];for(const i of ids)await db.doc('overrides/'+i).delete();toast('취소했어요')}catch(e){toast('취소하지 못했어요')}});
-$$('[data-lsmode]').forEach(b=>b.onclick=()=>{if(lsKind===b.dataset.lsmode)return;lsKind=b.dataset.lsmode;lsSel=lsKind==='sub'?lsSel.slice(-1):[];lsSub='';lsView()});
+$$('[data-lsmode]').forEach(b=>b.onclick=()=>{if(lsKind===b.dataset.lsmode)return;lsKind=b.dataset.lsmode;lsSel=lsKind==='sub'?lsSel.slice(-1):[];lsSub='';lsView()});try{lsAbsBind(eff)}catch(e){console.warn(e)}
 $$('[data-sub]').forEach(b=>b.onclick=()=>{lsSub=lsSub===b.dataset.sub?'':b.dataset.sub;lsView()});
 const si=$('#lsSubIn');if(si){const take=()=>{const v=si.value.trim().replace(/\s+/g,' ');if(v!==lsSub&&(v||!document.querySelector('.ls4-cand.on'))){lsSub=v;lsView()}};si.onchange=take;si.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();take()}}}
 const sb=$('#lsSubB');if(sb)sb.onclick=async()=>{const d=lsSel[0],cur=d&&eff(d);if(!d||!lsSub||lsSub===cur)return;sb.disabled=true;try{for(const x of ovr.filter(x=>x.k==='L'&&x.date===d&&x.pair))for(const y of ovr.filter(y=>y.pair===x.pair&&y.date!==d))await db.doc('overrides/'+y._id).delete();if(await apply(d,lsSub)){toast(`${fmtD(d)}은 ${lsSub} 님이 대신 인도해요`);lsSel=[];lsSub='';lsView()}}catch(e){console.error(e);toast('등록하지 못했어요')}sb.disabled=false};
@@ -11083,7 +11107,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=66').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=67').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12690,4 +12714,10 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .kz-absx-c button:disabled{opacity:.75;cursor:default}
 .kz-absx small{display:block;font-size:12.5px;line-height:1.5;color:#8a7360}
 .kz-absx-sum{color:#b4612c;font-weight:700}
+</style>
+<style id="kz-ls-abs">
+.ls4-dchip{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--bg);border:1px solid var(--bd);font-size:13px;font-weight:700}
+.ls4-dchip.lead{border-color:#d9a679;background:#fbf0e4;color:#9a4f1f}
+.ls4-hint{display:block;margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--mu)}
+@media(max-width:520px){.ls4-tabs button small{display:none}.ls4-tabs button{justify-content:center;gap:6px;padding:9px 6px}}
 </style>
