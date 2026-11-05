@@ -18,6 +18,7 @@ module.exports=async function handler(req,res){
   let remind=null;try{remind=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpRemind'});}catch(e){console.error('[rsvp-remind]',e.code||e.name||e.message);remind={error:true};}
   let ppt=null;try{ppt=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'pptRemind'});}catch(e){console.error('[ppt-remind]',e.code||e.name||e.message);ppt={error:true};}
   let serve=null;try{serve=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'serveRemind'});}catch(e){console.error('[serve-remind]',e.code||e.name||e.message);serve={error:true};}
+  let conti=null;try{conti=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'contiRemind'});}catch(e){console.error('[conti-remind]',e.code||e.name||e.message);conti={error:true};}
   let ev=null;try{ev=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'eventRemind'});}catch(e){console.error('[event-remind]',e.code||e.name||e.message);ev={error:true};}
   /* 참석 응답 마감이 지났으면 관리자급에게 미응답 명단 (토요 연습: 마감일 저녁 7시) */
   let report=null;try{report=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'rsvpReport'});}catch(e){console.error('[rsvp-report]',e.code||e.name||e.message);report={error:true};}
@@ -26,6 +27,6 @@ module.exports=async function handler(req,res){
   let bday=null;try{bday=await require('../lib/community-runtime.cjs').getRuntime().run({system:true},{action:'bdayRemind'});}catch(e){console.error('[bday-remind]',e.code||e.name||e.message);bday={error:true};}
   /* 일주일에 한 번 자동 백업 (최근 6개만 보관) */
   let backup=null;try{backup=await require('../lib/admin-service.cjs').createAdminService({db,auth:admin.auth()}).autoBackup();}catch(e){console.error('[auto-backup]',e.code||e.name||e.message);backup={error:true};}
-  return res.json({deleted,remind,ppt,serve,ev,bday,inbox,report,backup:backup&&{id:backup.id,skipped:backup.skipped,error:backup.error}});
+  return res.json({deleted,remind,ppt,serve,conti,ev,bday,inbox,report,backup:backup&&{id:backup.id,skipped:backup.skipped,error:backup.error}});
  }catch(e){console.error('[community-cleanup]',e.code||e.name);return res.status(500).json({error:'Cleanup failed'});}
 };
