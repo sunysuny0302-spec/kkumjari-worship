@@ -11108,7 +11108,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=70').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=71').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12834,14 +12834,14 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 @media(max-width:600px){.rd{padding:14px}.rd-l{grid-template-columns:1fr}.rd-p{width:60px}}
 </style>
 <script id="kz-why">
-/* 불참 사유: 여행 · 병원 · 시험 등 간단히 (관리자급과 본인만 사유가 보여요) */
+/* 불참 사유: 여행 · 병원 · 시험 등 간단히 (팀원 모두에게 보여요) */
 (function(){
  const E=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const RS=['여행','병원','시험','출장 · 근무','가족 행사','개인 사정'];
  const W={s:'',e:'',l:''};
- window.kzWhyOk=x=>{try{if(isManagementAccount())return true;if(['단장','인도자','선임싱어','선임세션'].includes(currentRank()))return true;if(hasRole('인도자'))return true;return x&&x.from===myName()}catch(e){return false}};
+ window.kzWhyOk=x=>true;/* 사유는 팀원 모두 볼 수 있어요 */
  window.kzWhyTag=x=>x&&x.why&&kzWhyOk(x)?` <small class="why-t">${E(x.why)}</small>`:'';
- const box=k=>{const v=W[k],pre=RS.includes(v);return `<div class="why" id="kzWhy" data-k="${k}"><b>왜 못 서나요? <em>간단히</em></b><div class="why-c">${RS.map(r=>`<button type="button" data-why="${E(r)}" class="${v===r?'on':''}">${E(r)}</button>`).join('')}</div><input id="kzWhyIn" maxlength="40" placeholder="직접 적기 (예: 수련회, 결혼식)" value="${pre?'':E(v)}" autocomplete="off"><small>사유는 관리자급과 본인에게만 보여요</small></div>`};
+ const box=k=>{const v=W[k],pre=RS.includes(v);return `<div class="why" id="kzWhy" data-k="${k}"><b>왜 못 서나요? <em>간단히</em></b><div class="why-c">${RS.map(r=>`<button type="button" data-why="${E(r)}" class="${v===r?'on':''}">${E(r)}</button>`).join('')}</div><input id="kzWhyIn" maxlength="40" placeholder="직접 적기 (예: 수련회, 결혼식)" value="${pre?'':E(v)}" autocomplete="off"><small>사유는 팀원 모두에게 보여요</small></div>`};
  function gate(k,btnId){const b=document.getElementById(btnId);if(!b)return;const ok=!!W[k].trim();if(!ok){b.disabled=true;b.dataset.whyBlock='1';b.title='불참 사유를 골라 주세요'}else if(b.dataset.whyBlock){b.dataset.whyBlock='';b.title='';b.disabled=false}}
  function wire(k,btnId){const r=document.getElementById('kzWhy');if(!r)return;
   r.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{W[k]=W[k]===b.dataset.why?'':b.dataset.why;r.querySelectorAll('[data-why]').forEach(x=>x.classList.toggle('on',x.dataset.why===W[k]));const i=r.querySelector('#kzWhyIn');if(i&&W[k])i.value='';gate(k,btnId)});
