@@ -4950,7 +4950,7 @@ const b=(on,attr,ic,lab)=>`<button type="button" class="${on?'on':''}" ${attr}><
 t.innerHTML=b(view==='home','data-tgo="home"',V13I('home'),'홈')+b(view==='notice','data-tgo="notice"',V13I('bell'),'공지')+b(view==='archive','data-tgo="archive"',V13I('archive'),'보관함')+b(inRole,R?`data-tgo="${ROLE_HOME[role]}"`:'data-tmenu="1"',R?V13I(role==='singer'?'mic':role==='session'?'guitar':'leader'):V13I('mic'),R?R[2]:'내 자리')+b(false,'data-tmenu="1"','☰','메뉴');
 $$('[data-tgo]',t).forEach(x=>x.onclick=()=>go(x.dataset.tgo));$$('[data-tmenu]',t).forEach(x=>x.onclick=()=>$('#shell').classList.add('open'));
 const sh=$('#shell');if(sh)sh.classList.toggle('no-tab',view==='edit')}
-function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자</span>`;if(view==='lsw')return `${V13I('calendar')}<span>인도자 일정</span>`;if(view==='rule_s'||view==='rule_e')return `${V13I('users')}<span>배정 규칙</span>`;if(['sched_s','sched_e','sched_x','swap','abs','absx'].includes(view))return `${V13I('calendar')}<span>배정표</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
+function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자</span>`;if(view==='lsw')return `${V13I('calendar')}<span>배정표</span>`;if(view==='rule_s'||view==='rule_e')return `${V13I('users')}<span>배정 규칙</span>`;if(['sched_s','sched_e','sched_x','swap','abs','absx'].includes(view))return `${V13I('calendar')}<span>배정표</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
 function renderTop(){
 $('#tl').innerHTML=`<button class="ib mb" id="mn" title="메뉴">☰</button><div class="pt">${pageTitle()}</div>`;$('#tr').innerHTML=`<span class="mu" id="stat"></span>${role==='leader'&&['edit','ment'].includes(view)?'<button class="btn upb" id="upl">업로드</button>':''}<button class="kz-account-btn" id="acct" title="내 계정과 권한">${esc(permLabel())}</button><button class="ib" id="kzMembersButton" title="멤버 접속 상태" aria-label="멤버 접속 상태" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v3"/></svg></button>`;
 $('#mn').onclick=()=>$('#shell').classList.add('open');if($('#upl'))$('#upl').onclick=uploadNow;$('#kzMembersButton').onclick=()=>window.kzOpenMembers();if($('#acct'))$('#acct').onclick=openAccountPicker;
@@ -9524,7 +9524,7 @@ html:root body #body .hm.hm-v13 .kh-song-card #khSongList:not(:has(*:nth-child(3
  if(typeof eventBody==='function'){const o=eventBody;eventBody=function(){const h=o.apply(this,arguments);return panel()+h};}
  if(typeof noticeView==='function'){const o=noticeView;noticeView=function(){const r=o.apply(this,arguments);try{bind(document.querySelector('#body'))}catch(e){}return r}}
  /* 인도자 일정 */
- if(typeof lsView==='function'){const o=lsView;lsView=function(){const r=o.apply(this,arguments);try{const h=document.querySelector('#body .ls4>.ro-h');if(h){h.insertAdjacentHTML('afterend',panel());bind(document.querySelector('#body'))}}catch(e){}return r}}
+ /* 인도자 일정에서는 '예배 없음 등록'을 보여주지 않아요 (공지 · 일정 → 일정에서 등록) */
  /* 홈 안내 */
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const hm=document.querySelector('#body .hm');if(!hm)return r;const d=date,n=shiftDate(nextSun(),7),msg=isNoSvc(d)?[d,'이 주']:(d===nextSun()&&isNoSvc(n))?[n,'다음 주']:null;
    if(msg){hm.insertAdjacentHTML('afterbegin',`<div class="hm-nosvc"><b>${msg[1]} ${md(msg[0])}은 청년부 예배가 없어요</b><small>${E(noSvcWhy(msg[0]))} · 인도자·싱어·세션 배정과 토요 연습이 쉬어요</small></div>`)}}catch(e){}return r}}
@@ -11113,7 +11113,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=77').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=78').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -13040,15 +13040,15 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 (function(){
  const K=[['singer','싱어','sched_s','swap'],['session','세션','sched_e','abs'],['eng','엔지니어','sched_x','absx'],['leader','인도자','lsw','lsw']];
  const kindOfView=v=>{const k=K.find(x=>x[2]===v||x[3]===v);return k?k[0]:null};
- const isChg=v=>['swap','abs','absx'].includes(v)||(v==='lsw'&&typeof lsKind!=='undefined'&&lsKind==='abs');
+ const isChg=v=>['swap','abs','absx'].includes(v)||(v==='lsw'&&!!window.kzLsChg);
  function pick(k){if(K.some(x=>x[0]===k))return k;let last='';try{last=localStorage.getItem('kzSchedKind')||''}catch(e){}
    if(K.some(x=>x[0]===last))return last;let p=[];try{const a=authAccount()||{},m=currentMember()||{};p=[...(a.parts||[]),...(m.parts||[]),a.rank||'',m.rank||'']}catch(e){}return p.includes('세션')||p.includes('선임세션')?'session':p.includes('엔지니어')&&!p.includes('싱어')?'eng':'singer'}
  window.kzGoSched=function(k,chg){k=pick(k);try{localStorage.setItem('kzSchedKind',k)}catch(e){}
-  if(k==='leader'){if(role!=='leader'){role='leader';LS('role','leader')}try{lsKind=chg?'abs':(lsKind==='abs'?'swap':lsKind);lsSel=[]}catch(e){}return go('lsw')}
+  if(k==='leader'){if(role!=='leader'){role='leader';LS('role','leader')}try{lsSel=[];lsSub=''}catch(e){}window.__lsChgNext=!!chg;return go('lsw')}
   const x=K.find(y=>y[0]===k);return goRole(k,chg?x[3]:x[2])};
  function bar(cur,chg){return `<div class="sk-bar"><div class="sk-seg" role="tablist" aria-label="배정표 고르기">${K.map(([k,l])=>`<button type="button" role="tab" data-sk="${k}" class="${k===cur?'on':''}" aria-selected="${k===cur}">${l}</button>`).join('')}</div><div class="sk-mode" role="tablist" aria-label="보기 · 일정 변경"><button type="button" data-skm="0" class="${chg?'':'on'}">${V13I('calendar')}배정표</button><button type="button" data-skm="1" class="${chg?'on':''}">${V13I('swap')}일정 변경</button></div></div>`}
  function inject(){const b=document.getElementById('body');if(!b||b.querySelector('.sk-bar'))return;const cur=kindOfView(view);if(!cur)return;const chg=isChg(view);
-  const h=b.querySelector('.kz-page-h h1, .ro-h h1, .cv6-hero h1');if(!h)return;if(view!=='lsw')h.textContent='배정표';
+  const h=b.querySelector('.kz-page-h h1, .ro-h h1, .cv6-hero h1');if(!h)return;h.textContent='배정표';
   const d=document.createElement('div');d.innerHTML=bar(cur,chg);const el=d.firstElementChild;h.parentElement.insertBefore(el,h.nextSibling);
   el.querySelectorAll('[data-sk]').forEach(x=>x.onclick=()=>{if(x.dataset.sk!==cur)window.kzGoSched(x.dataset.sk,chg)});
   el.querySelectorAll('[data-skm]').forEach(x=>x.onclick=()=>{const c=x.dataset.skm==='1';if(c!==chg)window.kzGoSched(cur,c)});
@@ -13092,8 +13092,8 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .wk2-l{display:flex;flex-wrap:wrap;gap:4px 14px}
 .wk2-i{font-size:13.5px;font-weight:700;color:var(--tx);line-height:1.6}
 .wk2-i em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--mu);margin-right:5px}
-.wk2-i s{text-decoration:none;font-size:12.5px;font-weight:700;color:#c4512f}
-.wk2-i.ab{color:#a33b1d;font-weight:600}
+.wk2-i s{text-decoration:none;font-size:11.5px;font-weight:600;color:#c4512f}
+.wk2-i.ab{color:#a33b1d;font-size:12px;font-weight:600}
 .wk2-none{font-size:13px;color:var(--mu)}
 </style>
 <style id="kz-sk3-css">
@@ -13108,3 +13108,18 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 #body.sk-on .sx{gap:10px!important;row-gap:10px!important}#body.sk-on .sx>.ro-h{padding-bottom:0!important;margin-bottom:0!important;min-height:0!important}#body.sk-on .sx>.wk2{margin:0!important}
 </style>
 <style id="kz-r2inst-css">.r2-inst{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;font-weight:700;color:var(--mu)}.r2-inst select{height:28px;padding:0 6px;border-radius:8px;border:1px solid var(--bd2);background:var(--card);font:inherit;font-size:12.5px;font-weight:700;color:var(--tx)}</style>
+<script id="kz-lsmode">
+/* 인도자 일정: 들어가면 배정표(달력)만, '일정 변경'에서 교환 · 대신 서기 · 불참 */
+(function(){
+ window.kzLsChg=false;
+ const g=window.go;if(typeof g==='function'){const w=function(v){if(v==='lsw'){window.kzLsChg=!!window.__lsChgNext;window.__lsChgNext=false}return g.apply(this,arguments)};window.go=w;try{go=w}catch(e){}}
+ const o=window.lsView;if(typeof o==='function'){const w=function(){const r=o.apply(this,arguments);try{const root=document.querySelector('#body .ls4');if(root){root.classList.toggle('ls4-view',!window.kzLsChg);root.classList.toggle('ls4-chg',!!window.kzLsChg);
+   if(!window.kzLsChg){root.querySelectorAll('.ls4-d[data-c]').forEach(b=>{b.onclick=null;b.tabIndex=-1});const lr=root.querySelector('#lrot');if(lr)lr.remove()}}}catch(e){console.warn(e)}return r};window.lsView=w;try{lsView=w}catch(e){}}
+})();
+</script>
+<style id="kz-lsmode-css">
+.ls4-view .ls4-main{grid-template-columns:minmax(0,1fr)!important}
+.ls4-view .ls4-side{display:none!important}
+.ls4-view .ls4-d{cursor:default}
+.ls4-view .ls4-d.on{border-color:transparent!important;background:none!important}
+</style>
