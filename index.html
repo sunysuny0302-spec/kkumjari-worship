@@ -4842,7 +4842,7 @@ const toast=m=>{const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeo
 const copyBtnState=(b,ok=true)=>{if(!b)return;toast(ok?'복사되었습니다.':'복사하지 못했어요. 다시 눌러주세요.');};
 const ROLES=[['leader','♛','인도자'],['singer','🎤','싱어'],['session','🎸','세션'],['eng','🎚','엔지니어']];
 const TABS={singer:['sched_s','swap','rule_s'],session:['sched_e','abs','rule_e'],leader:['lpick','edit','ment','lsw'],eng:['sched_x','absx']};
-const TAB={sched_x:['📅','일정표'],absx:['🔁','일정 변경'],home:['🏠','홈'],week:['🏠','이번 주 콘티'],edit:['🎼','송폼 · 악보 관리'],ment:['💬','주간 콘티 작성'],preview:['👀','프리뷰 & 업로드'],swap:['🔁','일정 변경'],sched_s:['📅','일정표'],sched_e:['📅','일정표'],members:['👥','멤버 명단'],abs:['🔁','일정 변경'],rule_s:['⚙️','배정 규칙'],rule_e:['⚙️','배정 규칙'],lsw:['🔁','인도자 일정'],lpick:['🎼','인도자 선택'],archive:['🗂','보관함'],library:['🗂','보관함']};
+const TAB={sched_x:['📅','배정표'],absx:['🔁','일정 변경'],home:['🏠','홈'],week:['🏠','이번 주 콘티'],edit:['🎼','송폼 · 악보 관리'],ment:['💬','주간 콘티 작성'],preview:['👀','프리뷰 & 업로드'],swap:['🔁','일정 변경'],sched_s:['📅','배정표'],sched_e:['📅','배정표'],members:['👥','멤버 명단'],abs:['🔁','일정 변경'],rule_s:['⚙️','배정 규칙'],rule_e:['⚙️','배정 규칙'],lsw:['🔁','인도자 일정'],lpick:['🎼','인도자 선택'],archive:['🗂','보관함'],library:['🗂','보관함']};
 const PRE=[['Intro','#111'],['Inter','#111'],['Outro','#111']];
 const ymd=d=>d.toISOString().slice(0,10);
 /* 한국 시간 기준으로 계산 (toISOString은 UTC라 오전 9시 전에는 하루 전 날짜가 나오던 문제 수정) */
@@ -4950,7 +4950,7 @@ const b=(on,attr,ic,lab)=>`<button type="button" class="${on?'on':''}" ${attr}><
 t.innerHTML=b(view==='home','data-tgo="home"',V13I('home'),'홈')+b(view==='notice','data-tgo="notice"',V13I('bell'),'공지')+b(view==='archive','data-tgo="archive"',V13I('archive'),'보관함')+b(inRole,R?`data-tgo="${ROLE_HOME[role]}"`:'data-tmenu="1"',R?V13I(role==='singer'?'mic':role==='session'?'guitar':'leader'):V13I('mic'),R?R[2]:'내 자리')+b(false,'data-tmenu="1"','☰','메뉴');
 $$('[data-tgo]',t).forEach(x=>x.onclick=()=>go(x.dataset.tgo));$$('[data-tmenu]',t).forEach(x=>x.onclick=()=>$('#shell').classList.add('open'));
 const sh=$('#shell');if(sh)sh.classList.toggle('no-tab',view==='edit')}
-function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자</span>`;if(view==='lsw')return `${V13I('calendar')}<span>인도자 일정</span>`;if(view==='rule_s'||view==='rule_e')return `${V13I('users')}<span>배정 규칙</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
+function pageTitle(){if(PAGES[view])return `${V13I(PAGES[view][0])}<span>${PAGES[view][1]}</span>`;if(view==='lpick')return `${V13I('leader')}<span>인도자</span>`;if(view==='lsw')return `${V13I('calendar')}<span>인도자 일정</span>`;if(view==='rule_s'||view==='rule_e')return `${V13I('users')}<span>배정 규칙</span>`;if(view==='sched_s'||view==='sched_e'||view==='sched_x')return `${V13I('calendar')}<span>배정표</span>`;const r=ROLES.find(x=>x[0]===role),ic=(view==='edit'?'music':view==='ment'?'archive':view==='sched_s'||view==='sched_e'?'calendar':view==='abs'||view==='swap'?'list':view==='rule_s'||view==='rule_e'?'users':null);return `${ic?V13I(ic):''}<span>${role==='leader'&&['edit','ment'].includes(view)?`<span class="${ldrCls(ldr)}">${ldr}</span> · `:r?r[2]+' · ':''}${(TAB[view]||[0,""])[1]}</span>`}
 function renderTop(){
 $('#tl').innerHTML=`<button class="ib mb" id="mn" title="메뉴">☰</button><div class="pt">${pageTitle()}</div>`;$('#tr').innerHTML=`<span class="mu" id="stat"></span>${role==='leader'&&['edit','ment'].includes(view)?'<button class="btn upb" id="upl">업로드</button>':''}<button class="kz-account-btn" id="acct" title="내 계정과 권한">${esc(permLabel())}</button><button class="ib" id="kzMembersButton" title="멤버 접속 상태" aria-label="멤버 접속 상태" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v3"/></svg></button>`;
 $('#mn').onclick=()=>$('#shell').classList.add('open');if($('#upl'))$('#upl').onclick=uploadNow;$('#kzMembersButton').onclick=()=>window.kzOpenMembers();if($('#acct'))$('#acct').onclick=openAccountPicker;
@@ -6331,7 +6331,7 @@ sub();stat()}catch(e){console.error(e)}})();
     const t=e.target.closest('button,input,textarea,select,[contenteditable="true"],canvas,.marker,.mk,.drag,.dropzone,.upload,.dz,[data-add],[data-del],[data-save],[data-upload]');
     if(!t) return;
     /* 열람/이동 성격의 컨트롤은 그대로 사용 가능 */
-    if(t.closest('.kz-readonly-notice') || t.matches('[data-o],[data-mo],.preview,.zoom,[data-zoom],[data-rv],[data-v],[data-view],[data-go],[data-nav]')) return;
+    if(t.closest('.kz-readonly-notice,.sk-seg,.r2-kseg') || t.matches('[data-o],[data-mo],.preview,.zoom,[data-zoom],[data-rv],[data-v],[data-view],[data-go],[data-nav]')) return;
     e.preventDefault();
     e.stopPropagation();
     if(typeof window.toast==='function') window.toast(READONLY_MSG);
@@ -7685,7 +7685,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  const admSing=isAdm||chX.includes('선임싱어')?[T('sched_s','roster','싱어 일정'),T('swap','swap','일정 변경'),T('rule_s','rule','배정 규칙')]:[],admSess=isAdm||chX.includes('선임세션')?[T('sched_e','roster','세션 일정'),T('abs','swap','일정 변경'),T('rule_e','rule','배정 규칙')]:[];
  const prep=[T('vault','archive','보관함'),T('song_requests','request','신청곡'),T('lyrics','slides','가사·PPT')];
  const team=[T('prac','metro','참석 확인'),T('attend','attend',att),T('members','users','멤버'),T('minutes','note','회의록')];
- const sched=[sing||staff?T('sched_s','roster','싱어 일정'):'',sess||staff?T('sched_e','roster','세션 일정'):'',T('lsw','roster','인도자 일정'),T('sched_x','roster','엔지니어 일정'),staff&&!admSing.length&&!admSess.length&&!isSS&&!isSE?T('rule','rule','배정 규칙'):''/* 관리자급은 싱어 · 세션 배정 규칙 모두 */,!sing&&!staff?T('sched_s','roster','싱어 일정'):'',!sess&&!staff?T('sched_e','roster','세션 일정'):''];
+ const sched=[T('sched','roster','배정표'),staff&&!admSing.length&&!admSess.length&&!isSS&&!isSE?T('rule','rule','배정 규칙'):''];
  const admin=staff?[(isChief||isAdm)?T('storage','cloud','저장 공간'):'',T('trash','trash','휴지통')]:[];
  const me=[!staff||isAdm?'':T('mobile_my','myturn','내 순서'),T('account','idcard','내 계정'),T('tour','help','사용법'),T('all','grid','전체 메뉴')];
  return `<section class="km-page km-more2">
@@ -7715,7 +7715,7 @@ window.kzSchedPush={describe,flush:()=>flush(),_q:()=>Q};
  window.kzMoreRole=id=>{try{localStorage.setItem('kzMoreRoleV1',id)}catch(e){}document.querySelectorAll('.km-rseg [data-rs]').forEach(b=>{const on=b.dataset.rs===id;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});document.querySelectorAll('.km-rp').forEach(x=>x.hidden=x.dataset.rp!==id)};
  body=function(){if(view!=='mobile_my'&&view!=='mobile_more')return oldBody();const b=document.getElementById('body');if(!b)return;b.innerHTML=view==='mobile_my'?myPage():morePage();const bar=document.getElementById('dbar');if(bar)bar.hidden=true;
  b.querySelectorAll('[data-mobile-date]').forEach(x=>x.onclick=()=>{go('home');goDate(x.dataset.mobileDate);window.scrollTo({top:0,behavior:'instant'})});
- b.querySelectorAll('[data-mobile-action]').forEach(x=>x.onclick=()=>{const a=x.dataset.mobileAction;if(a==='account')return openAccountPicker();if(a==='tour')return window.kzTour&&kzTour(true);if(a==='events'){ntTab='e';return go('notice')}if(a==='swap')return goRole('singer','swap');if(a==='sched_x'||a==='absx')return goRole('eng',a);if(a==='rule')return window.kzGoRule();if(a==='rule_s')return window.kzGoRule('singer');if(a==='rule_e')return window.kzGoRule('session');if(a==='kzhub')return window.kzAdminHub&&kzAdminHub();if(a==='approve'){openAccountPicker();let n=0;const t=setInterval(()=>{const x=[...document.querySelectorAll('#kzAdminPanel .kz-admin-section')].find(e=>/가입 승인/.test(e.textContent));if(x||++n>30){clearInterval(t);x&&x.scrollIntoView({block:'start',behavior:'smooth'})}},150);return}if(a==='prac')return window.kzRsvpHub&&kzRsvpHub.open();if(a==='sched_s')return goRole('singer','sched_s');if(a==='sched_e')return goRole('session','sched_e');if(a==='abs')return goRole('session','abs');if(a==='leader')return openLeaderRoom();if(a==='all')return document.getElementById('shell')?.classList.add('open');go(a)});stat();setBH();
+ b.querySelectorAll('[data-mobile-action]').forEach(x=>x.onclick=()=>{const a=x.dataset.mobileAction;if(a==='account')return openAccountPicker();if(a==='tour')return window.kzTour&&kzTour(true);if(a==='events'){ntTab='e';return go('notice')}if(a==='swap')return goRole('singer','swap');if(a==='sched')return window.kzGoSched();if(a==='sched_x'||a==='absx')return goRole('eng',a);if(a==='rule')return window.kzGoRule();if(a==='rule_s')return window.kzGoRule('singer');if(a==='rule_e')return window.kzGoRule('session');if(a==='kzhub')return window.kzAdminHub&&kzAdminHub();if(a==='approve'){openAccountPicker();let n=0;const t=setInterval(()=>{const x=[...document.querySelectorAll('#kzAdminPanel .kz-admin-section')].find(e=>/가입 승인/.test(e.textContent));if(x||++n>30){clearInterval(t);x&&x.scrollIntoView({block:'start',behavior:'smooth'})}},150);return}if(a==='prac')return window.kzRsvpHub&&kzRsvpHub.open();if(a==='sched_s')return goRole('singer','sched_s');if(a==='sched_e')return goRole('session','sched_e');if(a==='abs')return goRole('session','abs');if(a==='leader')return openLeaderRoom();if(a==='all')return document.getElementById('shell')?.classList.add('open');go(a)});stat();setBH();
  };
  const oldDbar=renderDbar;renderDbar=function(){if(view==='mobile_my'||view==='mobile_more'){const b=document.getElementById('dbar');if(b)b.hidden=true;setBH();return}return oldDbar()};
  function sync(){if(!document.getElementById('shell'))return;if(!mq.matches&&(view==='mobile_my'||view==='mobile_more'))return go('home');renderTabbar();renderTop();renderDbar();body()}
@@ -11113,7 +11113,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=74').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=75').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -11124,7 +11124,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
   if(k==='account')return openAccountPicker();if(k==='tour')return window.kzTour&&kzTour(true);if(k==='events'){try{ntTab='e'}catch(_){}return go('notice')}
   if(k==='prac')return window.kzRsvpHub&&kzRsvpHub.open();if(k==='approve')return window.kzOpenApprove?kzOpenApprove():openAccountPicker();
   if(k==='leader')return openLeaderRoom();if(k==='all'){const q=document.querySelector('[data-qk]');if(q){q.click();return}return document.getElementById('shell')?.classList.add('open')}
-  if(k==='sched_x'||k==='absx')return goRole('eng',k);if(k==='rule'||k==='rule_s'||k==='rule_e')return window.kzGoRule(k==='rule_e'?'session':k==='rule_s'?'singer':undefined);if(k==='swap'||k==='sched_s')return goRole('singer',k);if(k==='abs'||k==='sched_e'||k==='rule_e')return goRole('session',k);
+  if(k==='sched')return window.kzGoSched();if(k==='sched_x'||k==='absx')return goRole('eng',k);if(k==='rule'||k==='rule_s'||k==='rule_e')return window.kzGoRule(k==='rule_e'?'session':k==='rule_s'?'singer':undefined);if(k==='swap'||k==='sched_s')return goRole('singer',k);if(k==='abs'||k==='sched_e'||k==='rule_e')return goRole('session',k);
   if(k==='mobile_my'&&!mobile())return goRole('singer','sched_s');
   go(k)}catch(e){console.warn('[도우미 이동]',e);try{go('home')}catch(_){}}}
  /* 설명서 검색 (AI가 꺼져 있을 때) */
@@ -13013,7 +13013,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
  function sched(){const b=document.getElementById('body');if(!b)return;const all=engs(),ws=G(()=>sundays().slice(0,8),[]),ns=G(()=>nextSun(),'');
   const rows=ws.map(d=>{const no=G(()=>isNoSvc(d),false),ab=G(()=>ovr.filter(x=>x.k==='eng'&&x.date===d&&!x.to),[]),abN=new Set(ab.map(x=>x.from)),on=all.filter(n=>!abN.has(n));
    return `<div class="xs-r ${d===ns?'now':''} ${no?'no':''}"><div class="xs-d"><b>${md(d)}</b>${d===ns?'<em>이번 주</em>':''}</div><div class="xs-v">${no?`<span class="mu">예배 없음</span>`:`${on.map(n=>`<span class="xs-n ${n===me()?'me':''}">${E(n)}</span>`).join('')||'<span class="xs-empty">서는 사람 없음</span>'}${ab.map(x=>`<span class="xs-n ab"><s>${E(x.from)}</s>${x.why?` <small>${E(x.why)}</small>`:''}</span>`).join('')}`}</div></div>`}).join('');
-  b.innerHTML=`<div class="wk mxw1 sch"><div class="kz-page-h" style="display:flex;align-items:flex-end;gap:12px;margin-bottom:12px"><div style="flex:1"><h1 class="ht2" style="margin:0">엔지니어 일정</h1><div class="mu" style="margin-top:4px">로테이션 없이 엔지니어 모두가 매주 서요 · 불참만 빠져요</div></div>${window.kzEngCan()?'<button class="btn" id="xsGo">일정 변경</button>':''}</div>
+  b.innerHTML=`<div class="wk mxw1 sch"><div class="kz-page-h" style="display:flex;align-items:flex-end;gap:12px;margin-bottom:12px"><div style="flex:1"><h1 class="ht2" style="margin:0">배정표</h1><div class="mu" style="margin-top:4px">로테이션 없이 엔지니어 모두가 매주 서요 · 불참만 빠져요</div></div>${window.kzEngCan()?'<button class="btn" id="xsGo">일정 변경</button>':''}</div>
   <section class="card xs">${all.length?rows:'<div class="empty" style="padding:20px 0">엔지니어로 등록된 사람이 없어요. 멤버 명단에서 파트에 엔지니어를 넣어 주세요.</div>'}</section></div>`;
   const g=document.getElementById('xsGo');if(g)g.onclick=()=>goRole('eng','absx')}
  const ob=body;body=function(){if(view!=='absx'&&view!=='sched_x')return ob.apply(this,arguments);try{const bar=document.getElementById('dbar');if(bar)bar.hidden=true}catch(e){}view==='absx'?page():sched()};
@@ -13033,4 +13033,28 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .xs-n.me{background:#3d2b1f;border-color:#3d2b1f;color:#fff}
 .xs-n.ab{background:#fdf1ea;border-color:#f0cdb5;color:#a33b1d}.xs-n.ab small{font-size:11px;font-weight:700;color:#7a5236}
 .xs-empty{font-size:13px;color:#b4452a;font-weight:700}
+</style>
+<script id="kz-sched1">
+/* 배정표: 싱어 · 세션 · 엔지니어 · 인도자를 한 화면에서 골라 보기 (공지 · 일정의 '일정'과 구분해 '배정표'라고 부름) */
+(function(){
+ const K=[['singer','싱어','sched_s'],['session','세션','sched_e'],['eng','엔지니어','sched_x'],['leader','인도자','lsw']];
+ window.kzGoSched=function(k){if(!K.some(x=>x[0]===k)){let last='';try{last=localStorage.getItem('kzSchedKind')||''}catch(e){}
+   if(K.some(x=>x[0]===last))k=last;else{let p=[];try{const a=authAccount()||{},m=currentMember()||{};p=[...(a.parts||[]),...(m.parts||[]),a.rank||'',m.rank||'']}catch(e){}k=p.includes('세션')||p.includes('선임세션')?'session':p.includes('엔지니어')&&!p.includes('싱어')?'eng':'singer'}}
+  try{localStorage.setItem('kzSchedKind',k)}catch(e){}
+  if(k==='leader'){if(role!=='leader'){role='leader';LS('role','leader')}return go('lsw')}
+  const v=K.find(x=>x[0]===k)[2];return goRole(k,v)};
+ function seg(cur){return `<div class="sk-seg" role="tablist" aria-label="배정표 고르기">${K.map(([k,l])=>`<button type="button" role="tab" data-sk="${k}" class="${k===cur?'on':''}" aria-selected="${k===cur}">${l}</button>`).join('')}</div>`}
+ function inject(cur,rename){const b=document.getElementById('body');if(!b||b.querySelector('.sk-seg'))return;const h=b.querySelector('.kz-page-h h1, .ro-h h1');if(!h)return;if(rename)h.textContent='배정표';
+  const d=document.createElement('div');d.innerHTML=seg(cur);const el=d.firstElementChild;const host=h.parentElement;host.insertBefore(el,h.nextSibling);
+  el.querySelectorAll('[data-sk]').forEach(x=>x.onclick=()=>{if(x.dataset.sk!==cur)window.kzGoSched(x.dataset.sk)})}
+ const wrap=(n,cur,rename)=>{const o=window[n];if(typeof o!=='function'||o.__sk)return;const w=function(){const r=o.apply(this,arguments);try{inject(cur,rename)}catch(e){console.warn(e)}return r};w.__sk=1;window[n]=w;try{eval(n+'=w')}catch(e){}};
+ wrap('schedSView','singer',true);wrap('schedEView','session',true);wrap('lsView','leader',false);
+ const ob=body;body=function(){const r=ob.apply(this,arguments);try{if(view==='sched_x')inject('eng',false)}catch(e){}return r};
+})();
+</script>
+<style id="kz-sched1-css">
+.sk-seg{display:inline-flex;gap:3px;margin:10px 0 2px;padding:3px;border-radius:999px;background:rgba(120,88,56,.09);max-width:100%;overflow-x:auto}
+.sk-seg button{flex:none;min-height:34px;padding:0 15px;border:0;border-radius:999px;background:none;font:inherit;font-size:14px;font-weight:700;color:var(--mu);cursor:pointer;white-space:nowrap}
+.sk-seg button.on{background:#3d2b1f;color:#fff;box-shadow:0 2px 6px rgba(60,40,20,.15)}
+@media(max-width:600px){.sk-seg button{padding:0 12px;font-size:13.5px}}
 </style>
