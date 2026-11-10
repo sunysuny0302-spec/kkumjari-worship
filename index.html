@@ -11115,7 +11115,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=82').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=83').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12988,33 +12988,33 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
  const engs=()=>G(()=>members,[]).filter(m=>m.eng||(m.parts||[]).includes('엔지니어')||(m.roles||[]).includes('엔지니어')).map(m=>m.name).sort((a,b)=>a.localeCompare(b,'ko'));
  const me=()=>G(()=>myName(),'');
  const staff=()=>G(()=>isManagementAccount()||['단장','인도자','선임싱어','선임세션'].includes(currentRank()),false);
- /* 엔지니어 일정은 엔지니어만 고칠 수 있어요 (다른 사람은 보기만) */
- window.kzEngCan=()=>engs().includes(me());
+ /* 엔지니어 일정: 싱어 · 세션처럼 엔지니어는 본인 것, 관리자급(단장 · 인도자 · 선임 · 관리계정)은 모두 */
+ window.kzEngCan=()=>staff()||engs().includes(me());
  window.kzIsEng=n=>engs().includes(n);
  window.kzEngOn=d=>{if(G(()=>isNoSvc(d),false))return [];const ab=new Set(G(()=>ovr.filter(x=>x.k==='eng'&&x.date===d&&!x.to).map(x=>x.from),[]));return engs().filter(n=>!ab.has(n))};
  const S={n:'',ds:[],why:'',cus:false};
  const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}/${x.getDate()}`};
- function page(){const b=document.getElementById('body');if(!b)return;const all=engs(),mine=me(),can=window.kzEngCan(),names=can?all:[];
+ function page(){const b=document.getElementById('body');if(!b)return;const all=engs(),mine=me(),can=window.kzEngCan(),st=staff(),names=!can?[]:st?all:all.filter(n=>n===mine);/* 싱어 · 세션과 같게: 관리자급은 모두, 엔지니어는 본인만 */
   if(!S.n||!names.includes(S.n))S.n=names.includes(mine)?mine:(names[0]||'');
   const ws=G(()=>sundays().slice(0,8),[]),ok=d=>G(()=>kzChgOk(d),true)&&!G(()=>isNoSvc(d),false);S.ds=S.ds.filter(ok);
   const ready=S.n&&S.ds.length&&S.why.trim();
   const hist=G(()=>ovr.filter(x=>x.k==='eng'&&x.date>=shiftDate(nextSun(),-7)).sort((a,b)=>a.date<b.date?-1:1),[]);
   const row=(l,body)=>`<div class="kzc-r"><span class="kzc-l">${l}</span><div>${body}</div></div>`;
   b.innerHTML=`<div class="wk mxw1 sch"><div class="kz-page-h" style="margin-bottom:12px"><h1 class="ht2" style="margin:0">엔지니어 일정 변경</h1><div class="mu" style="margin-top:4px">엔지니어는 로테이션 없이 매주 서요. 못 오는 날만 사유와 함께 알려 주세요.</div></div>
-  <section class="card wz kzc">${!can?`<div class="kz-ro-note" style="margin:12px 0">🔒 <b>보기만 할 수 있어요.</b> 엔지니어 일정은 엔지니어만 바꿀 수 있어요.</div>`:names.length?`
+  <section class="card wz kzc">${!can?`<div class="kz-ro-note" style="margin:12px 0">🔒 <b>보기만 할 수 있어요.</b> 엔지니어 일정은 엔지니어와 관리자급이 바꿀 수 있어요.</div>`:names.length?`
    ${row('누가',`<div class="nchs">${names.map(n=>`<button type="button" class="nchip ${n===S.n?'on':''}" data-xn="${E(n)}">${E(n)}</button>`).join('')}</div>`)}
    ${row('언제',`<div class="wchs">${ws.map(d=>{const o=ok(d),on=S.ds.includes(d);return `<button type="button" class="wchip ${on?'on':''} ${o?'':'dis lock'}" data-xw="${d}" ${o?'':'disabled'}><b>${md(d)}</b>${o?'':'<em>마감</em>'}</button>`}).join('')}</div><div class="kz-chg-note">변경 마감: 예배 <b>전주 일요일</b>까지 · 여러 주 선택 가능</div>`)}
    <div class="why why2"><span class="why-l">사유</span><div class="why-v"><div class="why-c">${RS.map(r=>`<button type="button" data-xy="${E(r)}" class="${!S.cus&&S.why===r?'on':''}">${E(r)}</button>`).join('')}<button type="button" data-xyc class="${S.cus?'on':''}">기타</button></div><input id="xWhy" maxlength="40" placeholder="예: 수련회, 결혼식" value="${S.cus?E(S.why):''}" ${S.cus?'':'hidden'} autocomplete="off"></div></div>
    <div class="kzc-bar"><div class="cv6-summary" id="xSum">${ready?`<b>${E(S.n)}</b> · ${S.ds.map(md).join(', ')} <span style="color:#b4452a;font-weight:800">불참</span> · ${E(S.why)}`:!S.ds.length?'못 오는 주일을 골라요':'사유를 골라요'}</div><div class="g"><button class="btn" id="xGo" ${ready?'':'disabled'}>불참 등록</button></div></div>`
    :'<div class="empty" style="padding:20px 0">엔지니어로 등록된 사람이 없어요. 멤버 명단에서 파트에 엔지니어를 넣어 주세요.</div>'}</section>
-  <section class="card" style="margin-top:14px"><div class="ch"><b>변경 내역</b><span class="mu" style="margin-left:8px">${hist.length}건</span></div>${hist.length?hist.map(x=>`<div class="row2"><span>${G(()=>fmtD(x.date),x.date)} · <b>${E(x.from)}</b> → <s class="ab">불참</s>${x.why?` <small class="why-t">${E(x.why)}</small>`:''}</span>${can?`<button class="sm" data-xd="${x._id}">취소</button>`:''}</div>`).join(''):'<div class="empty">등록된 불참이 없어요</div>'}</section></div>`;
+  <section class="card" style="margin-top:14px"><div class="ch"><b>변경 내역</b><span class="mu" style="margin-left:8px">${hist.length}건</span></div>${hist.length?hist.map(x=>`<div class="row2"><span>${G(()=>fmtD(x.date),x.date)} · <b>${E(x.from)}</b> → <s class="ab">불참</s>${x.why?` <small class="why-t">${E(x.why)}</small>`:''}</span>${st||x.from===mine?`<button class="sm" data-xd="${x._id}">취소</button>`:''}</div>`).join(''):'<div class="empty">등록된 불참이 없어요</div>'}</section></div>`;
   b.querySelectorAll('[data-xn]').forEach(x=>x.onclick=()=>{S.n=x.dataset.xn;page()});
   b.querySelectorAll('[data-xw]').forEach(x=>x.onclick=()=>{const d=x.dataset.xw;S.ds=S.ds.includes(d)?S.ds.filter(y=>y!==d):[...S.ds,d].sort();page()});
   b.querySelectorAll('[data-xy]').forEach(x=>x.onclick=()=>{S.cus=false;S.why=S.why===x.dataset.xy?'':x.dataset.xy;page()});
   const cb=b.querySelector('[data-xyc]');if(cb)cb.onclick=()=>{S.cus=true;S.why='';page();const i=document.getElementById('xWhy');i&&i.focus()};
   const wi=document.getElementById('xWhy');if(wi)wi.oninput=()=>{S.why=wi.value.trim();const ok2=S.n&&S.ds.length&&S.why;const g=document.getElementById('xGo');if(g)g.disabled=!ok2;const sm=document.getElementById('xSum');if(sm)sm.innerHTML=ok2?`<b>${E(S.n)}</b> · ${S.ds.map(md).join(', ')} <span style="color:#b4452a;font-weight:800">불참</span> · ${E(S.why)}`:!S.ds.length?'못 오는 주일을 골라요':'사유를 골라요'};
-  const go2=document.getElementById('xGo');if(go2)go2.onclick=async()=>{if(!window.kzEngCan())return toast('엔지니어만 바꿀 수 있어요');if(!(S.n&&S.ds.length&&S.why.trim()))return;go2.disabled=true;const ok3=await addOvr(S.ds.map(d=>({date:d,from:S.n,to:'',why:S.why.trim()})),'eng');if(ok3){S.ds=[];S.why='';S.cus=false}page()};
-  b.querySelectorAll('[data-xd]').forEach(x=>x.onclick=async()=>{if(!window.kzEngCan())return toast('엔지니어만 바꿀 수 있어요');const o=G(()=>ovr.find(y=>y._id===x.dataset.xd),null);if(o)await delOvrFor(o);page()})}
+  const go2=document.getElementById('xGo');if(go2)go2.onclick=async()=>{if(!window.kzEngCan())return toast('엔지니어와 관리자급만 바꿀 수 있어요');if(!(S.n&&S.ds.length&&S.why.trim()))return;go2.disabled=true;const ok3=await addOvr(S.ds.map(d=>({date:d,from:S.n,to:'',why:S.why.trim()})),'eng');if(ok3){S.ds=[];S.why='';S.cus=false}page()};
+  b.querySelectorAll('[data-xd]').forEach(x=>x.onclick=async()=>{if(!window.kzEngCan())return toast('엔지니어와 관리자급만 바꿀 수 있어요');const o=G(()=>ovr.find(y=>y._id===x.dataset.xd),null);if(o)await delOvrFor(o);page()})}
  function sched(){const b=document.getElementById('body');if(!b)return;const all=engs(),ws=G(()=>sundays().slice(0,8),[]),ns=G(()=>nextSun(),'');
   const rows=ws.map(d=>{const no=G(()=>isNoSvc(d),false),ab=G(()=>ovr.filter(x=>x.k==='eng'&&x.date===d&&!x.to),[]),abN=new Set(ab.map(x=>x.from)),on=all.filter(n=>!abN.has(n));
    return `<div class="xs-r ${d===ns?'now':''} ${no?'no':''}"><div class="xs-d"><b>${md(d)}</b>${d===ns?'<em>이번 주</em>':''}</div><div class="xs-v">${no?`<span class="mu">예배 없음</span>`:`${on.map(n=>`<span class="xs-n ${n===me()?'me':''}">${E(n)}</span>`).join('')||'<span class="xs-empty">서는 사람 없음</span>'}${ab.map(x=>`<span class="xs-n ab"><s>${E(x.from)}</s>${x.why?` <small>${E(x.why)}</small>`:''}</span>`).join('')}`}</div></div>`}).join('');
