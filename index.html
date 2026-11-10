@@ -11113,7 +11113,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=79').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=80').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -13052,9 +13052,9 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
   const d=document.createElement('div');d.innerHTML=bar(cur,chg);const el=d.firstElementChild;h.parentElement.insertBefore(el,h.nextSibling);
   el.querySelectorAll('[data-sk]').forEach(x=>x.onclick=()=>{if(x.dataset.sk!==cur)window.kzGoSched(x.dataset.sk,chg)});
   el.querySelectorAll('[data-skm]').forEach(x=>x.onclick=()=>{const c=x.dataset.skm==='1';if(c!==chg)window.kzGoSched(cur,c)});
-  /* 일정 변경 안에서 싱어 · 세션 로테이션(배정 규칙) 설정으로 바로 가기 — 정할 수 있는 사람에게만 */
+  /* 배정표(보기) 화면에서 싱어 · 세션 로테이션(배정 규칙) 설정으로 바로 가기 — 정할 수 있는 사람에게만 */
   const canR=(()=>{try{return cur==='singer'?canSingerManage():cur==='session'?canSessionManage():false}catch(e){return false}})();
-  if(chg&&canR){const rb=document.createElement('button');rb.type='button';rb.className='sk-rule';rb.innerHTML=V13I('users')+'로테이션 설정';rb.onclick=()=>window.kzGoRule(cur);el.appendChild(rb)}
+  if(!chg&&canR){const rb=document.createElement('button');rb.type='button';rb.className='sk-rule';rb.innerHTML=V13I('users')+'로테이션 설정';rb.onclick=()=>window.kzGoRule(cur);el.appendChild(rb)}
   b.classList.add('sk-on')}
  const wrap=n=>{const o=window[n];if(typeof o!=='function'||o.__sk)return;const w=function(){const r=o.apply(this,arguments);try{inject()}catch(e){console.warn(e)}return r};w.__sk=1;window[n]=w;try{eval(n+'=w')}catch(e){}};
  ['schedSView','schedEView','lsView','swapView','absView'].forEach(wrap);
@@ -13117,7 +13117,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
  window.kzLsChg=false;
  const g=window.go;if(typeof g==='function'){const w=function(v){if(v==='lsw'){window.kzLsChg=!!window.__lsChgNext;window.__lsChgNext=false}return g.apply(this,arguments)};window.go=w;try{go=w}catch(e){}}
  const o=window.lsView;if(typeof o==='function'){const w=function(){const r=o.apply(this,arguments);try{const root=document.querySelector('#body .ls4');if(root){root.classList.toggle('ls4-view',!window.kzLsChg);root.classList.toggle('ls4-chg',!!window.kzLsChg);
-   if(!window.kzLsChg){root.querySelectorAll('.ls4-d[data-c]').forEach(b=>{b.onclick=null;b.tabIndex=-1});const lr=root.querySelector('#lrot');if(lr)lr.remove()}}}catch(e){console.warn(e)}return r};window.lsView=w;try{lsView=w}catch(e){}}
+   if(!window.kzLsChg){root.querySelectorAll('.ls4-d[data-c]').forEach(b=>{b.onclick=null;b.tabIndex=-1})}else{/* 로테이션 설정은 배정표(보기) 쪽에만 */const lr=root.querySelector('#lrot');if(lr)lr.remove()}}}catch(e){console.warn(e)}return r};window.lsView=w;try{lsView=w}catch(e){}}
 })();
 </script>
 <style id="kz-lsmode-css">
