@@ -7964,7 +7964,7 @@ function paintChat(force=false){const l=$c('#kcChatLog');if(!l)return;const near
  const clock=t=>new Date(t).toLocaleTimeString('ko-KR',{hour:'numeric',minute:'2-digit'});
  const dayKey=t=>new Date(t).toDateString();
  const same=(x,y)=>!!(x&&y)&&String(x.owner||x.name)===String(y.owner||y.name)&&isMyChatMessage(x)===isMyChatMessage(y)&&dayKey(x.createdAt)===dayKey(y.createdAt)&&Math.abs(y.createdAt-x.createdAt)<=stampGap;
- const emojiOnly=t=>!!t&&t.length<=12&&/^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|️|‍|\s)+$/u.test(t);
+ const emojiOnly=t=>!!t&&t.length<=16&&/^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|[0-9#*]\u20E3|\u20E3|️|‍|\s)+$/u.test(t);
  l.innerHTML=(chatCursor?'<button class="kc-more" id="kcOlder">이전 대화 보기</button>':'')+(items.length?items.map((m,i)=>{const dk=dayKey(m.createdAt);
 const header=dk!==day?`<div class="kc-day"><span>${escape(dayLabel(m.createdAt))}</span></div>`:'';day=dk;
 const mine=isMyChatMessage(m),first=!!header||!same(items[i-1],m),last=!same(m,items[i+1]);
@@ -13131,3 +13131,4 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .ls4-view .ls4-d.on{border-color:transparent!important;background:none!important}
 </style>
 <style id="kz-skrule-css">.sk-rule{display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:0 13px;border-radius:12px;border:0;background:#4c6a8c;color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}.sk-rule .ico svg{width:15px;height:15px}.sk-rule .ico{color:#fff}.sk-rule .ico svg,.sk-rule .ico svg *{stroke:#fff!important}</style>
+<style id="kz-emoji-big">/* 이모티콘만 보낸 메시지는 크게 (말풍선 없이) */#kcPanel .kc-bubble.emoji{font-size:46px!important;line-height:1.1!important;padding:2px 2px!important;background:none!important;border:0!important;box-shadow:none!important}</style>
