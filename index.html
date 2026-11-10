@@ -6728,14 +6728,14 @@ window.KZPasskey=(()=>{
 function v6Weeks(){return sundays().slice(0,5)}
 function v6SingerState(n,d){const b=baseNames(d).includes(n), c=ovr.find(x=>x.date===d&&!x.k&&x.from===n), incoming=ovr.find(x=>x.date===d&&!x.k&&x.to===n);if(c)return c.to?{t:'out',to:c.to}:{t:'abs'};if(incoming)return{t:'rep',from:incoming.from};return b?{t:'on'}:{t:'off'}}
 function schLegend(){return `<div class="sx-lg"><span><i class="sx-dot"></i>참여</span><span><i class="sx-pill abs">불참</i></span><span><i class="sx-pill rep">대타</i></span><span><i class="sx-blank">·</i>쉬는 주</span></div>`}
-function schWeekCards(ws,render){const ns=nextSun();return `<div class="sx-weeks">${ws.slice(0,2).map((d,i)=>`<section class="sx-wk ${d===ns?'now':''}"><div class="sx-wk-h"><b>${fmtD(d)}</b><span class="lr-tag ${d===ns?'now':''}">${wkTag(d)||(i?'다음 주':'')}</span></div>${isNoSvc(d)?`<div class="nosvc-box"><b>예배 없음</b><span>${esc(noSvcWhy(d))}</span></div>`:render(d)}</section>`).join('')}</div>`}
+function schWeekCards(ws,render){const ns=nextSun();/* 이번 주 · 다음 주를 한 상자에 두 줄로 (작게) */return `<section class="wk2">${ws.slice(0,2).map((d,i)=>`<div class="wk2-r ${d===ns?'now':''}"><div class="wk2-d"><b>${wkLbl(d)}</b><small>${wkTag(d)||(i?'다음 주':'')}</small></div><div class="wk2-v">${isNoSvc(d)?`<span class="wk2-none">예배 없음 · ${esc(noSvcWhy(d))}</span>`:render(d)}</div></div>`).join('')}</section>`}
 function schedSView(){const ws=v6Weeks(),names=singRoster().map(x=>x.n),tagOf=n=>sing.fixed.includes(n)?'매주 고정':sing.rot.includes(n)?'로테이션':'멤버',ns=nextSun();
 const cell=(n,d)=>{if(isNoSvc(d))return '<i class="sx-pill nosvc" title="'+esc(noSvcWhy(d))+'">예배 없음</i>';const x=v6SingerState(n,d);return x.t==='on'?'<i class="sx-dot" title="참여"></i>':x.t==='abs'?'<i class="sx-pill abs">불참</i>':x.t==='out'?`<i class="sx-pill out" title="${esc(x.to)}가 대신 서요">→ ${esc(x.to)}</i>`:x.t==='rep'?`<i class="sx-pill rep" title="${esc(x.from)} 대신">대타</i>`:'<i class="sx-blank">·</i>'};
 const cnt=d=>names.filter(n=>{const t=v6SingerState(n,d).t;return t==='on'||t==='rep'}).length;
 const head=`<div class="sx-c sx-hd sx-nm">싱어</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=names.map(n=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(n).slice(-2))}</span><span><b>${esc(n)}</b><small>${tagOf(n)}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(n,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const l=String(singersFor(d)||'').split(',').map(v=>v.trim()).filter(Boolean);return `<div class="sx-names">${l.length?l.map(n=>`<span class="sx-chip">${esc(n)}</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
+const card=d=>{const l=String(singersFor(d)||'').split(',').map(v=>v.trim()).filter(Boolean),ab=(()=>{try{return singEff(d).filter(x=>x.abs).map(x=>x.from)}catch(e){return []}})();return l.length||ab.length?`<div class="wk2-l"><span class="wk2-i"><em>싱어</em>${l.length?l.map(esc).join(' · '):'<s>없음</s>'}</span>${ab.length?`<span class="wk2-i ab"><em>불참</em>${ab.map(esc).join(' · ')}</span>`:''}</div>`:'<span class="wk2-none">배정 전</span>'};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">싱어 일정표</h1><div class="mu">앞으로 5주 동안 누가 서는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goSwap">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend()}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goSwap'))$('#goSwap').onclick=()=>go('swap')}
 function v6SessState(m,d){const c=ovr.find(x=>x.date===d&&x.k==='session'&&x.from===m.n),incoming=ovr.find(x=>x.date===d&&x.k==='session'&&x.to===m.n),oldAbs=sessAbs.some(a=>a.date===d&&a.name===m.n);if(c)return c.to?{t:'out',to:c.to}:{t:'abs'};if(oldAbs)return{t:'abs'};if(incoming)return{t:'rep',from:incoming.from};const fill=sessFill(d),on=Object.values(fill).includes(m.n);return on?{t:'on'}:{t:'off'}}
@@ -6747,7 +6747,7 @@ const cnt=d=>ms.filter(m=>{const t=v6SessState(m,d).t;return t==='on'||t==='rep'
 const head=`<div class="sx-c sx-hd sx-nm">세션</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=ms.map(m=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(m.n).slice(-2))}</span><span><b>${esc(m.n)}</b><small>${esc(m.tag||'세션')}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(m,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f),lb=k=>k==='메인'?'건반 메인':k==='세컨'?'건반 세컨':slotLbl(k),emp=l.filter(k=>!f[k]).length;/* 악기 | 이름 표 형태 (빈 자리는 흐린 빨간 글씨) */return l.length?`<div class="sx-lu">${l.map(k=>`<div class="sx-lu-r ${f[k]?'':'emp'}"><span class="sx-lu-k">${esc(lb(k))}</span><span class="sx-lu-n">${f[k]?esc(f[k]):'비어 있음'}</span></div>`).join('')}</div>${emp?`<div class="sx-lu-f">빈 자리 ${emp}곳</div>`:''}`:'<div class="sx-names"><span class="mu">배정 전</span></div>'};
+const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);if(!l.length)return '<span class="wk2-none">배정 전</span>';/* 건반(메인·세컨)은 한 칸으로 묶고, 빈 자리는 흐린 빨간 글씨 */const g=[];l.forEach(k=>{const lab=(k==='메인'||k==='세컨')?'건반':slotLbl(k);let x=g.find(y=>y.k===lab);if(!x){x={k:lab,n:[],e:0};g.push(x)}if(f[k])x.n.push(f[k]);else x.e++});return `<div class="wk2-l">${g.map(x=>`<span class="wk2-i ${x.n.length?'':'emp'}"><em>${esc(x.k)}</em>${x.n.map(esc).join(' · ')}${x.e?`${x.n.length?' · ':''}<s>빈 자리${x.e>1?' '+x.e:''}</s>`:''}</span>`).join('')}</div>`};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">세션 일정표</h1><div class="mu">악기별로 앞으로 5주 동안 누가 연주하는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goAbs">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend().replace('<i class="sx-dot"></i>참여','<i class="sx-slot">악기</i>참여')}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goAbs'))$('#goAbs').onclick=()=>go('abs')}
 /* 세션 변경 시트도 불참 / 대타 / 서로 교대 지원 */
@@ -13081,4 +13081,29 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .sx-lu-r.emp .sx-lu-n{font-size:13px;font-weight:600;color:#c27a5f}
 .sx-lu-f{margin-top:8px;font-size:12px;font-weight:700;color:#b4452a}
 @media(max-width:420px){.sx-lu{gap:0 12px}.sx-lu-k{width:58px;font-size:12px}.sx-lu-n{font-size:14.5px}}
+</style>
+<style id="kz-wk2-css">
+.wk2{margin:12px 0 14px;padding:4px 14px;border:1px solid var(--bd);border-radius:16px;background:var(--card)}
+.wk2-r{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--bd)}
+.wk2-r:last-child{border-bottom:0}
+.wk2-d{display:flex;flex-direction:column;gap:1px;padding-top:1px}
+.wk2-d b{font-size:14px;font-weight:800}.wk2-d small{font-size:11px;font-weight:700;color:var(--mu)}
+.wk2-r.now .wk2-d b,.wk2-r.now .wk2-d small{color:#b4612c}
+.wk2-l{display:flex;flex-wrap:wrap;gap:4px 14px}
+.wk2-i{font-size:13.5px;font-weight:700;color:var(--tx);line-height:1.6}
+.wk2-i em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--mu);margin-right:5px}
+.wk2-i s{text-decoration:none;font-size:12.5px;font-weight:700;color:#c4512f}
+.wk2-i.ab{color:#a33b1d;font-weight:600}
+.wk2-none{font-size:13px;color:var(--mu)}
+</style>
+<style id="kz-sk3-css">
+/* 배정표 머리: 설명 문구 숨기고 버튼 줄을 촘촘하게 */
+#body.sk-on .sx .ro-h .mu,#body.sk-on .sch .ro-h .mu,#body.sk-on .cv6-hero p,#body.sk-on .kz-page-h>div>.mu{display:none}
+#body.sk-on .sx .ro-h,#body.sk-on .sch .ro-h{margin-bottom:4px}
+#body.sk-on .sk-bar{margin:8px 0 0;gap:6px 8px}
+#body.sk-on .sk-seg button{min-height:32px;padding:0 13px;font-size:13.5px}
+#body.sk-on .sk-mode button{min-height:30px;padding:0 10px;font-size:13px}
+#body.sk-on .sx .wk2{margin-top:10px}
+#body.sk-on .ht2{font-size:22px}
+#body.sk-on .sx{gap:10px!important;row-gap:10px!important}#body.sk-on .sx>.ro-h{padding-bottom:0!important;margin-bottom:0!important;min-height:0!important}#body.sk-on .sx>.wk2{margin:0!important}
 </style>
