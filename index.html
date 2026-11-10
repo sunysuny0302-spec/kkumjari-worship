@@ -11113,7 +11113,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=78').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=79').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -13052,6 +13052,9 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
   const d=document.createElement('div');d.innerHTML=bar(cur,chg);const el=d.firstElementChild;h.parentElement.insertBefore(el,h.nextSibling);
   el.querySelectorAll('[data-sk]').forEach(x=>x.onclick=()=>{if(x.dataset.sk!==cur)window.kzGoSched(x.dataset.sk,chg)});
   el.querySelectorAll('[data-skm]').forEach(x=>x.onclick=()=>{const c=x.dataset.skm==='1';if(c!==chg)window.kzGoSched(cur,c)});
+  /* 일정 변경 안에서 싱어 · 세션 로테이션(배정 규칙) 설정으로 바로 가기 — 정할 수 있는 사람에게만 */
+  const canR=(()=>{try{return cur==='singer'?canSingerManage():cur==='session'?canSessionManage():false}catch(e){return false}})();
+  if(chg&&canR){const rb=document.createElement('button');rb.type='button';rb.className='sk-rule';rb.innerHTML=V13I('users')+'로테이션 설정';rb.onclick=()=>window.kzGoRule(cur);el.appendChild(rb)}
   b.classList.add('sk-on')}
  const wrap=n=>{const o=window[n];if(typeof o!=='function'||o.__sk)return;const w=function(){const r=o.apply(this,arguments);try{inject()}catch(e){console.warn(e)}return r};w.__sk=1;window[n]=w;try{eval(n+'=w')}catch(e){}};
  ['schedSView','schedEView','lsView','swapView','absView'].forEach(wrap);
@@ -13123,3 +13126,4 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .ls4-view .ls4-d{cursor:default}
 .ls4-view .ls4-d.on{border-color:transparent!important;background:none!important}
 </style>
+<style id="kz-skrule-css">.sk-rule{display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:0 13px;border-radius:12px;border:0;background:#4c6a8c;color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}.sk-rule .ico svg{width:15px;height:15px}.sk-rule .ico{color:#fff}.sk-rule .ico svg,.sk-rule .ico svg *{stroke:#fff!important}</style>
