@@ -6747,7 +6747,7 @@ const cnt=d=>ms.filter(m=>{const t=v6SessState(m,d).t;return t==='on'||t==='rep'
 const head=`<div class="sx-c sx-hd sx-nm">세션</div>`+ws.map(d=>`<div class="sx-c sx-hd ${d===ns?'now':''}"><b>${wkLbl(d)}</b>${wkTag(d)?`<small>${wkTag(d)}</small>`:''}</div>`).join('');
 const rows=ms.map(m=>`<div class="sx-c sx-nm"><span class="sx-av">${esc(String(m.n).slice(-2))}</span><span><b>${esc(m.n)}</b><small>${esc(m.tag||'세션')}</small></span></div>`+ws.map(d=>`<div class="sx-c ${d===ns?'now':''}">${cell(m,d)}</div>`).join('')).join('');
 const foot=`<div class="sx-c sx-ft sx-nm">인원</div>`+ws.map(d=>`<div class="sx-c sx-ft ${d===ns?'now':''}">${cnt(d)}명</div>`).join('');
-const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f);return `<div class="sx-names">${l.length?l.map(k=>f[k]?`<span class="sx-chip"><em class="sx-chip-k">${esc(slotLbl(k))}</em>${esc(f[k])}</span>`:`<span class="sx-chip empty"><em class="sx-chip-k">${esc(slotLbl(k))}</em>비어 있음</span>`).join(''):'<span class="mu">배정 전</span>'}</div>`};
+const card=d=>{const f=sessFill(d),l=LINES.filter(k=>k!=='인도'&&k in f),lb=k=>k==='메인'?'건반 메인':k==='세컨'?'건반 세컨':slotLbl(k),emp=l.filter(k=>!f[k]).length;/* 악기 | 이름 표 형태 (빈 자리는 흐린 빨간 글씨) */return l.length?`<div class="sx-lu">${l.map(k=>`<div class="sx-lu-r ${f[k]?'':'emp'}"><span class="sx-lu-k">${esc(lb(k))}</span><span class="sx-lu-n">${f[k]?esc(f[k]):'비어 있음'}</span></div>`).join('')}</div>${emp?`<div class="sx-lu-f">빈 자리 ${emp}곳</div>`:''}`:'<div class="sx-names"><span class="mu">배정 전</span></div>'};
 $('#body').innerHTML=`<div class="wk sx"><div class="ro-h kz-page-h"><div><h1 class="ht2">세션 일정표</h1><div class="mu">악기별로 앞으로 5주 동안 누가 연주하는지 한눈에 볼 수 있어요</div></div><span class="sp"></span>${canEdit?`<button class="btn sx-go" id="goAbs">${V13I('swap')}일정 변경</button>`:''}</div>${schWeekCards(ws,card)}<section class="sx-card"><div class="sx-card-h"><b>5주 배정표</b>${schLegend().replace('<i class="sx-dot"></i>참여','<i class="sx-slot">악기</i>참여')}</div><div class="sx-scroll"><div class="sx-grid" style="--n:${ws.length}">${head}${rows}${foot}</div></div></section><p class="sx-note">불참·대타·서로 교대는 ‘일정 변경’에서 등록해요. 교대는 한 번에 두 날짜가 함께 바뀌어요.</p></div>`;
 if($('#goAbs'))$('#goAbs').onclick=()=>go('abs')}
 /* 세션 변경 시트도 불참 / 대타 / 서로 교대 지원 */
@@ -13072,4 +13072,13 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .sk-mode button .ico svg{width:15px;height:15px}
 .sk-mode button.on{background:#fdf1ea;color:#a33b1d}
 #body.sk-on #goSwap,#body.sk-on #goAbs,#body.sk-on #xsGo,#body.sk-on #backSch{display:none!important}
+</style>
+<style id="kz-sxlu-css">
+.sx-lu{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:6px}
+.sx-lu-r{display:flex;align-items:center;gap:10px;min-height:38px;border-bottom:1px solid var(--bd)}
+.sx-lu-k{flex:none;width:68px;font-size:12.5px;font-weight:700;color:var(--mu)}
+.sx-lu-n{flex:1;min-width:0;font-size:15px;font-weight:800;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sx-lu-r.emp .sx-lu-n{font-size:13px;font-weight:600;color:#c27a5f}
+.sx-lu-f{margin-top:8px;font-size:12px;font-weight:700;color:#b4452a}
+@media(max-width:420px){.sx-lu{gap:0 12px}.sx-lu-k{width:58px;font-size:12px}.sx-lu-n{font-size:14.5px}}
 </style>
