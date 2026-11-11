@@ -1,5 +1,5 @@
 const {timingSafeEqual}=require('node:crypto');
-/* 매일 아침(한국 시간 8시대) 생일 알림. 같은 날 두 번 보내지 않도록 서버에서 기록해요. */
+/* 매일 자정(한국 시간 0시대) 생일 알림. 같은 날 두 번 보내지 않도록 서버에서 기록해요. */
 module.exports=async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET')return res.status(405).end();
