@@ -4966,7 +4966,7 @@ async function goDate(d){if(d===date)return;const old=date;date=d;lastKey=null;t
 /* ---------- 날짜 바 · 달력 ---------- */
 let calOpen=false,calM=null;
 const lbl=d=>{const n=nextSun();return d===n?'이번 주':d===shiftDate(n,7)?'다음 주':d===shiftDate(n,-7)?'지난 주':''};
-function renderDbar(){const b=$('#dbar');if(!b)return;const hide=view==='archive'||view==='members'||view==='lpick'||view==='minutes'||view==='notice'||view==='trash'||view==='library'||view==='attend'||view==='lyrics'||view==='song_requests'||view==='storage';b.hidden=hide;if(hide){calOpen=false;setBH();return}
+function renderDbar(){const b=$('#dbar');if(!b)return;const hide=view==='archive'||view==='members'||view==='lpick'||view==='minutes'||view==='notice'||view==='trash'||view==='library'||view==='attend'||view==='lyrics'||view==='song_requests'||view==='storage'||/* 배정표 · 일정 변경 · 배정 규칙은 고른 주일과 상관없이 앞으로의 주를 보여주므로 날짜 줄을 숨김 */['sched_s','sched_e','sched_x','swap','abs','absx','rule_s','rule_e','lsw'].includes(view);b.hidden=hide;if(hide){calOpen=false;setBH();return}
 b.innerHTML=`${role==='leader'&&['edit','ment'].includes(view)?'<span class="dbl">업로드할 날짜</span>':''}<div class="dnav"><button class="dn-b" id="dp" title="이전 주 (←)">‹</button><button class="dn-c" id="dc"><span class="dic">📅</span><b>${fmtD(date)}</b><i class="ldot ${ldrCls(ldrOf(date))}" title="인도 ${ldrOf(date)}"></i>${lbl(date)?`<em>${lbl(date)}</em>`:''}</button><button class="dn-b" id="dn" title="다음 주 (→)">›</button></div><button class="dn-t" id="dt0" ${date===nextSun()?'style="visibility:hidden" tabindex="-1"':''}>이번 주로</button><div class="cal" id="cal" ${calOpen?'':'hidden'}></div>`;
 $('#dp').onclick=()=>goDate(shiftDate(date,-7));$('#dn').onclick=()=>goDate(shiftDate(date,7));
 $('#dc').onclick=()=>{calOpen=!calOpen;calM=date.slice(0,7);$('#cal').hidden=!calOpen;if(calOpen)drawCal()};
@@ -11118,7 +11118,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=83').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=84').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -13054,7 +13054,7 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
  const kindOfView=v=>{const k=K.find(x=>x[2]===v||x[3]===v);return k?k[0]:null};
  const isChg=v=>['swap','abs','absx'].includes(v)||(v==='lsw'&&!!window.kzLsChg);
  function pick(k){if(K.some(x=>x[0]===k))return k;let last='';try{last=localStorage.getItem('kzSchedKind')||''}catch(e){}
-   if(K.some(x=>x[0]===last))return last;let p=[];try{const a=authAccount()||{},m=currentMember()||{};p=[...(a.parts||[]),...(m.parts||[]),a.rank||'',m.rank||'']}catch(e){}return p.includes('세션')||p.includes('선임세션')?'session':p.includes('엔지니어')&&!p.includes('싱어')?'eng':'singer'}
+   if(K.some(x=>x[0]===last))return last;/* 처음엔 내 역할부터: 인도자 → 싱어 → 세션 → 엔지니어 (더보기 '내 자리'와 같은 순서) */let p=[];try{const a=authAccount()||{},m=currentMember()||{};p=[...(a.parts||[]),...(m.parts||[]),a.rank||'',m.rank||'']}catch(e){}return p.includes('인도자')?'leader':p.includes('싱어')||p.includes('선임싱어')?'singer':p.includes('세션')||p.includes('선임세션')?'session':p.includes('엔지니어')?'eng':'singer'}
  window.kzGoSched=function(k,chg){k=pick(k);try{localStorage.setItem('kzSchedKind',k)}catch(e){}
   if(k==='leader'){if(role!=='leader'){role='leader';LS('role','leader')}try{lsSel=[];lsSub=''}catch(e){}window.__lsChgNext=!!chg;return go('lsw')}
   const x=K.find(y=>y[0]===k);return goRole(k,chg?x[3]:x[2])};
@@ -13150,4 +13150,8 @@ html:root body,html:root[data-season] body{background-image:none!important;backg
 .kzc .wchip .absd{color:#b4452a!important;font-weight:800;font-size:10px}
 .kzc .wchip.on .absd{color:#ffd9c9!important}
 .kzc .wchip.has-abs.on{background:#3d2b1f!important;border-color:#3d2b1f!important}
+</style>
+<style id="kz-r2wide-css">
+/* 배정 규칙(컴퓨터): 방식 버튼이 6개로 늘어 점 칸과 겹치던 것 → 가운데 칸을 넓힘 */
+@media (min-width:821px){.r2-head,.r2-row{grid-template-columns:minmax(120px,1fr) 340px minmax(150px,.8fr)}.r2-seg{justify-self:start}}
 </style>
