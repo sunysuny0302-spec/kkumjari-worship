@@ -10871,7 +10871,8 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 <script id="kz-chat-unread">
 /* 채팅 안 읽은 개수: 위쪽 채팅 버튼 · 아래 채팅 탭에 숫자 배지 (카톡처럼) */
 (function(){let n=0,busy=false,last=0;
- const chatOpen=()=>(typeof view!=='undefined'&&view==='community')||!!document.querySelector('.kc-panel.open,#kcPanel.open,.kc-panel[aria-hidden="false"]');
+ /* 채팅 창 = <dialog id="kcPanel" data-panel="community"> (열리면 body.kc-chat-active) */
+ const chatOpen=()=>(typeof view!=='undefined'&&view==='community')||document.body.classList.contains('kc-chat-active')||!!document.querySelector('#kcPanel[open][data-panel="community"]');
  function paint(){const t=n>99?'99+':String(n);
   /* 값이 바뀔 때만 고침 — 같은 값을 다시 쓰면 화면 변경 감시가 다시 불려 무한 반복(페이지 응답 없음)이 됨 */
   const set=b=>{if(b.hidden!==!n)b.hidden=!n;if(b.textContent!==t)b.textContent=t};
@@ -10880,7 +10881,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
  const chatTabs=()=>[...document.querySelectorAll('#tabbar button')].filter(btn=>/채팅/.test(btn.textContent||''));
  async function check(force){if(busy||document.hidden||!window.kzRsvp||!kzRsvp.api)return paint();let a=null;try{a=authAccount()}catch(e){}if(!a||document.getElementById('kzLoginLock'))return;
   if(chatOpen()){n=0;paint();return}if(!force&&Date.now()-last<20000)return paint();busy=true;last=Date.now();
-  try{const r=await kzRsvp.api({action:'chatUnread',room:'all'});n=Number(r&&r.unread)||0}catch(e){}busy=false;paint()}
+  try{const r=await kzRsvp.api({action:'chatUnread',room:'all'});n=chatOpen()?0:Number(r&&r.unread)||0}catch(e){}busy=false;paint()}
  setInterval(()=>check(false),30000);setTimeout(()=>check(true),2500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(true)});
  new MutationObserver(()=>{if(chatOpen()){if(n){n=0;paint()}}else{const top=document.getElementById('kcChatOpen');if((top&&!top.querySelector('#kcChatCount'))||(n&&chatTabs().some(btn=>!btn.querySelector('.kz-tb-badge'))))paint()}}).observe(document.body,{childList:true,subtree:true});
  let was=false;setInterval(()=>{const o=chatOpen();if(was&&!o){last=0;check(true)}was=o},1500);
