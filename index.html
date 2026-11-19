@@ -9298,6 +9298,20 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  if(typeof sessFill==='function'){const o=sessFill;sessFill=function(d){const r=o.apply(this,arguments),l=L(d);if(l&&r&&!LP(l))for(const k of Object.keys(r))if(r[k]===l)r[k]='';return r}}
 })();
 </script>
+<script id="kz-week-roll">
+/* 앱을 켜 둔 채 주일이 지나면(폰 홈 화면 앱은 새로고침 없이 이어서 열림) '이번 주'가 지난주에 멈춰 있던 문제:
+   다시 볼 때·1분마다 확인해서, 보던 주가 자동으로 정해진 '이번 주'였다면 새 주로 넘김 (직접 고른 주는 그대로) */
+(function(){let auto=(typeof date!=='undefined'&&date===nextSun())?date:null;
+ function roll(){try{if(typeof date==='undefined'||typeof goDate!=='function')return;const n=nextSun();
+  if(auto===null){if(date===n)auto=n;return}
+  if(n===auto)return;const prev=auto;auto=n;
+  if(date===prev&&!['edit','ment','preview'].includes(view))goDate(n)}catch(e){console.warn(e)}}
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)roll()});addEventListener('focus',roll);addEventListener('pageshow',roll);setInterval(roll,60000);
+ window.kzWeekRoll=roll;
+ /* 이번 주 콘티가 아직 없으면 보관함으로 갈 때 이유를 알려 줌 */
+ if(typeof kzWeekView==='function'){const o=kzWeekView;kzWeekView=function(){try{const pub=!!data.up,has=pub&&((data.ment&&data.ment.trim())||(data.scores||[]).some(x=>x.aid||x.oaid));if(!has){const d=new Date(date+'T12:00:00');toast(`${d.getMonth()+1}/${d.getDate()} 콘티는 아직 안 올라왔어요 · 지난 콘티는 보관함에서 볼 수 있어요`)}}catch(e){}return o.apply(this,arguments)}}
+})();
+</script>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
 <script id="kz-pin-mask-s">/* iPhone '강력한 암호 사용' 팝업이 PIN 칸에 뜨지 않도록, 가리기 지원 브라우저에서는 password 대신 text 칸 + 점 가리기 */
 (function(){const ok=window.CSS&&CSS.supports&&(CSS.supports('-webkit-text-security','disc')||CSS.supports('text-security','disc'));
