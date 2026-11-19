@@ -9320,6 +9320,26 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  if(typeof kzWeekView==='function'){const o=kzWeekView;kzWeekView=function(){try{const pub=!!data.up,has=pub&&((data.ment&&data.ment.trim())||(data.scores||[]).some(x=>x.aid||x.oaid));if(!has){const d=new Date(date+'T12:00:00');toast(`${d.getMonth()+1}/${d.getDate()} 콘티는 아직 안 올라왔어요 · 지난 콘티는 보관함에서 볼 수 있어요`)}}catch(e){}return o.apply(this,arguments)}}
 })();
 </script>
+<script id="kz-fix-1122">
+/* 한 번만: 11/22 콘티 글에 지난주 곡 목록이 남은 채 올라간 것을 악보 곡명으로 바로잡음 (이전 글은 mentPrev에 보관)
+   곡을 다룰 수 있는 계정이 앱을 열면 실행 · 이미 고쳐져 있거나 곡이 맞으면 아무것도 안 함 */
+(function(){const D='2026-11-22';let tries=0;
+ async function run(){if(++tries>40)return;try{if(typeof db==='undefined'||!db||document.getElementById('kzLoginLock'))return setTimeout(run,3000);{let a=null;try{a=authAccount()}catch(e){}if(!a)return setTimeout(run,3000);if(!(a.rank==='인도자'||a.rank==='단장'||a.rank==='관리계정'||a.id==='management'||(typeof isManagementAccount==='function'&&isManagementAccount())))return}
+  const ref=db.doc('weeks/'+D),sn=await ref.get();if(!sn.exists)return;const d=sn.data()||{};if(d.mentFix1||!d.up||!d.ment)return;
+  const sc=orderedScores((d.scores||[]).filter(x=>x.aid||x.oaid));if(!sc.length)return;
+  const nz=t=>String(kzStripKey(String(t||'')).normalize('NFC')).replace(/[\s()\[\]{}·:,\-–—|.!?~'"]/g,'').toLowerCase();
+  const songs=[];scoreSongs(sc).forEach(x=>{const n=String(x.name||'').trim();if(!n)return;const k=kzKey(x.key),l=songs[songs.length-1];if(l&&nz(l.n)===nz(n)){if(k&&!l.k.includes(k))l.k.push(k)}else songs.push({n,k:k?[k]:[]})});
+  const L=d.ment.split('\n'),ms=kzSongs(L).map(x=>x.t.replace(/^\s*\d+\s*[.)]\s*/,'').trim());
+  const hit=(a,b)=>{a=nz(a);b=nz(b);return !!a&&!!b&&(a===b||a.includes(b)||b.includes(a))};
+  if(!ms.length||ms.some(m=>songs.some(x=>hit(m,x.n))))return;/* 하나라도 맞으면 사람이 고친 것으로 보고 그대로 */
+  const i=L.findIndex(l=>/^\s*인도\s*:/.test(l));if(i<0)return;const head=(L.find(l=>/꿈자리 콘티/.test(l))||`:: ${D.replace(/-/g,'').slice(2)} 꿈자리 콘티 ::`).trim();
+  const lines=songs.map((x,j)=>`${j+1}. ${x.n}${x.k.length>1?' ('+x.k.join('→')+')':''}`).join('\n\n');
+  const nm=head+'\n\n'+lines+'\n\n'+L.slice(i).join('\n');
+  await ref.set({ment:nm,mentPrev:d.ment,mentFix1:Date.now()},{merge:true});
+  try{const a=(archive||[]).find(x=>x.id===D);if(a)a.ment=nm;if(date===D&&data){data.ment=nm}if((view==='home'||view==='archive')&&typeof window.body==='function')window.body()}catch(e){}
+  console.info('[꿈자리] 11/22 콘티 곡 목록을 악보 기준으로 바로잡았어요')}catch(e){console.warn('[꿈자리] 11/22 콘티 수정 실패',e&&e.code||e);setTimeout(run,15000)}}
+ setTimeout(run,4000);window.kzFix1122=()=>{tries=0;return run()}})();
+</script>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
 <script id="kz-pin-mask-s">/* iPhone '강력한 암호 사용' 팝업이 PIN 칸에 뜨지 않도록, 가리기 지원 브라우저에서는 password 대신 text 칸 + 점 가리기 */
 (function(){const ok=window.CSS&&CSS.supports&&(CSS.supports('-webkit-text-security','disc')||CSS.supports('text-security','disc'));
