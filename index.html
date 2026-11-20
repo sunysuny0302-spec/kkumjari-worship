@@ -8878,14 +8878,17 @@ window.kzPrac=(function(){
   const no=list.filter(o=>a[o.n]&&a[o.n].s==='no'),yes=list.filter(o=>a[o.n]&&a[o.n].s==='yes'),wait=list.filter(o=>!a[o.n]),t=list.length||1;
   const av=o=>`<span class="pl-av">${esc(String(o.n).slice(0,1))}</span>`;
   const w=document.createElement('div');w.id='kzPracList';w.className='pr-ov';
-  w.innerHTML=`<div class="pr-sh pl" role="dialog" aria-modal="true" aria-label="토요 연습 참석"><div class="pl-h"><div><small>${md(d)} 주일 콘티 · 응답 마감 ${dl(d)}${Date.now()>=until(d).at?' (지남)':''}</small><b>${md(sat(d))}(토) 연습</b></div><button type="button" class="pl-x" aria-label="닫기">✕</button></div>
-   <div class="pl-sum"><div class="pl-k yes"><b>${yes.length}</b><span>참석</span></div><div class="pl-k no"><b>${no.length}</b><span>어려워요</span></div><div class="pl-k wait"><b>${wait.length}</b><span>아직</span></div></div>
-   <div class="pl-bar"><i class="yes" style="flex:${yes.length}"></i><i class="no" style="flex:${no.length}"></i><i class="wait" style="flex:${wait.length}"></i></div>
-   <div class="pl-body">
-   ${no.length?`<section class="pl-g"><h4><i class="dot no"></i>어려워요 · 사유</h4>${no.map(o=>`<div class="pl-row no">${av(o)}<div><b>${esc(o.n)}</b><small>${esc(o.r.join(' · '))}</small>${a[o.n].note?`<p>“${esc(a[o.n].note)}”</p>`:''}</div></div>`).join('')}</section>`:''}
-   ${wait.length?`<section class="pl-g"><h4><i class="dot wait"></i>아직 응답 안 함</h4><div class="pl-chips">${wait.map(o=>`<span class="pl-chip">${esc(o.n)}<small>${esc(o.r.join('·'))}</small></span>`).join('')}</div></section>`:''}
-   ${yes.length?`<section class="pl-g"><h4><i class="dot yes"></i>참석</h4><div class="pl-chips">${yes.map(o=>`<span class="pl-chip yes">✓ ${esc(o.n)}<small>${esc(o.r.join('·'))}</small></span>`).join('')}</div></section>`:''}
-   ${!list.length?'<p class="pl-n">이 주에 배정된 싱어·세션이 없어요.</p>':''}</div></div>`;
+  const past=Date.now()>=until(d).at,n=list.length,pct=n?Math.round(yes.length/n*100):0,yd=n?yes.length/n*360:0,nd=n?no.length/n*360:0;
+  const role=o=>esc(o.r.join(' · '));
+  w.innerHTML=`<div class="pr-sh pl pl2" role="dialog" aria-modal="true" aria-label="토요 연습 참석">
+   <div class="pl2-h"><div><span class="pl2-ey">${md(d)} 주일 콘티</span><b>${md(sat(d))}(토) 연습</b><span class="pl2-dl ${past?'end':''}">${past?'응답 마감됨':'응답 마감 '+dl(d)}</span></div><button type="button" class="pl-x" aria-label="닫기">✕</button></div>
+   ${n?`<div class="pl2-sum"><div class="pl2-ring" style="--y:${yd}deg;--n:${nd}deg"><div><b>${yes.length}<small>/${n}</small></b><span>참석</span></div></div>
+    <ul class="pl2-st"><li class="yes"><i></i>참석<b>${yes.length}</b></li><li class="no"><i></i>어려워요<b>${no.length}</b></li><li class="wait"><i></i>아직 응답 안 함<b>${wait.length}</b></li></ul></div>`:''}
+   <div class="pl2-body">
+   ${no.length?`<section><h4>어려워요<em>${no.length}</em></h4><div class="pl2-list">${no.map(o=>`<div class="pl2-r no">${av(o)}<div class="pl2-t"><b>${esc(o.n)}</b><small>${role(o)}</small>${a[o.n].note?`<p>${esc(a[o.n].note)}</p>`:'<p class="none">사유 없음</p>'}</div></div>`).join('')}</div></section>`:''}
+   ${wait.length?`<section><h4>아직 응답 안 함<em>${wait.length}</em></h4><div class="pl2-grid">${wait.map(o=>`<div class="pl2-c wait">${av(o)}<div class="pl2-t"><b>${esc(o.n)}</b><small>${role(o)}</small></div></div>`).join('')}</div></section>`:''}
+   ${yes.length?`<section><h4>참석<em>${yes.length}</em></h4><div class="pl2-grid">${yes.map(o=>`<div class="pl2-c">${av(o)}<div class="pl2-t"><b>${esc(o.n)}</b><small>${role(o)}</small></div></div>`).join('')}</div></section>`:''}
+   ${!n?'<p class="pl-n">이 주에 배정된 싱어·세션이 없어요.</p>':''}</div></div>`;
   document.body.append(w);requestAnimationFrame(()=>w.classList.add('in'));const close=()=>{w.classList.remove('in');setTimeout(()=>w.remove(),200)};w.onclick=e=>{if(e.target===w)close()};w.querySelector('.pl-x').onclick=close}
  /* 출결 관리 → 토요 연습 탭: 주를 골라 참석 · 불참(사유) · 미응답을 한 화면에 */
  let fillD=null;
@@ -9342,6 +9345,43 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   console.info('[꿈자리] 11/22 콘티 곡 목록을 악보 기준으로 바로잡았어요')}catch(e){console.warn('[꿈자리] 11/22 콘티 수정 실패',e&&e.code||e);setTimeout(run,15000)}}
  setTimeout(run,4000);window.kzFix1122=()=>{tries=0;return run()}})();
 </script>
+<style id="kz-pl2-css">
+.pl2{padding:20px 18px 22px!important}
+.pl2-h{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}.pl2-h>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pl2-ey{font-size:12px;font-weight:600;color:var(--mu);letter-spacing:.01em}
+.pl2-h b{font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--tx)}
+.pl2-dl{align-self:flex-start;margin-top:4px;padding:3px 9px;border-radius:99px;background:#eef3f8;color:#4b6584;font-size:11.5px;font-weight:700}
+.pl2-dl.end{background:rgba(120,88,56,.08);color:#8a7764}
+.pl2-sum{display:flex;align-items:center;gap:18px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid rgba(120,88,56,.1);box-shadow:0 1px 2px rgba(60,40,20,.04)}
+.pl2-ring{--y:0deg;--n:0deg;flex:none;width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#2f6b4a 0 var(--y),#c4573f var(--y) calc(var(--y) + var(--n)),#ece4d9 calc(var(--y) + var(--n)) 360deg)}
+.pl2-ring>div{width:66px;height:66px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.pl2-ring b{font-size:22px;font-weight:800;color:#2f6b4a;letter-spacing:-.02em}.pl2-ring b small{font-size:12px;font-weight:700;color:var(--mu);margin-left:1px}
+.pl2-ring span{margin-top:3px;font-size:10.5px;font-weight:700;color:var(--mu)}
+.pl2-st{list-style:none;margin:0;padding:0;flex:1;display:grid;gap:7px;min-width:0}
+.pl2-st li{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#5c4a3a}
+.pl2-st li i{width:8px;height:8px;border-radius:50%;flex:none}.pl2-st li b{margin-left:auto;font-size:15px;font-weight:800;color:var(--tx)}
+.pl2-st .yes i{background:#2f6b4a}.pl2-st .no i{background:#c4573f}.pl2-st .wait i{background:#cdbfae}
+.pl2-st .no b{color:#b23a2f}
+.pl2-body{display:grid;gap:18px;margin-top:18px}
+.pl2-body h4{display:flex;align-items:center;gap:6px;margin:0 0 8px 2px;font-size:12.5px;font-weight:700;color:var(--mu)}
+.pl2-body h4 em{font-style:normal;min-width:18px;height:18px;padding:0 6px;border-radius:99px;background:rgba(120,88,56,.08);color:#6f5d4c;font-size:11px;display:inline-grid;place-items:center}
+.pl2-list{border-radius:16px;background:#fff;border:1px solid rgba(120,88,56,.1);overflow:hidden}
+.pl2-r{display:flex;align-items:flex-start;gap:11px;padding:12px 14px}.pl2-r+.pl2-r{border-top:1px solid rgba(120,88,56,.08)}
+.pl2 .pl-av{width:34px;height:34px;font-size:13px;background:#f1ebe3;color:#6f5d4c}
+.pl2-r.no .pl-av{background:#fbe9e5;color:#b23a2f}
+.pl2-t{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;padding-top:1px}
+.pl2-t b{font-size:14.5px;font-weight:700;color:var(--tx)}.pl2-t small{font-size:12px;color:var(--mu);font-weight:500}
+.pl2-t p{flex-basis:100%;margin:6px 0 0;padding:8px 11px;border-radius:10px;background:#fbf3f0;color:#7a3a2e;font-size:13.5px;line-height:1.45;font-weight:500}
+.pl2-t p.none{background:transparent;padding:0;color:var(--mu);font-size:12px}
+.pl2-r.wait{align-items:center}.pl2-r.wait .pl2-t{padding:0}
+.pl2-tag{flex:none;padding:3px 9px;border-radius:99px;background:rgba(120,88,56,.07);color:#8a7764;font-size:11.5px;font-weight:700}
+.pl2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pl2-c{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:14px;background:#f2f7f3;border:1px solid rgba(47,107,74,.12)}
+.pl2-c .pl-av{width:28px;height:28px;font-size:12px;background:#dcebe0;color:#24543a}
+.pl2-c .pl2-t{padding:0;gap:0 5px}.pl2-c .pl2-t b{font-size:13.5px;color:#24543a}.pl2-c .pl2-t small{font-size:11px}
+.pl2-c.wait{background:#fff;border-color:rgba(120,88,56,.12)}.pl2-c.wait .pl-av{background:#f1ebe3;color:#8a7764}.pl2-c.wait .pl2-t b{color:var(--tx)}
+@media(min-width:700px){.pl2-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
 <script id="kz-pin-mask-s">/* iPhone '강력한 암호 사용' 팝업이 PIN 칸에 뜨지 않도록, 가리기 지원 브라우저에서는 password 대신 text 칸 + 점 가리기 */
 (function(){const ok=window.CSS&&CSS.supports&&(CSS.supports('-webkit-text-security','disc')||CSS.supports('text-security','disc'));
