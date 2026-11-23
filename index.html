@@ -9491,7 +9491,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  function sundays(){const out=[];for(let i=-3;i<=6;i++)out.push(shiftDate(wk||nextSun(),i*7));return out}
  function edit(k){document.querySelectorAll('.kf-ov.apf-ov').forEach(o=>o.remove());const x0=k?(API().get(k)||{}):{};
   const st={k,title:x0.title||'',date:x0.date||wk||nextSun(),yt:x0.yt||'',note:x0.note||'',scores:Array.isArray(x0.scores)?x0.scores.filter(s=>s&&s.oaid).map(s=>({...s})):[],link:''};
-  const free=k?[]:items().filter(x=>!x.date);
+  const free=[];
   const o=document.createElement('div');o.className='kf-ov apf-ov';
   o.innerHTML=`<div class="kf-sheet apf" role="dialog" aria-modal="true" aria-label="적용찬양 ${k?'수정':'등록'}"><div class="kf-sh"><b>적용찬양 ${k?'수정':'등록'}</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">
    ${free.length?`<label class="apf-l" for="apfLink">가사 PPT에 이미 만든 적용찬양과 연결 (선택)</label><select id="apfLink"><option value="">새로 등록</option>${free.map(x=>`<option value="${esc(x.k)}">${esc(x.title||'제목 없음')} · 가사 ${lyrN(x)}장</option>`).join('')}</select>`:''}
@@ -11383,7 +11383,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=87').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=88').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
@@ -12185,8 +12185,9 @@ window.kzSatPrac=(function(){
  function pv(){const box=document.getElementById('apLive'),cap=document.getElementById('apLiveCap');const d=AP[cur];if(!box||!d)return;const t=String(d.pages[focus]||'').trim(),base=LY_BASE[lySize]||42,fs=lyFont(t||'가',base),w=box.clientWidth||400;
   box.style.background=t?`#000 url(${LY_PPT_BG}) center/cover no-repeat`:'#000';box.innerHTML=t?`<div class="tx" style="font-size:${fs*w/(13.333*72)}px;text-align:${lyAlign}">${E(t)}</div>`:'<div class="em">빈 장은 검은 화면으로 들어가요</div>';if(cap)cap.textContent=`미리보기 · ${focus+1}장 / ${d.pages.length}장`}
  function view(B){const L=list();if(cur&&!get(cur)&&!AP[cur])cur='';if(!cur&&L.length)cur=L[0].k;const wrap=B.querySelector('.ly2');[...wrap.children].forEach(c=>{if(!c.matches('.ro-h,.ly-tabs'))c.remove()});
-  const rail=`<nav class="ap-rail" aria-label="적용찬양 목록"><button type="button" class="ap-new" data-ap-new>＋ 새 적용찬양</button>${L.map(x=>`<button type="button" class="ap-ri ${x.k===cur?'on':''}" data-ap-pick="${E(x.k)}"><b>${E(x.title||'제목 없음')}</b><small>${(x.pages||[]).filter(p=>String(p||'').trim()).length}장${x.by?' · '+E(x.by):''}</small></button>`).join('')}</nav>`;
-  let main;if(!cur){main=`<div class="ly-empty"><b>적용찬양 가사를 만들어 보세요</b><span>악보나 송폼 없이 가사만 장별로 넣으면, 주일 PPT와 같은 배경·글꼴로 만들어져요.</span><button type="button" class="ly-go" data-ap-new>＋ 새 적용찬양</button></div>`}
+  const reg=L.filter(x=>x.date).length,ld=`<button type="button" class="ap-load" data-ap-load>적용찬양 불러오기${reg?` <em>${reg}</em>`:''}</button>`;
+  const rail=`<nav class="ap-rail" aria-label="적용찬양 목록">${ld}<button type="button" class="ap-new" data-ap-new>＋ 새 적용찬양</button>${L.map(x=>`<button type="button" class="ap-ri ${x.k===cur?'on':''}" data-ap-pick="${E(x.k)}"><b>${x.date?`<i class="ap-dt">${+x.date.slice(5,7)}/${+x.date.slice(8)}</i>`:''}${E(x.title||'제목 없음')}</b><small>${(x.pages||[]).filter(p=>String(p||'').trim()).length}장${x.by?' · '+E(x.by):''}</small></button>`).join('')}</nav>`;
+  let main;if(!cur){main=`<div class="ly-empty"><b>적용찬양 가사를 만들어 보세요</b><span>적용찬양 페이지에 등록된 곡을 불러오거나, 새로 만들어 가사를 장별로 넣으면 주일 PPT와 같은 배경·글꼴로 만들어져요.</span><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${ld}<button type="button" class="ly-go" data-ap-new>＋ 새 적용찬양</button></div></div>`}
   else{const d=edit(cur);if(focus>=d.pages.length)focus=d.pages.length-1;const n=slides(d).length;
    const card=(p,i)=>`<div class="ap-gap"><button type="button" data-ap-ins="${i}" aria-label="${i+1}장 앞에 장 추가">＋ 여기에 장 추가</button></div><div class="ap-pg ${i===focus?'on':''}" data-ap-i="${i}"><div class="ap-ph"><b>${i+1}장</b><span class="ap-sp"></span><button type="button" data-ap-up="${i}" ${i?'':'disabled'} aria-label="위로">↑</button><button type="button" data-ap-down="${i}" ${i<d.pages.length-1?'':'disabled'} aria-label="아래로">↓</button><button type="button" data-ap-dup="${i}">복제</button><button type="button" class="del" data-ap-del="${i}">삭제</button></div><textarea data-ap-t="${i}" rows="${Math.min(8,Math.max(3,String(p).split('\n').length+1))}" placeholder="${i+1}장 가사 (Enter = 같은 장 안에서 줄바꿈)">${E(p)}</textarea></div>`;
    main=`<div class="ap-ws">${rail}<section class="ap-ed"><div class="ap-eh">${d.date?`<button type="button" class="ap-wk" data-ap-wk="${E(d.date)}" title="적용찬양 페이지에서 보기">${+d.date.slice(5,7)}/${+d.date.slice(8)} 적용찬양 · 악보·링크 ›</button>`:''}<input id="apTitle" value="${E(d.title)}" placeholder="곡 제목 (예: 주의 은혜라)" aria-label="곡 제목"><label class="ly-chk"><input type="checkbox" id="apShowT" ${d.showTitle?'checked':''}>제목 슬라이드 넣기</label></div>
@@ -12198,6 +12199,7 @@ window.kzSatPrac=(function(){
  function bind(B){const d=cur?AP[cur]:null;
   B.querySelectorAll('[data-ap-new]').forEach(b=>b.onclick=()=>{const k=nid();AP[k]={kind:'apply',title:'',pages:[''],showTitle:true,at:Date.now(),by:me()};cur=k;LS('lyApplyCur',k);focus=0;rer();save(k);setTimeout(()=>document.getElementById('apTitle')?.focus(),30)});
   B.querySelectorAll('[data-ap-pick]').forEach(b=>b.onclick=()=>{cur=b.dataset.apPick;LS('lyApplyCur',cur);focus=0;rer()});
+  B.querySelectorAll('[data-ap-load]').forEach(b=>b.onclick=()=>loadSheet());
   if(!d)return;const ti=B.querySelector('#apTitle');ti.oninput=()=>{d.title=ti.value;save(cur);const r=B.querySelector('.ap-ri.on b');if(r)r.textContent=ti.value||'제목 없음';cnt()};
   B.querySelector('[data-ap-wk]')&&(B.querySelector('[data-ap-wk]').onclick=e=>{window.kzApplyGo&&kzApplyGo(e.currentTarget.dataset.apWk)});
   B.querySelector('#apShowT').onchange=e=>{d.showTitle=e.target.checked;save(cur);cnt()};
@@ -12213,6 +12215,16 @@ window.kzSatPrac=(function(){
   B.querySelector('[data-ap-paste]').onclick=()=>paste(d);
   B.querySelector('[data-ap-all]').onclick=()=>all(d);
   B.querySelector('[data-ap-go]').onclick=e=>make(d,e.currentTarget)}
+ /* 적용찬양 페이지에 등록된 곡(주일 지정) 불러오기 */
+ function loadSheet(){document.querySelectorAll('.kf-ov.apl-ov').forEach(o=>o.remove());const now=nextSun(),R=list().filter(x=>x.date).sort((a,b)=>(b.date===now)-(a.date===now)||(a.date<b.date?1:a.date>b.date?-1:0));
+  const o=document.createElement('div');o.className='kf-ov apl-ov';
+  o.innerHTML=`<div class="kf-sheet" role="dialog" aria-modal="true" aria-label="적용찬양 불러오기"><div class="kf-sh"><b>적용찬양 불러오기</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb">
+   <p class="ap-tip" style="margin:4px 0 10px">적용찬양 페이지에 등록된 곡이에요. 고르면 그 곡의 가사를 여기서 넣고 PPT로 만들 수 있어요.</p>
+   ${R.length?`<div class="apl-l">${R.map(x=>{const n=(x.pages||[]).filter(p=>String(p||'').trim()).length;return `<button type="button" data-apl="${E(x.k)}" class="${x.k===cur?'on':''}"><span class="apl-d ${x.date===now?'now':''}">${x.date===now?'이번 주':+x.date.slice(5,7)+'/'+ +x.date.slice(8)}</span><span class="apl-t"><b>${E(x.title||'제목 없음')}</b><small>${(x.scores||[]).length?'악보 '+(x.scores||[]).length+'장 · ':''}${n?'가사 '+n+'장':'가사 아직 없음'}</small></span><i>›</i></button>`}).join('')}</div>`:'<p class="ap-tip">아직 등록된 적용찬양이 없어요.</p>'}
+   <button type="button" class="apl-go" data-apl-page>적용찬양 페이지에서 등록하기 ›</button></div></div>`;
+  document.body.append(o);const close=()=>o.remove();o.querySelector('.kf-x').onclick=close;o.onclick=e=>{if(e.target===o)close()};
+  o.querySelectorAll('[data-apl]').forEach(b=>b.onclick=()=>{cur=b.dataset.apl;LS('lyApplyCur',cur);focus=0;close();rer();toast('불러왔어요 · 가사를 장별로 넣어 주세요')});
+  o.querySelector('[data-apl-page]').onclick=()=>{close();window.kzApplyGo&&kzApplyGo()}}
  function cnt(){const g=document.querySelector('[data-ap-go] b');if(g&&AP[cur])g.textContent=slides(AP[cur]).length+'장'}
  function paste(d){document.querySelectorAll('.kf-ov').forEach(o=>o.remove());const o=document.createElement('div');o.className='kf-ov';
   o.innerHTML=`<div class="kf-sheet" role="dialog" aria-modal="true" aria-label="가사 한 번에 붙여넣기"><div class="kf-sh"><b>가사 한 번에 붙여넣기</b><button type="button" class="kf-x" aria-label="닫기">✕</button></div><div class="kf-sb"><p class="ap-tip" style="margin:0 0 8px">빈 줄(엔터 두 번)마다 다음 장으로 나눠요.</p><textarea id="apPasteT" rows="12" style="width:100%;font:inherit;font-size:15px;padding:10px;border-radius:12px;border:1px solid var(--bd)" placeholder="1장 가사\n\n2장 가사\n\n3장 가사"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn" data-pm="replace" style="flex:1">지금 장들 바꾸기</button><button type="button" class="sm" data-pm="append" style="flex:1">맨 뒤에 이어 붙이기</button></div></div></div>`;
@@ -12253,6 +12265,12 @@ window.kzSatPrac=(function(){
 .ly-apadd{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--sAcd,#8a4f1f);padding:4px 6px 4px 10px;border:1px dashed var(--sAc,#d9b48a);border-radius:10px;background:var(--sSoft,#fff8ef)}.ly-apadd select{font:inherit;font-size:13px;border:0;background:transparent;max-width:150px}
 .ap-ws{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start}
 .ap-rail{display:flex;flex-direction:column;gap:6px;position:sticky;top:76px}
+.ap-load{border:1px solid #d9c3a8;background:#fff;color:#6a4a2c;border-radius:12px;padding:10px;font:inherit;font-weight:800;cursor:pointer}.ap-load em{font-style:normal;font-size:11px;padding:1px 7px;border-radius:99px;background:#f7ecdf;color:#8a5a2b;margin-left:2px}
+.ap-dt{font-style:normal;font-size:10.5px;font-weight:800;color:#8a5a2b;background:#f7ecdf;padding:1px 6px;border-radius:99px;margin-right:5px;vertical-align:1px}
+.apl-l{border:1px solid #eee5da;border-radius:14px;overflow:hidden}.apl-l button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;background:#fff;text-align:left;cursor:pointer;font:inherit;color:#1f1a16}.apl-l button+button{border-top:1px solid #f2ece4}.apl-l button.on{background:#faf6f0}
+.apl-d{flex:none;min-width:48px;text-align:center;font-size:12px;font-weight:800;color:#6f5d4c;background:#f3eee8;border-radius:99px;padding:3px 8px}.apl-d.now{background:#eef3f8;color:#4b6584}
+.apl-t{flex:1;min-width:0;display:grid;gap:2px}.apl-t b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.apl-t small{font-size:12px;color:#8a7764}.apl-l i{font-style:normal;color:#b9a892;font-size:18px}
+.apl-go{display:block;margin:12px auto 4px;height:38px;padding:0 16px;border-radius:99px;border:1px solid #e3ddd5;background:#fff;font:inherit;font-size:13px;font-weight:700;color:#3f3127;cursor:pointer}
 .ap-new{border:1px dashed var(--sAc,#c99a6b);background:var(--sSoft,#fff8ef);color:var(--sAcd,#8a4f1f);border-radius:12px;padding:10px;font:inherit;font-weight:800;cursor:pointer}
 .ap-ri{display:grid;gap:2px;text-align:left;border:1px solid var(--bd);background:var(--card);border-radius:12px;padding:9px 12px;font:inherit;cursor:pointer}
 .ap-ri b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ap-ri small{font-size:12px;color:var(--mu)}
