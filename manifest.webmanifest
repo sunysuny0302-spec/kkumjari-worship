@@ -1,9 +1,17 @@
 {
+  "id": "/",
   "name": "꿈자리 찬양팀",
   "short_name": "꿈자리",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  },
   "background_color": "#fbfaf7",
   "theme_color": "#fbfaf7",
   "lang": "ko",
