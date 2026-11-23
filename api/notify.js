@@ -14,7 +14,7 @@ const MANAGER_EMAIL = 'management@kkumjari-worship.firebaseapp.com';
 const SENDER_RANKS = ['단장', '인도자', '선임싱어', '선임세션'];
 /* 관리자급은 모든 알림(일정 변경 포함)을 항상 받음 */
 const ADMIN_RANKS = ['관리계정', '단장', '인도자', '선임싱어', '선임세션'];
-const TYPES = ['conti', 'notice', 'event', 'sched'];
+const TYPES = ['conti', 'notice', 'event', 'sched', 'apply'];  // apply: 적용찬양 등록 (팀원 누구나 등록 → 전체에게, 끌 수 없음)
 const SITE = 'https://kkumjari-worship.vercel.app/';
 
 const clip = (v, n) => String(v == null ? '' : v).replace(/\s+\n/g, '\n').trim().slice(0, n);
@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
       const acc = await db.doc('accounts/' + user.uid).get();
       const a = acc.exists ? acc.data() : null;
       if (!a || a.status !== 'approved') return res.status(403).json({ error: '알림을 보낼 권한이 없어요' });
-      if (type !== 'sched' && !SENDER_RANKS.includes(a.rank)) return res.status(403).json({ error: '알림을 보낼 권한이 없어요' });
+      if (type !== 'sched' && type !== 'apply' && !SENDER_RANKS.includes(a.rank)) return res.status(403).json({ error: '알림을 보낼 권한이 없어요' });
       senderName = a.name || senderName;
     }
     /* 일정 변경 알림은 관련된 사람(이름)·직책에게만 */
