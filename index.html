@@ -7492,14 +7492,10 @@ const G=f=>{try{return f()}catch(e){return null}};
 const md=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일`};
 const wdk=d=>G(()=>wd(d))||'';
 
-function contiMsg(d,w,re){w=w||(d===date?data:G(()=>(archive||[]).find(a=>a.id===d)))||{};
- const ment=String(w.ment||''),cs=ment.trim()?(G(()=>kzSongs(ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean)))||[]):[];
- let songs=cs.map(c=>String(c.t||'').replace(/^\d+\s*[.)]\s*/,'').trim()).filter(Boolean);
- if(!songs.length)songs=scoreSongs((w.scores||[]).filter(Boolean)).map(x=>String(x.name||'').trim()).filter(Boolean);
- const lm=/(?:^|\n)\s*인도\s*[:：]\s*([^\n]+)/.exec(ment),ld=(lm&&lm[1].trim())||G(()=>ldrOf(d))||w.by||'';
- return `[꿈자리 찬양팀] ${md(d)} 주일 콘티가 ${re?'수정됐어요':'올라왔어요'}\n${songs.length?'\n'+songs.map((t,i)=>`${i+1}. ${t}`).join('\n')+'\n':''}${ld?`\n인도 ${ld}\n`:''}\n콘티·악보 보기 👉 ${SITE()}`}
-function noticeMsg(n){const b=String(n.body||'').trim();return `[꿈자리 공지] ${n.title||''}\n${b?'\n'+(b.length>300?b.slice(0,300)+'…':b)+'\n':''}\n자세히 보기 👉 ${SITE()}`}
-function eventMsg(e){const parts=[`${md(e.date)} (${wdk(e.date)})`,e.time,e.place].filter(Boolean).join(' · ');return `[꿈자리 일정] ${e.title||''}\n${parts}\n\n자세히 보기 👉 ${SITE()}`}
+function contiMsg(d,w,re){/* 카톡용: 링크 없이 짧게 (링크는 홈 화면 앱이 아니라 브라우저로 열려서 헷갈림) */
+ return `[꿈자리 찬양팀] ${md(d)} 주일 콘티가 ${re?'수정됐어요':'올라왔어요'} 🙌\n꿈자리 앱에서 콘티와 악보를 확인해 주세요`}
+function noticeMsg(n){const b=String(n.body||'').trim();return `[꿈자리 공지] ${n.title||''}\n${b?'\n'+(b.length>300?b.slice(0,300)+'…':b)+'\n':''}\n꿈자리 앱에서 자세히 확인해 주세요`}
+function eventMsg(e){const parts=[`${md(e.date)} (${wdk(e.date)})`,e.time,e.place].filter(Boolean).join(' · ');return `[꿈자리 일정] ${e.title||''}\n${parts}\n\n꿈자리 앱에서 자세히 확인해 주세요`}
 
 function copyBox(text){const old=document.getElementById('kzShCopy');if(old)old.remove();const o=document.createElement('div');o.id='kzShCopy';
  o.innerHTML=`<div class="kzs-c" role="dialog" aria-modal="true" aria-label="알림 문구 복사"><b>알림 문구</b><span class="mu" style="font-size:13px">아래 문구를 길게 누르거나 전체 선택해서 복사한 뒤, 카톡 단톡방에 붙여넣어 주세요.</span><textarea readonly></textarea><div style="display:flex;justify-content:flex-end"><button type="button" class="sm">닫기</button></div></div>`;
