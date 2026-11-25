@@ -3725,7 +3725,7 @@ window.kzKeep=(()=>{const D='kzKeepDaysV1',K='kzKeepSesV1';
 :root .sm:not(.lr-ico):active,:root .btn:active,:root .ly-btn:active{transform:scale(.97)}
 :root .sm.on,:root .sm[aria-pressed="true"],:root .sm.active{background:var(--actone)!important;color:var(--ac)!important}
 :root .sm.danger,:root .sm[data-mx],:root .sm[data-del],:root .km-del,:root .sm.del{background:var(--redtone)!important;color:#b8392b!important}
-/* 이미 '정말 삭제?'처럼 빨간색으로 바뀐 버튼은 그대로 빨갛게 */
+/* 이미 '삭제 확인'처럼 빨간색으로 바뀐 버튼은 그대로 빨갛게 */
 :root .sm[style*="--bad"],:root .km-del.arm,:root .sm.arm{background:#c0392b!important;color:#fff!important}
 :root .sm:disabled,:root .ly-btn:disabled{opacity:.45;transform:none}
 :root .sm.nm,:root .fsadd{border:0!important;background:var(--actone)!important;color:var(--ac)!important}
@@ -6065,7 +6065,7 @@ function minList(){const q=abQ.toLowerCase(),mob=minMob(),l=minutes.filter(m=>!q
  const bk=$('[data-mback]');if(bk)bk.onclick=()=>{const id=minSel;minSel=null;minList();const r=$(`[data-msel="${id}"]`);if(r)r.scrollIntoView({block:'center'})};
  $$('[data-mc]').forEach(b=>b.onclick=async()=>{const m=f(b.dataset.mc);try{await navigator.clipboard.writeText(`[회의록] ${m.title}\n${m.date} (${wd(m.date)})\n참석: ${(m.attendees||[]).join(', ')}\n\n${m.body}`);toast('복사했어요')}catch(e){toast('복사하지 못했어요')}});
  $$('[data-me]').forEach(b=>b.onclick=()=>{const m=f(b.dataset.me);md={id:m._id,date:m.date,title:m.title,attendees:[...(m.attendees||[])],images:[...(m.images||[])],body:m.body};persistMd();minTab='write';minutesView()});
- $$('[data-mx]').forEach(b=>b.onclick=()=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='정말 삭제?';b.classList.add('arm');setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent='삭제';b.classList.remove('arm')}},3000);return}
+ $$('[data-mx]').forEach(b=>b.onclick=()=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='삭제 확인';b.classList.add('arm');setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent='삭제';b.classList.remove('arm')}},3000);return}
  toTrash('min',b.dataset.mx,'minutes').then(()=>{minSel=null;toast('휴지통으로 옮겼어요')}).catch(()=>toast('삭제하지 못했어요'))})}
 
 /* ---------- 공지 · 일정 ---------- */
@@ -6086,7 +6086,7 @@ $$('[data-nt2]').forEach(b=>b.onclick=()=>{ntTab=b.dataset.nt2;ntEdit=null;evEdi
 if($('#nnew'))$('#nnew').onclick=()=>{if(ntTab==='n')ntEdit='new';else evEdit='new';noticeView()};
 if(ntTab==='n')bindNotice();else bindEvent();
 if(ntFocus){const el=$('[data-nid="'+ntFocus+'"]');ntFocus=null;if(el){el.classList.add('ntfocus');setTimeout(()=>el.scrollIntoView({block:'center',behavior:'smooth'}),60)}}}
-const arm2=(b,fn,base)=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';const t0=b.textContent;b.textContent='정말 삭제?';b.style.cssText=base+';background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent=t0;b.style.cssText=base}},3000);return}fn()};
+const arm2=(b,fn,base)=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';const t0=b.textContent;b.textContent='삭제 확인';b.style.cssText=base+';background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent=t0;b.style.cssText=base}},3000);return}fn()};
 let ntSel=null,ntQ='',ntPast=false;
 const ntPlain=s=>String(s||'').replace(/\s+/g,' ').trim();
 const ntMob=()=>matchMedia('(max-width:820px)').matches;
@@ -6204,7 +6204,7 @@ $$('[data-cn]').forEach(b=>b.onclick=()=>{const[y,m]=abCal.split('-').map(Number
 bindArch();
 $$('[data-o]').forEach(b=>b.onclick=()=>kzArchView(b.dataset.o));
 $$('[data-c]').forEach(b=>b.onclick=async()=>{const a=archive.find(x=>x.id===b.dataset.c);try{await navigator.clipboard.writeText(normHead(a.ment));toast('복사했어요')}catch(e){toast('복사하지 못했어요')}});
-$$('[data-x]').forEach(b=>b.onclick=()=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='정말 삭제?';b.style.cssText='margin-left:auto;background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent='삭제';b.style.cssText='margin-left:auto'}},3000);return}
+$$('[data-x]').forEach(b=>b.onclick=()=>{if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='삭제 확인';b.style.cssText='margin-left:auto;background:var(--bad);color:var(--btnt);border-color:var(--bad)';setTimeout(()=>{if(b.isConnected){b.dataset.arm='0';b.textContent='삭제';b.style.cssText='margin-left:auto'}},3000);return}
 const id=b.dataset.x;toTrash('conti',id,'weeks').then(()=>{toast('휴지통으로 옮겼어요');if(id===date){pages=[];cur=0;data={scores:[],ment:null};wm=null;wmDirty=false;od=false;lastKey=null}}).catch(()=>toast('삭제하지 못했어요'))})}
 
 /* ---------- 빠른 검색 (Ctrl/⌘+K) ---------- */
