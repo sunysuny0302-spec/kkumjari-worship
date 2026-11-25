@@ -531,3 +531,27 @@ test('chat search and custom assistant answers',async()=>{
  const l=await f.run(f.user,{action:'askCustomList'});assert.equal(l.items[0].a,'교회 뒤편 주차장');
  await f.run(f.admin,{action:'askCustomDel',id:s.id});assert.equal((await f.run(f.user,{action:'askCustomList'})).items.length,0);
 });
+test('conti push schedule: only staff can schedule, sent once when due, skipped if conti taken down',async()=>{
+ const {createService}=require('../lib/community-service.cjs');
+ const people=[{id:'l1',name:'인도',rank:'인도자',status:'approved'},{id:'a1',name:'가',rank:'싱어',status:'approved'},{id:'a2',name:'나',rank:'팀원',status:'approved'}];
+ const data=new Map(),pushed=[];let clock=Date.UTC(2026,10,25,17,0);/* 11-26 02:00 KST */
+ const snap=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const ref=path=>({path,id:path.split('/').at(-1),get:async()=>snap(path),set:async(v,o)=>data.set(path,o&&o.merge?{...(data.get(path)||{}),...v}:v),collection:n=>({doc:k=>ref(path+'/'+n+'/'+k)})});
+ const col=n=>({doc:k=>ref(n+'/'+k),where:(f,op,v)=>({limit:()=>({get:async()=>({docs:[...data.keys()].filter(k=>k.startsWith(n+'/')&&k.split('/').length===2&&data.get(k)[f]===v).map(k=>({...snap(k),ref:ref(k)}))})})})});
+ const db={collection:col,doc:p=>ref(p),runTransaction:async fn=>{const w=[];const r=await fn({get:async x=>snap(x.path),set:(x,v,o)=>w.push(()=>data.set(x.path,o&&o.merge?{...(data.get(x.path)||{}),...v}:v)),update:(x,v)=>w.push(()=>data.set(x.path,{...data.get(x.path),...v})),delete:x=>w.push(()=>data.delete(x.path))});w.forEach(f=>f());return r;}};
+ const run=createService({db,accounts:async()=>people,push:async(r,n)=>{pushed.push({r,n});return{sent:r.length}},now:()=>clock});
+ const at=Date.UTC(2026,10,25,23,0);/* 08:00 KST */
+ await assert.rejects(run(people[1],{action:'pushSchedule',date:'2026-11-29',at,title:'11월 29일 콘티 등록'}),{status:403});
+ await assert.rejects(run(people[0],{action:'pushSchedule',date:'2026-11-29',at:clock+1000,title:'x'}),{status:400});
+ data.set('weeks/2026-11-29',{up:1});
+ await run(people[0],{action:'pushSchedule',date:'2026-11-29',at,title:'11월 29일 콘티 등록',body:'곡A'});
+ assert.equal((await run(people[1],{action:'pushPending',date:'2026-11-29'}).catch(e=>e)).status,403);
+ assert.equal((await run(people[0],{action:'pushPending',date:'2026-11-29'})).item.at,at);
+ let r=await run({system:true},{action:'pushDue'});assert.equal(r.due,0);assert.equal(pushed.length,0);
+ clock=at+60000;r=await run(people[1],{action:'pushDue'});assert.equal(r.due,1);assert.equal(pushed.length,1);
+ assert.deepEqual(pushed[0].r.map(a=>a.id).sort(),['a1','a2']);assert.equal(pushed[0].n.type,'conti');assert.equal(pushed[0].n.title,'11월 29일 콘티 등록');
+ assert.ok([...data.keys()].some(k=>k.startsWith('_kzCommunity/inbox_a1/items/contiq_2026-11-29')));
+ r=await run({system:true},{action:'pushDue'});assert.equal(pushed.length,1,'sent only once');
+ /* 내려간 콘티는 보내지 않음 */
+ clock=Date.UTC(2026,11,1,0,0);data.set('weeks/2026-12-06',{});await run(people[0],{action:'pushSchedule',date:'2026-12-06',at:clock+120000,title:'t'});clock+=200000;await run({system:true},{action:'pushDue'});assert.equal(pushed.length,1);assert.equal(data.get('_kzPushQ/conti_2026-12-06').status,'skip');
+});
