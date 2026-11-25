@@ -7618,7 +7618,28 @@ function paintBar(){const M=document.getElementById('kzM'),old=document.getEleme
  M.appendChild(b);b.querySelector('.x').onclick=()=>{const v=st();v.dismiss=Date.now()+864e5;save(v);b.remove()};
  const go=b.querySelector('.go');if(go)go.onclick=async()=>{go.disabled=true;try{await register();toast('이 기기에서 알림을 켰어요 ✓');b.remove()}catch(e){toast(e.message||'알림을 켜지 못했어요');go.disabled=false}}}
 
-window.kzPush={state,register,unregister,notify,contiPush,noticePush,eventPush};
+/* ---------- 폰은 알림을 켜야 사용 가능 (비상 보기 없음) ----------
+   · 휴대폰(아이폰·안드로이드 폰)만 · 태블릿·PC는 막지 않음 · 관리계정 제외
+   · 허용만 되어 있으면 자동 등록되므로 잠깐 기다렸다가 판단 */
+const isPhone=()=>/iPhone|iPod/i.test(navigator.userAgent)||/Android.+Mobile/i.test(navigator.userAgent);
+let gateSince=0;
+function gateNeed(){try{if(!isPhone()||!online()||!authUser()||document.getElementById('kzLoginLock'))return false;const a=me2()||{};if(a.id==='management')return false;const s=state();return s!=='on'&&s!=='local'}catch(e){return false}}
+function gateHTML(s){const ios=isIOS();
+ const step=a=>`<ol class="kzg-st">${a.map(x=>`<li>${x}</li>`).join('')}</ol>`;
+ if(s==='ios-home')return `<b class="kzg-t">홈 화면 앱에서 알림을 켜야 볼 수 있어요</b><p>아이폰은 사파리에서는 알림을 받을 수 없어요. 꿈자리를 홈 화면에 추가해서 열어 주세요.</p>${step(['사파리 아래 <b>공유 버튼(□↑)</b>을 눌러요','<b>홈 화면에 추가</b>를 눌러요','홈 화면의 <b>꿈자리</b> 아이콘으로 열어요','로그인 후 <b>알림 허용</b>을 눌러요'])}<small>홈 화면 앱은 사파리와 로그인이 따로라서 한 번 더 로그인해야 해요.</small>`;
+ if(s==='denied')return `<b class="kzg-t">알림이 막혀 있어요</b><p>콘티 · 공지 알림을 받아야 꿈자리를 쓸 수 있어요. 휴대폰 설정에서 알림을 허용해 주세요.</p>${ios?step(['아이폰 <b>설정</b> 앱을 열어요','<b>알림</b> → <b>꿈자리</b>를 눌러요','<b>알림 허용</b>을 켜요','꿈자리로 돌아와 <b>다시 확인</b>을 눌러요']):step(['주소창 왼쪽 <b>자물쇠(또는 ⓘ)</b> → <b>권한</b>을 눌러요 (설치한 앱이면 앱 아이콘 길게 → <b>앱 정보</b> → <b>알림</b>)','<b>알림 허용</b>으로 바꿔요','꿈자리로 돌아와 <b>다시 확인</b>을 눌러요'])}<button type="button" class="kzg-go" data-kzg="re">다시 확인</button>`;
+ if(s==='unsupported')return `<b class="kzg-t">이 브라우저에서는 알림을 켤 수 없어요</b><p>${ios?'iOS 16.4 이상으로 업데이트한 뒤 사파리에서 홈 화면에 추가해 열어 주세요.':'크롬(Chrome) 앱에서 꿈자리를 열어 주세요. 카톡 · 인스타 같은 앱 안 화면에서는 알림을 켤 수 없어요.'}</p><button type="button" class="kzg-go" data-kzg="re">다시 확인</button>`;
+ return `<b class="kzg-t">알림을 켜야 꿈자리를 볼 수 있어요</b><p>콘티 · 공지 · 내 순서가 바뀌면 바로 알려 드려요. 아래 버튼을 누르고 휴대폰이 물어보면 <b>허용</b>을 눌러 주세요.</p><button type="button" class="kzg-go" data-kzg="on">🔔 알림 켜기</button>`}
+function gatePaint(){let g=document.getElementById('kzGate');const need=gateNeed();
+ if(!need){gateSince=0;if(g){g.remove();document.documentElement.classList.remove('kzg-lock');try{toast('알림이 켜졌어요 ✓')}catch(e){}}return}
+ if(!gateSince)gateSince=Date.now();if(!g&&Date.now()-gateSince<4000)return;/* 허용된 기기는 자동 등록될 시간을 줌 */
+ const s=state();if(g&&g.dataset.s===s)return;
+ if(!g){g=document.createElement('div');g.id='kzGate';g.setAttribute('role','dialog');g.setAttribute('aria-modal','true');g.setAttribute('aria-label','알림 켜기');document.body.appendChild(g);document.documentElement.classList.add('kzg-lock')}
+ g.dataset.s=s;g.innerHTML=`<div class="kzg-c"><div class="kzg-ic">🔔</div>${gateHTML(s)}</div>`;
+ const on=g.querySelector('[data-kzg="on"]');if(on)on.onclick=async()=>{on.disabled=true;on.textContent='켜는 중…';try{await register();paint();gatePaint()}catch(e){try{toast(e.message||'알림을 켜지 못했어요')}catch(x){}on.disabled=false;on.textContent='🔔 알림 켜기';gatePaint()}};
+ const re=g.querySelector('[data-kzg="re"]');if(re)re.onclick=()=>location.reload()}
+setInterval(()=>{if(!document.hidden)gatePaint()},1500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(gatePaint,300)});
+window.kzPush={state,register,unregister,notify,contiPush,noticePush,eventPush,gateNeed,gateHTML};
 new MutationObserver(()=>{const p=document.getElementById('kzAdminPanel');if(p&&!p.querySelector('#kzPushSec'))paint()}).observe(document.body,{childList:true});
 setInterval(()=>{if(document.hidden)return;paintBar();autoSilent()},2000);
 if(window.KZ_FIREBASE_AUTH_READY)window.KZ_FIREBASE_AUTH_READY.then(()=>setTimeout(refresh,3000)).catch(()=>{});
@@ -9558,6 +9579,18 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
  const ol=window.lyRefresh;if(typeof ol==='function')window.lyRefresh=function(){try{const m=[...document.querySelectorAll('.kz-modal.kz-wv')].pop();m&&m._kzwt&&m._kzwt()}catch(e){}if(view==='apply'&&!document.querySelector('.apf-ov')){render();return}return ol.apply(this,arguments)};
 })();
 </script>
+<style id="kz-gate-css">
+html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
+#kzGate{position:fixed;inset:0;z-index:2147483000;background:rgba(246,242,236,.97);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto}
+#kzGate .kzg-c{width:100%;max-width:380px;background:#fff;border-radius:24px;padding:26px 22px 22px;box-shadow:0 10px 40px rgba(60,40,20,.12);text-align:center;display:grid;gap:12px}
+#kzGate .kzg-ic{width:58px;height:58px;margin:0 auto 2px;border-radius:50%;background:#f7ecdf;display:grid;place-items:center;font-size:28px}
+#kzGate .kzg-t{font-size:19px;font-weight:800;letter-spacing:-.02em;color:#1f1a16;line-height:1.35}
+#kzGate p{margin:0;font-size:14px;line-height:1.55;color:#5c4a3a}
+#kzGate .kzg-st{margin:4px 0 0;padding:12px 14px 12px 34px;text-align:left;background:#f8f4ee;border-radius:14px;display:grid;gap:7px;font-size:13.5px;color:#3f3127;line-height:1.45}
+#kzGate small{font-size:12px;color:#8a7764;line-height:1.5}
+#kzGate .kzg-go{height:50px;border:0;border-radius:14px;background:#3f3127;color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px}
+#kzGate .kzg-go:disabled{opacity:.6}
+</style>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
 <script id="kz-pin-mask-s">/* iPhone '강력한 암호 사용' 팝업이 PIN 칸에 뜨지 않도록, 가리기 지원 브라우저에서는 password 대신 text 칸 + 점 가리기 */
 (function(){const ok=window.CSS&&CSS.supports&&(CSS.supports('-webkit-text-security','disc')||CSS.supports('text-security','disc'));
@@ -11391,7 +11424,7 @@ textarea.kf-ttx,input.kf-ttx{color:transparent!important;-webkit-text-fill-color
 (function(){
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let KB=null,kbP=null,hist=[],busy=false,aiOff=false;
- const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=89').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
+ const loadKB=()=>kbP||(kbP=fetch('/assets/assistant-kb.json?v=90').then(r=>r.json()).then(j=>KB=j).catch(e=>{kbP=null;throw e}));
  const me=()=>{try{return (typeof authAccount==='function'&&authAccount())||{}}catch(e){return{}}};
  const mobile=()=>matchMedia('(max-width:820px)').matches;
  /* 화면 이동 */
