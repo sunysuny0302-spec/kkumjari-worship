@@ -9611,8 +9611,13 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
 #kzPW .pw-t{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 0 44px}#kzPW .pw-t button{height:34px;padding:0 12px;border-radius:99px;border:1px solid #e3ddd5;background:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#3f3127}#kzPW .pw-t button.on{background:#3f3127;color:#fff;border-color:#3f3127}
 #kzPW .pw-t input{height:34px;border-radius:10px;border:1px solid #e3ddd5;padding:0 8px;font:inherit;font-size:13px}
 #kzPW .pw-go{height:50px;border:0;border-radius:14px;background:#3f3127;color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px}
-.kz-pq{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:11px 14px;border-radius:14px;background:#eef3f8;border:1px solid #d6e2ee;color:#34506e;font-size:13.5px}
-.kz-pq b{font-weight:800}.kz-pq span{flex:1;min-width:180px}.kz-pq button{height:32px;padding:0 12px;border-radius:99px;border:1px solid #c9d7e6;background:#fff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:#34506e}
+.kz-pq{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 16px 14px;padding:12px 14px;border-radius:16px;background:#eef3f8;border:1px solid #d6e2ee;color:#34506e}
+@media(min-width:900px){.kz-pq{margin:18px 24px 0}}
+.kz-pq .pq-i{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:17px}
+.kz-pq .pq-t{flex:1;min-width:0;display:block}.kz-pq .pq-a{display:block;font-size:14.5px;font-weight:800;color:#24405e;letter-spacing:-.01em}.kz-pq .pq-b{display:block;margin-top:2px;font-size:12.5px;color:#5b7593;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kz-pq .pq-btn{display:flex;gap:6px;flex:none}
+.kz-pq button{height:32px;padding:0 12px;border-radius:99px;border:1px solid #c9d7e6;background:#fff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:#34506e;white-space:nowrap}.kz-pq button.pri{background:#34506e;border-color:#34506e;color:#fff}
+@media(max-width:520px){.kz-pq .pq-btn{width:100%;padding-left:48px;box-sizing:border-box}.kz-pq .pq-btn button{flex:1}}
 </style>
 <script id="kz-pushq">
 /* ===== 콘티 알림: 지금 보내기 / 예약 / (수정일 때만) 조용히 두기 =====
@@ -9642,7 +9647,7 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
  window.kzPushQPaint=async function(force=true){try{if(!staff()||typeof view==='undefined'||view!=='lpick')return;const d=nextSun(),it=await load(d,force),B=document.getElementById('body');if(!B||view!=='lpick')return;let el=document.getElementById('kzPQ');
   if(!it||it.at<Date.now()-5*60000){el&&el.remove();return}
   if(!el){el=document.createElement('div');el.id='kzPQ';el.className='kz-pq';B.prepend(el)}
-  el.innerHTML=`<span>🔔 <b>${E2(it.title)}</b> 알림 · <b>${kzWhenLbl(it.at)}</b> 예약됨${it.byName?' ('+E2(it.byName)+')':''}</span><button type="button" data-pq="now">지금 보내기</button><button type="button" data-pq="edit">시간 바꾸기</button>`;
+  el.innerHTML=`<div class="pq-i" aria-hidden="true">🔔</div><div class="pq-t"><div class="pq-a">${kzWhenLbl(it.at)} 알림 예약</div><div class="pq-b">${E2(it.title)}${it.byName?' · '+E2(it.byName):''}</div></div><div class="pq-btn"><button type="button" data-pq="edit">시간 바꾸기</button><button type="button" data-pq="now" class="pri">지금 보내기</button></div>`;
   el.querySelector('[data-pq="now"]').onclick=async()=>{try{await kzRsvp.api({action:'pushNow',date:d});toast('팀 알림을 보냈어요');kzPushQPaint(true)}catch(e){toast(e.message||'보내지 못했어요')}};
   el.querySelector('[data-pq="edit"]').onclick=async()=>{const wh=await kzPushWhen({re:false});if(wh.mode==='now'){try{await kzRsvp.api({action:'pushNow',date:d});toast('팀 알림을 보냈어요')}catch(e){toast(e.message||'보내지 못했어요')}}else if(wh.mode==='later'){try{await kzRsvp.api({action:'pushSchedule',date:d,at:wh.at,title:it.title,body:it.body||'',re:false});toast(`${kzWhenLbl(wh.at)}로 바꿨어요`)}catch(e){toast(e.message||'바꾸지 못했어요')}}kzPushQPaint(true)}}catch(e){console.warn(e)}};
  const E2=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
