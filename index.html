@@ -9601,16 +9601,26 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
 #kzGate .kzg-go:disabled{opacity:.6}
 </style>
 <style id="kz-pushq-css">
-#kzPW{position:fixed;inset:0;z-index:9500;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,16,12,.38)}
-#kzPW .pw{width:100%;max-width:440px;background:#fff;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;box-shadow:0 -6px 30px rgba(0,0,0,.12)}
-@media(min-width:700px){#kzPW{align-items:center}#kzPW .pw{border-radius:22px}}
-#kzPW h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em}#kzPW p{margin:0;font-size:13px;color:#7a6a5c;line-height:1.5}
-#kzPW .pw-o{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:14px;border:1.5px solid #ece5dc;background:#fff;font:inherit;text-align:left;cursor:pointer;color:#1f1a16}
-#kzPW .pw-o.on{border-color:#3f3127;background:#faf6f0}#kzPW .pw-o i{width:18px;height:18px;border-radius:50%;border:2px solid #cdbfae;flex:none}#kzPW .pw-o.on i{border:5px solid #3f3127}
-#kzPW .pw-o b{font-size:15px}#kzPW .pw-o small{display:block;font-size:12px;color:#8a7764;margin-top:2px}
-#kzPW .pw-t{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 0 44px}#kzPW .pw-t button{height:34px;padding:0 12px;border-radius:99px;border:1px solid #e3ddd5;background:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#3f3127}#kzPW .pw-t button.on{background:#3f3127;color:#fff;border-color:#3f3127}
-#kzPW .pw-t input{height:34px;border-radius:10px;border:1px solid #e3ddd5;padding:0 8px;font:inherit;font-size:13px}
-#kzPW .pw-go{height:50px;border:0;border-radius:14px;background:#3f3127;color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px}
+.kz-pw-ov,#kzPW{position:fixed;inset:0;z-index:9500;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,16,12,.32);animation:kzPWf .18s ease}
+@keyframes kzPWf{from{opacity:0}}@keyframes kzPWu{from{transform:translateY(24px);opacity:.6}}
+#kzPW .pw{width:100%;max-width:420px;background:#fff;border-radius:20px 20px 0 0;padding:10px 18px calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;box-shadow:0 -8px 32px rgba(0,0,0,.10);animation:kzPWu .22s cubic-bezier(.2,.8,.2,1)}
+@media(min-width:700px){#kzPW{align-items:center}#kzPW .pw{border-radius:20px;padding:18px 20px 18px}#kzPW .pw-grab{display:none}}
+#kzPW .pw-grab{justify-self:center;width:36px;height:4px;border-radius:9px;background:#e6dfd6;margin-bottom:2px}
+#kzPW .pw-h{display:grid;gap:3px}#kzPW .pw-ey{font-size:11.5px;font-weight:700;color:#a08b76;letter-spacing:.02em}
+#kzPW .pw-h b{font-size:16px;font-weight:800;letter-spacing:-.02em;color:#1f1a16;line-height:1.35}
+#kzPW .pw-seg{display:flex;padding:3px;border-radius:12px;background:#f3efe9}
+#kzPW .pw-seg button{flex:1;height:36px;border:0;border-radius:9px;background:none;font:inherit;font-size:13.5px;font-weight:700;color:#8a7764;cursor:pointer}
+#kzPW .pw-seg button.on{background:#fff;color:#1f1a16;box-shadow:0 1px 3px rgba(60,40,20,.12)}
+#kzPW .pw-tl{font-size:11.5px;font-weight:700;color:#a08b76;margin:0 0 -6px 2px}
+#kzPW .pw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#kzPW .pw-grid button{height:38px;border-radius:10px;border:1px solid #ebe4da;background:#fff;font:inherit;font-size:13px;font-weight:700;color:#4a3a2d;cursor:pointer;font-variant-numeric:tabular-nums}
+#kzPW .pw-grid button.on{background:#3f3127;border-color:#3f3127;color:#fff}
+#kzPW .pw-cus{display:flex;align-items:center;gap:8px;height:40px;padding:0 4px 0 12px;border-radius:10px;border:1px solid #ebe4da;background:#faf8f5}
+#kzPW .pw-cus span{font-size:12.5px;font-weight:700;color:#8a7764;flex:none}
+#kzPW .pw-cus input{flex:1;min-width:0;height:34px;border:0;background:transparent;font:inherit;font-size:14px;color:#1f1a16;text-align:right;outline:none}
+#kzPW .pw-sum{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#f6f8fb;color:#4b6584;font-size:12.5px;font-weight:600;line-height:1.4}
+#kzPW .pw-sum.quiet{background:#faf6f0;color:#8a7764}
+#kzPW .pw-go{height:46px;border:0;border-radius:13px;background:#3f3127;color:#fff;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
 .kz-pq{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 16px 14px;padding:12px 14px;border-radius:16px;background:#eef3f8;border:1px solid #d6e2ee;color:#34506e}
 @media(min-width:900px){.kz-pq{margin:18px 24px 0}}
 .kz-pq .pq-i{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:17px}
@@ -9626,18 +9636,23 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
  const pad=n=>String(n).padStart(2,'0'),WD='일월화수목금토';
  window.kzWhenLbl=t=>{const d=new Date(t),n=new Date(),tm=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1);const day=d.toDateString()===n.toDateString()?'오늘':d.toDateString()===tm.toDateString()?'내일':`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;const h=d.getHours(),m=d.getMinutes();return `${day} ${h<12?'오전':'오후'} ${h%12||12}시${m?' '+m+'분':''}`};
  const nextAt=h=>{const n=new Date(),d=new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,0,0);if(d.getTime()<=Date.now()+60000)d.setDate(d.getDate()+1);return d.getTime()};
- window.kzPushWhen=function({re}){return new Promise(res=>{document.getElementById('kzPW')?.remove();const night=new Date().getHours()<7||new Date().getHours()>=23;
-  let mode=night?'later':'now',at=nextAt(8);const presets=[7,8,9,12];
+ window.kzPushWhen=function({re,date}){return new Promise(res=>{document.getElementById('kzPW')?.remove();const hr=new Date().getHours(),night=hr<7||hr>=23;
+  let mode=night?'later':'now',at=nextAt(8),custom=false;const presets=[7,8,9,12];
   const o=document.createElement('div');o.id='kzPW';document.body.append(o);
-  const paint=()=>{const d=new Date(at);o.innerHTML=`<div class="pw" role="dialog" aria-modal="true" aria-label="콘티 알림 보내기"><h3>${re?'콘티를 재업로드했어요':'콘티를 올렸어요'} · 팀 알림</h3><p>${re?'곡 · 순서가 바뀌었으면 알림을 보내 주세요. 자잘한 수정이면 조용히 두어도 돼요.':'새 콘티는 팀 전체에 알림이 꼭 가요. 늦은 시간이면 예약해 두세요.'}</p>
-   <button type="button" class="pw-o ${mode==='now'?'on':''}" data-m="now"><i></i><span><b>지금 보내기</b></span></button>
-   <button type="button" class="pw-o ${mode==='later'?'on':''}" data-m="later"><i></i><span><b>예약해서 보내기</b><small>${mode==='later'?kzWhenLbl(at)+'에 보내요':'원하는 시간에 보내요'}</small></span></button>
-   ${mode==='later'?`<div class="pw-t">${presets.map(h=>{const t=nextAt(h);return `<button type="button" data-h="${h}" class="${t===at?'on':''}">${h<12?'오전':'오후'} ${h%12||12}시</button>`}).join('')}<input type="datetime-local" value="${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}" aria-label="예약 날짜와 시간"></div>`:''}
-   ${re?`<button type="button" class="pw-o ${mode==='quiet'?'on':''}" data-m="quiet"><i></i><span><b>조용히 두기</b><small>알림 없이 홈 콘티만 바뀌어요</small></span></button>`:''}
-   <button type="button" class="pw-go">${mode==='now'?'지금 알림 보내기':mode==='later'?kzWhenLbl(at)+'에 보내기':'알림 없이 두기'}</button></div>`;
+  const dLbl=(()=>{try{if(!date)return '콘티';const x=new Date(date+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 콘티`}catch(e){return '콘티'}})();
+  const hm=h=>`${h<12?'오전':'오후'} ${h%12||12}시`;
+  const paint=()=>{const d=new Date(at),dayOf=t=>{const x=new Date(t),n=new Date();return x.toDateString()===n.toDateString()?'오늘':'내일'};
+   o.innerHTML=`<div class="pw" role="dialog" aria-modal="true" aria-label="팀 알림 보내기"><i class="pw-grab" aria-hidden="true"></i>
+   <div class="pw-h"><span class="pw-ey">${re?'콘티 수정됨':'콘티 업로드 완료'} · 팀 알림</span><b>${dLbl} 알림을 언제 보낼까요?</b></div>
+   <div class="pw-seg" role="tablist"><button type="button" data-m="now" class="${mode==='now'?'on':''}">지금</button><button type="button" data-m="later" class="${mode==='later'?'on':''}">예약</button>${re?`<button type="button" data-m="quiet" class="${mode==='quiet'?'on':''}">안 보내기</button>`:''}</div>
+   ${mode==='later'?`<div class="pw-grid">${presets.map(h=>{const t=nextAt(h);return `<button type="button" data-h="${h}" class="${!custom&&t===at?'on':''}"><small style="display:block;font-size:10.5px;font-weight:600;opacity:.7">${dayOf(t)}</small>${h===12?'낮 12시':hm(h).replace('오전 ','')}</button>`}).join('')}</div>
+   <label class="pw-cus"><span>직접 고르기</span><input type="datetime-local" value="${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}" aria-label="예약 날짜와 시간"></label>`:''}
+   <div class="pw-sum ${mode==='quiet'?'quiet':''}">${mode==='now'?'🔔 지금 바로 팀 전체에게 알림이 가요':mode==='later'?`<span>🕗 <b>${kzWhenLbl(at)}</b>에 팀 전체에게 알림이 가요</span>`:'🔕 알림 없이 홈 콘티만 바뀌어요 (자잘한 수정일 때)'}</div>
+   <button type="button" class="pw-go">${mode==='now'?'지금 보내기':mode==='later'?'예약하기':'알림 없이 두기'}</button></div>`;
+   if(mode==='later')o.querySelectorAll('.pw-grid button').forEach(b=>{b.style.height='46px'});
    o.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;paint()});
-   o.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{at=nextAt(+b.dataset.h);paint()});
-   const inp=o.querySelector('input[type=datetime-local]');if(inp)inp.onchange=()=>{const t=new Date(inp.value).getTime();if(!t||t<Date.now()+60000){toast('지금보다 뒤의 시간을 골라 주세요');paint();return}if(t>Date.now()+8*864e5){toast('8일 안으로 골라 주세요');paint();return}at=t;paint()};
+   o.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{at=nextAt(+b.dataset.h);custom=false;paint()});
+   const inp=o.querySelector('input[type=datetime-local]');if(inp)inp.onchange=()=>{const t=new Date(inp.value).getTime();if(!t||t<Date.now()+60000){toast('지금보다 뒤의 시간을 골라 주세요');paint();return}if(t>Date.now()+8*864e5){toast('8일 안으로 골라 주세요');paint();return}at=t;custom=!presets.some(h=>nextAt(h)===t);paint()};
    o.querySelector('.pw-go').onclick=()=>{o.remove();res({mode,at})}};
   paint()})};
  /* 인도자 화면 위: 예약된 알림 보기 · 지금 보내기 · 취소 */
@@ -9649,7 +9664,7 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
   if(!el){el=document.createElement('div');el.id='kzPQ';el.className='kz-pq';B.prepend(el)}
   el.innerHTML=`<div class="pq-i" aria-hidden="true">🔔</div><div class="pq-t"><div class="pq-a">${kzWhenLbl(it.at)} 알림 예약</div><div class="pq-b">${E2(it.title)}${it.byName?' · '+E2(it.byName):''}</div></div><div class="pq-btn"><button type="button" data-pq="edit">시간 바꾸기</button><button type="button" data-pq="now" class="pri">지금 보내기</button></div>`;
   el.querySelector('[data-pq="now"]').onclick=async()=>{try{await kzRsvp.api({action:'pushNow',date:d});toast('팀 알림을 보냈어요');kzPushQPaint(true)}catch(e){toast(e.message||'보내지 못했어요')}};
-  el.querySelector('[data-pq="edit"]').onclick=async()=>{const wh=await kzPushWhen({re:false});if(wh.mode==='now'){try{await kzRsvp.api({action:'pushNow',date:d});toast('팀 알림을 보냈어요')}catch(e){toast(e.message||'보내지 못했어요')}}else if(wh.mode==='later'){try{await kzRsvp.api({action:'pushSchedule',date:d,at:wh.at,title:it.title,body:it.body||'',re:false});toast(`${kzWhenLbl(wh.at)}로 바꿨어요`)}catch(e){toast(e.message||'바꾸지 못했어요')}}kzPushQPaint(true)}}catch(e){console.warn(e)}};
+  el.querySelector('[data-pq="edit"]').onclick=async()=>{const wh=await kzPushWhen({re:false,date:d});if(wh.mode==='now'){try{await kzRsvp.api({action:'pushNow',date:d});toast('팀 알림을 보냈어요')}catch(e){toast(e.message||'보내지 못했어요')}}else if(wh.mode==='later'){try{await kzRsvp.api({action:'pushSchedule',date:d,at:wh.at,title:it.title,body:it.body||'',re:false});toast(`${kzWhenLbl(wh.at)}로 바꿨어요`)}catch(e){toast(e.message||'바꾸지 못했어요')}}kzPushQPaint(true)}}catch(e){console.warn(e)}};
  const E2=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  if(typeof lpickView==='function'){const o=lpickView;lpickView=function(){const r=o.apply(this,arguments);setTimeout(()=>kzPushQPaint(false),50);return r}}
 })();
