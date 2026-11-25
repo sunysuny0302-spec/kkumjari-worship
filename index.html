@@ -10,6 +10,10 @@
 (function(){const q=new Map();
  window.kzLater=function(fn,ms){if(typeof fn!=='function')return;const o=q.get(fn);if(o)clearTimeout(o);q.set(fn,setTimeout(()=>{q.delete(fn);try{fn()}catch(e){console.error(e)}},ms==null?90:ms))};
  window.kzRedraw=function(){try{if(document.getElementById('body'))(window.body||body)()}catch(e){console.error(e)}};
+ /* 이름 → 계정 id (프로필 사진용, 기기에 저장된 계정 목록) */
+ let accC={t:0,m:null};window.kzIdByName=function(n){try{if(!accC.m||Date.now()-accC.t>30000){accC={t:Date.now(),m:new Map()};JSON.parse(localStorage.getItem('kzAuthAccountsV92')||'[]').forEach(a=>{if(a&&a.id&&a.name&&a.id!=='management')accC.m.set(String(a.name).replace(/\s+/g,''),a.id)})}return accC.m.get(String(n||'').replace(/\s+/g,''))||''}catch(e){return ''}};
+ /* 프로필 사진 자리: 사진이 있으면 사진, 없으면 첫 글자 (kzProfiles가 불러와서 채움) */
+ window.kzPfHTML=function(name,id){const e=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const ini=e(String(name||'?').trim().slice(0,1));id=id||window.kzIdByName(name);if(!id)return ini;const ph=window.kzProfiles&&kzProfiles.get(id)?.photo;setTimeout(()=>{try{window.kzProfiles&&kzProfiles.want()}catch(x){}},0);return `<span class="kz-pf" data-profile-id="${e(id)}" data-initial="${ini}">${ph?`<img alt="" src="${e(ph)}">`:ini}</span>`};
  window.kzLaterCancel=function(fn){const o=q.get(fn);if(o){clearTimeout(o);q.delete(fn)}};
  const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
  const key=i=>(i.getAttribute('src')||'')+'|'+(i.getAttribute('srcset')||'');
@@ -3360,6 +3364,8 @@ body.kc-panel-open{overflow:hidden}
 @media (max-width:820px){#kzMembersDialog{inset:auto 0 0 0;width:100%;max-height:80dvh;border-radius:22px 22px 0 0;padding-bottom:env(safe-area-inset-bottom)}}
 /* 채팅방 멤버 목록 */
 #kcPanel .kc-room-member-avatar{position:relative}
+.pl-av,.kc-mention-av{overflow:hidden}
+.kz-pf{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden}.kz-pf img{width:100%;height:100%;object-fit:cover;display:block}
 #kcPanel .kc-room-member-avatar .kc-pres{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;border:2px solid var(--c-card,#fff);background:#c4c0b8}
 #kcPanel .kc-room-member.online .kc-pres{background:#2fa866}
 #kcPanel .kc-room-member-info b{display:flex;align-items:center;gap:6px}
@@ -7931,11 +7937,12 @@ function roomMemberListData(){
 }
 function roomMemberList(){
  const P=window.kzPresence,pres=P?P.sorted(P.items()):[],list=pres.length?pres:roomMemberListData().map(m=>({name:m.name,rank:m.rank,parts:m.parts||[]})),on=list.filter(m=>m.online).length;
+ setTimeout(()=>{try{refreshProfiles()}catch(e){}},0);
  return `<div class="kc-room-members-panel">
    <div class="kc-room-members-panel-head"><strong>참여 멤버</strong><span>${pres.length?`접속 ${on} · 전체 ${list.length}명`:`${list.length}명`}</span></div>
    <div class="kc-room-members-list">
      ${list.length?list.map(m=>`<div class="kc-room-member ${m.online?'online':''}">
-       <span class="kc-room-member-avatar">${escape(String(m.name).trim().slice(0,1))}<i class="kc-pres" aria-hidden="true"></i></span>
+       <span class="kc-room-member-avatar">${kzPfHTML(m.name,m.id)}<i class="kc-pres" aria-hidden="true"></i></span>
        <span class="kc-room-member-info"><b>${escape(m.name)}${m.id&&m.id===uid()?'<em>나</em>':''}</b><small>${escape([m.rank,...(m.parts||[])].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' · '))}</small></span>
        ${pres.length?`<span class="kc-room-member-when">${escape(P.label(m))}</span>`:''}
      </div>`).join(''):'<div class="kc-room-members-empty">이 채팅방에 참여할 수 있는 멤버가 없어요.</div>'}
@@ -8014,7 +8021,7 @@ function mentionSetup(t){if(!t||t._mention)return;t._mention=true;const host=t.c
  const close=()=>{if(box){box.remove();box=null}q=null};
  const pick=name=>{if(q==null)return;const v=t.value,end=t.selectionStart,start=end-q.length-1,tok=KZM+name+KZM;t.value=v.slice(0,start)+tok+' '+v.slice(end);const c=start+tok.length+1;t.setSelectionRange(c,c);close();t.dispatchEvent(new Event('input',{bubbles:true}));t.focus()};
  const paint=()=>{if(!list.length){close();return}if(!box){box=document.createElement('div');box.className='kc-mention-pop';box.setAttribute('role','listbox');host.append(box)}
-  box.innerHTML=list.map((n,i)=>`<button type="button" role="option" class="${i===idx?'on':''}" data-n="${escape(n)}"><span class="kc-mention-av">${escape(n.slice(0,1))}</span>${n==='모두'?'<b>모두</b><small>이 방 모두에게 알림</small>':`<b>${escape(n)}</b>`}</button>`).join('');
+  box.innerHTML=list.map((n,i)=>`<button type="button" role="option" class="${i===idx?'on':''}" data-n="${escape(n)}"><span class="kc-mention-av">${n==='모두'?escape(n.slice(0,1)):kzPfHTML(n)}</span>${n==='모두'?'<b>모두</b><small>이 방 모두에게 알림</small>':`<b>${escape(n)}</b>`}</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();pick(b.dataset.n)}})};
  const check=()=>{const v=t.value.slice(0,t.selectionStart),m=v.match(/(^|\s)@([^\s@]{0,12})$/);if(!m){close();return}q=m[2];const me=String(actor?.name||''),all=mentionNames().filter(n=>n!==me);const ql=q.toLowerCase();
   list=['모두',...all].filter(n=>!ql||n.toLowerCase().includes(ql)).sort((a,b)=>(b.toLowerCase().startsWith(ql))-(a.toLowerCase().startsWith(ql))).slice(0,8);idx=0;paint()};
@@ -8154,9 +8161,10 @@ document.addEventListener('click',e=>{const av=e.target.closest('#kcPanel .kc-av
  d.innerHTML='<div class="kc-pf-h"><b></b><button type="button" aria-label="닫기">✕ 닫기</button></div><img alt="">';d.querySelector('b').textContent=nm;const big=d.querySelector('img');big.src=im.src;big.alt=(nm||'팀원')+' 프로필 사진';
  d.querySelector('button').onclick=()=>d.close();d.addEventListener('click',ev=>{if(ev.target===d)d.close()});d.addEventListener('close',()=>d.remove());document.body.append(d);d.showModal();
  if(who){const c=profileCache.get(who);if(c&&c.big){big.src=c.big}else api({action:'profileBig',id:who}).then(r=>{if(r&&r.photo&&d.isConnected){big.src=r.photo;const cc=profileCache.get(who);if(cc)cc.big=r.photo}}).catch(()=>{})}},true);
+window.kzProfiles={get:id=>profileCache.get(id),want:()=>{try{refreshProfiles()}catch(e){}},paint:()=>paintProfiles()};
 function paintProfiles(){document.querySelectorAll('[data-profile-id]').forEach(el=>{const p=profileCache.get(el.dataset.profileId);if(!p)return;if(p.photo){el.innerHTML='<img alt="" src="'+escape(p.photo)+'">';}else if(el.querySelector('img'))el.textContent=el.dataset.initial||'?';});}
 async function refreshProfiles(){
- if(profilesBusy)return;const ids=[...new Set(chatItems.map(m=>m.owner).filter(Boolean))].filter(id=>Date.now()-(profileCache.get(id)?.at||0)>60000).slice(0,30);if(!ids.length)return;
+ if(profilesBusy)return;const ids=[...new Set([...chatItems.map(m=>m.owner),...[...document.querySelectorAll('[data-profile-id]')].map(e=>e.dataset.profileId)].filter(Boolean))].filter(id=>Date.now()-(profileCache.get(id)?.at||0)>60000).slice(0,30);if(!ids.length)return;
  profilesBusy=true;const ticket=epoch;try{const r=await api({action:'profiles',ids});if(ticket!==epoch)return;for(const p of r.profiles||[])profileCache.set(p.id,{photo:p.photo,at:Date.now()});paintProfiles();}catch{}finally{profilesBusy=false;}
 }
 /* 크게 보기용: 긴 변 640px 이하, 정사각형으로 자르지 않음 */
@@ -8480,8 +8488,9 @@ setInterval(()=>{if(document.hidden)return;if(current()!==identity){state=null;s
  const sorted=items=>[...items].sort((x,y)=>Number(!!y.online)-Number(!!x.online)||(Number(y.lastSeen)||0)-(Number(x.lastSeen)||0)||String(x.name).localeCompare(String(y.name),'ko'));
  window.kzPresence={load,label,sorted,items:()=>store.items,subscribe(f){store.subs.add(f);return()=>store.subs.delete(f)}};
  function row(m){const me=m.id&&m.id===user()?.uid,sub=[m.rank||'팀원',...(m.parts||[])].filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · ');
-  return `<li class="kp-row ${m.online?'on':''}"><span class="kp-av" aria-hidden="true">${esc(String(m.name||'?').trim().slice(0,1))}<i></i></span><span class="kp-info"><b>${esc(m.name)}${me?'<em>나</em>':''}</b><small>${esc(sub)}</small></span><span class="kp-when">${esc(label(m))}</span></li>`}
+  return `<li class="kp-row ${m.online?'on':''}"><span class="kp-av" aria-hidden="true">${kzPfHTML(m.name,m.id)}<i></i></span><span class="kp-info"><b>${esc(m.name)}${me?'<em>나</em>':''}</b><small>${esc(sub)}</small></span><span class="kp-when">${esc(label(m))}</span></li>`}
  function paint(items){const box=document.getElementById('kzMembersList');if(!box)return;const list=sorted(items),on=list.filter(m=>m.online),off=list.filter(m=>!m.online);
+  setTimeout(()=>{try{window.kzProfiles&&kzProfiles.want()}catch(e){}},0);
   const sum=document.getElementById('kzMembersSum');if(sum)sum.innerHTML=`<span class="kp-pill on"><i></i>접속 중 ${on.length}명</span><span class="kp-pill">전체 ${list.length}명</span>`;
   box.innerHTML=list.length?`${on.length?`<h4 class="kp-sec">지금 접속 중</h4><ul>${on.map(row).join('')}</ul>`:'<p class="kp-empty">지금 접속 중인 멤버가 없어요.</p>'}${off.length?`<h4 class="kp-sec">오프라인</h4><ul>${off.map(row).join('')}</ul>`:''}`:'<p class="kp-empty">등록된 멤버가 없어요.</p>'}
  store.subs.add(paint);
@@ -8938,7 +8947,7 @@ window.kzPrac=(function(){
   t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전'}
  async function openList(d){const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
   const no=list.filter(o=>a[o.n]&&a[o.n].s==='no'),yes=list.filter(o=>a[o.n]&&a[o.n].s==='yes'),wait=list.filter(o=>!a[o.n]),t=list.length||1;
-  const av=o=>`<span class="pl-av">${esc(String(o.n).slice(0,1))}</span>`;
+  const av=o=>`<span class="pl-av">${kzPfHTML(o.n)}</span>`;
   const w=document.createElement('div');w.id='kzPracList';w.className='pr-ov';
   const past=Date.now()>=until(d).at,n=list.length,pct=n?Math.round(yes.length/n*100):0,yd=n?yes.length/n*360:0,nd=n?no.length/n*360:0;
   const role=o=>esc(o.r.join(' · '));
