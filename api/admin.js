@@ -6,7 +6,7 @@ const {createAdminService, PUBLIC, ADMIN, SELF} = require('../lib/admin-service.
 let service;
 function getService() {
   init();
-  if (!service) service = createAdminService({db: admin.firestore(), auth: admin.auth()});
+  if (!service) service = createAdminService({db: admin.firestore(), auth: admin.auth(), messaging: admin.messaging()});
   return service;
 }
 module.exports = async function handler(req, res) {
