@@ -9669,6 +9669,18 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
  if(typeof lpickView==='function'){const o=lpickView;lpickView=function(){const r=o.apply(this,arguments);setTimeout(()=>kzPushQPaint(false),50);return r}}
 })();
 </script>
+<script id="kz-ios-fixbar">
+/* 아이폰: 키보드를 닫거나 화면 크기가 바뀐 뒤 아래 메뉴(고정 막대)가 위로 떠 있는 iOS 버그 보정
+   → 입력이 끝나면 스크롤 위치를 1px 흔들어 iOS가 고정 위치를 다시 계산하게 함 */
+(function(){if(!/iPhone|iPad|iPod/.test(navigator.userAgent))return;
+ const typing=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.isContentEditable||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|color|file)$/i.test(a.type||'')))};
+ let t=0;const fix=()=>{clearTimeout(t);t=setTimeout(()=>{if(typing())return;const vv=window.visualViewport;if(vv&&vv.height<window.innerHeight-80)return;/* 키보드가 아직 떠 있음 */
+  const x=window.scrollX,y=window.scrollY;window.scrollTo(x,y+1);window.scrollTo(x,y);
+  const tb=document.getElementById('tabbar');if(tb){tb.style.transform='translateZ(0)';requestAnimationFrame(()=>{tb.style.transform=''})}},120)};
+ document.addEventListener('focusout',fix);window.visualViewport&&visualViewport.addEventListener('resize',fix);
+ addEventListener('orientationchange',fix);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fix()});addEventListener('pageshow',fix);
+})();
+</script>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
 <script id="kz-pin-mask-s">/* iPhone '강력한 암호 사용' 팝업이 PIN 칸에 뜨지 않도록, 가리기 지원 브라우저에서는 password 대신 text 칸 + 점 가리기 */
 (function(){const ok=window.CSS&&CSS.supports&&(CSS.supports('-webkit-text-security','disc')||CSS.supports('text-security','disc'));
