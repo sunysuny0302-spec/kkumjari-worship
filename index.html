@@ -3,6 +3,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1d2b57">
 <title>꿈자리 찬양팀</title>
+<script id="kz-render-calm">
+/* 화면 다시 그리기 진정시키기
+   ① 데이터가 여러 개 연달아 도착할 때(첫 접속) 홈을 매번 통째로 다시 그리지 않고 한 번에 모아서 그림
+   ② 다시 그려도 이미 불러온 사진은 그대로 옮겨 씀 → 사진이 '따닥' 다시 켜지지 않음 */
+(function(){const q=new Map();
+ window.kzLater=function(fn,ms){if(typeof fn!=='function')return;const o=q.get(fn);if(o)clearTimeout(o);q.set(fn,setTimeout(()=>{q.delete(fn);try{fn()}catch(e){console.error(e)}},ms==null?90:ms))};
+ window.kzRedraw=function(){try{if(document.getElementById('body'))(window.body||body)()}catch(e){console.error(e)}};
+ window.kzLaterCancel=function(fn){const o=q.get(fn);if(o){clearTimeout(o);q.delete(fn)}};
+ const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+ const key=i=>(i.getAttribute('src')||'')+'|'+(i.getAttribute('srcset')||'');
+ Object.defineProperty(Element.prototype,'innerHTML',{configurable:true,get(){return d.get.call(this)},set(v){
+  if(this.id!=='body'||!this.firstChild){d.set.call(this,v);return}
+  let pool=null;try{const olds=this.getElementsByTagName('img');if(olds.length){pool=new Map();for(const i of olds){if(!i.complete||!i.naturalWidth)continue;const k=key(i);if(!k||k==='|')continue;(pool.get(k)||pool.set(k,[]).get(k)).push(i)}}}catch(e){pool=null}
+  d.set.call(this,v);
+  if(!pool||!pool.size)return;
+  try{for(const n of [...this.getElementsByTagName('img')]){const arr=pool.get(key(n));if(!arr||!arr.length)continue;const o=arr.shift();
+    for(const a of [...o.attributes])if(!n.hasAttribute(a.name))o.removeAttribute(a.name);
+    for(const a of [...n.attributes])if(o.getAttribute(a.name)!==a.value)o.setAttribute(a.name,a.value);
+    n.replaceWith(o)}}catch(e){console.warn('[꿈자리] 사진 유지',e)}}});
+ /* 홈으로 직접 이동하거나 누를 때는 미뤄 둔 그리기를 취소(바로 그려짐) */
+})();
+</script>
 <script>/* 카톡에서 링크를 누르면 카톡 안 브라우저 대신 휴대폰 기본 브라우저(사파리·크롬)로 열기 · 한 번만 시도 */
 (function(){try{var u=navigator.userAgent||'';if(!/KAKAOTALK/i.test(u))return;var k='kzKakaoOut';if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1');location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(location.href)}catch(e){}})();
 </script>
@@ -4892,6 +4914,7 @@ const P=()=>pages[cur],dirty=()=>od||wmDirty||pages.some(p=>p.dirty);
 const fmtD=d=>{const x=new Date(d+'T12:00:00');return `${x.getMonth()+1}월 ${x.getDate()}일 (${wd(d)})`};
 const closeSide=()=>{const e=$('#shell');if(e)e.classList.remove('open')};
 function renderApp(){if(!['feed','community','song_requests','inbox','mobile_my','mobile_more','home','notice','archive','members','minutes','trash','library','storage','attend','lyrics','apply'].includes(view)&&(!role||!TABS[role].includes(view)))view='home';
+if(window.__kzSoftApp&&$('#shell')){renderNav();renderTop();renderDbar();kzLater(kzRedraw);return}
 $('#app').innerHTML='<div class="shell" id="shell"><aside class="side" id="side" aria-label="메뉴"></aside><div class="bk" id="bk"></div><div class="col"><header class="top" id="top"><div class="tl" id="tl"></div><div class="dbar" id="dbar"></div><div class="tr" id="tr"></div></header><main id="body"></main></div><nav class="tabbar" id="tabbar" aria-label="빠른 이동"></nav></div>';
 $('#bk').onclick=closeSide;renderNav();renderTop();renderDbar();body()}
 function setRole(k){if(role===k&&TABS[k].includes(view)){closeSide();return}role=k;LS('role',k);go(ROLE_HOME[k])}
@@ -5220,7 +5243,7 @@ let subP=Promise.resolve(),subRes=null;
 function sub(){if(unsub)unsub();data={scores:[],ment:null};lastKey=null;subP=new Promise(rs=>subRes=rs);if(!db){subRes();subRes=null;return}
 unsub=db.doc('weeks/'+date).onSnapshot(s=>{const d=s.exists?JSON.parse(JSON.stringify(s.data())):{};if(!Array.isArray(d.scores))d.scores=[];if(subRes){subRes();subRes=null}
 const key=JSON.stringify([d.scores,d.ment]);if(key===lastKey)return;lastKey=key;data=d;if(data.ment===undefined)data.ment=null;data.ment=normHead(data.ment);
-if(view==='edit'){if(!pages.length&&$('#stage'))drawStage()}else if(view==='ment'){const bx=$('#clrbox');if(bx)bx.innerHTML=clrBanner()}else{const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA/.test(a.tagName)&&a.id!=='dt'))body()}stat()},e=>{if(subRes){subRes();subRes=null}console.error(e)})}
+if(view==='edit'){if(!pages.length&&$('#stage'))drawStage()}else if(view==='ment'){const bx=$('#clrbox');if(bx)bx.innerHTML=clrBanner()}else{const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA/.test(a.tagName)&&a.id!=='dt'))kzLater(kzRedraw)}stat()},e=>{if(subRes){subRes();subRes=null}console.error(e)})}
 let lastFail=false;
 let loadedDate=null;
 function clearWorkspace(){pages=[];cur=0;sel=null;armed=null;insNew=false;wm=null;wmDirty=false;od=false;loadedDate=null;try{LS('wm:'+ldr,null)}catch(e){}}
@@ -6313,19 +6336,19 @@ unsubA=_canQ?db.collection('weeks').where(_FP.documentId(),'>=',_cut(12)).onSnap
 window.__kzWeeksFull=!_canQ;
 window.kzNeedFull=function(){if(!window.__kzWeeksFull){window.__kzWeeksFull=true;try{unsubA&&unsubA()}catch(e){}unsubA=db.collection('weeks').onSnapshot(onWeeks,e=>console.error(e))}if(window.__kzLibLite)window.__kzLibFull&&window.__kzLibFull();if(window.__kzMinLite)window.__kzMinFull&&window.__kzMinFull()};
 db.doc('settings/noService').onSnapshot(x=>{const d=x.exists&&x.data()&&x.data().days;if(!kzNoSvcSet(d))return;try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.nsv'))return;if(view!=='edit'&&view!=='ment')body()}catch(e){}},e=>{console.warn('[꿈자리] 예배 없는 주일 정보를 불러오지 못했어요',e);window.__kzNoSvcViaApi=true;const t=async()=>{try{if(!(window.kzRsvp&&kzRsvp.api))return setTimeout(t,1500);const r=await kzRsvp.api({action:'noServiceGet'});if(!kzNoSvcSet(r&&r.days))return;if(view!=='edit'&&view!=='ment')body()}catch(x){setTimeout(t,5000)}};t();setInterval(()=>{if(!document.hidden)t()},120000)});
-db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))body()}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
-db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
-db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
-db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));try{purgeExpired([],eAll)}catch(e){}const _cut=kzCalRange().min+'-01';events=eAll.filter(e=>!(e&&e.date&&e.date<_cut));const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))homeView()},e=>console.error(e));
+db.doc('settings/leaderRotation').onSnapshot(x=>{lrot=x.exists?x.data():null;kzLeadersRefresh();try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(['lsw','home','lpick'].includes(view))kzLater(kzRedraw)}catch(e){}},e=>console.warn('[꿈자리] 인도자 로테이션을 불러오지 못했어요',e));
+db.doc('settings/members').onSnapshot(x=>{members=normMembers(x.exists&&Array.isArray(x.data().list)?x.data().list:[]);kzLeadersRefresh();syncPermission();if($('#top'))renderTop();const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='members'&&$('#body'))membersView();else if(view==='home'&&$('#body'))kzLater(kzRedraw);else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
+db.collection('notices').onSnapshot(x=>{const nAll=x.docs.map(d=>({...d.data(),_id:d.id}));purgeExpired(nAll,[]);notices=nAll.filter(ntActive);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))kzLater(kzRedraw)},e=>console.error(e));
+db.collection('events').onSnapshot(x=>{const eAll=x.docs.map(d=>({...d.data(),_id:d.id}));try{purgeExpired([],eAll)}catch(e){}const _cut=kzCalRange().min+'-01';events=eAll.filter(e=>!(e&&e.date&&e.date<_cut));const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='notice'&&document.querySelector('#body .kw-form'))return;if(view==='notice'&&$('#body'))noticeView();else if(view==='home'&&$('#body'))kzLater(kzRedraw)},e=>console.error(e));
 db.collection('trash').onSnapshot(x=>{const lim=Date.now()-TRASH_DAYS*864e5;trash=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));purgeTrash();trash=trash.filter(t=>(t.deletedAt||0)>=lim);const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if($('#side'))renderNav();if(view==='trash'&&$('#body'))trashView()},e=>console.error(e));
 setTimeout(()=>refreshStorage(false),2500);
 {const onLib=x=>{library=x.docs.map(d=>({...d.data(),_id:d.id}));if($('#side'))renderNav();const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='library'&&$('#body'))libraryView()};
  let un=null;if(_canQ){window.__kzLibLite=true;un=db.collection('library').where('at','>=',Date.now()-21*864e5).onSnapshot(onLib,e=>console.error(e));window.__kzLibFull=()=>{if(!window.__kzLibLite)return;window.__kzLibLite=false;try{un&&un()}catch(e){}un=db.collection('library').onSnapshot(onLib,e=>console.error(e))}}else db.collection('library').onSnapshot(onLib,e=>console.error(e));}
 {const onMin=x=>{minutes=x.docs.map(d=>({...d.data(),_id:d.id})).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.at||0)-(a.at||0));const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(view==='minutes'&&minTab==='list'&&$('#body'))minutesView()};
  let un=null;if(_canQ){window.__kzMinLite=true;un=db.collection('minutes').where('at','>=',Date.now()-21*864e5).onSnapshot(onMin,e=>console.error(e));window.__kzMinFull=()=>{if(!window.__kzMinLite)return;window.__kzMinLite=false;try{un&&un()}catch(e){}un=db.collection('minutes').onSnapshot(onMin,e=>console.error(e))}}else db.collection('minutes').onSnapshot(onMin,e=>console.error(e));}
-db.collection('sessAbs').onSnapshot(x=>{sessAbs=x.docs.map(d=>({...d.data(),_id:d.id}));try{setTimeout(()=>window.kzPrac&&kzPrac.syncTargets(date),1200)}catch(e){}const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='abs'&&$('#body'))absView();else if(view==='sched_e'&&$('#body'))schedEView();else if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
-db.collection('overrides').onSnapshot(x=>{ovr=x.docs.map(d=>({...d.data(),_id:d.id}));/* 대타·교환이 생기면 이번 주 섬김 명단(알림 대상)도 다시 저장 */try{setTimeout(()=>window.kzPrac&&kzPrac.syncTargets(date),1200)}catch(e){}const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='home'&&$('#body'))homeView();else if(view==='swap'&&$('#body'))swapView();else if(view==='sched_s'&&$('#body'))schedSView();else if(view==='lsw'&&$('#body'))lsView()},e=>console.error(e));
-db.doc('settings/singers').onSnapshot(x=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(x.exists){const d=x.data();if(Array.isArray(d.fixed)&&Array.isArray(d.rot)&&d.anchor){sing={fixed:d.fixed,rot:d.rot,every:d.every||2,anchor:d.anchor};sing=cleanSing(sing);if(view==='home'&&$('#body'))homeView();else if(view==='ment'&&$('#body'))mentView();}}},e=>console.error(e));
+db.collection('sessAbs').onSnapshot(x=>{sessAbs=x.docs.map(d=>({...d.data(),_id:d.id}));try{setTimeout(()=>window.kzPrac&&kzPrac.syncTargets(date),1200)}catch(e){}const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='abs'&&$('#body'))absView();else if(view==='sched_e'&&$('#body'))schedEView();else if(view==='home'&&$('#body'))kzLater(kzRedraw);else if(view==='ment'&&wm==null&&$('#body'))mentView()},e=>console.error(e));
+db.collection('overrides').onSnapshot(x=>{ovr=x.docs.map(d=>({...d.data(),_id:d.id}));/* 대타·교환이 생기면 이번 주 섬김 명단(알림 대상)도 다시 저장 */try{setTimeout(()=>window.kzPrac&&kzPrac.syncTargets(date),1200)}catch(e){}const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(view==='home'&&$('#body'))kzLater(kzRedraw);else if(view==='swap'&&$('#body'))swapView();else if(view==='sched_s'&&$('#body'))schedSView();else if(view==='lsw'&&$('#body'))lsView()},e=>console.error(e));
+db.doc('settings/singers').onSnapshot(x=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA/.test(a.tagName))return;if(x.exists){const d=x.data();if(Array.isArray(d.fixed)&&Array.isArray(d.rot)&&d.anchor){sing={fixed:d.fixed,rot:d.rot,every:d.every||2,anchor:d.anchor};sing=cleanSing(sing);if(view==='home'&&$('#body'))kzLater(kzRedraw);else if(view==='ment'&&$('#body'))mentView();}}},e=>console.error(e));
 sub();stat()}catch(e){console.error(e)}})();
 </script>
 
@@ -6404,7 +6427,7 @@ sub();stat()}catch(e){console.error(e)}})();
  /* 가입 때 비밀번호에 쓴 ID = 로그인 이메일 앞부분 (Firebase uid와 다르므로 이메일 기준으로 맞춤) */
  const authPwId=a=>{const l=String(a&&a.authEmail||'').split('@')[0];return l||(a&&a.id)};
  const fbError=e=>{const c=e&&e.code||'';console.error('[꿈자리] Firebase 인증 오류 코드:',c,e&&e.message);if(c.includes('wrong-password')||c.includes('invalid-credential'))return 'PIN이 맞지 않아요.';if(c.includes('too-many-requests'))return 'PIN을 여러 번 틀려서 잠시 잠겼어요. 잠시 후 다시 해 보거나, 관리계정에 PIN 재설정을 부탁하면 바로 풀려요.';if(c.includes('email-already-in-use'))return '이미 사용 중인 계정이에요. 다시 시도해 주세요.';return `Firebase 인증에 실패했어요. (${c||'오류 코드 없음'})`};
- function apply(a){if(!a)return;try{me=a.name;LS('me',me);syncPermission()}catch(e){}try{renderApp()}catch(e){console.error(e)}}
+ function apply(a){if(!a)return;try{me=a.name;LS('me',me);syncPermission()}catch(e){}/* 이미 화면 틀이 있으면 통째로 다시 만들지 않음 (첫 접속 때 화면이 두 번 깜빡이던 원인) */try{window.__kzSoftApp=!!document.getElementById('shell');renderApp()}catch(e){console.error(e)}finally{window.__kzSoftApp=false}}
  async function syncAccounts(){const fs=FS();if(!fs)return;try{const s=await fs.collection('accounts').get();if(!s.empty){const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote)}}catch(e){console.warn('[꿈자리] 계정 목록 동기화 대기 중',e)}}
  let joining=false;const approvedSig=()=>read().filter(x=>x.status==='approved').map(x=>x.id+':'+x.name+':'+(x.rank||'')).sort().join('|');
  function watchAccounts(){const fs=FS();if(!fs)return;let un=null;const sub=()=>{try{un&&un()}catch(e){}un=null;try{un=fs.collection('accounts').onSnapshot(s=>{const before=approvedSig();const remote=s.docs.map(d=>({id:d.id,...d.data()}));if(!remote.some(x=>x.id==='management'))remote.push({...manager});write(remote);try{checkRevoked()}catch(e){}
@@ -6876,7 +6899,7 @@ singerRuleView=function(){arPage('singer')};sessionRuleView=function(){arPage('s
 })();
 
 /* Load the advanced rules. Empty document keeps the old rules fully compatible. */
-kzWhenDb(()=>{db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){const d=x.data();if(window.kzRuleRemote)kzRuleRemote(d);else assignCfg={singer:d.singer||{},session:d.session||{}};if(view==='sched_s')schedSView();if(view==='sched_e')schedEView();if(view==='home'&&document.getElementById('body'))try{homeView()}catch(e){}}},e=>console.warn('[꿈자리] assignmentRules',e&&e.code))});
+kzWhenDb(()=>{db.doc('settings/assignmentRules').onSnapshot(x=>{if(x.exists){const d=x.data();if(window.kzRuleRemote)kzRuleRemote(d);else assignCfg={singer:d.singer||{},session:d.session||{}};if(view==='sched_s')schedSView();if(view==='sched_e')schedEView();if(view==='home'&&document.getElementById('body'))kzLater(kzRedraw)}},e=>console.warn('[꿈자리] assignmentRules',e&&e.code))});
 </script>
 
 <script>
