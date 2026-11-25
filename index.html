@@ -9670,15 +9670,24 @@ html.kzg-lock,html.kzg-lock body{overflow:hidden!important}
 })();
 </script>
 <script id="kz-ios-fixbar">
-/* 아이폰: 키보드를 닫거나 화면 크기가 바뀐 뒤 아래 메뉴(고정 막대)가 위로 떠 있는 iOS 버그 보정
-   → 입력이 끝나면 스크롤 위치를 1px 흔들어 iOS가 고정 위치를 다시 계산하게 함 */
+/* 아이폰 홈 화면 앱: 키보드를 한 번 쓰고 나면 iOS가 화면 높이를 작게 잘못 기억해서
+   아래 메뉴(bottom:0 고정)가 화면 중간에 떠 있는 버그 → 실제 화면 아래 끝에 맞춰 내려 줌 */
 (function(){if(!/iPhone|iPad|iPod/.test(navigator.userAgent))return;
+ const standalone=()=>navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
  const typing=()=>{const a=document.activeElement;return !!a&&(a.tagName==='TEXTAREA'||a.isContentEditable||(a.tagName==='INPUT'&&!/^(checkbox|radio|button|submit|range|color|file)$/i.test(a.type||'')))};
- let t=0;const fix=()=>{clearTimeout(t);t=setTimeout(()=>{if(typing())return;const vv=window.visualViewport;if(vv&&vv.height<window.innerHeight-80)return;/* 키보드가 아직 떠 있음 */
-  const x=window.scrollX,y=window.scrollY;window.scrollTo(x,y+1);window.scrollTo(x,y);
-  const tb=document.getElementById('tabbar');if(tb){tb.style.transform='translateZ(0)';requestAnimationFrame(()=>{tb.style.transform=''})}},120)};
- document.addEventListener('focusout',fix);window.visualViewport&&visualViewport.addEventListener('resize',fix);
- addEventListener('orientationchange',fix);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fix()});addEventListener('pageshow',fix);
+ const bars=()=>['tabbar','kzPushBar'].map(id=>document.getElementById(id)).filter(Boolean);
+ function pin(){const vv=window.visualViewport,ih=window.innerHeight;let bottom=vv?vv.height+vv.offsetTop:ih;
+  if(standalone()){const sh=matchMedia('(orientation: portrait)').matches?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);if(!typing())bottom=Math.max(bottom,sh)}
+  let d=Math.round(bottom-ih);if(typing()||d<3||d>600)d=0;
+  document.documentElement.style.setProperty('--kz-bar-fix',d+'px');
+  bars().forEach(b=>{const v=d?`translateY(${d}px)`:'';if(b.style.transform!==v)b.style.transform=v})}
+ let raf=0;const q=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;pin()})};
+ const later=()=>{q();setTimeout(pin,150);setTimeout(pin,450)};
+ ['scroll','resize','orientationchange','pageshow'].forEach(e=>addEventListener(e,q,{passive:true}));
+ if(window.visualViewport){visualViewport.addEventListener('resize',later);visualViewport.addEventListener('scroll',q)}
+ document.addEventListener('focusout',later);document.addEventListener('focusin',later);document.addEventListener('visibilitychange',()=>{if(!document.hidden)later()});
+ setInterval(pin,1500);later();
+ window.kzBarPin=pin;
 })();
 </script>
 </body><style id="kz-pin-mask">input.kz-pin[data-pin-t]{-webkit-text-security:disc;text-security:disc}</style>
