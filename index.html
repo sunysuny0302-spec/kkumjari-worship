@@ -11840,8 +11840,8 @@ window.kzSatPrac=(function(){
  const staff=()=>{try{const a=authAccount()||{};return a.id==='management'||['관리계정','단장','인도자','선임싱어','선임세션'].includes(a.rank)}catch(e){return false}};
  function weekObj(d){try{if(d===date)return data;return (archive||[]).find(a=>a.id===d)||null}catch(e){return null}}
  function of(d){const w=weekObj(d);const p=w&&w.prac;return p&&typeof p==='object'?p:null}
- /* 기본값: 세션 9:30 · 싱어 10:30 · 벧엘채플 (매번 이 값으로 시작) */
- function defaults(){return {singer:'10:30',session:'09:30',place:'벧엘채플'}}
+ /* 기본값: 세션 9:30 · 싱어 10:00 · 벧엘채플 (매번 이 값으로 시작) */
+ function defaults(){return {singer:'10:00',session:'09:30',place:'벧엘채플'}}
  /* 역할에 맞는 시간 글자 (참석 확인 창 등에서 씀) */
  function label(d,roles){const p=of(d);if(!p||!p.on)return '';const r=(roles||[]).join(' ');const sg=/싱어/.test(r),ss=/세션|건반|드럼|베이스|기타|B\.G|메인|세컨|엔지니어/.test(r);
   if(sg&&!ss)return p.singer?' '+tm(p.singer):'';if(ss&&!sg)return p.session?' '+tm(p.session):'';return ''}
