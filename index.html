@@ -12384,7 +12384,9 @@ window.kzSatPrac=(function(){
  function stat(){const el=document.getElementById('apSt');if(!el)return;const s=ST[cur];el.className='ly-st '+(s==='ok'?'ok':s==='err'?'err':'');el.textContent=s==='wait'||s==='saving'?'저장 중…':s==='ok'?'저장됨 ✓':s==='err'?'이 기기에만 저장됨':'자동 저장'}
  const nid=()=>'apply_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
  function slides(d){const out=[];if(d.showTitle&&String(d.title||'').trim())out.push({kind:'title',text:String(d.title).trim()});d.pages.forEach((p,i)=>{const t=String(p||'').replace(/\s+$/,'').replace(/^\n+/,'');out.push(t.trim()?{kind:'lyric',text:t,n:i+1}:{kind:'blank',text:'',n:i+1})});return out}
- function pv(){const box=document.getElementById('apLive'),cap=document.getElementById('apLiveCap');const d=AP[cur];if(!box||!d)return;const t=String(d.pages[focus]||'').trim(),base=LY_BASE[lySize]||42,fs=lyFont(t||'가',base),w=box.clientWidth||400;
+ function pv(){const box=document.getElementById('apLive'),cap=document.getElementById('apLiveCap');const d=AP[cur];if(!box||!d)return;
+  /* 폰: 미리보기를 지금 고치는 장 바로 아래로 옮겨서, 위에 큰 칸을 차지하지 않게 */
+  try{const mob=matchMedia('(max-width:900px)').matches,home=mob?document.querySelector('.ap-pg.on'):document.querySelector('.ap-pv');if(home&&box.parentNode!==home){if(mob)home.append(box);else home.prepend(box)}}catch(e){}const t=String(d.pages[focus]||'').trim(),base=LY_BASE[lySize]||42,fs=lyFont(t||'가',base),w=box.clientWidth||400;
   box.style.background=t?`#000 url(${LY_PPT_BG}) center/cover no-repeat`:'#000';box.innerHTML=t?`<div class="tx" style="font-size:${fs*w/(13.333*72)}px;text-align:${lyAlign}">${E(t)}</div>`:'<div class="em">빈 장은 검은 화면으로 들어가요</div>';if(cap)cap.textContent=`미리보기 · ${focus+1}장 / ${d.pages.length}장`}
  function view(B){const L=list();if(cur&&!get(cur)&&!AP[cur])cur='';if(!cur&&L.length)cur=L[0].k;const wrap=B.querySelector('.ly2');[...wrap.children].forEach(c=>{if(!c.matches('.ro-h,.ly-tabs'))c.remove()});
   const reg=L.filter(x=>x.date).length,ld=`<button type="button" class="ap-load" data-ap-load>적용찬양 불러오기${reg?` <em>${reg}</em>`:''}</button>`;
@@ -12394,10 +12396,11 @@ window.kzSatPrac=(function(){
    const card=(p,i)=>`<div class="ap-gap"><button type="button" data-ap-ins="${i}" aria-label="${i+1}장 앞에 장 추가">＋ 여기에 장 추가</button></div><div class="ap-pg ${i===focus?'on':''}" data-ap-i="${i}"><div class="ap-ph"><b>${i+1}장</b><span class="ap-sp"></span><button type="button" data-ap-up="${i}" ${i?'':'disabled'} aria-label="위로">↑</button><button type="button" data-ap-down="${i}" ${i<d.pages.length-1?'':'disabled'} aria-label="아래로">↓</button><button type="button" data-ap-dup="${i}">복제</button><button type="button" class="del" data-ap-del="${i}">삭제</button></div><textarea data-ap-t="${i}" rows="${Math.min(8,Math.max(3,String(p).split('\n').length+1))}" placeholder="${i+1}장 가사 (Enter = 같은 장 안에서 줄바꿈)">${E(p)}</textarea></div>`;
    main=`<div class="ap-ws">${rail}<section class="ap-ed"><div class="ap-eh">${d.date?`<button type="button" class="ap-wk" data-ap-wk="${E(d.date)}" title="적용찬양 페이지에서 보기">${+d.date.slice(5,7)}/${+d.date.slice(8)} 적용찬양 · 악보·링크 ›</button>`:''}<input id="apTitle" value="${E(d.title)}" placeholder="곡 제목 (예: 주의 은혜라)" aria-label="곡 제목"><label class="ly-chk"><input type="checkbox" id="apShowT" ${d.showTitle?'checked':''}>제목 슬라이드 넣기</label></div>
     <div class="ap-tools"><button type="button" data-ap-paste>가사 한 번에 붙여넣기</button><span class="ap-size"><button type="button" data-ap-size="m" class="${lySize==='m'?'on':''}">A−</button><button type="button" data-ap-size="l" class="${lySize==='l'?'on':''}">A</button><button type="button" data-ap-size="xl" class="${lySize==='xl'?'on':''}">A+</button></span><span class="ly-sp"></span><button type="button" class="del" data-ap-remove>이 적용찬양 삭제</button></div>
-    <div class="ap-body"><div class="ap-pgs">${d.pages.map(card).join('')}<button type="button" class="ap-add" data-ap-ins="${d.pages.length}">＋ 장 추가</button></div>
+    <div class="ap-body"><div class="ap-pgs">${d.pages.map(card).join('')}<button type="button" class="ap-add" data-ap-ins="${d.pages.length}">＋ 장 추가</button><button type="button" class="ap-rm-m" data-ap-remove>이 적용찬양 삭제</button></div>
     <aside class="ap-pv"><div class="lp-s" id="apLive"></div><small><span id="apLiveCap">미리보기</span><span class="ly-st" id="apSt">자동 저장</span></small><button type="button" class="ly-btn" data-ap-all>전체 미리보기</button><button type="button" class="ly-go" data-ap-go>PPT 만들기 <b>${n}장</b></button><p class="ap-tip">장마다 한 슬라이드예요 · 빈 장은 검은 화면 · ＋로 원하는 자리에 장을 끼워 넣을 수 있어요</p></aside></div></section></div>`}
   wrap.insertAdjacentHTML('beforeend',main);bind(B);pv();stat()}
  function rer(){const B=document.getElementById('body');if(B&&B.querySelector('.ly2'))view(B)}
+ try{matchMedia('(max-width:900px)').addEventListener('change',()=>{if(document.getElementById('apLive'))pv()})}catch(e){}
  function bind(B){const d=cur?AP[cur]:null;
   B.querySelectorAll('[data-ap-new]').forEach(b=>b.onclick=()=>{const k=nid();AP[k]={kind:'apply',title:'',pages:[''],showTitle:true,at:Date.now(),by:me()};cur=k;LS('lyApplyCur',k);focus=0;rer();save(k);setTimeout(()=>document.getElementById('apTitle')?.focus(),30)});
   B.querySelectorAll('[data-ap-pick]').forEach(b=>b.onclick=()=>{cur=b.dataset.apPick;LS('lyApplyCur',cur);focus=0;rer()});
@@ -12413,7 +12416,7 @@ window.kzSatPrac=(function(){
   B.querySelectorAll('[data-ap-dup]').forEach(b=>b.onclick=()=>{const i=+b.dataset.apDup;d.pages.splice(i+1,0,d.pages[i]);focus=i+1;save(cur);rer()});
   B.querySelectorAll('[data-ap-del]').forEach(b=>b.onclick=()=>{const i=+b.dataset.apDel;if(String(d.pages[i]||'').trim()&&!confirm(`${i+1}장을 지울까요?`))return;d.pages.splice(i,1);if(!d.pages.length)d.pages=[''];focus=Math.max(0,Math.min(i,d.pages.length-1));save(cur);rer()});
   B.querySelectorAll('[data-ap-size]').forEach(b=>b.onclick=()=>{lySize=b.dataset.apSize;LS('lySize',lySize);B.querySelectorAll('[data-ap-size]').forEach(x=>x.classList.toggle('on',x===b));pv()});
-  B.querySelector('[data-ap-remove]').onclick=()=>{if(!confirm(`'${d.title||'제목 없음'}' 적용찬양을 지울까요?`))return;d.del=true;save(cur,true);const k=cur;cur='';LS('lyApplyCur','');setTimeout(()=>{delete AP[k];try{db.doc('lyrics/'+k).delete().catch(()=>{})}catch(e){}rer()},400);rer()};
+  B.querySelectorAll('[data-ap-remove]').forEach(b=>b.onclick=()=>{if(!confirm(`'${d.title||'제목 없음'}' 적용찬양을 지울까요?`))return;d.del=true;save(cur,true);const k=cur;cur='';LS('lyApplyCur','');setTimeout(()=>{delete AP[k];try{db.doc('lyrics/'+k).delete().catch(()=>{})}catch(e){}rer()},400);rer()});
   B.querySelector('[data-ap-paste]').onclick=()=>paste(d);
   B.querySelector('[data-ap-all]').onclick=()=>all(d);
   B.querySelector('[data-ap-go]').onclick=e=>make(d,e.currentTarget)}
@@ -12507,6 +12510,39 @@ window.kzSatPrac=(function(){
  .ap-body{grid-template-columns:1fr}
  .ap-pv{position:sticky;top:0;z-index:5;order:-1;background:var(--page,#fbf8f3);padding:8px 0;grid-template-columns:44% 1fr;grid-template-rows:auto auto auto;column-gap:10px;row-gap:6px;align-items:center;box-shadow:0 10px 16px -16px rgba(60,40,20,.5)}
  .ap-pv .lp-s{grid-row:1/4;grid-column:1;width:100%}.ap-pv small{grid-column:2;flex-direction:column;gap:2px}.ap-pv .ly-btn,.ap-pv .ly-go{grid-column:2;padding:9px 10px!important;font-size:13px!important;min-height:0!important}.ap-pv .ap-tip{display:none}}
+.ap-rm-m{display:none}
+#apLive{background-color:#000!important;border:0!important;box-shadow:none!important;padding:0!important}
+#apLive{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;color:#fff;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-weight:700;text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.15}
+#apLive .tx{position:absolute;left:3.75%;right:3.75%;top:4.67%;line-height:1.1}
+#apLive .em{position:absolute;inset:0;display:grid;place-items:center;color:#8a8f9c;font-size:12px;font-weight:600}
+/* 폰: 한 손으로 쓰기 쉽게 — 곡 목록은 작은 칩, 제목은 한 줄 가득, 미리보기는 고치는 장 아래, PPT 만들기는 아래에 고정 */
+@media(max-width:900px){
+ .ap-ws{gap:10px}
+ .ap-rail{gap:6px;margin:0 -16px;padding:0 16px 2px}
+ .ap-rail>*{max-width:170px;min-height:0;height:36px;padding:0 13px!important;border-radius:99px!important;font-size:13px!important;display:inline-flex!important;align-items:center;gap:4px;white-space:nowrap}
+ .ap-ri small{display:none}.ap-ri b{font-size:13px;overflow:hidden;text-overflow:ellipsis}.ap-ri .ap-dt{font-size:10px;padding:1px 5px}
+ .ap-ri.on{box-shadow:none;background:#3a2c20;border-color:#3a2c20;color:#fff}.ap-ri.on .ap-dt{background:rgba(255,255,255,.18);color:#fff}
+ .ap-ed{gap:10px}
+ .ap-eh{gap:8px}
+ .ap-eh input#apTitle{order:-1;flex:1 1 100%;min-width:0;font-size:17px!important;padding:10px 12px}
+ .ap-eh .ap-wk{height:30px;font-size:12px}.ap-eh .ly-chk{font-size:13px;margin-left:auto}
+ .ap-tools{flex-wrap:nowrap;gap:6px}
+ .ap-tools>button,.ap-size button{height:38px;min-height:0;padding:0 11px;font-size:13px}
+ .ap-tools>[data-ap-paste]{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .ap-tools>.ly-sp,.ap-tools>.del{display:none}
+ .ap-body{gap:0}
+ .ap-pv{order:0;position:sticky;top:auto;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:8px;margin:12px -16px 0;padding:10px 16px;background:color-mix(in srgb,var(--page,#fbf8f3) 94%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--bd);box-shadow:none}
+ .ap-pv small{flex:none;display:block;font-size:11.5px}.ap-pv #apLiveCap{display:none}
+ .ap-pv .ly-btn,.ap-pv .ly-go{flex:1;height:44px!important;padding:0 10px!important;font-size:14px!important;justify-content:center;border-radius:12px}
+ .ap-pv .ly-go{flex:1.4}.ap-pv .ap-tip{display:none}
+ .ap-pg{padding:8px 10px 10px;border-radius:14px}
+ .ap-ph button{padding:6px 9px;font-size:13px}
+ .ap-pg textarea{font-size:16px;padding:10px}
+ .ap-pg #apLive{margin:8px auto 0;width:min(100%,300px);aspect-ratio:16/9;border-radius:10px}
+ .ap-gap{height:30px}.ap-gap button{opacity:.6;padding:3px 12px;font-size:11.5px}
+ .ap-add{padding:12px}
+ .ap-rm-m{display:block;margin:18px auto 6px;border:0;background:none;color:#b23b3b;font:inherit;font-size:13px;font-weight:700;padding:8px 12px;cursor:pointer}
+}
 </style>
 <style id="ka-ms-css">
 .ka-ms{max-height:82dvh;display:flex;flex-direction:column}.ka-ms .kf-sb{overflow:auto}
