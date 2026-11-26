@@ -5075,6 +5075,9 @@ function kzHref(u){return /^www\./i.test(u)?'https://'+u:u}
 function kzCleanU(u){return kzHref(String(u).replace(/[)\]}>.,;!?'"]+$/,''))}
 function kzSongs(lines){const out=[];let cur=null;for(const v0 of lines){const v=String(v0).trim(),us=(v.match(kzURL)||[]).map(kzCleanU),rest=v.replace(kzURL,'').replace(/[()\[\]{}<>\s\-–—|·:,]/g,'');if(/^\d+\s*[.)]\s*\S/.test(v)){cur={t:v.replace(kzURL,'').replace(/[(\[]\s*[)\]]/g,'').replace(/[\s\-–—|·:(\[]+$/,'').trim(),links:us};out.push(cur)}else if(us.length&&!rest&&cur){cur.links.push(...us)}else if(!us.length||rest)cur=us.length?cur:null}return out}
 function kzYtId(u){const m=/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/.exec(String(u));return m?m[1]:''}
+/* 큰 유튜브 썸네일: maxres(1280) → sd(640) → hq(480) 순으로. 없는 해상도는 120px 회색 그림이 오므로 크기로 걸러요 */
+function kzYtImg(id){return `<img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-yt="${id}" onload="kzYtUp(this)" onerror="kzYtUp(this,1)">`}
+function kzYtUp(im,err){if(!err&&im.naturalWidth>120)return;const q=['maxresdefault','sddefault','hqdefault'],k=+(im.dataset.q||0)+1;if(k>=q.length){if(err)im.remove();return}im.dataset.q=k;im.src=`https://i.ytimg.com/vi/${im.dataset.yt}/${q[k]}.jpg`}
 function kzLinkify(text){return esc(text).replace(/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi,m=>{const h=kzHref(m.replace(/&amp;/g,'&'));return `<a href="${esc(h)}" target="_blank" rel="noopener noreferrer">${m}</a>`})}
 function kzWeekView(){const pub=!!data.up,ment=pub&&data.ment&&data.ment.trim()?data.ment:'',sc=pub?orderedScores((data.scores||[]).filter(x=>x.aid||x.oaid)):[],songNo=scoreSongNumbers(sc);if(!ment&&!sc.length){go('archive');return}
 const d=new Date(date+'T12:00:00'),title=`${d.getMonth()+1}월 ${d.getDate()}일 주일예배`,lines=ment?ment.split(/\r?\n/).map(v=>v.trim()).filter(Boolean):[],cs=kzSongs(lines);
@@ -9535,6 +9538,16 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
 @media(max-width:820px){.apw{padding:12px 16px 40px}}
 .apw-add.sub{background:var(--card,#fff);color:var(--tx);border:1px dashed rgba(120,88,56,.3)}
 @media(max-width:600px){.apw-c{padding:15px;border-radius:18px}.apw-ct h3{font-size:18px}.apw-sc button{width:92px}}
+/* 카드가 옆으로 삐져나가던 것: 한 줄 말줄임 가사 미리보기가 그리드 칸을 늘리지 못하게 */
+.apw-c,.kzwt-ap{grid-template-columns:minmax(0,1fr)}.apw-c>*,.apw-ly{min-width:0}.kzwt-ap{overflow-x:hidden}
+/* 폰: 콘티·적용찬양 창을 화면에 꽉 차게 (노치·홈 막대 피해서) */
+@media screen and (max-width:820px){
+ .kz-modal.kz-wv{padding:0!important;place-items:stretch}
+ .kz-modal.kz-wv .kz-wv-dlg{width:100%!important;height:100vh;height:100dvh;max-height:none!important;border-radius:0;border:0}
+ .kz-wv .kz-dlg-h{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+ .kz-wv .kzwt-ap,.kz-wv .kz-wv-b{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+ .kzwt-ap{padding-left:14px;padding-right:14px}.kzwt{margin-left:14px;margin-right:14px}
+}
 </style>
 <script id="kz-apply-page">
 /* ===== 적용찬양 페이지: 그 주 적용찬양(목사님이 주신 곡)의 악보 · 참고 영상 · 가사를 한 곳에
@@ -9550,7 +9563,7 @@ async function atFinalize(){if(atFinDone)return;try{if(!kzAttOK()||!db)return}ca
   function card(x,ro){const sc=Array.isArray(x.scores)?x.scores.filter(s=>s&&s.oaid):[],n=lyrN(x),first=(x.pages||[]).find(p=>String(p||'').trim())||'';
    return `<article class="apw-c"><div class="apw-ct"><div><span class="apw-tag">${mds(x.date)} 적용찬양</span><h3>${esc(x.title||'제목 없음')}</h3>${x.by?`<small>${esc(x.by)} 등록</small>`:''}</div>${ro?'':`<button type="button" class="apw-ed" data-apw-edit="${esc(x.k)}">수정</button>`}</div>
     ${x.note?`<p class="apw-note">${esc(x.note)}</p>`:''}
-    ${yts(x).length?`<div class="apw-yts">${yts(x).map(u=>{const id=kzYtId(u);return `<a class="apw-yt ${id?'':'noimg'}" href="${esc(u)}" target="_blank" rel="noopener">${id?`<img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}<span>▶ 참고 영상</span></a>`}).join('')}</div>`:''}
+    ${yts(x).length?`<div class="apw-yts">${yts(x).map(u=>{const id=kzYtId(u);return `<a class="apw-yt ${id?'':'noimg'}" href="${esc(u)}" target="_blank" rel="noopener">${id?kzYtImg(id):''}<span>▶ 참고 영상</span></a>`}).join('')}</div>`:''}
     <section class="apw-s"><h4>악보 <em>${sc.length?sc.length+'장':'없음'}</em></h4>${sc.length?`<div class="apw-sc">${sc.map((s,i)=>`<button type="button" data-apw-big="${esc(x.k)}" data-i="${i}" aria-label="${i+1}장 크게 보기"><img src="${BLOB(s.oaid)}" alt="" loading="lazy"><span>${i+1}</span></button>`).join('')}</div>`:'<p class="apw-none">아직 악보가 없어요 · 수정에서 사진을 올리거나 악보 모음집에서 고를 수 있어요</p>'}</section>
     <section class="apw-s"><h4>가사 PPT <em>${n?n+'장':'없음'}</em></h4><div class="apw-ly"><p>${n?esc(String(first).split('\n')[0]):'가사를 넣으면 그 주 주일 PPT 맨 뒤에 자동으로 붙어요'}</p><button type="button" data-apw-lyr="${esc(x.k)}">${n?'가사 · PPT 열기':'가사 넣기'}</button></div></section></article>`}
  function bindCards(B){B.querySelectorAll('[data-apw-lyr]').forEach(b=>b.onclick=()=>{document.querySelector('.kz-modal.kz-wv')?.remove();API()&&API().open(b.dataset.apwLyr)});
