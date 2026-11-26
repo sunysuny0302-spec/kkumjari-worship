@@ -8941,10 +8941,14 @@ window.kzPrac=(function(){
   w.querySelector('[data-pr=no]').onclick=()=>{w.querySelector('[data-pr=no]').classList.add('on');w.querySelector('[data-pr=yes]').classList.remove('on');const y=w.querySelector('.pr-why');y.hidden=false;setTimeout(()=>w.querySelector('#prNote').focus(),50)};
   w.querySelector('.pr-send').onclick=()=>{const t=w.querySelector('#prNote').value.trim();if(t.length<2){w.querySelector('.pr-err').textContent='이유를 짧게라도 적어 주세요.';return}send('no',t)};}
  /* 인도자·단장·관리계정: '이번 주 준비'에 토요 연습 칸 */
+ /* 홈을 다시 그릴 때 칸이 비었다가 나중에 끼워지면 줄 높이가 출렁임(콘티 카드까지 늘었다 줄었다)
+    → 처음부터 같은 크기의 칸을 그려 두고(마지막 값 기억) 숫자만 바꿈 */
+ const tileMem=new Map();const TILE0='<button type="button" class="kz-ck na" data-kz-act="prac"><i>…</i><span><b>토요 연습</b><small>불러오는 중</small></span></button>';
+ function tileHTML(){if(!canSee())return '';let d;try{d=date}catch(e){return TILE0}return tileMem.get(d)||TILE0}
  async function paintTile(){const g=document.querySelector('#body .kz-rd .kz-rd-g');if(!g||!canSee())return;let d;try{d=date}catch(e){return}
-  const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));let t=g.querySelector('[data-kz-act=prac]');if(!t){g.insertAdjacentHTML('beforeend','<button type="button" class="kz-ck na" data-kz-act="prac"><i>…</i><span><b>토요 연습</b><small>불러오는 중</small></span></button>');t=g.querySelector('[data-kz-act=prac]');t.onclick=e=>{e.stopPropagation();e.preventDefault();openList(d)}}
+  const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));let t=g.querySelector('[data-kz-act=prac]');if(!t){g.insertAdjacentHTML('beforeend',tileMem.get(d)||TILE0);t=g.querySelector('[data-kz-act=prac]')}if(!t._kzb){t._kzb=1;t.onclick=e=>{e.stopPropagation();e.preventDefault();openList(d)}}
   const a=await answers(d,false)||{};const y=list.filter(o=>a[o.n]&&a[o.n].s==='yes').length,no=list.filter(o=>a[o.n]&&a[o.n].s==='no').length,w=list.length-y-no;
-  t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전'}
+  t.className='kz-ck '+(!list.length?'na':no?'part':w?'part':'ok');t.querySelector('i').textContent=!list.length?'–':no?'!':w?'…':'✓';t.querySelector('small').textContent=list.length?`참석 ${y} · 불참 ${no}${w?' · 아직 '+w:''}`:'배정 전';tileMem.set(d,t.outerHTML)}
  async function openList(d){const list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도'));const a=await answers(d,true)||{};document.getElementById('kzPracList')?.remove();
   const no=list.filter(o=>a[o.n]&&a[o.n].s==='no'),yes=list.filter(o=>a[o.n]&&a[o.n].s==='yes'),wait=list.filter(o=>!a[o.n]),t=list.length||1;
   const av=o=>`<span class="pl-av">${kzPfHTML(o.n)}</span>`;
@@ -8981,7 +8985,7 @@ window.kzPrac=(function(){
  async function syncTargets(d){try{if(!STAFF.includes(rank()))return;if(typeof isNoSvc==='function'&&isNoSvc(d))return;if(!d||d!==date||!data||!data.up||!R().api)return;let list=(R().assigned?R().assigned(d):[]).filter(o=>!o.r.includes('인도')).map(o=>({n:o.n,r:o.r}));if(data.prac&&data.prac.on===false)list=[];else if(!list.length)return;const key=JSON.stringify(list);if(synced[d]===key)return;synced[d]=key;await R().api({action:'rsvpTargets',date:d,targets:list})}catch(e){}}
  function home(){setTimeout(()=>{paintTile();check();try{syncTargets(date)}catch(e){}},700)}
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,800)});
- return{home,check,openList,fill,syncTargets,until,dl};
+ return{home,check,openList,fill,syncTargets,until,dl,tileHTML};
 })();
 </script>
 <style id="kz-prac-css">
@@ -12020,7 +12024,7 @@ window.kzSatPrac=(function(){
   else if(!p)body2=`<div class="sp-big none">아직 안 정했어요<small>${s?'인도자가 업로드할 때 정하거나, \'정하기\'를 눌러 정해요':'정해지면 여기에 시간이 나와요'}</small></div>`;
   else if(!p.on)body2=`<div class="sp-big off">이번 주 토요 연습 없음<small>참석 확인과 저녁 알림도 쉬어요</small></div>`;
   else body2=`<div class="sp-rows">${p.singer?`<div class="sp-row"><span>🎤 싱어</span><b>${E(tm(p.singer))}</b></div>`:''}${p.session?`<div class="sp-row"><span>🎸 세션</span><b>${E(tm(p.session))}</b></div>`:''}${p.place?`<div class="sp-row pl"><span>📍 장소</span><b>${E(p.place)}</b></div>`:''}</div>`;
-  return `<section class="kz-rd kz-sp"><div class="kz-h">${V13I('list')}<h2>이번 주 토요 연습</h2><span class="kz-dd2">${E(md(sat(d)))}(토)${dd>0?' · D-'+dd:dd===0?' · 오늘':''}</span><span class="sp"></span>${s&&!(typeof isNoSvc==='function'&&isNoSvc(d))?`<button type="button" class="sp-edit" data-sp-edit>${p?'바꾸기':'정하기'}</button>`:''}</div>${body2}${p&&p.on?'<div class="kz-rd-g sp-g"></div>':''}</section>`}}
+  return `<section class="kz-rd kz-sp"><div class="kz-h">${V13I('list')}<h2>이번 주 토요 연습</h2><span class="kz-dd2">${E(md(sat(d)))}(토)${dd>0?' · D-'+dd:dd===0?' · 오늘':''}</span><span class="sp"></span>${s&&!(typeof isNoSvc==='function'&&isNoSvc(d))?`<button type="button" class="sp-edit" data-sp-edit>${p?'바꾸기':'정하기'}</button>`:''}</div>${body2}${p&&p.on?`<div class="kz-rd-g sp-g">${window.kzPrac&&kzPrac.tileHTML?kzPrac.tileHTML():''}</div>`:''}</section>`}}
  /* 홈 그린 뒤: 버튼 연결 + 폰 위쪽 얇은 띠 */
  if(typeof homeView==='function'){const o=homeView;homeView=function(){const r=o.apply(this,arguments);try{const b=document.querySelector('#body [data-sp-edit]');if(b)b.onclick=()=>edit(date);
    const hm=document.querySelector('#body .hm');if(hm&&!hm.querySelector('.hm-sp')&&!(typeof isNoSvc==='function'&&isNoSvc(date))){const p=of(date);if(p||staff()){const st=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?`${(+m[1])%12||12}:${m[2]}`:''};
